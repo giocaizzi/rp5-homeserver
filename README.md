@@ -4,7 +4,7 @@ Raspberry Pi 5 Docker-based home server with Portainer stack management.
 
 ## Quick Start
 
-Deploy the [infrastructure stack](../infra) first.
+Deploy the [infrastructure stack](../infra) with [Portainer](./PORTAINER.md) first.
 
 ```bash
 cd infra
@@ -20,6 +20,9 @@ Then access Portainer at `https://portainer.local` to deploy services.
 
 - **[N8N](./services/n8n/README.md)** - Workflow automation (`https://n8n.local`)
 - **[Ollama](./services/ollama/README.md)** - Local LLM server (`https://ollama.local`)
+
+> [How to add a service](./ADDING_SERVICES.md)
+
 
 ## Documentation
 
