@@ -5,3 +5,4 @@
 - [Security](./security.md)
 - [Data Management](./data.md)
 - [Monitoring](./monitoring.md)
+- [Resource Optimization](./resources.md)
