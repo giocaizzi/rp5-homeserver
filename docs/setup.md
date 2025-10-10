@@ -30,19 +30,18 @@ cp ./infra/.env.example ./infra/.env
 ```bash
 # copy infrastructure compose
 scp ./infra/docker-compose.yml pi@pi.local:~/rp5-homeserver/docker-compose.yml
-# copy env example
+# copy env file
 scp ./infra/.env pi@pi.local:~/rp5-homeserver/.env
+# create ssl folder via ssh
+ssh pi@pi.local "mkdir -p /home/pi/rp5-homeserver/infra/nginx/ssl"
 # copy ssl certs
-scp ./infra/nginx/ssl/cert.pem ./infra/nginx/ssl/key.pem pi@pi.local:/home/pi/rp5-homeserver/ssl/
+scp ./infra/nginx/ssl/cert.pem ./infra/nginx/ssl/key.pem pi@pi.local:/home/pi/rp5-homeserver/infra/nginx/ssl/
 ```
 
 - Start the infrastructure stack with Docker compose:
 
 ```bash
-ssh pi@pi.local
-cd ~/rp5-homeserver
-docker-compose up -d
-exit
+ssh pi@pi.local "cd ~/rp5-homeserver && docker-compose up -d"
 ```
 
 Update hostname resolution on your **local machine** (not on Pi):
