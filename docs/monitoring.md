@@ -7,7 +7,7 @@ Lightweight real-time monitoring installed directly on the Raspberry Pi host (no
 
 **Installation:**
 ```bash
-# On RPi host
+# On RP5 host
 bash <(curl -Ss https://my-netdata.io/kickstart.sh)
 ```
 
