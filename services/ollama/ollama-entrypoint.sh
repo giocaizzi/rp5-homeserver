@@ -11,9 +11,14 @@ SERVER_PID=$!
 echo "Waiting for Ollama server to start..."
 sleep 5  # adjust if needed on Pi
 
-# Pull the model via Ollama CLI
-echo "Pulling $MODEL_NAME via Ollama..."
-ollama pull "$MODEL_NAME"
+# Only pull the model if it's not already present
+echo "Checking if $MODEL_NAME is already available..."
+if ! ollama list | grep -q "$MODEL_NAME"; then
+    echo "Pulling $MODEL_NAME via Ollama..."
+    ollama pull "$MODEL_NAME"
+else
+    echo "$MODEL_NAME is already available"
+fi
 
 # Wait for server process to keep container alive
 wait $SERVER_PID
