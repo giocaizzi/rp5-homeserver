@@ -4,9 +4,8 @@ Raspberry Pi 5 Docker-based home server.
 
 ## Quick Start
 
-Deploy the [infrastructure stack](infra/README.md) with [Portainer](./deployment.md).
-
-Then access Portainer at `https://portainer.local` to deploy desired services.
+1. Deploy the [infrastructure stack](infra/README.md) with [Portainer](./deployment.md).
+2. Then access Portainer at `https://portainer.local` to deploy desired services.
 
 ## Services
 
