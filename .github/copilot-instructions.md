@@ -9,13 +9,13 @@ You are an agent - please keep going until the user's query is completely resolv
 
 
 <context>
-This repository manages a Raspberry Pi 5 home server setup.
+This repository manages a Raspberry Pi 5 8GB home server setup.
 Based on the use of Docker and Docker Compose.
 Utilizes Portainer for allowing remote management of Docker containers.
 </context>
 
 <guidelines>    
-Follow best practices for Docker and Docker Compose.
+Follow best practices for Docker and Docker Compose yet keeping things simple.
 Ensure security, efficiency, and maintainability.
 Use environment variables for sensitive data.
 </guidelines>
