@@ -21,12 +21,6 @@ services:
       POSTGRES_USER: "${POSTGRES_USER:-n8n}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
-      # Pi-optimized PostgreSQL settings
-      POSTGRES_SHARED_BUFFERS: "64MB"
-      POSTGRES_EFFECTIVE_CACHE_SIZE: "128MB"
-      POSTGRES_MAINTENANCE_WORK_MEM: "16MB"
-      POSTGRES_WORK_MEM: "2MB"
-      POSTGRES_MAX_CONNECTIONS: "20"
     volumes:
       - ${POSTGRES_DATA_PATH:-./data/postgres}:/var/lib/postgresql/data
       - ./postgres.conf:/etc/postgresql/postgresql.conf:ro
