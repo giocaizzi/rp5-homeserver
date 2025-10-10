@@ -34,8 +34,8 @@ cd infra/nginx
 
 Transfer to RP5:
 ```bash
-ssh pi@<rp5-ip> "mkdir -p /home/pi/rp5-homeserver/infra/nginx/ssl"
-scp ssl/cert.pem ssl/key.pem pi@<rp5-ip>:/home/pi/rp5-homeserver/infra/nginx/ssl/
+ssh pi@pi.local "mkdir -p /home/pi/rp5-homeserver/infra/nginx/ssl"
+scp ssl/cert.pem ssl/key.pem pi@pi.local:/home/pi/rp5-homeserver/infra/nginx/ssl/
 ```
 
 Add to `/etc/hosts`:
