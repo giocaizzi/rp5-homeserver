@@ -10,5 +10,5 @@ Rasperry Pi 5 Home Server base infrastructure.
 ## Usage
 
 ```bash
-CLOUDFLARED_TOKEN=your-actual-token docker-compose up -d
+CLOUDFLARED_TOKEN="" docker-compose up -d
 ```
