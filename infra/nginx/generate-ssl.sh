@@ -35,7 +35,3 @@ chmod 644 "$SSL_DIR/cert.pem"
 rm "$SSL_DIR/cert.csr"
 
 echo "SSL certificates generated in $SSL_DIR"
-echo "Remember to add these entries to your /etc/hosts file:"
-echo "127.0.0.1 portainer.local"
-echo "127.0.0.1 n8n.local"
-echo "127.0.0.1 ollama.local"
