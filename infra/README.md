@@ -40,7 +40,7 @@ scp ssl/cert.pem ssl/key.pem pi@pi.local:/home/giorgiocaizzi/rp5-homeserver/infr
 
 Add to `/etc/hosts`:
 ```
-127.0.0.1 portainer.local <other_services>.local
+192.168.x.x portainer.local netdata.local <other_service>.local
 ```
 
 ## Deployment
