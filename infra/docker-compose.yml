@@ -121,10 +121,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 64M   # Reduced from 128M - tunnel is very lightweight
+          memory: 64M
           cpus: "0.25"
         reservations:
-          memory: 32M   # Reduced from 64M
+          memory: 32M
           cpus: "0.1"
     # Allow swap usage since host has swap enabled
     memswap_limit: 128M   # Allow 2x memory limit in swap

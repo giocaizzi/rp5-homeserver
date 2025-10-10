@@ -45,7 +45,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M  # Reduced for Pi efficiency
+          memory: 256M
           cpus: "0.5"
         reservations:
           memory: 128M  # Conservative reservation
