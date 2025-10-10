@@ -12,15 +12,6 @@ networks:
     name: rp5_infra
     internal: false
 
-  # External networks from other stacks
-  n8n_network:
-    external: true
-    name: rp5_n8n
-  
-  ollama_network:
-    external: true
-    name: rp5_ollama
-
 services:
   # Nginx Reverse Proxy
   nginx:
@@ -39,8 +30,6 @@ services:
     networks:
       - public_network
       - infra_network
-      - n8n_network
-      - ollama_network
     depends_on:
       - portainer
     healthcheck:

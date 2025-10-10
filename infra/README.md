@@ -2,6 +2,19 @@
 
 > *Deploy this stack first* - other services depend on the networks created here.
 
+## Network Architecture
+
+**Created Networks:**
+- `rp5_public` - Shared network for nginx ↔ service communication
+- `rp5_infra` - Internal infrastructure network
+
+**Service Integration:**
+Services join `rp5_public` network to enable nginx routing without exposing ports directly.
+
+```
+Internet → Nginx (rp5_public) → Services (rp5_public + private networks)
+```
+
 ## Services
 
 **Nginx Reverse Proxy** (`nginx:alpine`)

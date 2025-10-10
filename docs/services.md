@@ -13,10 +13,38 @@ services/new-service/
 
 ## Docker Compose Requirements
 
+### Network Architecture
+Services must connect to **both** networks for proper nginx routing:
+
+```yaml
+networks:
+  # Private service network
+  service_network:
+    driver: bridge
+    name: rp5_<service>
+    internal: false
+  
+  # Shared public network (created by infrastructure)
+  public_network:
+    external: true
+    name: rp5_public
+
+services:
+  service:
+    networks:
+      - service_network    # Internal service communication
+      - public_network     # Nginx proxy access
+```
+
+### Complete Service Template
+
 ```yaml
 networks:
   service_network:
     name: rp5_<service>
+  public_network:
+    external: true
+    name: rp5_public
 
 services:
   service:
@@ -27,7 +55,9 @@ services:
     volumes:
       - ./data/<service>:/data
       - ./logs/<service>:/var/log
-    networks: [service_network]
+    networks: 
+      - service_network
+      - public_network     # Required for nginx access
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:<port>"]
       start_period: 60s  # Pi startup time
@@ -42,17 +72,19 @@ services:
 
 ## Nginx Integration
 
-Add to `/infra/docker-compose.yml` networks:
-```yaml
-new_service_network:
-  external: true
-  name: rp5_<service>
-```
+Services automatically join the `rp5_public` network, making them accessible to nginx.
 
 Add to `/infra/nginx/nginx.conf`:
-```nginx
-upstream <service> { server <service>:<port>; }
 
+### 1. Upstream Definition
+```nginx
+upstream <service> { 
+  server <service>:<port>; 
+}
+```
+
+### 2. Server Block
+```nginx
 server {
     listen 443 ssl http2;
     server_name <service>.local;
