@@ -19,4 +19,5 @@ Coding happens on MacOS connected to the RP5 via SSH @ `giorgiocaizzi@pi.local`.
 Follow best practices for Docker and Docker Compose yet keeping things simple.
 Ensure security, efficiency, and maintainability.
 Use environment variables for sensitive data.
+Document with a streamlined style.
 </guidelines>

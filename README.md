@@ -10,8 +10,6 @@ Then access Portainer at `https://portainer.local` to deploy desired services.
 
 ## Services
 
-- 
-
 - **[N8N](./services/n8n/README.md)** - Workflow automation (`https://n8n.local`)
 - **[Ollama](./services/ollama/README.md)** - Local LLM server (`https://ollama.local`)
 
