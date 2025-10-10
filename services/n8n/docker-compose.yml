@@ -64,8 +64,6 @@ services:
       retries: 3
       start_period: 60s
     labels:
-      - "service=n8n"
-      - "type=automation"
       - "stack=n8n"
     security_opt:
       - no-new-privileges:true
