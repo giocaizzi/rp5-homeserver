@@ -36,7 +36,7 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private networks)
 See [`.env.example`](./.env.example) for all environment variables.
 
 
-## Nginx SSL Setup
+## Nginx Post-Setup
 
 ### Generate certificates locally
 
@@ -51,12 +51,9 @@ ssh pi@pi.local "mkdir -p /home/giorgiocaizzi/rp5-homeserver/infra/nginx/ssl"
 scp ssl/cert.pem ssl/key.pem pi@pi.local:/home/giorgiocaizzi/rp5-homeserver/infra/nginx/ssl/
 ```
 
+### Update hostsfile
+
 Add to `/etc/hosts`:
 ```
 192.168.x.x portainer.local netdata.local <other_service>.local
 ```
-
-## Deployment
-
-**Portainer**: *Recommended*, use [Portainer](../docs/deployment.md#deploy-with-portainer)
-**Manual**: with docker CLI `docker-compose up -d`
