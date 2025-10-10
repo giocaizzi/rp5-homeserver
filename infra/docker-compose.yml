@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  # Portainer - Docker management UI
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: always
+    ports:
+      - "9000:9000"   # HTTP
+      - "9443:9443"   # HTTPS
+    volumes:
+      # required to view/manage docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      # portainer data
+      - /home/giorgiocaizzi/services/portainer/data:/data
+    depends_on:
+      - agent
+
+  # Portainer Agent - required for managing remote docker hosts
+  agent:
+    image: portainer/agent:latest
+    container_name: portainer_agent
+    restart: always
+    environment:
+      CAP_HOST_MANAGEMENT: 1
+    ports:
+      - "9001:9001"
+    volumes:
+      # required to view/manage docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      # requirwed to manage host
+      - /:/host
+  
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token $PORTAINER_TOKEN
