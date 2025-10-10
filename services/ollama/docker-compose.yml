@@ -11,8 +11,8 @@ services:
       - OLLAMA_HOST=0.0.0.0
       - OLLAMA_MODELS=/root/.ollama
     volumes:
-      - /home/pi/services/ollama/data:/root/.ollama   # persists models, configs, logs
-      - /home/pi/services/ollama/ollama-entrypoint.sh:/usr/local/bin/ollama-entrypoint.sh:ro
+      - /home/pi/rp5-homeserver/ollama:/root/.ollama   # persists models, configs, logs
+      # - /home/pi/rp5-homeserver/ollama/ollama-entrypoint.sh:/usr/local/bin/ollama-entrypoint.sh:ro
 
     entrypoint: ["/usr/local/bin/ollama-entrypoint.sh"]
     healthcheck:
