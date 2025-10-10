@@ -47,10 +47,7 @@ services:
       timeout: 10s
       retries: 3
     labels:
-      - "service=infra"
-      - "type=proxy"
       - "stack=infrastructure"
-      - "traefik.enable=false"
     security_opt:
       - no-new-privileges:true
     read_only: true
@@ -86,8 +83,6 @@ services:
       retries: 3
       start_period: 40s
     labels:
-      - "service=infra"
-      - "type=management"
       - "stack=infrastructure"
     security_opt:
       - no-new-privileges:true
@@ -120,8 +115,6 @@ services:
       timeout: 10s
       retries: 3
     labels:
-      - "service=infra"
-      - "type=tunnel"
       - "stack=infrastructure"
     security_opt:
       - no-new-privileges:true
