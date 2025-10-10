@@ -40,20 +40,14 @@ See [`.env.example`](./.env.example) for all environment variables.
 
 ### Generate certificates locally
 
-```bash
-cd infra/nginx
-./generate-ssl.sh
-```
+SSL Certificates must be present in `./nginx/ssl` before starting the stack.
 
-Transfer to RP5:
-```bash
-ssh pi@pi.local "mkdir -p /home/giorgiocaizzi/rp5-homeserver/infra/nginx/ssl"
-scp ssl/cert.pem ssl/key.pem pi@pi.local:/home/giorgiocaizzi/rp5-homeserver/infra/nginx/ssl/
-```
+See [SSL Generation Instructions](../docs/setup.md#1-infrastructure-stack).
 
 ### Update hostsfile
 
-Add to `/etc/hosts`:
+In order to pass `nginx` hostname resolution, add to your local `/etc/hosts` file:
+
 ```
 192.168.x.x portainer.local netdata.local <other_service>.local
 ```
