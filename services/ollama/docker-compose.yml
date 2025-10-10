@@ -54,10 +54,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${OLLAMA_MEMORY_LIMIT:-4G}  # Adjust based on your system's memory
-          cpus: "${OLLAMA_CPU_LIMIT:-2.0}"
+          memory: ${OLLAMA_MEMORY_LIMIT:-3G}  # Reduced from 4G for 8GB Pi
+          cpus: "${OLLAMA_CPU_LIMIT:-3.0}"    # Can use more CPU cores
         reservations:
-          memory: ${OLLAMA_MEMORY_RESERVATION:-2G}
+          memory: ${OLLAMA_MEMORY_RESERVATION:-1G}  # Reduced from 2G
           cpus: "${OLLAMA_CPU_RESERVATION:-1.0}"
     tmpfs:
       - /tmp:size=1G,noexec,nosuid,nodev
