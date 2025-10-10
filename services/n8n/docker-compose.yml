@@ -1,5 +1,3 @@
-version: "3.8"
-
 networks:
   # Private network for n8n stack
   n8n_network:

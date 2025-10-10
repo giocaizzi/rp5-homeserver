@@ -1,5 +1,3 @@
-version: "3.8"
-
 networks:
   # Private network for ollama stack
   ollama_network:
