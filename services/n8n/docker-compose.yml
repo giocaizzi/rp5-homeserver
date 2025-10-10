@@ -11,10 +11,61 @@ networks:
     name: rp5_public
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: n8n_postgres
+    restart: unless-stopped
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-n8n}"
+      POSTGRES_USER: "${POSTGRES_USER:-n8n}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+      # Pi-optimized PostgreSQL settings
+      POSTGRES_SHARED_BUFFERS: "64MB"
+      POSTGRES_EFFECTIVE_CACHE_SIZE: "128MB"
+      POSTGRES_MAINTENANCE_WORK_MEM: "16MB"
+      POSTGRES_WORK_MEM: "2MB"
+      POSTGRES_MAX_CONNECTIONS: "20"
+    volumes:
+      - ${POSTGRES_DATA_PATH:-./data/postgres}:/var/lib/postgresql/data
+      - ./postgres.conf:/etc/postgresql/postgresql.conf:ro
+    networks:
+      - n8n_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-n8n} -d ${POSTGRES_DB:-n8n}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "stack=n8n"
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 256M  # Reduced for Pi efficiency
+          cpus: "0.5"
+        reservations:
+          memory: 128M  # Conservative reservation
+          cpus: "0.25"
+    # Allow swap usage since host has swap enabled
+    memswap_limit: 512M  # Allow 2x memory limit in swap
+    mem_swappiness: 10   # Prefer RAM but allow swap when needed
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   n8n:
     image: n8nio/n8n:latest
     container_name: n8n
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
     # Remove direct port exposure - access via nginx proxy
     expose:
       - "5678"
@@ -30,9 +81,14 @@ services:
       TZ: "${TZ:-UTC}"
       
       # Database configuration
-      DB_TYPE: "sqlite"
-      DB_SQLITE_DATABASE: "/data/n8n.sqlite"
-      DB_SQLITE_VACUUM_ON_STARTUP: "true"
+      DB_TYPE: "postgresdb"
+      DB_POSTGRESDB_HOST: "postgres"
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: "${POSTGRES_DB:-n8n}"
+      DB_POSTGRESDB_USER: "${POSTGRES_USER:-n8n}"
+      DB_POSTGRESDB_PASSWORD: "${POSTGRES_PASSWORD}"
+      DB_POSTGRESDB_SCHEMA: "public"
+      DB_POSTGRESDB_SSL_ENABLED: "false"
       
       # Security configuration
       N8N_SECURE_COOKIE: "true"  # Enable secure cookies with HTTPS
@@ -73,11 +129,14 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 512M 
           cpus: "1.0"
         reservations:
-          memory: 512M
+          memory: 256M
           cpus: "0.5"
+    # Allow swap usage since host has swap enabled
+    memswap_limit: 1G     # Allow 2x memory limit in swap
+    mem_swappiness: 10    # Prefer RAM but allow swap when needed
     tmpfs:
       - /tmp
     logging:

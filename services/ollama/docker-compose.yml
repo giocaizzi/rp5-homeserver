@@ -59,6 +59,9 @@ services:
         reservations:
           memory: ${OLLAMA_MEMORY_RESERVATION:-1G}  # Reduced from 2G
           cpus: "${OLLAMA_CPU_RESERVATION:-1.0}"
+    # Allow swap usage since host has swap enabled
+    memswap_limit: ${OLLAMA_MEMSWAP_LIMIT:-6G}  # Allow 2x memory limit in swap
+    mem_swappiness: 1     # Very conservative swap usage for AI workloads
     tmpfs:
       - /tmp:size=1G,noexec,nosuid,nodev
     ulimits:

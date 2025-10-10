@@ -41,6 +41,17 @@ services:
     tmpfs:
       - /var/cache/nginx
       - /var/run
+    deploy:
+      resources:
+        limits:
+          memory: 128M  # Nginx is lightweight
+          cpus: "0.5"
+        reservations:
+          memory: 64M
+          cpus: "0.25"
+    # Allow swap usage since host has swap enabled
+    memswap_limit: 256M   # Allow 2x memory limit in swap
+    mem_swappiness: 10    # Prefer RAM but allow swap when needed
     logging:
       driver: "json-file"
       options:
@@ -76,9 +87,14 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
-        reservations:
           memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+          cpus: "0.25"
+    # Allow swap usage since host has swap enabled
+    memswap_limit: 512M   # Allow 2x memory limit in swap
+    mem_swappiness: 10    # Prefer RAM but allow swap when needed
     logging:
       driver: "json-file"
       options:
@@ -105,9 +121,14 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 64M   # Reduced from 128M - tunnel is very lightweight
+          cpus: "0.25"
         reservations:
-          memory: 64M
+          memory: 32M   # Reduced from 64M
+          cpus: "0.1"
+    # Allow swap usage since host has swap enabled
+    memswap_limit: 128M   # Allow 2x memory limit in swap
+    mem_swappiness: 10    # Prefer RAM but allow swap when needed
     logging:
       driver: "json-file"
       options:
