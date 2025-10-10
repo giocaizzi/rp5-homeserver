@@ -7,6 +7,11 @@ networks:
     name: rp5_ollama
     internal: false  # Allow external access via nginx proxy
 
+  # External network to connect to nginx proxy
+  public_network:
+    external: true
+    name: rp5_public
+
 services:
   ollama:
     image: ollama/ollama:latest
@@ -34,6 +39,7 @@ services:
       - ${OLLAMA_LOGS_PATH:-./logs/ollama}:/var/log/ollama
     networks:
       - ollama_network
+      - public_network
     entrypoint: ["/usr/local/bin/ollama-entrypoint.sh"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
