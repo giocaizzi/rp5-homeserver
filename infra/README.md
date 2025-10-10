@@ -23,9 +23,17 @@ See [`.env.example`](./.env.example) for all environment variables.
 
 ## Nginx SSL Setup
 
-**SSL Setup**:
+### Generate certificates locally
+
 ```bash
-cd nginx && ./generate-ssl.sh
+cd infra/nginx
+./generate-ssl.sh
+```
+
+Transfer to RP5:
+```bash
+ssh pi@<rp5-ip> "mkdir -p /home/giorgiocaizzi/rp5-homeserver/infra/nginx/ssl"
+scp ssl/cert.pem ssl/key.pem pi@<rp5-ip>:/home/giorgiocaizzi/rp5-homeserver/infra/nginx/ssl/
 ```
 
 Add to `/etc/hosts`:
