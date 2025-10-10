@@ -1,5 +1,7 @@
 # Infrastructure Stack
 
+> *Deploy this stack first* - other services depend on the networks created here.
+
 ## Services
 
 **Nginx Reverse Proxy** (`nginx:alpine`)
@@ -43,7 +45,5 @@ Add to `/etc/hosts`:
 
 ## Deployment
 
-> *Deploy this stack first* - other services depend on the networks created here.
-
-**Portainer**: *Recommended*, use [Portainer](../docs/portainer.md)
+**Portainer**: *Recommended*, use [Portainer](../docs/deployment.md#deploy-with-portainer)
 **Manual**: with docker CLI `docker-compose up -d`
