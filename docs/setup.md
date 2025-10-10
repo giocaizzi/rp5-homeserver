@@ -30,9 +30,9 @@ cp ./infra/.env.example ./infra/.env
 ```bash
 # --- Base
 # copy infrastructure compose
-scp ./infra/docker-compose.yml pi@pi.local:~/rp5-homeserver/docker-compose.yml
+scp ./infra/docker-compose.yml pi@pi.local:~/rp5-homeserver/infra/docker-compose.yml
 # copy env file
-scp ./infra/.env pi@pi.local:~/rp5-homeserver/.env
+scp ./infra/.env pi@pi.local:~/rp5-homeserver/infra/.env
 # --- Nginx
 # create ssl folders
 ssh pi@pi.local "mkdir -p /home/pi/rp5-homeserver/infra/nginx/ssl"
