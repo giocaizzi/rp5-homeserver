@@ -91,8 +91,6 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
     restart: unless-stopped
-    env_file:
-      - .env
     command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN}
     networks:
       - infra_network
