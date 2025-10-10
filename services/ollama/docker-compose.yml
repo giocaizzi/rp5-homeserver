@@ -1,24 +1,73 @@
-version: "3.9"
+version: "3.8"
+
+networks:
+  # Private network for ollama stack
+  ollama_network:
+    driver: bridge
+    name: rp5_ollama
+    internal: false  # Allow external access via nginx proxy
 
 services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
     restart: unless-stopped
-    ports:
-      - "11434:11434"
+    env_file:
+      - .env
+    # Remove direct port exposure - access via nginx proxy
+    expose:
+      - "11434"
     environment:
+      # Server configuration
       - OLLAMA_HOST=0.0.0.0
       - OLLAMA_MODELS=/root/.ollama
+      - OLLAMA_DEBUG=false
+      - OLLAMA_KEEP_ALIVE=5m
+      - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_NUM_PARALLEL=1
+      # Raspberry Pi optimizations
+      - OLLAMA_MAX_VRAM=1024  # Limit VRAM usage on Pi
+      - OLLAMA_FLASH_ATTENTION=false  # Disable for compatibility
     volumes:
-      - /home/giorgiocaizzi/rp5-homeserver/ollama:/root/.ollama   # persists models, configs, logs
-      # - /home/giorgiocaizzi/rp5-homeserver/ollama/ollama-entrypoint.sh:/usr/local/bin/ollama-entrypoint.sh:ro
-
+      - ${OLLAMA_DATA_PATH:-./data/ollama}:/root/.ollama   # persists models, configs, logs
+      - ./ollama-entrypoint.sh:/usr/local/bin/ollama-entrypoint.sh:ro
+      - ${OLLAMA_LOGS_PATH:-./logs/ollama}:/var/log/ollama
+    networks:
+      - ollama_network
     entrypoint: ["/usr/local/bin/ollama-entrypoint.sh"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s  # Allow more time for model loading
     labels:
       - "service=ollama"
+      - "type=ai-inference"
+      - "stack=ollama"
+    security_opt:
+      - no-new-privileges:true
+      - seccomp:unconfined  # Required for some AI operations
+    # GPU access (if available)
+    # devices:
+    #   - /dev/dri:/dev/dri  # For Intel GPU acceleration
+    deploy:
+      resources:
+        limits:
+          memory: ${OLLAMA_MEMORY_LIMIT:-4G}  # Adjust based on your system's memory
+          cpus: "${OLLAMA_CPU_LIMIT:-2.0}"
+        reservations:
+          memory: ${OLLAMA_MEMORY_RESERVATION:-2G}
+          cpus: "${OLLAMA_CPU_RESERVATION:-1.0}"
+    tmpfs:
+      - /tmp:size=1G,noexec,nosuid,nodev
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      stack: 67108864
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"  # Larger logs for AI operations
+        max-file: "3"
