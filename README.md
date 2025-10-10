@@ -1,21 +1,26 @@
-# rp5-homeserver
+# RP5 Home Server
 
-Rasperry Pi 5 Home Server setup based on Docker.
+Raspberry Pi 5 Docker-based home server with Portainer stack management.
 
-## Infrastructure 
+## Quick Start
 
-### Docker compose base stack
+Deploy the [infrastructure stack](../infra) first.
 
-Base infrastructure Docker compose stack [infra](./infra)
+```bash
+cd infra
+cp .env.example .env
+# Edit .env to add CLOUDFLARED_TOKEN
+# Generate SSL certs
+docker compose up -d
+```
 
-- [Portainer]() - Docker management UI
-- [Cloudflared]() - Cloudflare Tunnel client to expose Portainer securely to the internet
+Then access Portainer at `https://portainer.local` to deploy services.
 
-### Host base setup
+## Services
 
-- [Netdata](./host/netdata) - Real-time performance monitoring with access to system metrics and alerts
+- **[N8N](./services/n8n/README.md)** - Workflow automation (`https://n8n.local`)
+- **[Ollama](./services/ollama/README.md)** - Local LLM server (`https://ollama.local`)
 
-## Docker Services
+## Documentation
 
-- [n8n]() - Workflow automation tool
-- [ollama]() - Local LLM server
+[Read the docs here](./docs/README.md).
