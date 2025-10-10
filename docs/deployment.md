@@ -28,6 +28,14 @@ Depploy the infrastructure stack with Docker compose.
 docker-compose up -d
 ```
 
+Update hostname resolution on your **macOS** (not on Pi):
+```bash
+# Then add to your macOS /etc/hosts
+sudo vim /etc/hosts
+# Add (replace with your Pi's actual IP):
+# 192.168.x.x portainer.local netdata.local <other_service>.local
+```
+
 Now you can access Portainer at `https://portainer.local` and control all services (stacks) via the web UI.
 
 See [infra README](../infra/README.md) for details.
