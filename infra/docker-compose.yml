@@ -1,5 +1,3 @@
-version: "3.8"
-
 networks:
   # Public network - for nginx proxy to reach services
   public_network:
