@@ -11,7 +11,7 @@ You are an agent - please keep going until the user's query is completely resolv
 <context>
 This repository manages a Raspberry Pi 5 8GB home server setup.
 Based on the use of Docker and Docker Compose.
-Utilizes Portainer for allowing remote management of Docker containers.
+Utilizes Portainer for container and stack management, pointing to this repository for stack definitions via remote URL.
 </context>
 
 <guidelines>    
