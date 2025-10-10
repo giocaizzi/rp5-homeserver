@@ -8,11 +8,15 @@ Deploy RP5 Home Server stacks via Portainer's remote repository feature.
 
 ### 1. Infrastructure Stack
 
-Copy base stack files and env variables to your RP5.
+Setup necessary files and folders on your RP5.
 
 ```bash
+# copy dompose and env
 scp ./infra/docker-compose.yml pi@pi.local:~/rp5-homeserver/docker-compose.yml
-scp .env.example pi@pi.local:~/rp5-homeserver/.env
+scp ./infra/.env.example pi@pi.local:~/rp5-homeserver/.env
+# 
+mkdir 
+
 ```
 
 SSH to your RP5 and edit `.env`.

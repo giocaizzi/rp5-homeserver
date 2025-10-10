@@ -111,7 +111,7 @@ server {
 ## Process
 1. Create `./services/<service>` with required files
 1. Add service to nginx config
-2. [Deploy service](./deployment.md) with Portainer or CLI
+2. [Deploy service](./setup.md#2-deploy-service-stacks) with Portainer or CLI
 3. Add `<service>.local` to hosts file
 
 ## Documentation
