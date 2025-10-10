@@ -21,4 +21,4 @@ services:
       N8N_BASIC_AUTH_USER: "admin"
       N8N_BASIC_AUTH_PASSWORD: "yourpassword"
     volumes:
-      - /home/giorgiocaizzi/services/n8n:/data
+      - /home/giorgiocaizzi/rp5-homeserver/n8n:/data

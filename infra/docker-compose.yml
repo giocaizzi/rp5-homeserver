@@ -13,7 +13,7 @@ services:
       # required to view/manage docker
       - /var/run/docker.sock:/var/run/docker.sock
       # portainer data
-      - /home/giorgiocaizzi/services/portainer/data:/data
+      - /home/giorgiocaizzi/rp5-homeserver/portainer:/data
     depends_on:
       - agent
 
@@ -36,4 +36,6 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
     restart: unless-stopped
-    command: tunnel --no-autoupdate run --token $PORTAINER_TOKEN
+    environment:
+      - CLOUDFLARED_TOKEN=${CLOUDFLARED_TOKEN}
+    command: tunnel --no-autoupdate run --token $CLOUDFLARED_TOKEN
