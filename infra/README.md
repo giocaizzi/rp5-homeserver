@@ -37,5 +37,5 @@ Add to `/etc/hosts`:
 
 > *Deploy this stack first* - other services depend on the networks created here.
 
-**Portainer**: *Recommended*, use [Portainer](../docs/PORTAINER.md)
+**Portainer**: *Recommended*, use [Portainer](../docs/portainer.md)
 **Manual**: with docker CLI `docker-compose up -d`
