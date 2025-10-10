@@ -22,8 +22,8 @@ services:
       - "80:80"     # HTTP
       - "443:443"   # HTTPS
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ${NGINX_SSL_PATH:-./nginx/ssl}:/etc/nginx/ssl:ro
+      - ${NGINX_CONF_PATH}:/etc/nginx/nginx.conf:ro
+      - ${NGINX_SSL_PATH}:/etc/nginx/ssl:ro
       - ${NGINX_LOGS_PATH:-./logs/nginx}:/var/log/nginx
     extra_hosts:
       - "host.docker.internal:host-gateway"
