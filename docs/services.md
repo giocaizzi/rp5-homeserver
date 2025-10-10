@@ -76,10 +76,10 @@ server {
 - **Resources**: Pi-appropriate limits (≤2GB RAM, ≤2 CPU)
 - **Health**: 60s+ start period for Pi hardware
 
-## Deployment
-
+## Process
+1. Create `./services/<service>` with required files
 1. Add service to nginx config
-2. Deploy service stack with [Portainer](./portainer.md) or CLI
+2. [Deploy service](./deployment.md) with Portainer or CLI
 3. Add `<service>.local` to hosts file
 
 ## Documentation

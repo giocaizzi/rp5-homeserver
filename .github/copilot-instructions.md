@@ -12,7 +12,7 @@ You are an agent - please keep going until the user's query is completely resolv
 This repository manages a Raspberry Pi 5 8GB home server setup.
 Based on the use of Docker and Docker Compose.
 Utilizes Portainer for container and stack management, pointing to this repository for stack definitions via remote URL.
-Coding happens on MacOS connected to the RPi via SSH @ `giorgiocaizzi@pi.local`.
+Coding happens on MacOS connected to the RP5 via SSH @ `giorgiocaizzi@pi.local`.
 </context>
 
 <guidelines>    

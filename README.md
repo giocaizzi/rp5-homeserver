@@ -1,27 +1,21 @@
 # RP5 Home Server
 
-Raspberry Pi 5 Docker-based home server with Portainer stack management.
+Raspberry Pi 5 Docker-based home server.
 
 ## Quick Start
 
-Deploy the [infrastructure stack](../infra) with [Portainer](./portainer.md) first.
+Deploy the [infrastructure stack](infra/README.md) with [Portainer](./deployment.md).
 
-```bash
-cd infra
-cp .env.example .env
-# Edit .env to add CLOUDFLARED_TOKEN
-# Generate SSL certs
-docker compose up -d
-```
-
-Then access Portainer at `https://portainer.local` to deploy services.
+Then access Portainer at `https://portainer.local` to deploy desired services.
 
 ## Services
+
+- 
 
 - **[N8N](./services/n8n/README.md)** - Workflow automation (`https://n8n.local`)
 - **[Ollama](./services/ollama/README.md)** - Local LLM server (`https://ollama.local`)
 
-> [How to add a service](./services.md)
+> [How to add a service](./docs/services.md)
 
 
 ## Documentation
