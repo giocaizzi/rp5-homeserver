@@ -27,6 +27,9 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private networks)
 - Resource limited (512MB RAM max)
 - Read-only Docker socket access
 
+> Requires a *Business Edition* license for mounting configuration files.
+> Get a free license (less than 3 noes) at [Portainer](https://www.portainer.io/).
+
 **Cloudflare Tunnel** (`cloudflare/cloudflared:latest`)
 - Secure external access without port forwarding
 - Requires `CLOUDFLARED_TOKEN` environment variable
