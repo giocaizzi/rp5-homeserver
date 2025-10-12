@@ -114,6 +114,9 @@ services:
       N8N_BASIC_AUTH_USER: "admin"
       N8N_BASIC_AUTH_PASSWORD: "${N8N_BASIC_AUTH_PASSWORD}"
       
+      # Proxy configuration - trust nginx reverse proxy
+      N8N_PROXY_HOPS: "1"  # Trust 1 hop (nginx proxy)
+      
       # Performance and features
       N8N_LOG_LEVEL: "info"
       N8N_LOG_OUTPUT: "console"
