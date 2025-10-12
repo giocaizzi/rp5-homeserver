@@ -3,15 +3,8 @@
 # Generate self-signed SSL certificates for local development
 # Run this script to create SSL certificates for nginx
 
-# Detect if we're running on macOS or Pi and set appropriate path
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS
-    BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-    SSL_DIR="$BASE_DIR/nginx/ssl"
-else
-    # Linux (Raspberry Pi)
-    SSL_DIR="~/rp5-homeserver/infra/nginx/ssl"
-fi
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SSL_DIR="$BASE_DIR/nginx/ssl"
 
 echo "Creating SSL certificates in: $SSL_DIR"
 

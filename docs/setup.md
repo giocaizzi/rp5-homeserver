@@ -10,7 +10,7 @@ Deploy RP5 Home Server stacks via Portainer's remote repository feature.
 
 Setup necessary files and folders on your RP5.
 
-- Generate SSL certificates:
+- Generate SSL certificates on local machine (not on Pi):
 
 ```bash
 cd infra/nginx
