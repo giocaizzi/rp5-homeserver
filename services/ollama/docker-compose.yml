@@ -30,9 +30,9 @@ services:
       - OLLAMA_MAX_VRAM=1024  # Limit VRAM usage on Pi
       - OLLAMA_FLASH_ATTENTION=false  # Disable for compatibility
     volumes:
-      - ${OLLAMA_DATA_PATH:-./data/ollama}:/root/.ollama   # persists models, configs, logs
+      - ollama_ollama_data:/root/.ollama   # persists models, configs, logs
       - ./ollama-entrypoint.sh:/usr/local/bin/ollama-entrypoint.sh:ro
-      - ${OLLAMA_LOGS_PATH:-./logs/ollama}:/var/log/ollama
+      - ollama_ollama_logs:/var/log/ollama
     networks:
       - ollama_network
       - public_network
@@ -74,3 +74,9 @@ services:
       options:
         max-size: "50m"  # Larger logs for AI operations
         max-file: "3"
+
+volumes:
+  ollama_ollama_data:
+    driver: local
+  ollama_ollama_logs:
+    driver: local

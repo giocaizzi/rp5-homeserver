@@ -22,7 +22,7 @@ services:
     volumes:
       - ${NGINX_CONF_PATH}:/etc/nginx/nginx.conf:ro
       - ${NGINX_SSL_PATH}:/etc/nginx/ssl:ro
-      - ${NGINX_LOGS_PATH:-./logs/nginx}:/var/log/nginx
+      - infra_nginx_logs:/var/log/nginx
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -71,7 +71,7 @@ services:
       # required to view/manage docker
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # portainer data
-      - ${PORTAINER_DATA_PATH:-./data/portainer}:/data
+      - infra_portainer_data:/data
     networks:
       - infra_network
     healthcheck:
@@ -134,3 +134,9 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  infra_nginx_logs:
+    driver: local
+  infra_portainer_data:
+    driver: local

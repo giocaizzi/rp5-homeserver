@@ -1,6 +1,12 @@
-# Data & Logs Structure
+# Data & Volume Management
 
-Essential guide for data persistence and log management in RP5 home server.
+Essential guide for data persistence and volume management in RP5 home server.
+
+## Volume Strategy
+
+**Named Volumes for Persistent Data**: All services use Docker named volumes for persistent storage to ensure data integrity and easier management.
+
+**Bind Mounts for Configuration**: Only configuration files that may need external modification are mounted as bind mounts.
 
 ## Infrastructure Data
 
@@ -8,62 +14,76 @@ Essential guide for data persistence and log management in RP5 home server.
 /home/pi/rp5-homeserver/infra/
 ├── docker-compose.yml       # Infrastructure stack compose file
 ├── .env                     # Environment variables
-├── nginx/
-│   ├── nginx.conf           # Nginx configuration
-│   └── ssl/
-│       ├── cert.pem         # SSL certificate
-│       └── key.pem          # SSL private key
-├── logs/
-│   └── nginx/               # Nginx access and error logs
-└── data/                    # (Optional) Persistent data for infra services
-    └── <service>/           # e.g. Portainer, Cloudflared
+└── nginx/
+    ├── nginx.conf           # Nginx configuration (bind mount)
+    └── ssl/
+        ├── cert.pem         # SSL certificate (bind mount)
+        └── key.pem          # SSL private key (bind mount)
 ```
 
-## Portainer Remote Repository Structure
+**Named Volumes:**
+- `infra_nginx_logs` - Nginx access and error logs
+- `infra_portainer_data` - Portainer application data
 
-When deploying via Portainer remote repository, data on the Rasperry Pi is stored in Portainer's stack directories:
+## Service Data
 
-```
-/opt/portainer/compose/
-├── n8n_<id>/
-│   ├── data/n8n/          # Workflows, credentials, SQLite DB
-│   └── logs/n8n/          # Application logs
-└── ollama_<id>/
-    ├── data/ollama/       # Models and configuration
-    └── logs/ollama/       # Inference logs
-```
+### N8N Stack
+**Bind Mounts:**
+- `./postgres.conf` - PostgreSQL configuration
 
-**Note**: `<id>` is Portainer's stack identifier
+**Named Volumes:**
+- `n8n_postgres_data` - PostgreSQL database
+- `n8n_n8n_data` - N8N workflows, credentials, and settings
+- `n8n_n8n_logs` - N8N application logs
 
-## Volume Mapping
+### Ollama Stack
+**Bind Mounts:**
+- `./ollama-entrypoint.sh` - Custom entrypoint script
 
-The Standard Pattern for all services: 
-- `./data/<service>` → container data directory
-- `./logs/<service>` → container log directory
+**Named Volumes:**
+- `ollama_ollama_data` - AI models and configuration
+- `ollama_ollama_logs` - Inference and application logs
 
+## Volume Pattern
+
+**Standard Named Volume Pattern** with `<stack>_<service>_<type>` naming:
 ```yaml
 volumes:
-  - ${SERVICE_DATA_PATH:-./data/<service>}:/data
-  - ${SERVICE_LOGS_PATH:-./logs/<service>}:/var/log
+  stack_service_data:
+    driver: local
+  stack_service_logs:
+    driver: local
 ```
 
-## Custom Paths
+**Volume Mounting**:
+```yaml
+services:
+  service:
+    volumes:
+      - stack_service_data:/data
+      - stack_service_logs:/var/log/service
+      - ./config.conf:/etc/service/config.conf:ro  # Config only
+```
 
-Paths can be customized, both for the infrastructure stack and Portainer stacks.
+**Examples**:
+- `infra_nginx_logs`, `infra_portainer_data`
+- `n8n_postgres_data`, `n8n_n8n_data`, `n8n_n8n_logs`  
+- `ollama_ollama_data`, `ollama_ollama_logs`
 
-**Infrastructure Stack** (in `infra/.env`):
+## Volume Management
 
+**List All Volumes**:
 ```bash
-PORTAINER_DATA_PATH=""
+docker volume ls
 ```
 
-**Environment Variables** (in Portainer):
-
+**Inspect Volume Details**:
 ```bash
-# Override default paths if needed
-N8N_DATA_PATH=/custom/path/n8n
-N8N_LOGS_PATH=/custom/path/n8n/logs
+docker volume inspect <volume_name>
 ```
+
+**Volume Location**: 
+Docker manages volume storage automatically, typically under `/var/lib/docker/volumes/`
 
 ## Log Configuration
 
@@ -79,24 +99,22 @@ logging:
 **Access Logs**:
 - **Portainer UI**: Container logs viewer
 - **CLI**: `docker logs <container>`
-- **Host**: Stack directory + `/logs/<service>/`
-
+- **Volume Data**: `docker volume inspect <volume_name>`
 
 ## Permissions
 
-**Portainer User**: Containers run as specified PUID/PGID
+**Volume Ownership**: Docker manages volume permissions automatically
+
+**Container User**: Containers run as specified PUID/PGID when applicable
 ```bash
-PUID=1000  # Pi user ID
+PUID=1000  # Pi user ID  
 PGID=1000  # Pi group ID
 ```
 
-**Host Access**: Data owned by Docker daemon, accessible via Portainer
 
 
-**CLI Access**:
+**CLI Volume Usage Check**:
 ```bash
-# Check Portainer volume usage
-docker system df
-du -sh /home/pi/rp5-homeserver/**/data
-du -sh /opt/portainer/compose/**/data
+# Check Docker volume usage
+docker system df -v
 ```
