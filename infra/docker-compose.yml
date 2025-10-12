@@ -60,9 +60,9 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Portainer - Docker management UI
+  # Portainer - Docker management UI (Business Edition)
   portainer:
-    image: portainer/portainer-ce:latest
+    image: portainer/portainer-ee:latest
     container_name: portainer
     restart: unless-stopped
     # Remove direct port exposure - access via nginx proxy
@@ -137,8 +137,67 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # Netdata - Real-time performance monitoring
+  netdata:
+    image: netdata/netdata:latest
+    container_name: netdata
+    hostname: pi-netdata
+    restart: unless-stopped
+    # Remove direct port exposure - access via nginx proxy
+    expose:
+      - "19999"
+    cap_add:
+      - SYS_PTRACE           # needed for process monitoring
+      - NET_ADMIN            # needed for network stats
+    security_opt:
+      - apparmor:unconfined  # disable AppArmor restrictions
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker metrics
+      - /proc:/host/proc:ro                 # host processes
+      - /sys:/host/sys:ro                   # host system metrics
+      - /etc/passwd:/host/etc/passwd:ro     # optional for user mapping
+      - /etc/group:/host/etc/group:ro       # optional
+      - netdata_config:/etc/netdata         # config directory
+      - netdata_cache:/var/cache/netdata    # persistent cache
+      - netdata_lib:/var/lib/netdata        # persistent data
+    networks:
+      - infra_network
+    environment:
+      - NETDATA_CLAIM_TOKEN=${NETDATA_CLAIM_TOKEN:-}
+      - NETDATA_CLAIM_URL=https://app.netdata.cloud
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19999/api/v1/info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "stack=infrastructure"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+          cpus: "0.25"
+    # Allow swap usage since host has swap enabled
+    memswap_limit: 512M   # Allow 2x memory limit in swap
+    mem_swappiness: 10    # Prefer RAM but allow swap when needed
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   nginx_logs:
     driver: local
   portainer_data:
+    driver: local
+  netdata_config:
+    driver: local
+  netdata_cache:
+    driver: local
+  netdata_lib:
     driver: local
