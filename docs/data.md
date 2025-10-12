@@ -28,9 +28,6 @@ Essential guide for data persistence and volume management in RP5 home server.
 ## Service Data
 
 ### N8N Stack
-**Bind Mounts:**
-- `./postgres.conf` - PostgreSQL configuration
-
 **Named Volumes:**
 - `n8n_postgres_data` - PostgreSQL database
 - `n8n_n8n_data` - N8N workflows, credentials, and settings

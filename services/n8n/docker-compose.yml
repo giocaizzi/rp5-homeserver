@@ -15,7 +15,31 @@ services:
     image: postgres:16-alpine
     container_name: n8n_postgres
     restart: unless-stopped
-    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    command: |
+      postgres
+      -c shared_buffers=64MB
+      -c effective_cache_size=256MB
+      -c work_mem=4MB
+      -c maintenance_work_mem=32MB
+      -c max_connections=20
+      -c wal_level=replica
+      -c max_wal_size=128MB
+      -c min_wal_size=32MB
+      -c wal_compression=on
+      -c wal_buffers=2MB
+      -c checkpoint_completion_target=0.9
+      -c checkpoint_timeout=15min
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=2
+      -c log_min_duration_statement=1000
+      -c log_checkpoints=on
+      -c log_lock_waits=on
+      -c log_temp_files=0
+      -c autovacuum_max_workers=2
+      -c autovacuum_vacuum_cost_limit=100
+      -c bgwriter_delay=200ms
+      -c bgwriter_lru_maxpages=100
+      -c bgwriter_lru_multiplier=2.0
     environment:
       POSTGRES_DB: "${POSTGRES_DB:-n8n}"
       POSTGRES_USER: "${POSTGRES_USER:-n8n}"
@@ -23,15 +47,14 @@ services:
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
     volumes:
       - n8n_postgres_data:/var/lib/postgresql/data
-      - ./postgres.conf:/etc/postgresql/postgresql.conf:ro
     networks:
       - n8n_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-n8n} -d ${POSTGRES_DB:-n8n}"]
       interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
     labels:
       - "stack=n8n"
     security_opt:
