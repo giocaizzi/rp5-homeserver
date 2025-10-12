@@ -50,6 +50,8 @@ scp ./infra/nginx/ssl/cert.pem ./infra/nginx/ssl/key.pem pi@pi.local:~/rp5-homes
 ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker-compose up -d"
 ```
 
+> **Note**: You may see warnings about kernel memory limit capabilities not being supported. This is normal on Raspberry Pi systems where cgroups memory management isn't enabled by default. The containers will still run properly, but memory limits defined in the compose files will be ignored. To enable memory limits, you would need to add `cgroup_enable=memory cgroup_memory=1` to `/boot/firmware/cmdline.txt` and reboot, but this is optional for normal operation.
+
 Update hostname resolution on your **local machine** (not on Pi):
 
 ```bash
