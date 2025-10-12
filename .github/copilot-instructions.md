@@ -20,4 +20,5 @@ Follow best practices for Docker and Docker Compose yet keeping things simple.
 Ensure security, efficiency, and maintainability.
 Use environment variables for sensitive data.
 Document with a streamlined style.
+DO NOT summarize what YOU changed in any documentation. Just make the changes and update the docs as needed.
 </guidelines>
