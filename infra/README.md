@@ -22,17 +22,36 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private networks)
 - Rate limiting and security headers
 - WebSocket support for Portainer/N8N
 
-**Portainer CE** (`portainer/portainer-ce:latest`)
+**Portainer EE** (`portainer/portainer-ee:latest`)
 - Docker management UI at `https://portainer.local`
-- Resource limited (512MB RAM max)
+- Business Edition with advanced features
+- Resource limited (256MB RAM max)
 - Read-only Docker socket access
 
-> Requires a *Business Edition* license for mounting configuration files.
-> Get a free license (less than 3 noes) at [Portainer](https://www.portainer.io/).
+> Using Business Edition for enhanced stack management capabilities.
+> Get a free license (less than 3 nodes) at [Portainer](https://www.portainer.io/).
 
 **Cloudflare Tunnel** (`cloudflare/cloudflared:latest`)
 - Secure external access without port forwarding
 - Requires `CLOUDFLARED_TOKEN` environment variable
+
+**Netdata Monitoring** (`netdata/netdata:latest`)
+- Real-time system monitoring at `https://netdata.local`
+- Performance metrics, alerts, and dashboards
+- Integrated with host system via bind mounts
+
+## Volumes & Data
+
+**Named Volumes:**
+- `portainer_data` - Portainer configuration and stacks
+- `netdata_cache` - Monitoring metrics cache
+- `netdata_config` - Custom monitoring configuration
+- `netdata_lib` - Monitoring runtime data
+
+**Recent Optimizations (Oct 2025):**
+- ✅ Removed `nginx_logs` volume - using Docker JSON logging
+- ✅ Optimized Netdata with separate cache/config/lib volumes
+- ✅ All logs now handled by Docker's built-in logging
 
 ## Configuration
 

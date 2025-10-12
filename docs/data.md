@@ -22,24 +22,30 @@ Essential guide for data persistence and volume management in RP5 home server.
 ```
 
 **Named Volumes:**
-- `infra_nginx_logs` - Nginx access and error logs
-- `infra_portainer_data` - Portainer application data
+- `infra_portainer_data` - Portainer application data and configuration
+- `infra_netdata_cache` - Netdata performance metrics cache and time-series data
+- `infra_netdata_config` - Netdata custom configuration and alerts
+- `infra_netdata_lib` - Netdata runtime libraries and registry data
+
+> **Note:** Log volumes removed - using Docker's built-in JSON logging instead
 
 ## Service Data
 
 ### N8N Stack
 **Named Volumes:**
-- `n8n_postgres_data` - PostgreSQL database
+- `n8n_postgres_data` - PostgreSQL database for workflow data
 - `n8n_n8n_data` - N8N workflows, credentials, and settings
-- `n8n_n8n_logs` - N8N application logs
+
+> **Note:** Log volumes removed - using Docker's built-in JSON logging instead
 
 ### Ollama Stack
 **Bind Mounts:**
 - `./ollama-entrypoint.sh` - Custom entrypoint script
 
 **Named Volumes:**
-- `ollama_ollama_data` - AI models and configuration
-- `ollama_ollama_logs` - Inference and application logs
+- `ollama_data` - AI models and configuration
+
+> **Note:** Log volumes removed - using Docker's built-in JSON logging instead
 
 ## Volume Pattern
 
