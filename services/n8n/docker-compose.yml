@@ -132,8 +132,7 @@ services:
       N8N_ADDITIONAL_ALLOWED_ORIGINS: "https://n8n.local"
       
     volumes:
-      - n8n_data:/data
-      - n8n_logs:/var/log/n8n
+      - n8n_data:/home/node/.n8n
     networks:
       - n8n_network
       - public_network
@@ -171,6 +170,4 @@ volumes:
   postgres_data:
     driver: local
   n8n_data:
-    driver: local
-  n8n_logs:
     driver: local
