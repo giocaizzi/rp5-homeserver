@@ -12,7 +12,7 @@ Self-hosted workflow automation at `https://n8n.local`.
 ## Key Settings
 
 **Raspberry Pi Optimizations**:
-- PostgreSQL tuned for 8GB Pi: 64MB shared buffers, 128MB cache
+- PostgreSQL tuned for 8GB Pi: 64MB shared buffers, 256MB cache
 - Reduced memory footprint: n8n 512MB, PostgreSQL 256MB
 - Conservative connection limits (20 max connections)
 - Optimized WAL and checkpoint settings for SD card longevity
