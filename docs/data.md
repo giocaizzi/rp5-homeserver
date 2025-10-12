@@ -27,16 +27,13 @@ Essential guide for data persistence and volume management in RP5 home server.
 - `infra_netdata_config` - Netdata custom configuration and alerts
 - `infra_netdata_lib` - Netdata runtime libraries and registry data
 
-> **Note:** Log volumes removed - using Docker's built-in JSON logging instead
 
 ## Service Data
 
 ### N8N Stack
 **Named Volumes:**
 - `n8n_postgres_data` - PostgreSQL database for workflow data
-- `n8n_n8n_data` - N8N workflows, credentials, and settings
-
-> **Note:** Log volumes removed - using Docker's built-in JSON logging instead
+- `n8n_n8n_data` - N8N additional data and configuration
 
 ### Ollama Stack
 **Bind Mounts:**
@@ -45,7 +42,6 @@ Essential guide for data persistence and volume management in RP5 home server.
 **Named Volumes:**
 - `ollama_data` - AI models and configuration
 
-> **Note:** Log volumes removed - using Docker's built-in JSON logging instead
 
 ## Volume Pattern
 

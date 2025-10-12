@@ -48,11 +48,6 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private networks)
 - `netdata_config` - Custom monitoring configuration
 - `netdata_lib` - Monitoring runtime data
 
-**Recent Optimizations (Oct 2025):**
-- ✅ Removed `nginx_logs` volume - using Docker JSON logging
-- ✅ Optimized Netdata with separate cache/config/lib volumes
-- ✅ All logs now handled by Docker's built-in logging
-
 ## Configuration
 
 See [`.env.example`](./.env.example) for all environment variables.
