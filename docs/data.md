@@ -11,7 +11,7 @@ Essential guide for data persistence and volume management in RP5 home server.
 ## Infrastructure Data
 
 ```
-/home/pi/rp5-homeserver/infra/
+~/rp5-homeserver/infra/
 ├── docker-compose.yml       # Infrastructure stack compose file
 ├── .env                     # Environment variables
 └── nginx/

@@ -10,7 +10,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     SSL_DIR="$BASE_DIR/nginx/ssl"
 else
     # Linux (Raspberry Pi)
-    SSL_DIR="/home/pi/rp5-homeserver/infra/nginx/ssl"
+    SSL_DIR="~/rp5-homeserver/infra/nginx/ssl"
 fi
 
 echo "Creating SSL certificates in: $SSL_DIR"
