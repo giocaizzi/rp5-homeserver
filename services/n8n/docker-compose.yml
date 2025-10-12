@@ -117,9 +117,10 @@ services:
       # Performance and features
       N8N_LOG_LEVEL: "info"
       N8N_LOG_OUTPUT: "console"
-      EXECUTIONS_PROCESS: "main"
+      N8N_RUNNERS_ENABLED: "true"  # Enable task runners (recommended)
       EXECUTIONS_DATA_PRUNE: "true"
       EXECUTIONS_DATA_MAX_AGE: 168  # 7 days in hours
+      
       
       # Webhook configuration for reverse proxy
       WEBHOOK_URL: "https://n8n.local"
