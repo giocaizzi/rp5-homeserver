@@ -11,8 +11,10 @@ You are an agent - please keep going until the user's query is completely resolv
 <context>
 This repository manages a Raspberry Pi 5 8GB home server setup.
 Based on the use of Docker and Docker Compose.
-Utilizes Portainer for container and stack management, pointing to this repository for stack definitions via remote URL.
-Coding happens on MacOS connected to the RP5 via SSH @ `pi@pi.local`.
+Utilizes Portainer for container management.
+    - `infra` is deployed manually via SSH located at `/home/giorgiocaizzi/rp5-homeserver/infra`.
+    - `services` are deployed via Portainer stacks using REMOTE REPOSITORY feature.
+Coding happens on MacOS connected to the RP5 via SSH @ `giorgiocaizzi@pi.local`.
 </context>
 
 <guidelines>    
