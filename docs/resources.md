@@ -23,7 +23,11 @@ All services are configured to use swap intelligently:
 | Nginx | 128MB | 64MB | 0.5 | 0.25 |
 | Portainer | 256MB | 128MB | 0.5 | 0.25 |
 | Cloudflared | 64MB | 32MB | 0.25 | 0.1 |
-| **Total** | **448MB** | **224MB** | **1.25** | **0.6** |
+| Netdata | 256MB | 128MB | 0.5 | 0.25 |
+| Restic* | 512MB | 256MB | 1.0 | 0.5 |
+| **Total** | **1216MB** | **608MB** | **2.75** | **1.35** |
+
+*Restic runs only during backup operations, not continuously.
 
 ### N8N Stack (services/n8n/)
 | Service | Memory Limit | Memory Reserve | CPU Limit | CPU Reserve |
@@ -70,27 +74,31 @@ free -h
 Total RAM: 8GB (8192MB)
 ├── System/OS: ~1500MB (estimated)
 ├── Docker overhead: ~200MB
-├── Infrastructure: 448MB (limits)
+├── Infrastructure: 1216MB (limits)*
 ├── N8N Stack: 768MB (limits)
 ├── Ollama: 3072MB (limits)
-└── Available buffer: ~2204MB
+└── Available buffer: ~1436MB
+
+*Restic only runs during backup operations
 ```
 
 ### CPU Distribution
 ```
 Total CPU: 4 cores
-├── Infrastructure: 1.25 cores (limits)
+├── Infrastructure: 2.75 cores (limits)*
 ├── N8N Stack: 1.5 cores (limits)
 ├── Ollama: 3.0 cores (limits)
 └── Overlap allowed: Services can share cores
+
+*Restic only active during backups
 ```
 
 ## Memory Reservations (Guaranteed)
-- **Infrastructure**: 224MB
+- **Infrastructure**: 608MB (352MB when backup not running)
 - **N8N Stack**: 384MB  
 - **Ollama**: 1GB
-- **Total Reserved**: 1.6GB
-- **Available for OS**: 6.4GB
+- **Total Reserved**: 1.99GB (1.74GB without backup)
+- **Available for OS**: 6GB+ (6.26GB without backup)
 
 ## Optimization Benefits
 

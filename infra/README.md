@@ -40,6 +40,12 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private networks)
 - Performance metrics, alerts, and dashboards
 - Integrated with host system via bind mounts
 
+**Restic Backup** (`restic/restic:latest`)
+- Automated incremental backups to Google Cloud Storage
+- Backs up `/home/giorgiocaizzi` and Docker volumes
+- Configurable retention policy (7 daily, 4 weekly)
+- Secure secrets management via Docker secrets
+
 ## Volumes & Data
 
 **Named Volumes:**
@@ -47,11 +53,47 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private networks)
 - `netdata_cache` - Monitoring metrics cache
 - `netdata_config` - Custom monitoring configuration
 - `netdata_lib` - Monitoring runtime data
+- `restic_cache` - Backup repository cache for performance
 
 ## Configuration
 
 See [`.env.example`](./.env.example) for all environment variables.
 
+## Backup Setup
+
+**Prerequisites:**
+1. Google Cloud Storage bucket with service account access
+2. Create secrets files:
+   ```bash
+   # Create restic repository password
+   echo "your-strong-restic-password" > backup/secrets/restic_password.txt
+   
+   # Create GCP service account key (get from Google Cloud Console)
+   # Download the JSON key file and save as backup/secrets/gcp_service_account.json
+   ```
+3. Configure bucket name in `.env` file
+
+**Automated Backup (Recommended):**
+```bash
+# SSH to Pi and set up daily backup at 2 AM
+ssh pi@pi.local
+sudo crontab -e
+# Add: 0 2 * * * cd /home/pi/rp5-homeserver/infra && ./backup/backup.sh >> /var/log/restic-backup.log 2>&1
+```
+
+**Manual Backup:**
+```bash
+ssh pi@pi.local "cd ~/rp5-homeserver/infra && ./backup/backup.sh"
+```
+
+**Restore Files:**
+```bash
+# List snapshots
+ssh pi@pi.local "cd ~/rp5-homeserver/infra && ./backup/restore.sh --list"
+
+# Restore specific path
+ssh pi@pi.local "cd ~/rp5-homeserver/infra && ./backup/restore.sh /backup/home/giorgiocaizzi/Documents /tmp/restore"
+```
 
 ## Nginx Post-Setup
 

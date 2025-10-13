@@ -189,6 +189,55 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # Restic Backup Service
+  restic:
+    image: restic/restic:latest
+    container_name: restic_backup
+    restart: "no"  # Manual execution via docker run or cron
+    environment:
+      - RESTIC_REPOSITORY=gs:${GCS_BUCKET_NAME}:/backups/rp5-homeserver
+      - RESTIC_PASSWORD_FILE=/run/secrets/restic_password
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp_service_account
+      - TZ=${TZ:-UTC}
+    volumes:
+      # Backup targets
+      - /home/giorgiocaizzi:/backup/home/giorgiocaizzi:ro
+      - /var/lib/docker/volumes:/backup/docker-volumes:ro
+      # Restic repository cache for performance
+      - restic_cache:/root/.cache/restic
+    secrets:
+      - restic_password
+      - gcp_service_account
+    networks:
+      - infra_network
+    labels:
+      - "stack=infrastructure"
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+          cpus: "0.5"
+    memswap_limit: 1G
+    mem_swappiness: 10
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    # Keep container alive for manual backup commands
+    entrypoint: ["tail", "-f", "/dev/null"]
+
+secrets:
+  restic_password:
+    file: ${RESTIC_PASSWORD_FILE:-./backup/secrets/restic_password.txt}
+  gcp_service_account:
+    file: ${GCP_SERVICE_ACCOUNT_FILE:-./backup/secrets/gcp_service_account.json}
+
 volumes:
   portainer_data:
     driver: local
@@ -197,4 +246,6 @@ volumes:
   netdata_cache:
     driver: local
   netdata_lib:
+    driver: local
+  restic_cache:
     driver: local
