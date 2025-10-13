@@ -28,21 +28,35 @@ cp ./infra/.env.example ./infra/.env
 - Copy necessary files to RP5 via SCP with SSH:
 
 ```bash
-# --- Base
-# make rp5-homeserver folder
-ssh pi@pi.local "mkdir -p ~/rp5-homeserver"
-# copy infrastructure compose
-ssh pi@pi.local "mkdir -p ~/rp5-homeserver/infra"
-scp ./infra/docker-compose.yml pi@pi.local:~/rp5-homeserver/infra/docker-compose.yml
-# copy env file
-scp ./infra/.env pi@pi.local:~/rp5-homeserver/infra/.env
-# --- Nginx
-# create ssl folders
-ssh pi@pi.local "mkdir -p ~/rp5-homeserver/infra/nginx/ssl"
-# copy
-scp ./infra/nginx/nginx.conf pi@pi.local:~/rp5-homeserver/infra/nginx/nginx.conf
-scp ./infra/nginx/ssl/cert.pem ./infra/nginx/ssl/key.pem pi@pi.local:~/rp5-homeserver/infra/nginx/ssl/
+# Create directory structure
+ssh pi@pi.local "mkdir -p ~/rp5-homeserver/infra/{nginx/ssl,backup/secrets}"
+
+# Copy core infrastructure files
+scp ./infra/docker-compose.yml ./infra/.env pi@pi.local:~/rp5-homeserver/infra/
+
+# Copy nginx configuration and SSL certificates
+scp ./infra/nginx/nginx.conf pi@pi.local:~/rp5-homeserver/infra/nginx/
+scp ./infra/nginx/ssl/*.pem pi@pi.local:~/rp5-homeserver/infra/nginx/ssl/
+
+# Copy backup scripts (optional)
+scp ./infra/backup/{backup.sh,restore.sh} pi@pi.local:~/rp5-homeserver/infra/backup/
 ```
+
+- **Optional: Setup backup secrets** (see [Backup System](../docs/backup.md)):
+  ```bash
+  # Create secrets on Pi
+  ssh pi@pi.local "echo 'your-strong-restic-password' > ~/rp5-homeserver/infra/backup/secrets/restic_password.txt"
+  
+  # Copy your GCP service account JSON file to Pi
+  scp /path/to/your/gcp_service_account.json pi@pi.local:~/rp5-homeserver/infra/backup/secrets/
+  ```
+
+- **Optional: Setup automated backups**:
+  ```bash
+  ssh pi@pi.local
+  sudo crontab -e
+  # Add: 0 2 * * * cd /home/pi/rp5-homeserver/infra && ./backup/backup.sh >> /var/log/restic-backup.log 2>&1
+  ```
 
 - Start the infrastructure stack with Docker compose:
 
