@@ -48,7 +48,7 @@ Create a Cloudflare API token at [dash.cloudflare.com/profile/api-tokens](https:
 
 1. **Generate tunnel secret**: `openssl rand -base64 32`
 
-2. **Configure**: `cp terraform.tfvars.example terraform.tfvars` and edit values
+2. **Create tfvars file**: `cp terraform.tfvars.example terraform.tfvars` and edit values
 
 3. **Deploy**: 
    ```bash

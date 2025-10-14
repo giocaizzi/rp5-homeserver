@@ -18,16 +18,16 @@ data "cloudflare_zone" "main" {
 }
 
 # Create the tunnel
-resource "cloudflare_tunnel" "homeserver" {
+resource "cloudflare_zero_trust_tunnel_cloudflared" "homeserver" {
   account_id = var.cloudflare_account_id
   name       = "rp5-homeserver"
   secret     = var.tunnel_secret
 }
 
-# Create tunnel configuration
-resource "cloudflare_tunnel_config" "homeserver" {
+# tunnel configuration
+resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homeserver" {
   account_id = var.cloudflare_account_id
-  tunnel_id  = cloudflare_tunnel.homeserver.id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
 
   config {
     # Nginx proxy endpoint for all services
@@ -59,7 +59,7 @@ resource "cloudflare_tunnel_config" "homeserver" {
 resource "cloudflare_record" "n8n" {
   zone_id = data.cloudflare_zone.main.id
   name    = "n8n"
-  value   = cloudflare_tunnel.homeserver.cname
+  content   = cloudflare_zero_trust_tunnel_cloudflared.homeserver.cname
   type    = "CNAME"
   proxied = true
   comment = "N8N automation platform via Cloudflare Tunnel"
@@ -84,8 +84,6 @@ resource "cloudflare_access_application" "n8n" {
 
   # Enable browser isolation for security
   app_launcher_visible = true
-  
-  tags = ["homeserver", "automation"]
 }
 
 # Access Policy for N8N - Only allow owner
@@ -101,7 +99,6 @@ resource "cloudflare_access_policy" "n8n_owner_only" {
   }
 
   session_duration = var.session_duration
-  tags             = ["homeserver"]
 }
 
 # Additional Access Policy for emergency access (conditional)
@@ -128,7 +125,6 @@ resource "cloudflare_access_policy" "n8n_emergency" {
   }
 
   session_duration = var.emergency_session_duration
-  tags             = ["homeserver", "emergency"]
 }
 
 # Security settings for the zone
@@ -161,9 +157,6 @@ resource "cloudflare_zone_settings_override" "main_security" {
       include_subdomains = true
       nosniff = true
     }
-    
-    # Bot fight mode
-    bot_fight_mode = "on"
     
     # Browser check
     browser_check = "on"
