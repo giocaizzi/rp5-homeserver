@@ -1,0 +1,25 @@
+# Copy this file to terraform.tfvars and fill in your values
+
+cloudflare_api_token = "your_cloudflare_api_token_here"
+
+# Your Cloudflare account ID (found in the right sidebar of your Cloudflare dashboard)
+cloudflare_account_id = "your_account_id_here"
+
+# Domain name (should match your Cloudflare zone)
+zone_name = "example.com"
+
+# Base64 encoded tunnel secret (generate with: openssl rand -base64 32)
+tunnel_secret = "your_base64_tunnel_secret_here"
+
+# Owner email for primary Cloudflare Access policies
+owner_email = "owner@example.com"
+
+# Emergency access configuration
+enable_emergency_access = true
+emergency_emails = ["owner@example.com", "backup@example.com"]
+emergency_email_domains = ["example.com"]
+
+# Session duration settings
+session_duration = "24h"           # Normal access session duration
+emergency_session_duration = "1h"  # Emergency access session duration
+
