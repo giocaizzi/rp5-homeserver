@@ -12,15 +12,8 @@ zone_name = "example.com"
 # Base64 encoded tunnel secret (generate with: openssl rand -base64 32)
 tunnel_secret = "your_base64_tunnel_secret_here"
 
-# Owner email for primary Cloudflare Access policies
-owner_email = "owner@example.com"
-
-# Emergency access configuration
-enable_emergency_access = true
-emergency_emails = ["owner@example.com", "backup@example.com"]
-emergency_email_domains = ["example.com"]
-
-# Session duration settings
-session_duration = "24h"           # Normal access session duration
-emergency_session_duration = "1h"  # Emergency access session duration
-
+# List of allowed email addresses for n8n access
+users = [
+  "user1@example.com",
+  "user2@example.com"
+]
