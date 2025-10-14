@@ -20,8 +20,8 @@ output "n8n_url" {
 }
 
 output "access_application_id" {
-  description = "The ID of the Cloudflare Access application for N8N"
-  value       = cloudflare_access_application.n8n.id
+  description = "The ID of the Cloudflare Zero Trust Access application for N8N"
+  value       = cloudflare_zero_trust_access_application.n8n.id
 }
 
 output "emergency_policy_enabled" {
