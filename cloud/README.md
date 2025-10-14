@@ -41,9 +41,8 @@ Create a Cloudflare API token at [dash.cloudflare.com/profile/api-tokens](https:
    - `Account:Cloudflare Tunnel:Edit`
    - `Account:Access: Apps and Policies:Edit`
 4. Set **Zone Resources** to include your domain
-5. Set **Account Resources** to include your account
-6. **Continue to summary** and **Create Token**
-7. Copy the generated token immediately (you won't see it again)
+5. **Continue to summary** and **Create Token**
+6. Copy the generated token immediately (you won't see it again)
 
 ## Setup
 
