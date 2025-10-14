@@ -66,15 +66,15 @@ resource "cloudflare_record" "n8n" {
   tags    = ["homeserver"]
 }
 
-# Access Application for N8N
-resource "cloudflare_access_application" "n8n" {
+#  Zero Trust Access Application for N8N
+resource "cloudflare_zero_trust_access_application" "n8n" {
   zone_id                   = data.cloudflare_zone.main.id
   name                      = "N8N Automation Platform"
   domain                    = "n8n.${var.zone_name}"
   type                      = "self_hosted"
   session_duration          = "24h"
   auto_redirect_to_identity = false
-  
+
   cors_headers {
     allowed_methods = ["GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"]
     allowed_origins = ["https://n8n.${var.zone_name}"]
@@ -82,13 +82,12 @@ resource "cloudflare_access_application" "n8n" {
     max_age = 300
   }
 
-  # Enable browser isolation for security
   app_launcher_visible = true
 }
 
 # Access Policy for N8N - Only allow owner
 resource "cloudflare_access_policy" "n8n_owner_only" {
-  application_id = cloudflare_access_application.n8n.id
+  application_id = cloudflare_zero_trust_access_application.n8n.id
   zone_id        = data.cloudflare_zone.main.id
   name           = "Owner Only Access"
   precedence     = 1
@@ -104,8 +103,8 @@ resource "cloudflare_access_policy" "n8n_owner_only" {
 # Additional Access Policy for emergency access (conditional)
 resource "cloudflare_access_policy" "n8n_emergency" {
   count = var.enable_emergency_access ? 1 : 0
-  
-  application_id = cloudflare_access_application.n8n.id
+
+  application_id = cloudflare_zero_trust_access_application.n8n.id
   zone_id        = data.cloudflare_zone.main.id
   name           = "Emergency Access"
   precedence     = 2
