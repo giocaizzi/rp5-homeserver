@@ -86,7 +86,7 @@ resource "cloudflare_zero_trust_access_application" "n8n" {
 }
 
 # Access Policy for N8N - Only allow owner
-resource "cloudflare_access_policy" "n8n_owner_only" {
+resource "cloudflare_zero_trust_access_policy" "n8n_owner_only" {
   application_id = cloudflare_zero_trust_access_application.n8n.id
   zone_id        = data.cloudflare_zone.main.id
   name           = "Owner Only Access"
@@ -101,7 +101,7 @@ resource "cloudflare_access_policy" "n8n_owner_only" {
 }
 
 # Additional Access Policy for emergency access (conditional)
-resource "cloudflare_access_policy" "n8n_emergency" {
+resource "cloudflare_zero_trust_access_policy" "n8n_emergency" {
   count = var.enable_emergency_access ? 1 : 0
 
   application_id = cloudflare_zero_trust_access_application.n8n.id
