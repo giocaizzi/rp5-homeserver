@@ -3,7 +3,7 @@ terraform {
   required_providers {
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = "~> 4.43"
+      version = "~> 5.11"
     }
   }
 }
@@ -12,152 +12,81 @@ provider "cloudflare" {
   api_token = var.cloudflare_api_token
 }
 
-# Data sources to fetch existing resources
-data "cloudflare_zone" "main" {
-  name = var.zone_name
-}
+# # Data source for zone lookup
+# data "cloudflare_zone" "main" {
+#   zone_id = var.zone_id
+#   # filter = {
+#   #   name = var.zone_name
+#   # }
+# }
 
 # Create the tunnel
 resource "cloudflare_zero_trust_tunnel_cloudflared" "homeserver" {
-  account_id = var.cloudflare_account_id
-  name       = "rp5-homeserver"
-  secret     = var.tunnel_secret
+  account_id    = var.cloudflare_account_id
+  name          = "rp5-homeserver"
+  config_src    = "cloudflare"
+  tunnel_secret = var.tunnel_secret
 }
 
-# tunnel configuration
-resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homeserver" {
-  account_id = var.cloudflare_account_id
-  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
-
-  config {
-    # Nginx proxy endpoint for all services
-    ingress_rule {
-      hostname = "n8n.${var.zone_name}"
-      service  = "https://nginx:443"
-      origin_request {
-        http_host_header = "n8n.${var.zone_name}"
-        no_happy_eyeballs = true
-        keep_alive_timeout = "30s"
-        keep_alive_connections = 10
-        no_tls_verify = true  # Accept self-signed certificates
-      }
-    }
-
-    # Default catch-all rule (required)
-    ingress_rule {
-      service = "http_status:404"
-    }
-
-    # Tunnel settings
-    warp_routing {
-      enabled = false
-    }
-  }
+# Reads the token used to run the tunnel on the server.
+data "cloudflare_zero_trust_tunnel_cloudflared_token" "tunnel_token" {
+  account_id   = var.cloudflare_account_id
+  tunnel_id   = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
 }
 
-# DNS record for n8n subdomain
-resource "cloudflare_record" "n8n" {
-  zone_id = data.cloudflare_zone.main.id
+
+# Creates the CNAME record that routes n8n.${var.zone_name} to the tunnel.
+resource "cloudflare_dns_record" "n8n" {
+  zone_id = var.zone_id
   name    = "n8n"
-  content   = cloudflare_zero_trust_tunnel_cloudflared.homeserver.cname
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
   type    = "CNAME"
+  ttl     = 1
   proxied = true
-  comment = "N8N automation platform via Cloudflare Tunnel"
-  tags    = ["homeserver"]
 }
 
-#  Zero Trust Access Application for N8N
-resource "cloudflare_zero_trust_access_application" "n8n" {
-  zone_id                   = data.cloudflare_zone.main.id
-  name                      = "N8N Automation Platform"
-  domain                    = "n8n.${var.zone_name}"
-  type                      = "self_hosted"
-  session_duration          = "24h"
-  auto_redirect_to_identity = false
-
-  cors_headers {
-    allowed_methods = ["GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"]
-    allowed_origins = ["https://n8n.${var.zone_name}"]
-    allow_credentials = true
-    max_age = 300
+# Configures tunnel with a published application for clientless access.
+resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
+  account_id = var.cloudflare_account_id
+  config = {
+    ingress = [
+      {
+        hostname = "n8n.${var.zone_name}"
+        service  = "http://nginx:443"
+      },
+      {
+        service = "http_status:404"
+      }
+    ]
   }
-
-  app_launcher_visible = true
 }
 
-# Access Policy for N8N - Only allow owner
-resource "cloudflare_zero_trust_access_policy" "n8n_owner_only" {
-  application_id = cloudflare_zero_trust_access_application.n8n.id
-  zone_id        = data.cloudflare_zone.main.id
-  name           = "Owner Only Access"
-  precedence     = 1
-  decision       = "allow"
-
-  include {
-    email = [var.owner_email]
-  }
-
-  session_duration = var.session_duration
+# Creates a reusable Access policy.
+resource "cloudflare_zero_trust_access_policy" "n8n_users" {
+  account_id = var.cloudflare_account_id
+  name       = "n8n-users"
+  decision   = "allow"
+  include = [
+    for email in var.users : { email = { email = email } }
+    # {
+    #   email_domain = {
+    #     domain = "@example.com"
+    #   }
+    # }
+  ]
 }
 
-# Additional Access Policy for emergency access (conditional)
-resource "cloudflare_zero_trust_access_policy" "n8n_emergency" {
-  count = var.enable_emergency_access ? 1 : 0
-
-  application_id = cloudflare_zero_trust_access_application.n8n.id
-  zone_id        = data.cloudflare_zone.main.id
-  name           = "Emergency Access"
-  precedence     = 2
-  decision       = "allow"
-
-  include {
-    email = var.emergency_emails
-  }
-
-  include {
-    email_domain = var.emergency_email_domains
-  }
-
-  # Require additional verification for emergency access
-  require {
-    auth_method = "otp"
-  }
-
-  session_duration = var.emergency_session_duration
-}
-
-# Security settings for the zone
-resource "cloudflare_zone_settings_override" "main_security" {
-  zone_id = data.cloudflare_zone.main.id
-
-  settings {
-    # Security settings
-    security_level = "medium"
-    challenge_ttl  = 1800
-    
-    # SSL settings
-    ssl                      = "strict"
-    min_tls_version         = "1.2"
-    tls_1_3                 = "on"
-    automatic_https_rewrites = "on"
-    
-    # Performance settings
-    minify {
-      css  = "on"
-      js   = "on"
-      html = "on"
+# Creates an Access application to control who can connect to the public hostname.
+resource "cloudflare_zero_trust_access_application" "n8n_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "n8n.${var.zone_name}"
+  domain     = "n8n.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.n8n_users.id
+      precedence = 1
     }
-    
-    # Security headers
-    security_header {
-      enabled = true
-      preload = true
-      max_age = 31536000
-      include_subdomains = true
-      nosniff = true
-    }
-    
-    # Browser check
-    browser_check = "on"
-  }
+  ]
 }
