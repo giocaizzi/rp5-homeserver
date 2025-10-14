@@ -1,5 +1,6 @@
 # Copy this file to terraform.tfvars and fill in your values
 
+# Your Cloudflare API token with appropriate permissions
 cloudflare_api_token = "your_cloudflare_api_token_here"
 
 # Your Cloudflare account ID (found in the right sidebar of your Cloudflare dashboard)
