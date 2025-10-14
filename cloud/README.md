@@ -23,16 +23,27 @@ Your home server creates an outbound tunnel to Cloudflare. No inbound firewall r
 
 ## Prerequisites
 
-1. Cloudflare account with `example.com` domain
-2. Cloudflare API token with required permissions
-> Cloudflare API token with the following permissions:
-> `Zone:Zone Settings:Edit`
-> `Zone:Zone:Read`
-> `Zone:DNS:Edit`
-> `Account:Cloudflare Tunnel:Edit`
-> `Account:Access: Apps and Policies:Edit`
+1. Cloudflare account with your domain
+2. Cloudflare API token (see setup below)
 3. Terraform >= 1.6 installed
 4. Access to Cloudflare Zero Trust dashboard for identity provider setup
+
+## API Token Setup
+
+Create a Cloudflare API token at [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens):
+
+1. Click **Create Token**
+2. Use **Custom token** template (not pre-built templates)
+3. Configure permissions:
+   - `Zone:Zone Settings:Edit`
+   - `Zone:Zone:Read` 
+   - `Zone:DNS:Edit`
+   - `Account:Cloudflare Tunnel:Edit`
+   - `Account:Access: Apps and Policies:Edit`
+4. Set **Zone Resources** to include your domain
+5. Set **Account Resources** to include your account
+6. **Continue to summary** and **Create Token**
+7. Copy the generated token immediately (you won't see it again)
 
 ## Setup
 
