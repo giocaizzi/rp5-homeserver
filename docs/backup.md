@@ -74,6 +74,7 @@ docker compose up -d
    - Password: Strong repository password (save this securely)
    - Environment variables:
      - `GOOGLE_APPLICATION_CREDENTIALS=/gcp/credentials.json`
+     - `GOOGLE_PROJECT_ID=your-gcp-project-id`
 3. Create backup plans:
    - **User Home Backup**:
      - Paths: `/backup/home/giorgiocaizzi`
