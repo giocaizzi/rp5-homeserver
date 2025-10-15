@@ -64,13 +64,6 @@ variable "gcp_backup_bucket_name" {
   type        = string
 }
 
-variable "allowed_ips" {
-  description = "List of IP addresses/CIDR ranges allowed to access the backup bucket"
-  type        = list(string)
-  default     = []
-  # Example: ["1.2.3.4/32", "5.6.7.0/24"]
-}
-
 variable "backup_retention_days" {
   description = "Number of days to retain backup files in GCS bucket before automatic deletion. Set to 0 to disable GCS lifecycle deletion and rely on Backrest's retention logic only."
   type        = number

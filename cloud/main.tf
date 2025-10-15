@@ -138,7 +138,7 @@ resource "google_storage_bucket" "backup" {
   # Uniform bucket-level access
   uniform_bucket_level_access = true
 
-  # Public access prevention
+  # Public access prevention - enforced for maximum security
   public_access_prevention = "enforced"
 
   labels = {
@@ -167,17 +167,6 @@ resource "google_service_account_key" "backup_key" {
   service_account_id = google_service_account.backup.name
 }
 
-# IP-based access control via firewall rules
-# This restricts access to the bucket from specific IP addresses
-resource "google_storage_bucket_iam_member" "public_read" {
-  count  = length(var.allowed_ips) > 0 ? 1 : 0
-  bucket = google_storage_bucket.backup.name
-  role   = "roles/storage.objectViewer"
-  member = "allUsers"
-
-  condition {
-    title       = "IP Whitelist"
-    description = "Allow access only from whitelisted IPs"
-    expression  = join(" || ", [for ip in var.allowed_ips : "inIpRange(origin.ip, '${ip}')"])
-  }
-}
+# Note: IP-based restrictions on GCS are not supported via IAM conditions on allUsers.
+# Access is restricted to the service account only via public_access_prevention = "enforced".
+# The service account credentials must be secured on the home server.
