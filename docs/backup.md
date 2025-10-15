@@ -70,7 +70,7 @@ docker compose up -d
 2. Create a new repository:
    - Name: `rp5-homeserver`
    - Type: `Google Cloud Storage`
-   - Path: `gs://<GCS_BUCKET_NAME>/backups/rp5-homeserver`
+   - Path: `gs:<GCS_BUCKET_NAME>:/`
    - Password: Strong repository password (save this securely)
    - Environment variables:
      - `GOOGLE_APPLICATION_CREDENTIALS=/gcp/credentials.json`
