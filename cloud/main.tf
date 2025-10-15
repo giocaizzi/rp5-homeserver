@@ -5,20 +5,21 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = "~> 5.11"
     }
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 7.7"
+    }
   }
 }
+
+# ============================================================================
+# Cloudflare Resources
+# ============================================================================
 
 provider "cloudflare" {
   api_token = var.cloudflare_api_token
 }
 
-# # Data source for zone lookup
-# data "cloudflare_zone" "main" {
-#   zone_id = var.zone_id
-#   # filter = {
-#   #   name = var.zone_name
-#   # }
-# }
 
 # Create the tunnel
 resource "cloudflare_zero_trust_tunnel_cloudflared" "homeserver" {
@@ -30,8 +31,8 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "homeserver" {
 
 # Reads the token used to run the tunnel on the server.
 data "cloudflare_zero_trust_tunnel_cloudflared_token" "tunnel_token" {
-  account_id   = var.cloudflare_account_id
-  tunnel_id   = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
+  account_id = var.cloudflare_account_id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
 }
 
 
@@ -73,7 +74,7 @@ resource "cloudflare_zero_trust_access_policy" "n8n_users" {
   name       = "n8n-users"
   decision   = "allow"
   include = [
-    for email in var.users : { email = { email = email } }
+    for email in var.n8n_users : { email = { email = email } }
     # {
     #   email_domain = {
     #     domain = "@example.com"
@@ -94,4 +95,89 @@ resource "cloudflare_zero_trust_access_application" "n8n_policy" {
       precedence = 1
     }
   ]
+}
+
+# ============================================================================
+# GCP Resources
+# ============================================================================
+
+provider "google" {
+  project     = var.gcp_project_id
+  region      = var.gcp_region
+}
+
+# GCS bucket for backups - Archive storage class for cost-effective storage
+resource "google_storage_bucket" "backup" {
+  name          = var.gcp_backup_bucket_name
+  location      = var.gcp_region
+  storage_class = "ARCHIVE" # Most cost-effective for infrequent access backups
+
+  # Prevent accidental deletion
+  force_destroy = false
+
+  # Enable versioning for backup protection
+  versioning {
+    enabled = true
+  }
+
+  # Lifecycle rules for cost optimization (optional)
+  # Only apply if backup_retention_days is set (> 0)
+  # Otherwise rely on Backrest's internal retention logic
+  dynamic "lifecycle_rule" {
+    for_each = var.backup_retention_days > 0 ? [1] : []
+    content {
+      action {
+        type = "Delete"
+      }
+      condition {
+        age = var.backup_retention_days
+      }
+    }
+  }
+
+  # Uniform bucket-level access
+  uniform_bucket_level_access = true
+
+  # Public access prevention
+  public_access_prevention = "enforced"
+
+  labels = {
+    environment = "production"
+    purpose     = "backup"
+    managed_by  = "terraform"
+  }
+}
+
+# Service account for backup operations
+resource "google_service_account" "backup" {
+  account_id   = "restic-backup"
+  display_name = "Restic Backup Service Account"
+  description  = "Service account for Restic/Backrest backup operations to GCS"
+}
+
+# IAM binding - Grant bucket admin to service account
+resource "google_storage_bucket_iam_member" "backup_admin" {
+  bucket = google_storage_bucket.backup.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.backup.email}"
+}
+
+# Create service account key
+resource "google_service_account_key" "backup_key" {
+  service_account_id = google_service_account.backup.name
+}
+
+# IP-based access control via firewall rules
+# This restricts access to the bucket from specific IP addresses
+resource "google_storage_bucket_iam_member" "public_read" {
+  count  = length(var.allowed_ips) > 0 ? 1 : 0
+  bucket = google_storage_bucket.backup.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+
+  condition {
+    title       = "IP Whitelist"
+    description = "Allow access only from whitelisted IPs"
+    expression  = join(" || ", [for ip in var.allowed_ips : "inIpRange(origin.ip, '${ip}')"])
+  }
 }

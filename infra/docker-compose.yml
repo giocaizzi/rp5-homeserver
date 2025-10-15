@@ -209,7 +209,7 @@ services:
       - /home/giorgiocaizzi:/backup/home/giorgiocaizzi:ro
       - /var/lib/docker/volumes:/backup/docker-volumes:ro
       # GCP credentials
-      - ${GCP_SERVICE_ACCOUNT_FILE:-./backup/secrets/gcp_service_account.json}:/gcp/credentials.json:ro
+      - ${GCP_SERVICE_ACCOUNT_FILE}:/gcp/credentials.json:ro
     networks:
       - infra_network
     labels:

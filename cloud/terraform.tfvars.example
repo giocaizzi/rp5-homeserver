@@ -1,5 +1,9 @@
 # Copy this file to terraform.tfvars and fill in your values
 
+# ============================================================================
+# Cloudflare Configuration
+# ============================================================================
+
 # Your Cloudflare API token with appropriate permissions
 cloudflare_api_token = "your_cloudflare_api_token_here"
 
@@ -9,11 +13,36 @@ cloudflare_account_id = "your_account_id_here"
 # Domain name (should match your Cloudflare zone)
 zone_name = "example.com"
 
+# Zone ID of the domain
+zone_id = "your_zone_id_here"
+
 # Base64 encoded tunnel secret (generate with: openssl rand -base64 32)
 tunnel_secret = "your_base64_tunnel_secret_here"
 
 # List of allowed email addresses for n8n access
-users = [
+n8n_users = [
   "user1@example.com",
   "user2@example.com"
+]
+
+# ============================================================================
+# GCP Configuration
+# ============================================================================
+
+# GCP project ID (from Google Cloud Console)
+gcp_project_id = "your-gcp-project-id"
+
+# GCP region (default: europe-west1)
+gcp_region = "europe-west1"
+
+# Globally unique bucket name for backups
+gcp_backup_bucket_name = "your-unique-backup-bucket-name"
+
+# Backup retention in days for GCS lifecycle deletion
+backup_retention_days = 0
+
+# IP addresses/CIDR ranges allowed to access the backup bucket
+allowed_ips = [
+  "1.2.3.4/32",     # Your home IP
+  # "5.6.7.0/24",   # Optional: additional network range
 ]
