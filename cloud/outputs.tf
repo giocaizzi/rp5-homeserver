@@ -1,8 +1,11 @@
+# ============================================================================
+# Cloudflare Outputs
+# ============================================================================
+
 output "tunnel_token" {
   description = "The token for the tunnel"
-#   sensitive = true
   value       = data.cloudflare_zero_trust_tunnel_cloudflared_token.tunnel_token.token
-
+  sensitive   = true
 }
 
 output "tunnel_id" {
@@ -13,4 +16,34 @@ output "tunnel_id" {
 output "n8n_url" {
   description = "The public URL for N8N"
   value       = "https://n8n.${var.zone_name}"
+}
+
+# ============================================================================
+# GCP Outputs
+# ============================================================================
+
+output "backup_bucket_name" {
+  description = "Name of the backup GCS bucket"
+  value       = google_storage_bucket.backup.name
+}
+
+output "backup_bucket_url" {
+  description = "URL of the backup GCS bucket"
+  value       = google_storage_bucket.backup.url
+}
+
+output "backup_service_account_email" {
+  description = "Email of the backup service account"
+  value       = google_service_account.backup.email
+}
+
+output "backup_service_account_key" {
+  description = "Base64 encoded service account key JSON (save this securely)"
+  value       = google_service_account_key.backup_key.private_key
+  sensitive   = true
+}
+
+output "backup_bucket_path" {
+  description = "Full GCS path for backrest configuration"
+  value       = "gs://${google_storage_bucket.backup.name}/backups/rp5-homeserver"
 }

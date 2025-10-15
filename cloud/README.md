@@ -1,102 +1,143 @@
-# Cloudflare Infrastructure
+# Cloud Infrastructure
 
-Terraform configuration for securely exposing home server services to the internet via Cloudflare Tunnels.
+Terraform configuration for managing Cloudflare and GCP resources for the home server.
 
 ## Overview
 
-- **Cloudflare Tunnel**: Secure outbound-only connection from home server to Cloudflare edge
-- **Zero Trust Access**: Authentication layer protecting exposed services  
-- **DNS Management**: Automated subdomain configuration
-- **No Port Forwarding**: Services accessible globally without opening router ports
+**Cloudflare:**
+- Zero Trust tunnel for secure service access
+- DNS records for exposed services  
+- Access policies with email authentication
+- No port forwarding required
 
-## Services Exposed
-
-- **N8N**: `https://n8n.example.com` - Automation platform
+**GCP:**
+- Archive storage bucket for backups
+- Service account with minimal permissions
+- IP-based access control
+- Versioning and flexible retention policies
 
 ## Architecture
 
 ```
-Internet → Cloudflare Edge → Encrypted Tunnel → Home Server → Services
+Internet → Cloudflare Edge → Encrypted Tunnel → Home Server → Services (n8n, etc.)
+                                                      ↓
+                                               Backrest (Restic)
+                                                      ↓
+                                           GCS Archive Bucket (IP-restricted)
 ```
-
-Your home server creates an outbound tunnel to Cloudflare. No inbound firewall rules needed.
 
 ## Prerequisites
 
-1. Cloudflare account with your domain
-2. Cloudflare API token (see setup below)
-3. Terraform >= 1.6 installed
-4. Access to Cloudflare Zero Trust dashboard for identity provider setup
-
-## API Token Setup
-
-Create a Cloudflare API token at [dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens):
-
-1. Click **Create Token**
-2. Use **Custom token** template (not pre-built templates)
-3. Configure permissions:
-   - `Zone:Zone Settings:Edit`
-   - `Zone:Zone:Read` 
-   - `Zone:DNS:Edit`
-   - `Account:Cloudflare Tunnel:Edit`
-   - `Account:Access: Apps and Policies:Edit`
-4. Set **Zone Resources** to include your domain
-5. **Continue to summary** and **Create Token**
-6. Copy the generated token immediately (you won't see it again)
+1. **Cloudflare account** with your domain and Zero Trust enabled
+2. **GCP account** with billing enabled and active project
+3. **Terraform >= 1.6** installed
+4. **gcloud CLI** for GCP authentication (optional)
 
 ## Setup
 
-1. **Generate tunnel secret**: `openssl rand -base64 32`
+### 1. Create Configuration File
 
-2. **Create tfvars file**: `cp terraform.tfvars.example terraform.tfvars` and edit values
+```bash
+cp terraform.tfvars.example terraform.tfvars
+vim terraform.tfvars
+```
 
-3. **Deploy**: 
-   ```bash
-   terraform init
-   terraform apply
-   ```
+**Cloudflare Configuration:**
+- `cloudflare_api_token` - Create at [API Tokens](https://dash.cloudflare.com/profile/api-tokens)
 
-4. **Update environment**: Add `CLOUDFLARED_TOKEN` from terraform output to your `.env` file
+   > Permissions: `Zone:Zone Settings:Edit`, `Zone:Zone:Read` , `Zone:DNS:Edit`, `Account:Cloudflare Tunnel:Edit`, `Account:Access: Apps and Policies:Edit`
 
-5. **Setup authentication**: Configure identity provider in Cloudflare Zero Trust dashboard:
-   - Go to [Zero Trust Dashboard](https://one.dash.cloudflare.com/) → Settings → Authentication
-   - Add login method (Email OTP, Google, GitHub, etc.)
-   - Or access your service URL and follow the setup prompt
+- `cloudflare_account_id` - From Cloudflare dashboard
+- `zone_name` - Your domain (e.g., example.com)
+- `zone_id` - From domain overview
+- `tunnel_secret` - Generate: `openssl rand -base64 32`
+- `n8n_users` - Email addresses for n8n access
 
-## API Token Permissions
+**GCP Configuration:**
+- `gcp_project_id` - Your GCP project ID
+- `gcp_region` - Region (default: europe-west1)
+- `gcp_backup_bucket_name` - Globally unique bucket name
+- `backup_retention_days` - Set to `0` for Backrest-managed retention (recommended)
+- `allowed_ips` - Your home server's public IP in CIDR format (e.g., `["1.2.3.4/32"]`)
 
-- **Zone:Zone Settings:Edit** - Security settings
-- **Zone:Zone:Read** - Zone information  
-- **Zone:DNS:Edit** - DNS records
-- **Account:Cloudflare Tunnel:Edit** - Tunnel management
-- **Account:Access: Apps and Policies:Edit** - Zero Trust policies
+Get your public IP: `curl -4 ifconfig.me`
 
-## Configuration
+### 2. Authenticate with GCP
 
-Key variables in `terraform.tfvars`:
-- `cloudflare_api_token`: API token with above permissions
-- `cloudflare_account_id`: Account ID from Cloudflare dashboard
-- `tunnel_secret`: Base64 secret (generate with openssl)
-- `owner_email`: Primary access email
-- `enable_emergency_access`: Enable/disable emergency policies
-- `emergency_emails`: Additional allowed emails
+```bash
+gcloud auth application-default login
+```
 
-## Security Features
+### 3. Deploy Cloud Infrastructure
 
-- **Zero Trust Access**: All requests require authentication
-- **No Port Forwarding**: No open ports on home network
-- **Encrypted Tunnels**: TLS encryption from edge to home server
-- **Access Policies**: Email-based access control
-- **Flexible Authentication**: Email OTP, OAuth (Google/GitHub), SAML
+```bash
+terraform init
+terraform apply
+```
 
-## Troubleshooting
+### 4. Extract Outputs
 
-- **Tunnel connection**: Check `docker logs cloudflared`
-- **Access denied**: Verify email in policies, check authentication setup
-- **DNS issues**: Ensure DNS records are proxied (orange cloud)
-- **No Zero Trust**: May need to enable/upgrade Cloudflare plan
+Extract terraform tokens:
+```bash
+terraform output -raw cloudflare_tunnel_credentials
+# copy this to ../infra/.env
+```
 
-## Outputs
+Extract Service Account Key:
+```bash
+terraform output -raw backup_service_account_key | base64 -d > ../infra/backup/secrets/gcp_service_account.json
+# and scp to rp5-homeserver
+# make backup/secrets directory if it doesn't exist
+ssh pi@pi.local "mkdir -p ~/rp5-homeserver/infra/backup/secrets"
+scp ../infra/backup/secrets/gcp_service_account.json pi@pi.local:~/rp5-homeserver/infra/backup/secrets/gcp_service_account.json
+```
 
-- `tunnel_token`: Token for cloudflared container (sensitive)
-- `n8n_url`: Public URL for N8N service
+### 5. Re-start infrastructure
+
+```bash
+ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker-compose down && docker-compose up -d"
+```
+
+**Restart cloudflared:**
+```bash
+cd ../infra && docker compose up -d cloudflared
+```
+## Cloudflare 
+
+**Zero Trust Tunnel:**
+- Secure access to home server services
+- No public IP exposure
+
+**DNS Configuration:**
+- Automatic DNS record management
+- Proxying for enhanced security
+- Application-level access control
+
+## GCS Backup Bucket
+
+**Storage Class: ARCHIVE**
+- Lowest cost
+- Perfect for infrequent backup access
+- Retrieval latency: minutes to hours
+
+**Retention Strategies:**
+
+*Backrest-Managed (Recommended):*
+```hcl
+backup_retention_days = 0
+```
+- Backrest controls retention via Web UI
+- Fine-grained policies (7 daily, 4 weekly, 6 monthly, 2 yearly)
+- No automatic GCS deletion
+
+*GCS Lifecycle Deletion:*
+```hcl
+backup_retention_days = 730  # 2 years
+```
+- GCS automatically deletes files older than N days
+- Safety net on top of Backrest on consumption
+
+**IP Whitelisting:**
+- Bucket access restricted to specified IPs
+- Update `allowed_ips` in terraform.tfvars
+- Use CIDR notation: `/32` for single IP

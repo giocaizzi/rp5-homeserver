@@ -6,6 +6,11 @@
 .terraform/
 .terraform.lock.hcl
 
+# GCP credentials
+gcp-terraform-key.json
+*-sa-key.json
+*.json
+
 # OS files
 .DS_Store
 Thumbs.db
@@ -17,3 +22,6 @@ Thumbs.db
 # Backup files
 *.backup
 *.bak
+
+# Logs
+*.log
