@@ -58,9 +58,6 @@ vim terraform.tfvars
 - `gcp_region` - Region (default: europe-west1)
 - `gcp_backup_bucket_name` - Globally unique bucket name
 - `backup_retention_days` - Set to `0` for Backrest-managed retention (recommended)
-- `allowed_ips` - Your home server's public IP in CIDR format (e.g., `["1.2.3.4/32"]`)
-
-Get your public IP: `curl -4 ifconfig.me`
 
 ### 2. Authenticate with GCP
 
@@ -137,7 +134,10 @@ backup_retention_days = 730  # 2 years
 - GCS automatically deletes files older than N days
 - Safety net on top of Backrest on consumption
 
-**IP Whitelisting:**
-- Bucket access restricted to specified IPs
-- Update `allowed_ips` in terraform.tfvars
-- Use CIDR notation: `/32` for single IP
+**Security:**
+- Public access prevention enforced - no public access possible
+- Access exclusively via service account credentials
+- Service account has objectAdmin role (read/write only for backups)
+- Credentials secured on home server at `infra/backup/secrets/gcp_service_account.json`
+
+> **Note:** GCS does not support IP-based restrictions via IAM. Access control relies on securing the service account credentials. Only systems with valid credentials can access the bucket.
