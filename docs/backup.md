@@ -54,7 +54,6 @@ cd infra/backup/secrets
 **Update environment:**
 ```bash
 # In infra/.env
-GCS_BUCKET_NAME=your-backup-bucket-name
 GCP_SERVICE_ACCOUNT_FILE=./backup/secrets/gcp_service_account.json
 ```
 
@@ -71,7 +70,7 @@ docker compose up -d
 2. Create a new repository:
    - Name: `rp5-homeserver`
    - Type: `Google Cloud Storage`
-   - Path: `gs://${GCS_BUCKET_NAME}/backups/rp5-homeserver`
+   - Path: `gs://<GCS_BUCKET_NAME>/backups/rp5-homeserver`
    - Password: Strong repository password (save this securely)
    - Environment variables:
      - `GOOGLE_APPLICATION_CREDENTIALS=/gcp/credentials.json`
@@ -188,7 +187,7 @@ docker exec backrest ls -la /gcp/credentials.json
 
 # Test GCS access
 docker exec backrest env GOOGLE_APPLICATION_CREDENTIALS=/gcp/credentials.json \
-  gsutil ls gs://${GCS_BUCKET_NAME}
+  gsutil ls gs://<GCS_BUCKET_NAME>
 ```
 
 **Repository issues:**
