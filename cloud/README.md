@@ -95,10 +95,6 @@ scp ../infra/backup/secrets/gcp_service_account.json pi@pi.local:~/rp5-homeserve
 ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker-compose down && docker-compose up -d"
 ```
 
-**Restart cloudflared:**
-```bash
-cd ../infra && docker compose up -d cloudflared
-```
 ## Cloudflare 
 
 **Zero Trust Tunnel:**
