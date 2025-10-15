@@ -73,7 +73,6 @@ See [`.env.example`](./.env.example) for all environment variables.
    ```
 3. Configure bucket name in `.env` file:
    ```bash
-   GCS_BUCKET_NAME=your-backup-bucket-name
    GCP_SERVICE_ACCOUNT_FILE=./backup/secrets/gcp_service_account.json
    ```
 
