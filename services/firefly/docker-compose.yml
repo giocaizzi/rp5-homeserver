@@ -1,74 +1,237 @@
-#
-# The Firefly III Data Importer will ask you for the Firefly III URL and a "Client ID".
-# You can generate the Client ID at http://localhost/profile (after registering)
-# The Firefly III URL is: http://app:8080
-#
-# Other URL's will give 500 | Server Error
-#
+name: firefly
+
+networks:
+  # Private network for firefly stack
+  firefly_network:
+    driver: bridge
+    name: rp5_firefly
+    internal: false  # Allow external access via nginx proxy
+  
+  # External network to connect to nginx proxy
+  public_network:
+    external: true
+    name: rp5_public
 
 services:
   app:
     image: fireflyiii/core:latest
-    hostname: app
-    container_name: firefly_iii_core
-    networks:
-      - firefly_iii
-    restart: always
-    volumes:
-      - firefly_iii_upload:/var/www/html/storage/upload
-    env_file: .env
-    ports:
-      - '80:8080'
+    container_name: firefly_app
+    restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    expose:
+      - "8080"
+    environment:
+      # Application configuration
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: "${APP_KEY}"
+      APP_URL: "https://${FIREFLY_HOST:-firefly.local}"
+      SITE_OWNER: "${SITE_OWNER:-admin@firefly.local}"
+      DEFAULT_LANGUAGE: "${DEFAULT_LANGUAGE:-en_US}"
+      DEFAULT_LOCALE: "${DEFAULT_LOCALE:-equal}"
+      
+      # Timezone
+      TZ: "${TZ:-UTC}"
+      
+      # Database configuration
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: "${DB_DATABASE:-firefly}"
+      DB_USERNAME: "${DB_USERNAME:-firefly}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      
+      # Security & Trust
+      TRUSTED_PROXIES: "**"
+      APP_LOG_LEVEL: "${APP_LOG_LEVEL:-notice}"
+      AUDIT_LOG_LEVEL: "${AUDIT_LOG_LEVEL:-emergency}"
+      
+      # Mail configuration (optional)
+      MAIL_MAILER: "${MAIL_MAILER:-log}"
+      MAIL_HOST: "${MAIL_HOST:-}"
+      MAIL_PORT: "${MAIL_PORT:-2525}"
+      MAIL_FROM: "${MAIL_FROM:-changeme@example.com}"
+      MAIL_USERNAME: "${MAIL_USERNAME:-}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD:-}"
+      MAIL_ENCRYPTION: "${MAIL_ENCRYPTION:-}"
+      
+      # Authentication
+      LOGIN_PROVIDER: "${LOGIN_PROVIDER:-eloquent}"
+      
+      # Feature flags
+      DISABLE_FRAME_HEADER: "${DISABLE_FRAME_HEADER:-false}"
+      DISABLE_CSP_HEADER: "${DISABLE_CSP_HEADER:-false}"
+    volumes:
+      - firefly_upload:/var/www/html/storage/upload
+    networks:
+      - firefly_network
+      - public_network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    labels:
+      - "stack=firefly"
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+          cpus: "0.5"
+    memswap_limit: 1G
+    mem_swappiness: 10
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   db:
     image: mariadb:lts
-    hostname: db
-    container_name: firefly_iii_db
-    networks:
-      - firefly_iii
-    restart: always
-    env_file: .db.env
+    container_name: firefly_db
+    restart: unless-stopped
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: "${DB_DATABASE:-firefly}"
+      MYSQL_USER: "${DB_USERNAME:-firefly}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
     volumes:
-      - firefly_iii_db:/var/lib/mysql
+      - firefly_db:/var/lib/mysql
+    networks:
+      - firefly_network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+    labels:
+      - "stack=firefly"
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+          cpus: "0.25"
+    memswap_limit: 1G
+    mem_swappiness: 10
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   importer:
     image: fireflyiii/data-importer:latest
-    hostname: importer
-    restart: always
-    container_name: firefly_iii_importer
-    networks:
-      - firefly_iii
-    ports:
-      - '81:8080'
+    container_name: firefly_importer
+    restart: unless-stopped
     depends_on:
-      - app
-    env_file: .importer.env
+      app:
+        condition: service_healthy
+    expose:
+      - "8080"
+    environment:
+      # Firefly III connection
+      FIREFLY_III_URL: "http://app:8080"
+      VANITY_URL: "https://${FIREFLY_HOST:-firefly.local}"
+      FIREFLY_III_CLIENT_ID: "${FIREFLY_CLIENT_ID}"
+      
+      # Timezone and Locale
+      TZ: "${TZ:-UTC}"
+      FALLBACK_LOCALE: "${FALLBACK_LOCALE:-en_US}"
+      
+      # Security
+      TRUSTED_PROXIES: "**"
+      EXPECT_SECURE_URL: "false"
+      VERIFY_TLS_SECURITY: "false"
+      
+      # Logging
+      LOG_LEVEL: "${IMPORTER_LOG_LEVEL:-info}"
+      
+      # Performance
+      USE_CACHE: "true"
+      
+      # Optional: Auto-import configuration
+      AUTO_IMPORT_SECRET: "${AUTO_IMPORT_SECRET:-}"
+      CAN_POST_AUTOIMPORT: "${CAN_POST_AUTOIMPORT:-false}"
+      CAN_POST_FILES: "${CAN_POST_FILES:-false}"
+      IGNORE_DUPLICATE_ERRORS: "${IGNORE_DUPLICATE_ERRORS:-false}"
+    networks:
+      - firefly_network
+      - public_network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "stack=firefly"
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+          cpus: "0.25"
+    memswap_limit: 512M
+    mem_swappiness: 10
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   cron:
-    #
-    # To make this work, set STATIC_CRON_TOKEN in your .env file or as an environment variable
-    # The STATIC_CRON_TOKEN must be *exactly* 32 characters long
-    # Use this URL for inspiration: https://www.random.org/strings/?num=1&len=32&digits=on&upperalpha=on&loweralpha=on&unique=on&format=html&rnd=new
-    #
     image: alpine
-    container_name: firefly_iii_cron
-    restart: always
-    env_file: .env
-    command: sh -c "
-      apk add tzdata && \
-      (ln -fs /usr/share/zoneinfo/$$TZ /etc/localtime || true) && \
-      echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/$$STATIC_CRON_TOKEN;echo\"
-      | crontab - && \
-      crond -f -L /dev/stdout"
-    networks:
-      - firefly_iii
+    container_name: firefly_cron
+    restart: unless-stopped
     depends_on:
-      - app
-volumes:
-   firefly_iii_upload:
-   firefly_iii_db:
+      app:
+        condition: service_healthy
+    environment:
+      TZ: "${TZ:-UTC}"
+      STATIC_CRON_TOKEN: "${STATIC_CRON_TOKEN}"
+    command: sh -c "apk add --no-cache tzdata wget && ln -sf /usr/share/zoneinfo/$$TZ /etc/localtime && echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/$$STATIC_CRON_TOKEN\" | crontab - && crond -f -L /dev/stdout"
+    networks:
+      - firefly_network
+    labels:
+      - "stack=firefly"
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.25"
+        reservations:
+          memory: 32M
+          cpus: "0.1"
+    memswap_limit: 128M
+    mem_swappiness: 10
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-networks:
-  firefly_iii:
-    driver: bridge
+volumes:
+  firefly_upload:
+    driver: local
+  firefly_db:
+    driver: local
