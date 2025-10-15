@@ -55,7 +55,8 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
         hostname = "n8n.${var.zone_name}"
         service  = "https://nginx:443"
         origin_request = {
-          no_tls_verify = true
+          no_tls_verify    = true
+          http_host_header = "n8n.${var.zone_name}"
         }
       },
       {
