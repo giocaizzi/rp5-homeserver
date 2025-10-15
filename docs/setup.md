@@ -38,24 +38,9 @@ scp ./infra/docker-compose.yml ./infra/.env pi@pi.local:~/rp5-homeserver/infra/
 scp ./infra/nginx/nginx.conf pi@pi.local:~/rp5-homeserver/infra/nginx/
 scp ./infra/nginx/ssl/*.pem pi@pi.local:~/rp5-homeserver/infra/nginx/ssl/
 
-# Copy backup scripts (optional)
-scp ./infra/backup/{backup.sh,restore.sh} pi@pi.local:~/rp5-homeserver/infra/backup/
-```
-
-- **Optional: Setup backup secrets** (see [Backup System](../docs/backup.md)):
-  ```bash
-  # Create secrets on Pi
-  ssh pi@pi.local "echo 'your-strong-restic-password' > ~/rp5-homeserver/infra/backup/secrets/restic_password.txt"
-  
-  # Copy your GCP service account JSON file to Pi
-  scp /path/to/your/gcp_service_account.json pi@pi.local:~/rp5-homeserver/infra/backup/secrets/
-  ```
-
-- **Optional: Setup automated backups**:
-  ```bash
-  ssh pi@pi.local
-  sudo crontab -e
-  # Add: 0 2 * * * cd /home/pi/rp5-homeserver/infra && ./backup/backup.sh >> /var/log/restic-backup.log 2>&1
+# Copy GCP service account for backups (optional)
+# If you want to set up backups, copy the GCP credentials file
+scp /path/to/your/gcp_service_account.json pi@pi.local:~/rp5-homeserver/infra/backup/secrets/
   ```
 
 - Start the infrastructure stack with Docker compose:
@@ -72,7 +57,7 @@ Update hostname resolution on your **local machine** (not on Pi):
 # Then add to your local machine /etc/hosts
 sudo vim /etc/hosts
 # Add (replace with your Pi's actual IP):
-# 192.168.x.x portainer.local netdata.local <other_service>.local
+# 192.168.x.x portainer.local netdata.local backrest.local <other_service>.local
 ```
 
 Now you can access Portainer at `https://portainer.local` and control all services (stacks) via the web UI.
