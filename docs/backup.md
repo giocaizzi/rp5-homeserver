@@ -1,6 +1,6 @@
 # Backup System
 
-Docker-based Restic backup integrated into infrastructure stack. Backs up user data and Docker volumes to Google Cloud Storage.
+Docker-based Backrest (restic with web UI) integrated into infrastructure stack. Backs up user data and Docker volumes to Google Cloud Storage.
 
 ## Architecture
 
@@ -10,11 +10,13 @@ Docker-based Restic backup integrated into infrastructure stack. Backs up user d
 
 **Storage:** Google Cloud Storage bucket with incremental snapshots
 
-**Retention Policy:**
+**Retention Policy (configured in Web UI):**
 - Daily: 7 snapshots
 - Weekly: 4 snapshots  
 - Monthly: 6 snapshots
 - Yearly: 2 snapshots
+
+**Web UI:** https://backrest.local (accessible after setup)
 
 ## Setup
 
@@ -41,14 +43,10 @@ gcloud iam service-accounts keys create gcp_service_account.json \
 
 ### 2. Configure Secrets
 
-**Create secrets files:**
+**Create GCP service account key file:**
 ```bash
 cd infra/backup/secrets
 
-# Create restic repository password
-echo "your-strong-restic-password-here" > restic_password.txt
-
-# Create GCP service account key file
 # Download JSON key from Google Cloud Console and save as:
 # gcp_service_account.json
 ```
@@ -57,6 +55,7 @@ echo "your-strong-restic-password-here" > restic_password.txt
 ```bash
 # In infra/.env
 GCS_BUCKET_NAME=your-backup-bucket-name
+GCP_SERVICE_ACCOUNT_FILE=./backup/secrets/gcp_service_account.json
 ```
 
 ### 3. Deploy Stack
@@ -66,80 +65,83 @@ cd infra
 docker compose up -d
 ```
 
+### 4. Configure Backrest via Web UI
+
+1. Access web UI at https://backrest.local
+2. Create a new repository:
+   - Name: `rp5-homeserver`
+   - Type: `Google Cloud Storage`
+   - Path: `gs://${GCS_BUCKET_NAME}/backups/rp5-homeserver`
+   - Password: Strong repository password (save this securely)
+   - Environment variables:
+     - `GOOGLE_APPLICATION_CREDENTIALS=/gcp/credentials.json`
+3. Create backup plans:
+   - **User Home Backup**:
+     - Paths: `/backup/home/giorgiocaizzi`
+     - Schedule: Daily at 2 AM
+     - Retention: Keep last 7 daily, 4 weekly, 6 monthly, 2 yearly
+   - **Docker Volumes Backup**:
+     - Paths: `/backup/docker-volumes`
+     - Schedule: Daily at 3 AM
+     - Retention: Keep last 7 daily, 4 weekly, 6 monthly, 2 yearly
+
 ## Usage
 
-### Automated Backup (Recommended)
-Set up cron on the Pi for automatic daily backups:
-
-```bash
-# SSH to Pi and edit crontab
-ssh pi@pi.local
-sudo crontab -e
-
-# Add daily backup at 2 AM
-0 2 * * * cd /home/pi/rp5-homeserver/infra && ./backup/backup.sh >> /var/log/restic-backup.log 2>&1
-```
-
-**Alternative schedules:**
-```bash
-# Weekly backup on Sunday at 3 AM
-0 3 * * 0 cd /home/pi/rp5-homeserver/infra && ./backup/backup.sh >> /var/log/restic-backup.log 2>&1
-
-# Twice daily (2 AM and 2 PM)
-0 2,14 * * * cd /home/pi/rp5-homeserver/infra && ./backup/backup.sh >> /var/log/restic-backup.log 2>&1
-```
+### Automated Backup
+Backups are scheduled via the Backrest web UI. No cron setup required.
 
 ### Manual Backup
-For testing or one-off backups:
-```bash
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && ./backup/backup.sh"
-```
+Trigger backups manually via the web UI:
+1. Navigate to https://backrest.local
+2. Select backup plan
+3. Click "Backup Now"
 
 ### Restore Operations
 
-**List snapshots:**
-```bash
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && ./backup/restore.sh --list"
-```
+**Via Web UI (Recommended):**
+1. Navigate to https://backrest.local
+2. Go to "Snapshots" tab
+3. Browse snapshot contents
+4. Select files/folders to restore
+5. Choose restore location
+6. Execute restore
 
-**Browse files in snapshot:**
+**Via CLI (Advanced):**
+Access the container directly for restic commands:
 ```bash
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && ./backup/restore.sh --files /backup/home/giorgiocaizzi"
-```
+# List snapshots
+docker exec backrest restic -r /data/repos/rp5-homeserver snapshots
 
-**Restore specific directory:**
-```bash
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && ./backup/restore.sh /backup/home/giorgiocaizzi/Documents /tmp/restore-docs"
-```
+# Browse files
+docker exec backrest restic -r /data/repos/rp5-homeserver ls latest /backup/home/giorgiocaizzi
 
-**Restore Docker volume:**
-```bash
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && ./backup/restore.sh /backup/docker-volumes/n8n_postgres_data /tmp/restore-db"
+# Restore specific directory
+docker exec backrest restic -r /data/repos/rp5-homeserver restore latest \
+  --target /restore --include /backup/home/giorgiocaizzi/Documents
 ```
 
 ## Monitoring
 
-**Check cron status:**
+**Web UI Dashboard:**
+- Access https://backrest.local
+- View backup status, last run times, and errors
+- Check repository size and snapshot counts
+- Monitor backup plan execution history
+
+**Container logs:**
 ```bash
-ssh pi@pi.local "sudo crontab -l"                    # List scheduled jobs
-ssh pi@pi.local "sudo systemctl status cron"         # Check cron service
+docker logs -f backrest
 ```
 
-**Backup logs:**
+**Repository status (via CLI):**
 ```bash
-ssh pi@pi.local "tail -f /var/log/restic-backup.log" # Follow backup logs
-ssh pi@pi.local "grep ERROR /var/log/restic-backup.log" # Check for errors
-```
-
-**Repository status:**
-```bash
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker exec restic_backup restic snapshots"
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker exec restic_backup restic stats latest"
+docker exec backrest restic -r /data/repos/rp5-homeserver snapshots
+docker exec backrest restic -r /data/repos/rp5-homeserver stats latest
 ```
 
 **Check repository integrity:**
 ```bash
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker exec restic_backup restic check"
+docker exec backrest restic -r /data/repos/rp5-homeserver check
 ```
 
 ## Security
@@ -158,44 +160,47 @@ ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker exec restic_backup restic c
 
 ## Troubleshooting
 
-**Check if cron is running:**
+**Container not running:**
 ```bash
-ssh pi@pi.local "sudo systemctl status cron"
-ssh pi@pi.local "ps aux | grep cron"
-```
+# Check container status
+docker ps | grep backrest
 
-**Container not found:**
-```bash
 # Ensure infrastructure stack is running
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker compose up -d"
+cd ~/rp5-homeserver/infra && docker compose up -d
 ```
 
-**Permission denied:**
+**Web UI not accessible:**
 ```bash
-# Check file permissions on Pi
-ssh pi@pi.local "ls -la ~/rp5-homeserver/infra/backup/"
-# Should be executable: backup.sh, restore.sh
+# Check if service is listening
+docker exec backrest wget -qO- http://localhost:9898/
+
+# Check nginx proxy
+docker logs nginx | grep backrest
+
+# Verify hosts file
+cat /etc/hosts | grep backrest.local
 ```
 
-**GCS authentication:**
+**GCS authentication issues:**
 ```bash
-# Test service account
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker exec restic_backup env | grep GOOGLE"
+# Verify credentials file
+docker exec backrest ls -la /gcp/credentials.json
+
+# Test GCS access
+docker exec backrest env GOOGLE_APPLICATION_CREDENTIALS=/gcp/credentials.json \
+  gsutil ls gs://${GCS_BUCKET_NAME}
 ```
 
-**Repository corruption:**
+**Repository issues:**
 ```bash
-# Repair repository
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker exec restic_backup restic rebuild-index"
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker exec restic_backup restic prune"
+# Check repository in web UI under "Repositories" tab
+# Or repair via CLI:
+docker exec backrest restic -r /data/repos/rp5-homeserver rebuild-index
+docker exec backrest restic -r /data/repos/rp5-homeserver prune
 ```
 
-**Backup not running automatically:**
-```bash
-# Check cron logs
-ssh pi@pi.local "grep CRON /var/log/syslog | tail -10"
-ssh pi@pi.local "tail /var/log/restic-backup.log"
-
-# Test manual execution
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && ./backup/backup.sh"
-```
+**Backup failures:**
+1. Check web UI notifications
+2. Review backup plan logs in web UI
+3. Check container logs: `docker logs backrest`
+4. Verify backup paths are accessible in container

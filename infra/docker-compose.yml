@@ -187,25 +187,29 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Restic Backup Service
-  restic:
-    image: restic/restic:latest
-    container_name: restic_backup
-    restart: "no"  # Manual execution via docker run or cron
+  # Backrest - Restic backup with Web UI
+  backrest:
+    image: garethgeorge/backrest:latest
+    container_name: backrest
+    restart: unless-stopped
+    hostname: backrest
+    expose:
+      - "9898"  # Web UI
     environment:
-      - RESTIC_REPOSITORY=gs:${GCS_BUCKET_NAME}:/backups/rp5-homeserver
-      - RESTIC_PASSWORD_FILE=/run/secrets/restic_password
-      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp_service_account
+      - BACKREST_DATA=/data
+      - BACKREST_CONFIG=/config/config.json
+      - XDG_CACHE_HOME=/cache
       - TZ=${TZ:-UTC}
     volumes:
+      # Backrest data and config
+      - backrest_data:/data
+      - backrest_config:/config
+      - backrest_cache:/cache
       # Backup targets
       - /home/giorgiocaizzi:/backup/home/giorgiocaizzi:ro
       - /var/lib/docker/volumes:/backup/docker-volumes:ro
-      # Restic repository cache for performance
-      - restic_cache:/root/.cache/restic
-    secrets:
-      - restic_password
-      - gcp_service_account
+      # GCP credentials
+      - ${GCP_SERVICE_ACCOUNT_FILE:-./backup/secrets/gcp_service_account.json}:/gcp/credentials.json:ro
     networks:
       - infra_network
     labels:
@@ -227,14 +231,12 @@ services:
       options:
         max-size: "50m"
         max-file: "3"
-    # Keep container alive for manual backup commands
-    entrypoint: ["tail", "-f", "/dev/null"]
-
-secrets:
-  restic_password:
-    file: ${RESTIC_PASSWORD_FILE:-./backup/secrets/restic_password.txt}
-  gcp_service_account:
-    file: ${GCP_SERVICE_ACCOUNT_FILE:-./backup/secrets/gcp_service_account.json}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9898/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   portainer_data:
@@ -245,5 +247,9 @@ volumes:
     driver: local
   netdata_lib:
     driver: local
-  restic_cache:
+  backrest_data:
+    driver: local
+  backrest_config:
+    driver: local
+  backrest_cache:
     driver: local
