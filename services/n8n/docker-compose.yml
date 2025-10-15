@@ -84,7 +84,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    # Remove direct port exposure - access via nginx proxy
     expose:
       - "5678"
     environment:

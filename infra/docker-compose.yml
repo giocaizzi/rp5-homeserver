@@ -64,7 +64,6 @@ services:
     image: portainer/portainer-ee:latest
     container_name: portainer
     restart: unless-stopped
-    # Remove direct port exposure - access via nginx proxy
     expose:
       - "9000"
       - "9443"
@@ -142,7 +141,6 @@ services:
     container_name: netdata
     hostname: pi-netdata
     restart: unless-stopped
-    # Remove direct port exposure - access via nginx proxy
     expose:
       - "19999"
     cap_add:
