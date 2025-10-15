@@ -91,7 +91,7 @@ services:
       # Network configuration
       N8N_HOST: "n8n.local"
       N8N_PORT: 5678
-      N8N_PROTOCOL: "https"  # Changed to https since nginx handles SSL
+      N8N_PROTOCOL: "https"  # https since nginx handles SSL
       N8N_LISTEN_ADDRESS: "0.0.0.0"
       
       # Timezone
