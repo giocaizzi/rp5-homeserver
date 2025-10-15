@@ -42,8 +42,3 @@ output "backup_service_account_key" {
   value       = google_service_account_key.backup_key.private_key
   sensitive   = true
 }
-
-output "backup_bucket_path" {
-  description = "Full GCS path for backrest configuration"
-  value       = "gs://${google_storage_bucket.backup.name}/backups/rp5-homeserver"
-}
