@@ -23,4 +23,5 @@ Ensure security, efficiency, and maintainability.
 Use environment variables for sensitive data.
 Document with a streamlined style.
 DO NOT summarize what YOU changed in any documentation. Just make the changes and update the docs as needed.
+ALWAYS keep secret keys and sensitive info out of the code, use environment variables or ignore files.
 </guidelines>

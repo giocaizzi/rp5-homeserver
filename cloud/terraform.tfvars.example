@@ -1,0 +1,19 @@
+# Copy this file to terraform.tfvars and fill in your values
+
+# Your Cloudflare API token with appropriate permissions
+cloudflare_api_token = "your_cloudflare_api_token_here"
+
+# Your Cloudflare account ID (found in the right sidebar of your Cloudflare dashboard)
+cloudflare_account_id = "your_account_id_here"
+
+# Domain name (should match your Cloudflare zone)
+zone_name = "example.com"
+
+# Base64 encoded tunnel secret (generate with: openssl rand -base64 32)
+tunnel_secret = "your_base64_tunnel_secret_here"
+
+# List of allowed email addresses for n8n access
+users = [
+  "user1@example.com",
+  "user2@example.com"
+]
