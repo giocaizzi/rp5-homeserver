@@ -88,7 +88,7 @@ services:
       - "5678"
     environment:
       # Network configuration
-      N8N_HOST: "n8n.giocaizzi.xyz"
+      N8N_HOST: "${N8N_HOST:-n8n.local}"
       N8N_PORT: 5678
       N8N_PROTOCOL: "https"  # https since nginx handles SSL
       N8N_LISTEN_ADDRESS: "0.0.0.0"
@@ -125,10 +125,10 @@ services:
       
       
       # Webhook configuration for reverse proxy
-      WEBHOOK_URL: "https://n8n.giocaizzi.xyz"
+      WEBHOOK_URL: "https://${N8N_HOST:-n8n.local}"
       
       # Security headers
-      N8N_ADDITIONAL_ALLOWED_ORIGINS: "https://n8n.giocaizzi.xyz,https://n8n.local"
+      N8N_ADDITIONAL_ALLOWED_ORIGINS: "https://${N8N_HOST:-n8n.local}"
       
     volumes:
       - n8n_data:/home/node/.n8n
