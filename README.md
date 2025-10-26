@@ -11,6 +11,7 @@ Raspberry Pi 5 Docker-based home server.
 
 - **[N8N](./services/n8n/README.md)** - Workflow automation (`https://n8n.local`)
 - **[Ollama](./services/ollama/README.md)** - Local LLM server (`https://ollama.local`)
+- **[Firefly III](./services/firefly/README.md)** - Personal finance manager (`https://firefly.local`)
 
 > [How to add a service](./docs/services.md)
 
