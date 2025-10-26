@@ -191,16 +191,14 @@ Automated imports reuse a configuration you create manually first. See the [offi
    - At the end, **download the configuration file** (JSON)
    - See [JSON configuration file reference](https://docs.firefly-iii.org/references/data-importer/json/) for field details
 
-2. **Deploy configuration to the server**:
+2. **Deploy configuration to the container**:
    ```bash
-   # Copy config to the import directory on the Pi
-   # This directory is mounted via relative path in docker-compose.yml
-   scp ~/Downloads/your-config.json pi@pi.local:/home/pi/rp5-homeserver/services/firefly/import/config.json
+   # Copy config directly to the running container (no volume mount needed)
+   scp import/config.json giorgiocaizzi@pi.local:/tmp/config.json
+   ssh giorgiocaizzi@pi.local "docker cp /tmp/config.json firefly_importer:/import/config.json"
    
-   # Verify the file is in place
-   ssh pi@pi.local "ls -lh /home/pi/rp5-homeserver/services/firefly/import/"
-
-   # Redeploy stack in Portainer (or just restart importer container)
+   # Verify the file is in the container
+   ssh giorgiocaizzi@pi.local "docker exec firefly_importer ls -la /import/"
    ```
 
 3. **Automated imports run daily at 2:40 AM UTC**:
@@ -210,13 +208,14 @@ Automated imports reuse a configuration you create manually first. See the [offi
    - Duplicate detection prevents re-importing existing transactions
 
 **How it works with Portainer remote deployment**:
-- The `docker-compose.yml` uses **relative mount** `./import:/import` which Portainer supports
-- Portainer clones the git repo to the Pi, then Docker resolves the relative path
-- Your `config.json` persists on Pi filesystem (NOT in git) across redeployments
-- See `import/README.md` for details on the directory structure
+- No volume mount needed - config is copied directly to running container
+- Uses `docker cp` to transfer config.json to `/import/config.json` in container
+- Simpler, cleaner approach with no Portainer path dependencies
+- Config persists in container until next redeploy (then just copy again)
+- See `import/README.md` for details on the configuration file
 
 **Important Notes**:
-- Config file must be copied to Pi at: `/home/pi/rp5-homeserver/services/firefly/import/config.json`
+- Copy config after each stack redeploy using `docker cp`
 - Date ranges in config (e.g., "last 30 days") are evaluated at import time
 - The `AUTO_IMPORT_SECRET` must be set in environment variables
 - Config files are NOT tracked in git (contain sensitive account IDs and mappings)
