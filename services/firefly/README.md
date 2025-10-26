@@ -41,10 +41,10 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 1. **Clean up any previous failed deployments:**
    ```bash
    # Remove orphaned containers
-   ssh giorgiocaizzi@pi.local "docker stop firefly_app firefly_db firefly_importer firefly_cron 2>/dev/null; docker rm firefly_app firefly_db firefly_importer firefly_cron 2>/dev/null || true"
+   ssh pi@pi.local  "docker stop firefly_app firefly_db firefly_importer firefly_cron 2>/dev/null; docker rm firefly_app firefly_db firefly_importer firefly_cron 2>/dev/null || true"
    
    # Remove old volumes to ensure fresh database initialization
-   ssh giorgiocaizzi@pi.local "docker volume rm firefly_firefly_db firefly_firefly_upload 2>/dev/null || true"
+   ssh pi@pi.local  "docker volume rm firefly_firefly_db firefly_firefly_upload 2>/dev/null || true"
    ```
 
 2. **Deploy via Portainer** pointing to:
@@ -56,7 +56,19 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
    APP_KEY=<generate-32-char-base64-key>
    DB_PASSWORD=<strong-password>
    STATIC_CRON_TOKEN=<32-character-token>
+   AUTO_IMPORT_SECRET=<16-character-secret>
    FIREFLY_CLIENT_ID=1
+   FIREFLY_III_ACCESS_TOKEN=<personal-access-token>
+   LUNCH_FLOW_API_KEY=<lunch-flow-api-key>
+   ```
+   
+   Generate tokens:
+   ```bash
+   # APP_KEY (base64 encoded 32 characters)
+   openssl rand -base64 32
+   
+   # STATIC_CRON_TOKEN and AUTO_IMPORT_SECRET
+   openssl rand -hex 16
    ```
 
 4. **Monitor deployment progress** (expected timing):
@@ -67,7 +79,7 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 5. **Verify successful deployment:**
    ```bash
    # Check all containers are healthy
-   ssh giorgiocaizzi@pi.local "docker ps | grep firefly"
+   ssh pi@pi.local  "docker ps | grep firefly"
    ```
 
 6. **Access and setup**:
@@ -114,14 +126,17 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
    - Navigate to `https://firefly.local`
    - Create your account (first user becomes admin)
 
-5. **Generate OAuth Client ID** for data importer:
+5. **Generate OAuth Client ID and Personal Access Token**:
    - Login to Firefly III
    - Go to Profile → OAuth → "Create New Personal Access Client"
    - Name: "Data Importer"
    - Redirect URL: `https://firefly-importer.local/callback`
    - UNCHECK "Confidential"
    - Copy the Client ID
-   - Update `FIREFLY_CLIENT_ID` in Portainer environment variables
+   - Go to Profile → OAuth → "Personal Access Tokens"
+   - Create new token with name "Importer Automation"
+   - Copy the token
+   - Update `FIREFLY_CLIENT_ID` and `FIREFLY_III_ACCESS_TOKEN` in Portainer environment variables
    - Restart the stack
 
 6. **Access Data Importer**:
@@ -132,12 +147,11 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 
 ## Cron Jobs
 
-Automated daily tasks run at 3:00 AM UTC:
-- Process recurring transactions
-- Execute auto-budgets
-- Clear cache
+Automated tasks run daily:
+- **3:00 AM UTC**: Firefly III maintenance (recurring transactions, auto-budgets, cache clearing)
+- **2:40 AM UTC**: Automated Lunch Flow import from `/import` directory
 
-The cron job uses `STATIC_CRON_TOKEN` for secure API access.
+Both jobs use secure tokens (`STATIC_CRON_TOKEN` and `AUTO_IMPORT_SECRET`) for API access.
 
 ## Data Import
 
@@ -153,10 +167,59 @@ The Data Importer supports:
 
 1. Sign up at [https://www.lunchflow.app/](https://www.lunchflow.app/)
 2. Create connections to your bank accounts
-3. In Lunch Flow dashboard: **Destinations** → **Add Destination** → **API** → **Firefly III**
-4. Copy the generated API key
-5. Set `LUNCH_FLOW_API_KEY` environment variable in Portainer
-6. Restart the stack
+3. Customize connection settings (under "X Accounts" → "Description" - **must not be empty**)
+4. In Lunch Flow dashboard: **Destinations** → **Add Destination** → **API** → **Firefly III**
+5. Copy the generated API key
+6. Set `LUNCH_FLOW_API_KEY` environment variable in Portainer
+7. Restart the stack
+
+### Automated Lunch Flow Imports
+
+Automated imports reuse a configuration you create manually first. See the [official documentation on automated imports](https://docs.firefly-iii.org/how-to/data-importer/import/automated/).
+
+**Setup Process**:
+
+1. **Create and test configuration manually**:
+   - Access the importer at `https://firefly-importer.local`
+   - Select "Lunch Flow" as import method
+   - Configure:
+     - Which bank accounts to import from
+     - Which Firefly III accounts to import into
+     - Date range (e.g., "last 30 days")
+     - Data mapping preferences
+   - Run the import to verify it works
+   - At the end, **download the configuration file** (JSON)
+   - See [JSON configuration file reference](https://docs.firefly-iii.org/references/data-importer/json/) for field details
+
+2. **Deploy configuration to the server**:
+   ```bash
+   # Copy config to the import directory on the Pi
+   # This directory is mounted via relative path in docker-compose.yml
+   scp ~/Downloads/your-config.json pi@pi.local:/home/pi/rp5-homeserver/services/firefly/import/config.json
+   
+   # Verify the file is in place
+   ssh pi@pi.local "ls -lh /home/pi/rp5-homeserver/services/firefly/import/"
+
+   # Redeploy stack in Portainer (or just restart importer container)
+   ```
+
+3. **Automated imports run daily at 2:40 AM UTC**:
+   - Uses the configuration in `/import/config.json`
+   - Connects to Lunch Flow with your API key
+   - Imports new transactions based on the date range in config
+   - Duplicate detection prevents re-importing existing transactions
+
+**How it works with Portainer remote deployment**:
+- The `docker-compose.yml` uses **relative mount** `./import:/import` which Portainer supports
+- Portainer clones the git repo to the Pi, then Docker resolves the relative path
+- Your `config.json` persists on Pi filesystem (NOT in git) across redeployments
+- See `import/README.md` for details on the directory structure
+
+**Important Notes**:
+- Config file must be copied to Pi at: `/home/pi/rp5-homeserver/services/firefly/import/config.json`
+- Date ranges in config (e.g., "last 30 days") are evaluated at import time
+- The `AUTO_IMPORT_SECRET` must be set in environment variables
+- Config files are NOT tracked in git (contain sensitive account IDs and mappings)
 
 Access at `https://firefly-importer.local` with the OAuth credentials.
 
@@ -165,5 +228,6 @@ Access at `https://firefly-importer.local` with the OAuth credentials.
 Important data locations:
 - Database: MariaDB volume `firefly_db`
 - Uploads: Volume `firefly_upload`
+- Import configurations: `services/firefly/import/` (on Pi host filesystem)
 
-Include both volumes in your backup strategy.
+Include volumes in your backup strategy. Back up import configs separately if needed.
