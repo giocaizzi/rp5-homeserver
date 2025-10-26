@@ -24,6 +24,7 @@ services:
     volumes:
       - ${NGINX_CONF_PATH}:/etc/nginx/nginx.conf:ro
       - ${NGINX_SSL_PATH}:/etc/nginx/ssl:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
