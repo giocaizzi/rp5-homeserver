@@ -150,6 +150,7 @@ services:
       FIREFLY_III_URL: "http://app:8080"
       VANITY_URL: "https://${FIREFLY_HOST:-firefly.local}"
       FIREFLY_III_CLIENT_ID: "${FIREFLY_CLIENT_ID}"
+      FIREFLY_III_ACCESS_TOKEN: "${FIREFLY_III_ACCESS_TOKEN}"
 
       # Lunch flow
       LUNCH_FLOW_API_KEY: "${LUNCH_FLOW_API_KEY:-}"
@@ -169,11 +170,14 @@ services:
       # Performance
       USE_CACHE: "true"
       
-      # Optional: Auto-import configuration
-      AUTO_IMPORT_SECRET: "${AUTO_IMPORT_SECRET:-}"
-      CAN_POST_AUTOIMPORT: "${CAN_POST_AUTOIMPORT:-false}"
-      CAN_POST_FILES: "${CAN_POST_FILES:-false}"
+      # Auto-import configuration
+      IMPORT_DIR_ALLOWLIST: "/import"
+      AUTO_IMPORT_SECRET: "${AUTO_IMPORT_SECRET}"
+      CAN_POST_AUTOIMPORT: "true"
+      CAN_POST_FILES: "true"
       IGNORE_DUPLICATE_ERRORS: "${IGNORE_DUPLICATE_ERRORS:-false}"
+    volumes:
+      - ./import:/import
     networks:
       - firefly_network
       - public_network
@@ -210,10 +214,25 @@ services:
     depends_on:
       app:
         condition: service_started
+      importer:
+        condition: service_started
     environment:
       TZ: "${TZ:-UTC}"
       STATIC_CRON_TOKEN: "${STATIC_CRON_TOKEN}"
-    command: sh -c "apk add --no-cache tzdata wget && ln -sf /usr/share/zoneinfo/$$TZ /etc/localtime && echo 'Waiting for Firefly to be ready...' && until wget -q --spider http://app:8080/api/v1/about; do echo 'Waiting...'; sleep 30; done && echo 'Firefly is ready, starting cron...' && echo \"0 3 * * * wget -qO- http://app:8080/api/v1/cron/$$STATIC_CRON_TOKEN\" | crontab - && crond -f -L /dev/stdout"
+      AUTO_IMPORT_SECRET: "${AUTO_IMPORT_SECRET}"
+    command: >
+      sh -c "apk add --no-cache tzdata wget &&
+      ln -sf /usr/share/zoneinfo/$$TZ /etc/localtime &&
+      echo 'Waiting for Firefly to be ready...' &&
+      until wget -q --spider http://app:8080/api/v1/about; do echo 'Waiting...'; sleep 30; done &&
+      echo 'Firefly is ready, setting up cron jobs...' &&
+      echo '0 3 * * * wget -qO- http://app:8080/api/v1/cron/'$$STATIC_CRON_TOKEN > /tmp/crontab &&
+      echo '40 2 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" http://importer:8080/autoimport?directory=/import\\&secret='$$AUTO_IMPORT_SECRET >> /tmp/crontab &&
+      crontab /tmp/crontab &&
+      rm /tmp/crontab &&
+      echo 'Cron jobs configured:' &&
+      crontab -l &&
+      crond -f -L /dev/stdout"
     networks:
       - firefly_network
     labels:
