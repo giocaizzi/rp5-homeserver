@@ -58,7 +58,6 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
    STATIC_CRON_TOKEN=<32-character-token>
    AUTO_IMPORT_SECRET=<16-character-secret>
    FIREFLY_CLIENT_ID=1
-   FIREFLY_III_ACCESS_TOKEN=<personal-access-token>
    LUNCH_FLOW_API_KEY=<lunch-flow-api-key>
    ```
    
@@ -117,8 +116,8 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 1. **Generate required tokens** using commands above
 
 2. **Set environment variables** in Portainer:
-   - Set `APP_KEY`, `DB_PASSWORD`, `STATIC_CRON_TOKEN`
-   - Leave `FIREFLY_CLIENT_ID` empty initially
+   - Set `APP_KEY`, `DB_PASSWORD`, `STATIC_CRON_TOKEN`, `AUTO_IMPORT_SECRET`
+   - Set `FIREFLY_CLIENT_ID=1` initially
 
 3. **Deploy the stack** in Portainer
 
@@ -126,23 +125,21 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
    - Navigate to `https://firefly.local`
    - Create your account (first user becomes admin)
 
-5. **Generate OAuth Client ID and Personal Access Token**:
+5. **Generate OAuth Client ID for Data Importer**:
    - Login to Firefly III
    - Go to Profile → OAuth → "Create New Personal Access Client"
    - Name: "Data Importer"
    - Redirect URL: `https://firefly-importer.local/callback`
    - UNCHECK "Confidential"
    - Copy the Client ID
-   - Go to Profile → OAuth → "Personal Access Tokens"
-   - Create new token with name "Importer Automation"
-   - Copy the token
-   - Update `FIREFLY_CLIENT_ID` and `FIREFLY_III_ACCESS_TOKEN` in Portainer environment variables
+   - Update `FIREFLY_CLIENT_ID` in Portainer environment variables
    - Restart the stack
 
 6. **Access Data Importer**:
    - Navigate to `https://firefly-importer.local`
    - When prompted for Firefly III URL, use: `http://app:8080`
    - Provide the Client ID generated in step 5
+   - The system will use OAuth flow for authentication
 
 
 ## Cron Jobs
@@ -151,7 +148,7 @@ Automated tasks run daily:
 - **3:00 AM UTC**: Firefly III maintenance (recurring transactions, auto-budgets, cache clearing)
 - **2:40 AM UTC**: Automated Lunch Flow import from `/import` directory
 
-Both jobs use secure tokens (`STATIC_CRON_TOKEN` and `AUTO_IMPORT_SECRET`) for API access.
+The cron job uses the `php artisan firefly-iii:cron` command and the auto-import uses the `AUTO_IMPORT_SECRET` for API access.
 
 ## Data Import
 
