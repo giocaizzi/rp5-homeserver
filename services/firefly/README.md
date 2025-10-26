@@ -144,11 +144,21 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 
 ## Cron Jobs
 
-Automated tasks run daily:
-- **3:00 AM UTC**: Firefly III maintenance (recurring transactions, auto-budgets, cache clearing)
-- **2:40 AM UTC**: Automated Lunch Flow import from `/import` directory
+Following the [official automated import documentation](https://docs.firefly-iii.org/how-to/data-importer/import/automated/), automated tasks run daily:
 
-The cron job uses the `php artisan firefly-iii:cron` command and the auto-import uses the `AUTO_IMPORT_SECRET` for API access.
+- **3:00 AM UTC**: **Firefly III maintenance cron** (`/api/v1/cron/[token]`)
+  - Recurring transactions: Creates scheduled recurring transactions
+  - Auto-budgets: Automatically allocates budget amounts based on rules
+  - Exchange rates: Updates currency exchange rates from external providers
+  - Bill notifications: Sends alerts for upcoming or overdue bills
+
+- **2:40 AM UTC**: **Data Importer autoimport** (`/autoimport?directory=/import&secret=[secret]`)
+  - Imports new bank transactions from configured data providers (Lunch Flow, GoCardless, etc.)
+  - Scans the `/import` directory for configuration files
+  - Uses personal access token authentication with Bearer header
+  - Applies duplicate detection to prevent re-importing existing transactions
+
+Both cron jobs run in the same Alpine container but serve completely different purposes: **internal Firefly maintenance** vs **external data import**.
 
 ## Data Import
 
@@ -198,6 +208,22 @@ Automated imports reuse a configuration you create manually first. See the [offi
    ssh giorgiocaizzi@pi.local "docker exec firefly_importer ls -la /import/"
    ```
 
+   **Important**: Your config.json must include a valid personal access token for automated imports:
+   
+   a. **Generate personal access token**:
+      - Login to Firefly III at `https://firefly.local`
+      - Go to Profile → OAuth → Personal Access Tokens
+      - Click "Create New Token"
+      - Name: "Data Importer Automated"
+      - Select all scopes (read/write)
+      - Copy the generated token
+   
+   b. **Update config.json** with the token:
+      - Edit your local `import/config.json`
+      - Find the `"access_token": ""` field
+      - Replace empty string with your token: `"access_token": "eyJ0eXAiOiJKV1QiLCJ..."`
+      - Save and copy to container again
+
 3. **Automated imports run daily at 2:40 AM UTC**:
    - Uses the configuration in `/import/config.json`
    - Connects to Lunch Flow with your API key
@@ -213,9 +239,10 @@ Automated imports reuse a configuration you create manually first. See the [offi
 
 **Important Notes**:
 - Copy config after each stack redeploy using `docker cp`
+- **Personal access token required**: Config must include valid `access_token` for automated imports
 - Date ranges in config (e.g., "last 30 days") are evaluated at import time
 - The `AUTO_IMPORT_SECRET` must be set in environment variables
-- Config files are NOT tracked in git (contain sensitive account IDs and mappings)
+- Config files are NOT tracked in git (contain sensitive account IDs, mappings, and tokens)
 
 Access at `https://firefly-importer.local` with the OAuth credentials.
 
