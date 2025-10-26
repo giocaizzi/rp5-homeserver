@@ -47,6 +47,33 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private networks)
 - Configurable retention policy via web interface
 - Real-time backup monitoring and notifications
 
+**Homepage** (`ghcr.io/gethomepage/homepage:latest`)
+- Modern application dashboard at `https://homepage.local`
+- Centralized access to all services
+- Real-time system stats and Docker container monitoring
+- Customizable widgets and service status indicators
+
+## Portainer API Key Setup
+
+To enable Portainer widget integration:
+
+1. Access Portainer at `https://portainer.local`
+2. Navigate to User account → API keys
+3. Generate a new API key
+4. Replace `ptr_xxxxxxxxxxxxxxxxxxxxx` in `services.yaml` with your actual API key
+5. Restart homepage container: `docker compose restart homepage`
+
+## Widget Features
+
+With API integration enabled, the Portainer widget will show:
+- Container count by status
+- Stack information
+- Resource usage
+
+## Security Note
+
+The API key provides read-only access to container information. Store securely and rotate periodically.
+
 ## Volumes & Data
 
 **Named Volumes:**
@@ -57,6 +84,8 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private networks)
 - `backrest_data` - Backup metadata and state
 - `backrest_config` - Backup plans and repository config
 - `backrest_cache` - Restic cache for performance
+
+> Homepage uses local config files from `./homepage/` directory.
 
 ## Configuration
 
@@ -97,5 +126,5 @@ See [SSL Generation Instructions](../docs/setup.md#1-infrastructure-stack).
 In order to pass `nginx` hostname resolution, add to your local `/etc/hosts` file:
 
 ```
-192.168.x.x portainer.local netdata.local backrest.local <other_service>.local
+192.168.x.x portainer.local netdata.local backrest.local homepage.local <other_service>.local
 ```

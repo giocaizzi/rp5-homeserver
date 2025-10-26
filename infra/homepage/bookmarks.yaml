@@ -1,0 +1,20 @@
+---
+# Bookmarks for quick access
+- Development:
+    - GitHub:
+        - abbr: GH
+          href: https://github.com/giocaizzi/rp5-homeserver
+
+- Documentation:
+    - Homepage.dev:
+        - abbr: HP
+          href: https://gethomepage.dev/
+
+    - Docker:
+        - abbr: DC
+          href: https://docs.docker.com/
+
+- Monitoring:
+    - Raspberry Pi:
+        - abbr: RPi
+          href: https://www.raspberrypi.org/

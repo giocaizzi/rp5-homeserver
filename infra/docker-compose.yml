@@ -238,6 +238,51 @@ services:
       retries: 3
       start_period: 10s
 
+  # Homepage - Modern application dashboard
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      - PUID=0  # Run as root for Docker socket access
+      - PGID=0
+      - TZ=${TZ:-UTC}
+      - HOMEPAGE_ALLOWED_HOSTS=homepage.local,localhost
+      - HOMEPAGE_VAR_PORTAINER_API_KEY=${PORTAINER_API_KEY}
+    volumes:
+      - ${HOMEPAGE_CONFIG_PATH:-./homepage}:/app/config  # Local config files
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker integration (writable)
+    networks:
+      - infra_network
+      - public_network
+    labels:
+      - "stack=infrastructure"
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+        reservations:
+          memory: 64M
+          cpus: "0.25"
+    memswap_limit: 256M
+    mem_swappiness: 10
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
 volumes:
   portainer_data:
     driver: local
