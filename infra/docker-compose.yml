@@ -16,7 +16,7 @@ services:
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: nginx
+    container_name: infra_nginx
     restart: unless-stopped
     ports:
       - "80:80"     # HTTP
@@ -63,7 +63,7 @@ services:
   # Portainer - Docker management UI (Business Edition)
   portainer:
     image: portainer/portainer-ee:latest
-    container_name: portainer
+    container_name: infra_portainer
     restart: unless-stopped
     expose:
       - "9000"
@@ -99,7 +99,7 @@ services:
   
   cloudflared:
     image: cloudflare/cloudflared:latest
-    container_name: cloudflared
+    container_name: infra_cloudflared
     restart: unless-stopped
     command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN}
     networks:
@@ -134,7 +134,7 @@ services:
   # Netdata - Real-time performance monitoring
   netdata:
     image: netdata/netdata:latest
-    container_name: netdata
+    container_name: infra_netdata
     hostname: pi-netdata
     restart: unless-stopped
     expose:
@@ -186,7 +186,7 @@ services:
   # Backrest - Restic backup with Web UI
   backrest:
     image: garethgeorge/backrest:latest
-    container_name: backrest
+    container_name: infra_backrest
     restart: unless-stopped
     hostname: backrest
     expose:
@@ -237,7 +237,7 @@ services:
   # Homepage - Modern application dashboard
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
-    container_name: homepage
+    container_name: infra_homepage
     restart: unless-stopped
     expose:
       - "3000"
