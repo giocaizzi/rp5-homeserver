@@ -16,6 +16,7 @@ Utilizes Portainer for container management.
     - `services` are deployed via Portainer stacks using REMOTE REPOSITORY feature.
 Coding happens on MacOS connected to the RP5 via SSH @ `giorgiocaizzi@pi.local`, use rsync for file sync.
 Always sync the `infra`. Other services are managed via Portainer and normally not synced directly. Exceptions for private config files.
+Write docs anonymously without personal identifiers, use /home/pi/ and pi@pi.local for Pi paths and SSH.
 </context>
 
 <guidelines>    
