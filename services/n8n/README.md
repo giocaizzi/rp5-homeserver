@@ -43,32 +43,12 @@ Copy `.env.example` to `.env` and set:
 
 Requires [infrastructure stack](../../infra) running first.
 
-**Access**: Login at `https://n8n.local` with configured credentials.
+1. Deploy via Portainer pointing to:
 
-## Migration from SQLite
+- Repository: `https://github.com/giocaizzi/rp5-homeserver`
+- Container path: `services/n8n/docker-compose.yml`
+Set environment variables in Portainer Stack → Environment Variables section.
 
-If migrating from an existing SQLite setup:
+2. Add `n8n.local` to your local `/etc/hosts`
 
-1. **Stop the current n8n stack**:
-   ```bash
-   docker compose down
-   ```
-
-2. **Backup existing SQLite database** (if it exists):
-   ```bash
-   cp ./data/n8n/n8n.sqlite ./data/n8n/n8n.sqlite.backup
-   ```
-
-3. **Update environment variables** as described above
-
-4. **Start the new stack** with PostgreSQL:
-   ```bash
-   docker compose up -d
-   ```
-
-5. **For data migration** (optional):
-   - N8N will start fresh with PostgreSQL
-   - To migrate workflows/credentials from SQLite, export them from the old instance and import to the new one via the web interface
-   - Or use N8N's CLI tools for bulk migration if needed
-
-**Note**: The PostgreSQL setup provides better performance and reliability for production use.
+3. Login at `https://n8n.local` with configured credentials.

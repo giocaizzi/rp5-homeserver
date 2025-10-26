@@ -13,27 +13,6 @@ Self-hosted personal finance manager at `https://firefly.local` with data import
 **Authentication**: Built-in user registration & authentication
 **Resource Limits**: 512MB RAM, 1 CPU (app) + 512MB RAM, 0.5 CPU (database)
 
-## Key Settings
-
-**Raspberry Pi Optimizations**:
-- Conservative memory limits: app 512MB, database 512MB, importer 256MB, cron 64MB
-- Swap-aware configuration for 8GB Pi
-- Optimized resource reservations
-- JSON logging with rotation
-
-**Security**:
-- HTTPS-only via nginx proxy
-- Trusted proxy configuration for proper IP handling
-- No-new-privileges security option
-- Secure database with random root password
-- Secret tokens for cron and importer
-
-**Performance**:
-- Dedicated MariaDB database for optimal performance
-- Health checks on all critical services
-- Automatic daily cron job for recurring transactions
-- Data importer for bank statement imports
-
 **Network**: Access via nginx proxy (no direct ports exposed)
 
 ## Environment Setup
@@ -42,34 +21,6 @@ Self-hosted personal finance manager at `https://firefly.local` with data import
 
 Set environment variables in Portainer Stack → Environment Variables section.
 
-### Minimal Required Setup
-
-```bash
-# Application encryption key (base64, 32 chars)
-APP_KEY=<generate-unique-value>
-
-# Database password
-DB_PASSWORD=<strong-random-password>
-
-# Cron token (exactly 32 chars)
-STATIC_CRON_TOKEN=<generate-32-char-token>
-
-# OAuth Client ID (leave empty initially, set after first login)
-FIREFLY_CLIENT_ID=
-```
-
-### Generate Secure Tokens
-
-```bash
-# APP_KEY
-head /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | head -c 32 | base64
-
-# STATIC_CRON_TOKEN (exactly 32 characters)
-head /dev/urandom | LC_ALL=C tr -dc 'A-Za-z0-9' | head -c 32
-
-# DB_PASSWORD
-openssl rand -base64 32
-```
 
 ## Deployment
 
@@ -77,11 +28,77 @@ Requires [infrastructure stack](../../infra) running first.
 
 Deploy via Portainer using the remote repository feature.
 
+**Important**: Ensure all required environment variables are set before deployment.
+
 **Nginx Configuration**: Firefly III is accessible at:
 - Main app: `https://firefly.local`
 - Data Importer: `https://firefly-importer.local`
 
 The nginx configuration has been added to `/infra/nginx/nginx.conf`.
+
+### Deployment Steps:
+
+1. **Clean up any previous failed deployments:**
+   ```bash
+   # Remove orphaned containers
+   ssh giorgiocaizzi@pi.local "docker stop firefly_app firefly_db firefly_importer firefly_cron 2>/dev/null; docker rm firefly_app firefly_db firefly_importer firefly_cron 2>/dev/null || true"
+   
+   # Remove old volumes to ensure fresh database initialization
+   ssh giorgiocaizzi@pi.local "docker volume rm firefly_firefly_db firefly_firefly_upload 2>/dev/null || true"
+   ```
+
+2. **Deploy via Portainer** pointing to:
+   - Repository: `https://github.com/giocaizzi/rp5-homeserver`
+   - Container path: `services/firefly/docker-compose.yml`
+
+3. **Set required environment variables** in Portainer Stack → Environment Variables:
+   ```bash
+   APP_KEY=<generate-32-char-base64-key>
+   DB_PASSWORD=<strong-password>
+   STATIC_CRON_TOKEN=<32-character-token>
+   FIREFLY_CLIENT_ID=1
+   ```
+
+4. **Monitor deployment progress** (expected timing):
+   - Database initialization: ~60-90 seconds
+   - App startup & migrations: ~120-180 seconds
+   - Total deployment time: ~3-5 minutes
+
+5. **Verify successful deployment:**
+   ```bash
+   # Check all containers are healthy
+   ssh giorgiocaizzi@pi.local "docker ps | grep firefly"
+   ```
+
+6. **Access and setup**:
+   - Navigate to `https://firefly.local`
+   - Create your first user account
+
+### Troubleshooting:
+
+**Deployment fails in Portainer:**
+1. **First step: Always clean up volumes** from previous failed attempts
+2. Check that all required environment variables are set correctly
+3. Ensure infrastructure stack is running (`rp5_public` network must exist)
+4. Monitor container logs in Portainer for specific errors
+
+**Common Issues:**
+- **"Access denied for user 'firefly'"**: Old database volume exists, clean up volumes first
+- **Portainer deployment timeout**: Expected on first deployment (3-5 minutes), let it complete
+- **App health check fails**: Check app logs for database connection errors
+- **Containers start then stop**: Usually database authentication issues from dirty volumes
+
+**Timing Expectations:**
+- **Database healthcheck**: 60-90 seconds for fresh initialization
+- **App healthcheck**: 120-180 seconds (includes migrations)  
+- **Total deployment**: 3-5 minutes on Raspberry Pi
+- **Portainer timeout**: ~10-15 minutes (should not be reached)
+
+**Performance Notes for Raspberry Pi:**
+- Database initialization slower on ARM architecture
+- Memory limits may cause swap usage (normal)
+- First-time deployment takes longer due to image pulls and volume initialization
+
 
 ## First Time Setup
 
@@ -101,6 +118,8 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
    - Login to Firefly III
    - Go to Profile → OAuth → "Create New Personal Access Client"
    - Name: "Data Importer"
+   - Redirect URL: `https://firefly-importer.local/callback`
+   - UNCHECK "Confidential"
    - Copy the Client ID
    - Update `FIREFLY_CLIENT_ID` in Portainer environment variables
    - Restart the stack
@@ -109,6 +128,7 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
    - Navigate to `https://firefly-importer.local`
    - When prompted for Firefly III URL, use: `http://app:8080`
    - Provide the Client ID generated in step 5
+
 
 ## Cron Jobs
 
@@ -127,6 +147,16 @@ The Data Importer supports:
 - Automated imports via API
 - Spectre/Salt Edge integration
 - Nordigen (GoCardless) integration
+- **Lunch Flow integration** - Connect to your banks via [Lunch Flow](https://www.lunchflow.app/)
+
+### Lunch Flow Setup
+
+1. Sign up at [https://www.lunchflow.app/](https://www.lunchflow.app/)
+2. Create connections to your bank accounts
+3. In Lunch Flow dashboard: **Destinations** → **Add Destination** → **API** → **Firefly III**
+4. Copy the generated API key
+5. Set `LUNCH_FLOW_API_KEY` environment variable in Portainer
+6. Restart the stack
 
 Access at `https://firefly-importer.local` with the OAuth credentials.
 
