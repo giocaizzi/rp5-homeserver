@@ -176,8 +176,6 @@ services:
       CAN_POST_AUTOIMPORT: "true"
       CAN_POST_FILES: "true"
       IGNORE_DUPLICATE_ERRORS: "${IGNORE_DUPLICATE_ERRORS:-false}"
-    volumes:
-      - ./import:/import
     networks:
       - firefly_network
       - public_network

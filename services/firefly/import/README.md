@@ -24,10 +24,13 @@ The JSON configuration file that defines how automated imports should run. This 
    - Run a manual import with desired settings
    - Download the configuration file at the end
 
-2. **Deploy to Pi**:
+2. **Save locally and deploy to Pi**:
    ```bash
-   # Copy from your downloads to Pi
-   scp ~/Downloads/your-config.json pi@pi.local:/home/pi/rp5-homeserver/services/firefly/import/config.json
+   # Move downloaded config to your local repo (git-ignored)
+   mv ~/Downloads/your-config.json import/config.json
+   
+   # Copy to the Pi
+   scp import/config.json pi@pi.local:/home/pi/rp5-homeserver/services/firefly/import/config.json
    ```
 
 3. **Redeploy stack** in Portainer to ensure the mount picks up the new file
