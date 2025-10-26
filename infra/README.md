@@ -43,7 +43,7 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private networks)
 **Backrest** (`garethgeorge/backrest:latest`)
 - Web UI for restic backups at `https://backrest.local`
 - Automated incremental backups to Google Cloud Storage
-- Backs up `/home/giorgiocaizzi` and Docker volumes
+- Backs up user home directory and Docker volumes
 - Configurable retention policy via web interface
 - Real-time backup monitoring and notifications
 

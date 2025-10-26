@@ -5,7 +5,7 @@ Docker-based Backrest (restic with web UI) integrated into infrastructure stack.
 ## Architecture
 
 **Backup Targets:**
-- `/home/giorgiocaizzi` - User home directory
+- `${USER_HOME}` - User home directory
 - `/var/lib/docker/volumes` - All Docker volumes (n8n, ollama, portainer data)
 
 **Storage:** Google Cloud Storage bucket with incremental snapshots
@@ -77,7 +77,7 @@ docker compose up -d
      - `GOOGLE_PROJECT_ID=your-gcp-project-id`
 3. Create backup plans:
    - **User Home Backup**:
-     - Paths: `/backup/home/giorgiocaizzi`
+     - Paths: `/backup/home/username`
      - Schedule: Daily at 2 AM
      - Retention: Keep last 7 daily, 4 weekly, 6 monthly, 2 yearly
    - **Docker Volumes Backup**:
@@ -113,11 +113,11 @@ Access the container directly for restic commands:
 docker exec backrest restic -r /data/repos/rp5-homeserver snapshots
 
 # Browse files
-docker exec backrest restic -r /data/repos/rp5-homeserver ls latest /backup/home/giorgiocaizzi
+docker exec backrest restic -r /data/repos/rp5-homeserver ls latest /backup/home/username
 
 # Restore specific directory
 docker exec backrest restic -r /data/repos/rp5-homeserver restore latest \
-  --target /restore --include /backup/home/giorgiocaizzi/Documents
+  --target /restore --include /backup/home/username/Documents
 ```
 
 ## Monitoring
