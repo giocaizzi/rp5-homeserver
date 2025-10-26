@@ -17,12 +17,20 @@
         description: Real-time system monitoring
         icon: netdata.png
         ping: http://netdata:19999/api/v1/info
+        widget:
+          type: netdata
+          url: http://netdata:19999
 
     - Backrest:
         href: https://backrest.local
         description: Backup management
         icon: backrest.png
         ping: http://backrest:9898
+        widget:
+          type: backrest
+          url: http://backrest:9898
+          username: "{{HOMEPAGE_VAR_BACKREST_USERNAME}}"
+          password: "{{HOMEPAGE_VAR_BACKREST_PASSWORD}}"
 
 # Application Services  
 - Applications:
@@ -43,6 +51,10 @@
         description: Personal finance manager
         icon: firefly.png
         ping: http://firefly_app:8080
+        widget:
+          type: firefly
+          url: http://firefly_app:8080
+          key: "{{HOMEPAGE_VAR_FIREFLY_API_TOKEN}}"
 
     - Firefly Importer:
         href: https://firefly-importer.local

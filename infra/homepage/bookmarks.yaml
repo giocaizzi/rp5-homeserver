@@ -4,17 +4,10 @@
     - GitHub:
         - abbr: GH
           href: https://github.com/giocaizzi/rp5-homeserver
+          description: "RP5 Homeserver Repository"
 
-- Documentation:
-    - Homepage.dev:
-        - abbr: HP
-          href: https://gethomepage.dev/
-
-    - Docker:
-        - abbr: DC
-          href: https://docs.docker.com/
-
-- Monitoring:
-    - Raspberry Pi:
-        - abbr: RPi
-          href: https://www.raspberrypi.org/
+- Web:
+    - ChatGPT:
+        - abbr: GPT
+          href: https://chat.openai.com/
+          description: "OpenAI ChatGPT Interface"
