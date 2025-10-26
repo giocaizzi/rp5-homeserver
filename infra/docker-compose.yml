@@ -251,6 +251,14 @@ services:
       - TZ=${TZ:-UTC}
       - HOMEPAGE_ALLOWED_HOSTS=homepage.local,localhost
       - HOMEPAGE_VAR_PORTAINER_API_KEY=${PORTAINER_API_KEY}
+      - HOMEPAGE_VAR_BACKREST_USERNAME=${BACKREST_ADMIN_USERNAME:-admin}
+      - HOMEPAGE_VAR_BACKREST_PASSWORD=${BACKREST_ADMIN_PASSWORD}
+      - HOMEPAGE_VAR_FIREFLY_API_TOKEN=${FIREFLY_API_TOKEN}
+      - HOMEPAGE_VAR_LATITUDE=${HOMEPAGE_LATITUDE:-41.9028}
+      - HOMEPAGE_VAR_LONGITUDE=${HOMEPAGE_LONGITUDE:-12.4964}
+      - HOMEPAGE_VAR_TIMEZONE=${HOMEPAGE_TIMEZONE:-Europe/Rome}
+    group_add:
+      - "123"  # Docker group GID
     volumes:
       - ${HOMEPAGE_CONFIG_PATH:-./homepage}:/app/config  # Local config files
       - /var/run/docker.sock:/var/run/docker.sock  # Docker integration (writable)

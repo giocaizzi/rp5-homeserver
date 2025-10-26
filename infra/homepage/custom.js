@@ -1,1 +1,1 @@
-/* Custom JavaScript for homepage */
+/* Custom JavaScript disabled */
