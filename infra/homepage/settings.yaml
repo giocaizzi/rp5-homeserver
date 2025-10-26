@@ -1,0 +1,29 @@
+---
+# Homepage Configuration
+title: "RP5 Homeserver"
+subtitle: "Raspberry Pi 5 Infrastructure Dashboard"
+logo: "https://raw.githubusercontent.com/gethomepage/homepage/main/public/android-chrome-192x192.png"
+
+# Layout
+headerStyle: "boxed"
+theme: "dark"
+color: "slate"
+
+# Branding
+fav: "https://raw.githubusercontent.com/gethomepage/homepage/main/public/favicon.ico"
+
+# Options
+target: "_blank"
+useEqualHeights: true
+showStats: true
+
+# Language
+language: "en"
+
+# Quick launch settings
+quicklaunch:
+  searchDescriptions: true
+  hideInternetSearch: true
+
+# Status style
+statusStyle: "dot"

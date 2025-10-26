@@ -1,0 +1,35 @@
+---
+# Widget configuration for homepage
+
+# System resources widget
+- resources:
+    backend: resources
+    expanded: true
+    cpu: true
+    memory: true
+    cputemp: true
+    uptime: true
+    units: metric
+    refresh: 3000
+
+# Docker widget
+- docker:
+    socket: /var/run/docker.sock
+    expanded: true
+    show:
+      - running
+      - stopped
+      - unhealthy
+
+# Date and time
+- datetime:
+    text_size: xl
+    format:
+      timeStyle: short
+      dateStyle: long
+      hourCycle: h23
+
+# Search widget
+- search:
+    provider: duckduckgo
+    target: _blank

@@ -1,0 +1,51 @@
+---
+# Infrastructure Services
+- Infrastructure:
+    - Portainer:
+        href: https://portainer.local
+        description: Docker container management
+        icon: portainer.png
+        ping: http://portainer:9000/api/status
+        widget:
+          type: portainer
+          url: http://portainer:9000
+          env: 3
+          key: "{{HOMEPAGE_VAR_PORTAINER_API_KEY}}"
+
+    - Netdata:
+        href: https://netdata.local
+        description: Real-time system monitoring
+        icon: netdata.png
+        ping: http://netdata:19999/api/v1/info
+
+    - Backrest:
+        href: https://backrest.local
+        description: Backup management
+        icon: backrest.png
+        ping: http://backrest:9898
+
+# Application Services  
+- Applications:
+    - N8N:
+        href: https://n8n.local
+        description: Workflow automation
+        icon: n8n.png
+        ping: http://n8n:5678
+
+    - Ollama:
+        href: https://ollama.local
+        description: Local AI models
+        icon: ollama.png
+        ping: http://ollama:11434
+
+    - Firefly III:
+        href: https://firefly.local
+        description: Personal finance manager
+        icon: firefly.png
+        ping: http://firefly_app:8080
+
+    - Firefly Importer:
+        href: https://firefly-importer.local
+        description: Data import for Firefly III
+        icon: firefly.png
+        ping: http://firefly_importer:8080

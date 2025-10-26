@@ -1,0 +1,5 @@
+---
+# Docker configuration for homepage
+# Uses local Docker socket for container monitoring
+- my-docker:
+    socket: /var/run/docker.sock
