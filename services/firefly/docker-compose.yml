@@ -150,7 +150,6 @@ services:
       FIREFLY_III_URL: "http://app:8080"
       VANITY_URL: "https://${FIREFLY_HOST:-firefly.local}"
       FIREFLY_III_CLIENT_ID: "${FIREFLY_CLIENT_ID}"
-      FIREFLY_III_ACCESS_TOKEN: "${FIREFLY_III_ACCESS_TOKEN}"
 
       # Lunch flow
       LUNCH_FLOW_API_KEY: "${LUNCH_FLOW_API_KEY:-}"
@@ -216,15 +215,16 @@ services:
         condition: service_started
     environment:
       TZ: "${TZ:-UTC}"
-      STATIC_CRON_TOKEN: "${STATIC_CRON_TOKEN}"
       AUTO_IMPORT_SECRET: "${AUTO_IMPORT_SECRET}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     command: >
-      sh -c "apk add --no-cache tzdata wget &&
+      sh -c "apk add --no-cache tzdata wget docker-cli &&
       ln -sf /usr/share/zoneinfo/$$TZ /etc/localtime &&
       echo 'Waiting for Firefly to be ready...' &&
       until wget -q --spider http://app:8080/api/v1/about; do echo 'Waiting...'; sleep 30; done &&
       echo 'Firefly is ready, setting up cron jobs...' &&
-      echo '0 3 * * * wget -qO- http://app:8080/api/v1/cron/'$$STATIC_CRON_TOKEN > /tmp/crontab &&
+      echo '0 3 * * * docker exec firefly_app php artisan firefly-iii:cron' > /tmp/crontab &&
       echo '40 2 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" http://importer:8080/autoimport?directory=/import\\&secret='$$AUTO_IMPORT_SECRET >> /tmp/crontab &&
       crontab /tmp/crontab &&
       rm /tmp/crontab &&
