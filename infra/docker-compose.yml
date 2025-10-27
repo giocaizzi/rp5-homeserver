@@ -241,6 +241,8 @@ services:
     restart: unless-stopped
     expose:
       - "3000"
+    env_file:
+      - ./VERSION
     environment:
       - PUID=0  # Run as root for Docker socket access
       - PGID=0
@@ -253,6 +255,7 @@ services:
       - HOMEPAGE_VAR_LATITUDE=${HOMEPAGE_LATITUDE:-41.9028}
       - HOMEPAGE_VAR_LONGITUDE=${HOMEPAGE_LONGITUDE:-12.4964}
       - HOMEPAGE_VAR_TIMEZONE=${HOMEPAGE_TIMEZONE:-Europe/Rome}
+      - HOMEPAGE_VAR_VERSION=${VERSION}
     group_add:
       - "123"  # Docker group GID
     volumes:

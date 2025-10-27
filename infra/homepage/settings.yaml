@@ -1,7 +1,7 @@
 ---
 # Homepage Configuration
 title: "RP5 Homeserver"
-subtitle: "Raspberry Pi 5 Infrastructure Dashboard"
+subtitle: "Raspberry Pi 5 Infrastructure Dashboard v{{HOMEPAGE_VAR_VERSION}}"
 logo: "https://raw.githubusercontent.com/gethomepage/homepage/main/public/android-chrome-192x192.png"
 
 # Layout
