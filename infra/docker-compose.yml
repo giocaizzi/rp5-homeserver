@@ -202,7 +202,7 @@ services:
       - backrest_config:/config
       - backrest_cache:/cache
       # Backup targets
-      - ${USER_HOME}:/backup/home/username:ro
+      - ${USER_HOME}:/backup${USER_HOME}:ro
       - /var/lib/docker/volumes:/backup/docker-volumes:ro
       # GCP credentials
       - ${GCP_SERVICE_ACCOUNT_FILE}:/gcp/credentials.json:ro
