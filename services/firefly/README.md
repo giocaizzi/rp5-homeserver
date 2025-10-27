@@ -201,11 +201,11 @@ Automated imports reuse a configuration you create manually first. See the [offi
 2. **Deploy configuration to the container**:
    ```bash
    # Copy config directly to the running container (no volume mount needed)
-   scp import/config.json giorgiocaizzi@pi.local:/tmp/config.json
-   ssh giorgiocaizzi@pi.local "docker cp /tmp/config.json firefly_importer:/import/config.json"
+   scp import/config.json pi.local:/tmp/config.json
+   ssh pi.local "docker cp /tmp/config.json firefly_importer:/import/config.json"
    
    # Verify the file is in the container
-   ssh giorgiocaizzi@pi.local "docker exec firefly_importer ls -la /import/"
+   ssh pi.local "docker exec firefly_importer ls -la /import/"
    ```
 
    **Important**: Your config.json must include a valid personal access token for automated imports:
