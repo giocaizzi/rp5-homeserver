@@ -4,7 +4,7 @@
 # Greeting widget for personalization
 - greeting:
     text_size: xl
-    text: "Welcome to RP5 Homeserver"
+    text: "RP5 Homeserver v{{HOMEPAGE_VAR_VERSION}}"
 
 # Weather widget (no API key required)
 - openmeteo:
