@@ -39,7 +39,31 @@ variable "tunnel_secret" {
 # ---- Optional ----
 
 variable "n8n_users" {
-  description = "List of email addresses allowed to access n8n"
+  description = "List of email addresses allowed to access N8N"
+  type        = list(string)
+  default     = []
+}
+
+variable "portainer_users" {
+  description = "List of email addresses allowed to access Portainer"
+  type        = list(string)
+  default     = []
+}
+
+variable "backrest_users" {
+  description = "List of email addresses allowed to access Backrest"
+  type        = list(string)
+  default     = []
+}
+
+variable "firefly_users" {
+  description = "List of email addresses allowed to access Firefly III"
+  type        = list(string)
+  default     = []
+}
+
+variable "homepage_users" {
+  description = "List of email addresses allowed to access Homepage"
   type        = list(string)
   default     = []
 }
