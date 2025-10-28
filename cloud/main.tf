@@ -325,7 +325,3 @@ resource "google_storage_bucket_iam_member" "backup_admin" {
 resource "google_service_account_key" "backup_key" {
   service_account_id = google_service_account.backup.name
 }
-
-# Note: IP-based restrictions on GCS are not supported via IAM conditions on allUsers.
-# Access is restricted to the service account only via public_access_prevention = "enforced".
-# The service account credentials must be secured on the home server.
