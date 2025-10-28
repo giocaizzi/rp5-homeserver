@@ -25,6 +25,24 @@ n8n_users = [
   "user2@example.com"
 ]
 
+# List of allowed email addresses for Portainer
+portainer_users = [
+  "user1@example.com",
+  "user2@example.com"
+]
+
+# List of allowed email addresses for Backrest
+backrest_users = [
+  "user1@example.com",
+  "user2@example.com"
+]
+
+# List of allowed email addresses for Firefly III
+firefly_users = [
+  "user1@example.com",
+  "user2@example.com"
+]
+
 # ============================================================================
 # GCP Configuration
 # ============================================================================

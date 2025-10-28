@@ -18,6 +18,21 @@ output "n8n_url" {
   value       = "https://n8n.${var.zone_name}"
 }
 
+output "portainer_url" {
+  description = "The public URL for Portainer"
+  value       = "https://portainer.${var.zone_name}"
+}
+
+output "backrest_url" {
+  description = "The public URL for Backrest"
+  value       = "https://backrest.${var.zone_name}"
+}
+
+output "firefly_url" {
+  description = "The public URL for Firefly III"
+  value       = "https://firefly.${var.zone_name}"
+}
+
 # ============================================================================
 # GCP Outputs
 # ============================================================================

@@ -46,6 +46,46 @@ resource "cloudflare_dns_record" "n8n" {
   proxied = true
 }
 
+# Creates the CNAME record that routes portainer.${var.zone_name} to the tunnel.
+resource "cloudflare_dns_record" "portainer" {
+  zone_id = var.zone_id
+  name    = "portainer"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
+# Creates the CNAME record that routes backrest.${var.zone_name} to the tunnel.
+resource "cloudflare_dns_record" "backrest" {
+  zone_id = var.zone_id
+  name    = "backrest"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
+# Creates the CNAME record that routes firefly.${var.zone_name} to the tunnel.
+resource "cloudflare_dns_record" "firefly" {
+  zone_id = var.zone_id
+  name    = "firefly"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
+# Creates the CNAME record that routes homepage.${var.zone_name} to the tunnel.
+resource "cloudflare_dns_record" "homepage" {
+  zone_id = var.zone_id
+  name    = "homepage"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
 # Configures tunnel with a published application for clientless access.
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
@@ -62,24 +102,91 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
         }
       },
       {
+        hostname = "portainer.${var.zone_name}"
+        service  = "https://nginx:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "portainer.${var.zone_name}"
+          origin_server_name = "portainer.${var.zone_name}"
+        }
+      },
+      {
+        hostname = "backrest.${var.zone_name}"
+        service  = "https://nginx:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "backrest.${var.zone_name}"
+          origin_server_name = "backrest.${var.zone_name}"
+        }
+      },
+      {
+        hostname = "firefly.${var.zone_name}"
+        service  = "https://nginx:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "firefly.${var.zone_name}"
+          origin_server_name = "firefly.${var.zone_name}"
+        }
+      },
+      {
+        hostname = "homepage.${var.zone_name}"
+        service  = "https://nginx:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "homepage.${var.zone_name}"
+          origin_server_name = "homepage.${var.zone_name}"
+        }
+      },
+      {
         service = "http_status:404"
       }
     ]
   }
 }
 
-# Creates a reusable Access policy.
+# Creates separate Access policies for each service.
 resource "cloudflare_zero_trust_access_policy" "n8n_users" {
   account_id = var.cloudflare_account_id
   name       = "n8n-users"
   decision   = "allow"
   include = [
     for email in var.n8n_users : { email = { email = email } }
-    # {
-    #   email_domain = {
-    #     domain = "@example.com"
-    #   }
-    # }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_policy" "portainer_users" {
+  account_id = var.cloudflare_account_id
+  name       = "portainer-users"
+  decision   = "allow"
+  include = [
+    for email in var.portainer_users : { email = { email = email } }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_policy" "backrest_users" {
+  account_id = var.cloudflare_account_id
+  name       = "backrest-users"
+  decision   = "allow"
+  include = [
+    for email in var.backrest_users : { email = { email = email } }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_policy" "firefly_users" {
+  account_id = var.cloudflare_account_id
+  name       = "firefly-users"
+  decision   = "allow"
+  include = [
+    for email in var.firefly_users : { email = { email = email } }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_policy" "homepage_users" {
+  account_id = var.cloudflare_account_id
+  name       = "homepage-users"
+  decision   = "allow"
+  include = [
+    for email in var.homepage_users : { email = { email = email } }
   ]
 }
 
@@ -92,6 +199,58 @@ resource "cloudflare_zero_trust_access_application" "n8n_policy" {
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.n8n_users.id
+      precedence = 1
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "portainer_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "portainer.${var.zone_name}"
+  domain     = "portainer.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.portainer_users.id
+      precedence = 1
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "backrest_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "backrest.${var.zone_name}"
+  domain     = "backrest.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.backrest_users.id
+      precedence = 1
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "firefly_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "firefly.${var.zone_name}"
+  domain     = "firefly.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.firefly_users.id
+      precedence = 1
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "homepage_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "homepage.${var.zone_name}"
+  domain     = "homepage.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.homepage_users.id
       precedence = 1
     }
   ]
