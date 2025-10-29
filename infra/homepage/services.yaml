@@ -2,7 +2,7 @@
 # Infrastructure Services
 - Infrastructure:
     - Portainer:
-        href: https://portainer.local
+        href: https://portainer.giocaizzi.xyz
         description: Docker container management
         icon: portainer.png
         ping: http://portainer:9000/api/status
@@ -22,7 +22,7 @@
           url: http://netdata:19999
 
     - Backrest:
-        href: https://backrest.local
+        href: https://backrest.giocaizzi.xyz
         description: Backup management
         icon: backrest.png
         ping: http://backrest:9898
@@ -46,7 +46,7 @@
 # Application Services  
 - Applications:
     - N8N:
-        href: https://n8n.local
+        href: https://n8n.giocaizzi.xyz
         description: Workflow automation
         icon: n8n.png
         ping: http://n8n:5678
@@ -58,7 +58,7 @@
         ping: http://ollama:11434
 
     - Firefly III:
-        href: https://firefly.local
+        href: https://firefly.giocaizzi.xyz
         description: Personal finance manager
         icon: firefly.png
         ping: http://firefly_app:8080
