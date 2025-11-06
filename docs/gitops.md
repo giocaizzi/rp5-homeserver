@@ -1,6 +1,24 @@
 # GitOps with Portainer
 
-Automated deployment and updates using Portainer's GitOps capabilities with GitHub webhooks.
+Automated deployment and updates using Portainer's GitOps capabilities with GitHub webhooks behind Cloudflare Access.
+
+## Terraform Configuration Summary
+
+The GitOps webhook setup is now fully integrated in `cloud/main.tf`:
+
+### ✅ **What's Configured:**
+- **Service Token:** Creates `github-webhooks` token for API access
+- **Bypass Policy:** Allows service token to bypass Cloudflare Access
+- **Updated Portainer App:** Includes webhook bypass with precedence 1
+- **Outputs:** Credentials and setup instructions in `outputs.tf`
+
+### 🚀 **Deployment Steps:**
+1. Deploy: `cd cloud && terraform apply`
+2. Get credentials: `terraform output github_webhook_service_token`
+3. Configure GitHub webhook with the credentials
+4. Test webhook delivery
+
+---
 
 ## Overview
 
