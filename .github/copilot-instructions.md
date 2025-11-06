@@ -14,7 +14,7 @@ Based on the use of Docker and Docker Compose.
 Utilizes Portainer for container management.
     - `infra` is deployed manually via SSH located at `/home/giorgiocaizzi/rp5-homeserver/infra`.
     - `services` are deployed via Portainer stacks using REMOTE REPOSITORY feature.
-Coding happens on MacOS connected to the RP5 via SSH @ `giorgiocaizzi@pi.local`, use rsync for file sync.
+Coding happens on MacOS connected to the RP5 via SSH @ `giorgiocaizzi@pi.local`, use rsync for file sync. ALWAYS rsync the whole /infra folder, as it contains the VERSION file to track infra version.
 Always sync the `infra`. Other services are managed via Portainer and normally not synced directly. Exceptions for private config files.
 Write docs anonymously without personal identifiers, use /home/pi/ and pi@pi.local for Pi paths and SSH.
 </context>

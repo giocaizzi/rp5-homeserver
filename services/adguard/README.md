@@ -11,7 +11,7 @@ Self-hosted DNS server with ad blocking capabilities at `https://adguard.local`.
 **Resource Limits**: 256MB RAM, 0.5 CPU
 
 **Network**: 
-- Web interface accessible via nginx proxy (port 80 proxied)
+- Web interface accessible via nginx proxy (port 3000 proxied)
 - DNS services exposed on host ports (53, 853, 5443)
 - DNS-over-HTTPS available via nginx proxy at `https://adguard.local/dns-query`
 
@@ -89,9 +89,14 @@ ssh pi@pi.local "sudo systemctl stop systemd-resolved"
 2. **Access web interface**:
    - Navigate to `https://adguard.local`
    - Complete the initial setup wizard:
+     - **Admin Web Interface**: 
+       - Listen interface: `All interfaces`
+       - Port: `3000` (important: change from default 80)
+     - **DNS Server**:
+       - Listen interface: `All interfaces`
+       - Port: `53` (keep default)
      - Set admin username and password
-     - Configure listening interfaces
-     - Choose DNS upstream servers
+     - Configure DNS upstream servers
 
 3. **Basic DNS configuration**:
    - **Upstream DNS servers**: 
@@ -113,6 +118,36 @@ ssh pi@pi.local "sudo systemctl stop systemd-resolved"
    - **Router level**: Set Pi's IP as primary DNS server in router settings
    - **Device level**: Configure individual devices to use Pi's IP as DNS server
    - **Testing**: Use `https://adguard.local` → Query Log to verify filtering
+
+## Setup Wizard Configuration
+
+During the initial setup wizard, configure these settings to match your environment:
+
+### **Step 1: Admin Web Interface**
+- **Listen interface**: `All interfaces` ✅
+- **Port**: `3000` ⚠️ **Important**: Change from default `80` to `3000`
+  - This matches the nginx proxy configuration
+  - Port 80 would conflict with nginx reverse proxy
+
+### **Step 2: DNS Server** 
+- **Listen interface**: `All interfaces` ✅ 
+- **Port**: `53` ✅ (keep default)
+
+### **Step 3: Authentication**
+- Create admin username and strong password
+- Save credentials securely
+
+### **Step 4: DNS Configuration**
+- **Upstream DNS servers**:
+  - Primary: `1.1.1.1` (Cloudflare)
+  - Secondary: `8.8.8.8` (Google) 
+  - Alternative: `9.9.9.9` (Quad9 for privacy)
+- **Enable DNS-over-HTTPS** for upstream queries
+- **Enable rate limiting** if exposed to internet
+
+### **After Setup**
+- Web interface: `https://adguard.local`
+- DNS server: Use Pi's IP (`192.168.1.151`) in router/device settings
 
 ## DNS Services
 
