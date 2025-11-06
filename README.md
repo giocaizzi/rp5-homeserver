@@ -14,6 +14,7 @@ Applications available for deployment:
 - **[N8N](./services/n8n/README.md)** - Workflow automation (`https://n8n.local`)
 - **[Ollama](./services/ollama/README.md)** - Local LLM server (`https://ollama.local`)
 - **[Firefly III](./services/firefly/README.md)** - Personal finance manager (`https://firefly.local`)
+- **[AdGuard Home](./services/adguard/README.md)** - DNS server & ad blocker (`https://adguard.local`)
 
 > [How to add a service](./docs/services.md)
 

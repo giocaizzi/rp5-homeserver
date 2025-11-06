@@ -1,0 +1,77 @@
+name: adguard
+
+networks:
+  # Private network for adguard stack
+  adguard_network:
+    driver: bridge
+    name: rp5_adguard
+    internal: false  # Allow external access via nginx proxy
+  
+  # External network to connect to nginx proxy
+  public_network:
+    external: true
+    name: rp5_public
+
+services:
+  adguard:
+    image: adguard/adguardhome:latest
+    container_name: adguard
+    restart: unless-stopped
+    ports:
+      # DNS ports (host network mode for DNS)
+      - "53:53/tcp"
+      - "53:53/udp"
+      # DNS-over-HTTPS
+      - "443:443/tcp"
+      # DNS-over-TLS
+      - "853:853/tcp"
+      # DNS-over-QUIC
+      - "853:853/udp"
+      # DNSCrypt
+      - "5443:5443/tcp"
+      - "5443:5443/udp"
+    expose:
+      # Web interface (proxied via nginx)
+      - "80"
+    environment:
+      TZ: "${TZ:-UTC}"
+      # AdGuard Home configuration
+      AGH_CONFIG_PATH: "/opt/adguardhome/conf/AdGuardHome.yaml"
+      AGH_WORK_DIR: "/opt/adguardhome/work"
+    volumes:
+      - adguard_work:/opt/adguardhome/work
+      - adguard_conf:/opt/adguardhome/conf
+    networks:
+      - adguard_network
+      - public_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - "stack=adguard"
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+          cpus: "0.25"
+    memswap_limit: 512M
+    mem_swappiness: 10
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  adguard_work:
+    driver: local
+  adguard_conf:
+    driver: local

@@ -2,6 +2,15 @@
 
 Guidelines for adding service stacks that comply with RP5 architecture.
 
+## Available Services
+
+Current services deployed:
+
+- **[Firefly III](../services/firefly/)** - Personal finance manager (`https://firefly.local`)
+- **[N8N](../services/n8n/)** - Workflow automation (`https://n8n.local`) 
+- **[Ollama](../services/ollama/)** - Local AI models (`https://ollama.local`)
+- **[AdGuard Home](../services/adguard/)** - DNS server & ad blocker (`https://adguard.local`)
+
 ## Required Structure
 
 ```
