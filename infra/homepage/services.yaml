@@ -32,6 +32,8 @@
           username: "{{HOMEPAGE_VAR_BACKREST_USERNAME}}"
           password: "{{HOMEPAGE_VAR_BACKREST_PASSWORD}}"
 
+# Application Services  
+- Applications:
     - AdGuard Home:
         href: https://adguard.local
         description: DNS server & ad blocker
@@ -42,9 +44,7 @@
           url: http://adguard:3000
           username: "{{HOMEPAGE_VAR_ADGUARD_USERNAME}}"
           password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
-
-# Application Services  
-- Applications:
+          
     - N8N:
         href: https://n8n.giocaizzi.xyz
         description: Workflow automation
