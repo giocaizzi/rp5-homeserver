@@ -32,6 +32,17 @@
           username: "{{HOMEPAGE_VAR_BACKREST_USERNAME}}"
           password: "{{HOMEPAGE_VAR_BACKREST_PASSWORD}}"
 
+    - AdGuard Home:
+        href: https://adguard.local
+        description: DNS server & ad blocker
+        icon: adguard-home.png
+        ping: http://adguard:80
+        widget:
+          type: adguard
+          url: http://adguard:80
+          username: "{{HOMEPAGE_VAR_ADGUARD_USERNAME}}"
+          password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
+
 # Application Services  
 - Applications:
     - N8N:
