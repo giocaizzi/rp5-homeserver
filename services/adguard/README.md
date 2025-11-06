@@ -12,7 +12,8 @@ Self-hosted DNS server with ad blocking capabilities at `https://adguard.local`.
 
 **Network**: 
 - Web interface accessible via nginx proxy (port 80 proxied)
-- DNS services exposed on host ports (53, 443, 853, 5443)
+- DNS services exposed on host ports (53, 853, 5443)
+- DNS-over-HTTPS available via nginx proxy at `https://adguard.local/dns-query`
 
 ## Environment Setup
 
@@ -118,7 +119,7 @@ ssh pi@pi.local "sudo systemctl stop systemd-resolved"
 AdGuard Home provides multiple DNS protocols:
 
 - **Plain DNS**: Port 53 (TCP/UDP) - Standard DNS
-- **DNS-over-HTTPS**: Port 443/tcp - Secure DNS over HTTPS
+- **DNS-over-HTTPS**: Via nginx proxy at `https://adguard.local/dns-query` - Secure DNS over HTTPS
 - **DNS-over-TLS**: Port 853/tcp - Secure DNS over TLS  
 - **DNS-over-QUIC**: Port 853/udp - Fast secure DNS
 - **DNSCrypt**: Port 5443 - Encrypted DNS
@@ -130,11 +131,11 @@ AdGuard Home provides multiple DNS protocols:
 - Secondary DNS: `1.1.1.1` (fallback)
 
 **iOS/Android DNS-over-HTTPS:**
-- URL: `https://pi.local/dns-query`
+- URL: `https://adguard.local/dns-query`
 
 **Browser DNS-over-HTTPS:**
-- Firefox: `https://pi.local/dns-query`
-- Chrome: `https://pi.local/dns-query`
+- Firefox: `https://adguard.local/dns-query`
+- Chrome: `https://adguard.local/dns-query`
 
 ## Features
 
@@ -208,5 +209,5 @@ dig @pi.local google.com
 dig @pi.local doubleclick.net
 
 # Test DNS-over-HTTPS
-curl -H "accept: application/dns-json" "https://pi.local/dns-query?name=google.com&type=A"
+curl -H "accept: application/dns-json" "https://adguard.local/dns-query?name=google.com&type=A"
 ```
