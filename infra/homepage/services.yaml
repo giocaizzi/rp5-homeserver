@@ -36,10 +36,10 @@
         href: https://adguard.local
         description: DNS server & ad blocker
         icon: adguard-home.png
-        ping: http://adguard:80
+        ping: http://adguard:3000
         widget:
           type: adguard
-          url: http://adguard:80
+          url: http://adguard:3000
           username: "{{HOMEPAGE_VAR_ADGUARD_USERNAME}}"
           password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
 
