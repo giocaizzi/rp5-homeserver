@@ -1,8 +1,9 @@
 # RP5 Home Server Documentation
 
-- [Setup](./setup.md)
-- [Services](./services.md)
-- [Data Management](./data.md)
-- [Backup System](./backup.md)
-- [Monitoring](./monitoring.md)
-- [Resource Optimization](./resources.md)
+- [Setup](./setup.md) - Complete deployment instructions
+- [GitOps](./gitops.md) - Automated deployments with webhooks
+- [Services](./services.md) - How to add and manage services
+- [Data Management](./data.md) - Data organization and access
+- [Backup System](./backup.md) - Data protection and recovery
+- [Monitoring](./monitoring.md) - System monitoring and alerts
+- [Resource Optimization](./resources.md) - Performance tuning

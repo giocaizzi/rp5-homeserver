@@ -66,16 +66,43 @@ See [infra README](../infra/README.md) for details.
 
 ### 2. Deploy service stacks
 
-Add Remote Repository in Portainer:
-- URL: `https://github.com/giocaizzi/rp5-homeserver`
-- Branch: `refs/heads/main`
-- Authentication: Configure if private repo
+Deploy services using Portainer's GitOps capabilities for automated updates.
 
-#### Deploy with Portainer
+#### GitOps Setup (Recommended)
 
-See [How to add a service](./services.md).
+Enable automated deployments with webhook integration:
 
-Once added to the repository, deploy each service stack via Portainer:
+1. **Add Stack from Git Repository:**
+   - URL: `https://github.com/giocaizzi/rp5-homeserver`
+   - Branch: `refs/heads/main`
+   - Compose file: `services/{service}/docker-compose.yml`
+   - Authentication: Configure if private repo
+
+2. **Enable GitOps Updates:**
+   - Toggle **GitOps updates** ON
+   - Select **Webhook** mechanism
+   - Copy the generated webhook URL
+
+3. **Configure GitHub Webhook:**
+   - Repository Settings → Webhooks → Add webhook
+   - Payload URL: Use Portainer's webhook URL
+   - Events: Push events
+   - Content type: `application/json`
+
+4. **Test Workflow:**
+   - Make a small change to the service
+   - Push to main branch
+   - Verify automatic deployment in Portainer
+
+**Benefits:** Automatic updates, version control, audit trail, and rollback capabilities.
+
+See [GitOps Documentation](./gitops.md) for complete setup guide.
+
+#### Manual Deployment (Alternative)
+
+For services that don't require frequent updates:
 - Go to **Stacks** > **Add stack** > **From repository**
 - Select the service stack (e.g. `services/n8n/docker-compose.yml`)
 - Click **Deploy the stack**
+
+See [How to add a service](./services.md) for details.

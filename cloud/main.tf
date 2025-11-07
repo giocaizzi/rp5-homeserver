@@ -9,6 +9,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 7.7"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 }
 
@@ -190,6 +194,31 @@ resource "cloudflare_zero_trust_access_policy" "homepage_users" {
   ]
 }
 
+# ============================================================================
+# Webhook Service Token and Bypass Policy for GitOps
+# ============================================================================
+
+# Create service token for GitHub webhook authentication
+resource "cloudflare_zero_trust_access_service_token" "github_webhook" {
+  account_id = var.cloudflare_account_id
+  name       = "github-webhooks"
+}
+
+# Create bypass policy for webhook endpoints
+resource "cloudflare_zero_trust_access_policy" "webhook_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "webhook-bypass"
+  decision   = "bypass"
+  
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.github_webhook.id
+      }
+    }
+  ]
+}
+
 # Creates an Access application to control who can connect to the public hostname.
 resource "cloudflare_zero_trust_access_application" "n8n_policy" {
   account_id = var.cloudflare_account_id
@@ -204,15 +233,32 @@ resource "cloudflare_zero_trust_access_application" "n8n_policy" {
   ]
 }
 
+# Portainer access application with webhook bypass support
 resource "cloudflare_zero_trust_access_application" "portainer_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "portainer.${var.zone_name}"
-  domain     = "portainer.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  name             = "portainer.${var.zone_name}"
+  domain           = "portainer.${var.zone_name}"
+  session_duration = "24h"
+  
+  # Enable CORS for webhook requests
+  cors_headers = {
+    allowed_methods   = ["GET", "POST", "OPTIONS"]
+    allowed_origins   = ["*"]  # GitHub webhook origins vary
+    allow_credentials = false
+    max_age          = 3600
+  }
+
   policies = [
+    # Webhook bypass policy (highest precedence) - allows service tokens to bypass auth
+    {
+      id         = cloudflare_zero_trust_access_policy.webhook_bypass.id
+      precedence = 1
+    },
+    # Regular user access policy
     {
       id         = cloudflare_zero_trust_access_policy.portainer_users.id
-      precedence = 1
+      precedence = 2
     }
   ]
 }

@@ -117,11 +117,30 @@ server {
 - **Resources**: Pi-appropriate limits (≤2GB RAM, ≤2 CPU)
 - **Health**: 60s+ start period for Pi hardware
 
-## Process
-1. Create `./services/<service>` with required files
-1. Add service to nginx config
-2. [Deploy service](./setup.md#2-deploy-service-stacks) with Portainer or CLI
-3. Add `<service>.local` to hosts file
+## Deployment Methods
+
+### GitOps (Recommended)
+Automated deployment with webhook integration:
+
+1. **Deploy via Portainer GitOps:**
+   - Access `https://portainer.local`
+   - Stacks → Add stack → Git Repository
+   - Configure repository and enable GitOps webhooks
+   - See [GitOps Documentation](./gitops.md) for details
+
+2. **Benefits:**
+   - Automatic updates on git push
+   - Version control and audit trail
+   - Easy rollback capabilities
+   - Centralized configuration
+
+### Manual Deployment (Alternative)
+For services requiring manual control:
+
+1. **Portainer UI:** Stacks → Add stack → Upload/Web editor
+2. **SSH deployment:** `docker compose up -d` in service directory
+
+See [Setup Guide](./setup.md#2-deploy-service-stacks) for detailed instructions.
 
 ## Documentation
 
