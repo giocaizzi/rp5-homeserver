@@ -39,16 +39,3 @@ quicklaunch:
 
 # Status style
 statusStyle: "dot"
-
-# Providers for API credentials (automatically read from Docker secrets)
-providers:
-  portainer:
-    key: "{{HOMEPAGE_FILE_PORTAINER_API_KEY}}"
-  backrest:
-    username: "{{HOMEPAGE_VAR_BACKREST_USERNAME}}"
-    password: "{{HOMEPAGE_FILE_BACKREST_PASSWORD}}"
-  adguard:
-    username: "{{HOMEPAGE_VAR_ADGUARD_USERNAME}}"
-    password: "{{HOMEPAGE_FILE_ADGUARD_PASSWORD}}"
-  firefly:
-    key: "{{HOMEPAGE_FILE_FIREFLY_API_TOKEN}}"

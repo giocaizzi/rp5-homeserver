@@ -10,7 +10,7 @@
           type: portainer
           url: http://portainer:9000
           env: 3
-          provider: portainer
+          key: "{{HOMEPAGE_FILE_PORTAINER_API_KEY}}"
 
     - Netdata:
         href: https://netdata.local
@@ -29,7 +29,8 @@
         widget:
           type: backrest
           url: http://backrest:9898
-          provider: backrest
+          username: "{{HOMEPAGE_VAR_BACKREST_USERNAME}}"
+          password: "{{HOMEPAGE_FILE_BACKREST_PASSWORD}}"
 
 # Application Services  
 - Applications:
@@ -41,7 +42,8 @@
         widget:
           type: adguard
           url: http://adguard:3000
-          provider: adguard
+          username: "{{HOMEPAGE_VAR_ADGUARD_USERNAME}}"
+          password: "{{HOMEPAGE_FILE_ADGUARD_PASSWORD}}"
           
     - N8N:
         href: https://n8n.{{HOMEPAGE_FILE_DOMAIN}}
@@ -63,7 +65,7 @@
         widget:
           type: firefly
           url: http://firefly:8080
-          provider: firefly
+          key: "{{HOMEPAGE_FILE_FIREFLY_API_TOKEN}}"
 
     - Firefly Importer:
         href: https://firefly-importer.local
