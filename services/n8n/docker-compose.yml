@@ -186,6 +186,8 @@ volumes:
 
 secrets:
   postgres_password:
-    file: ./secrets/postgres_password.txt
+    external: true
+    name: n8n_postgres_password
   n8n_auth_password:
-    file: ./secrets/n8n_auth_password.txt
+    external: true
+    name: n8n_auth_password
