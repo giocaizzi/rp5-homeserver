@@ -27,4 +27,5 @@ Document with a streamlined style.
 DO NOT summarize what YOU changed in any documentation. Just make the changes and update the docs as needed.
 ALWAYS keep secret keys and sensitive info out of the code, use environment variables or ignore files.
 DO NOT create unnecessary scripts.
+NEVER WAIT MORE THAN 5 seconds when retrying commands.
 </guidelines>
