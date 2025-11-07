@@ -2,7 +2,7 @@
 # Infrastructure Services
 - Infrastructure:
     - Portainer:
-        href: https://portainer.giocaizzi.xyz
+        href: https://portainer.{{HOMEPAGE_VAR_DOMAIN}}
         description: Docker container management
         icon: portainer.png
         ping: http://portainer:9000/api/status
@@ -22,7 +22,7 @@
           url: http://netdata:19999
 
     - Backrest:
-        href: https://backrest.giocaizzi.xyz
+        href: https://backrest.{{HOMEPAGE_VAR_DOMAIN}}
         description: Backup management
         icon: backrest.png
         ping: http://backrest:9898
@@ -46,7 +46,7 @@
           password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
           
     - N8N:
-        href: https://n8n.giocaizzi.xyz
+        href: https://n8n.{{HOMEPAGE_VAR_DOMAIN}}
         description: Workflow automation
         icon: n8n.png
         ping: http://n8n:5678
@@ -58,7 +58,7 @@
         ping: http://ollama:11434
 
     - Firefly III:
-        href: https://firefly.giocaizzi.xyz
+        href: https://firefly.{{HOMEPAGE_VAR_DOMAIN}}
         description: Personal finance manager
         icon: firefly.png
         ping: http://firefly_app:8080
