@@ -1,11 +1,8 @@
-name: firefly
-
 networks:
   # Private network for firefly stack
   firefly_network:
-    driver: bridge
+    driver: overlay
     name: rp5_firefly
-    internal: false  # Allow external access via nginx proxy
   
   # External network to connect to nginx proxy
   public_network:
@@ -13,10 +10,9 @@ networks:
     name: rp5_public
 
 services:
-  app:
+  firefly:
     image: fireflyiii/core:latest
-    container_name: firefly_app
-    restart: unless-stopped
+    hostname: firefly
     depends_on:
       db:
         condition: service_healthy
@@ -79,6 +75,16 @@ services:
     security_opt:
       - no-new-privileges:true
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           memory: 512M
@@ -86,8 +92,6 @@ services:
         reservations:
           memory: 256M
           cpus: "0.5"
-    memswap_limit: 1G
-    mem_swappiness: 10
     logging:
       driver: "json-file"
       options:
@@ -96,8 +100,7 @@ services:
 
   db:
     image: mariadb:lts
-    container_name: firefly_db
-    restart: unless-stopped
+    hostname: db
     environment:
       MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
       MYSQL_DATABASE: "${DB_DATABASE:-firefly}"
@@ -120,6 +123,16 @@ services:
     security_opt:
       - no-new-privileges:true
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           memory: 512M
@@ -127,8 +140,6 @@ services:
         reservations:
           memory: 256M
           cpus: "0.25"
-    memswap_limit: 1G
-    mem_swappiness: 10
     logging:
       driver: "json-file"
       options:
@@ -138,16 +149,15 @@ services:
   importer:
     # develop supports Lunch Flow integration (TODO: switch to stable when released)
     image: fireflyiii/data-importer:develop
-    container_name: firefly_importer
-    restart: unless-stopped
+    hostname: firefly-importer
     depends_on:
-      app:
+      firefly:
         condition: service_started
     expose:
       - "8080"
     environment:
       # Firefly III connection
-      FIREFLY_III_URL: "http://app:8080"
+      FIREFLY_III_URL: "http://firefly:8080"
       VANITY_URL: "https://${FIREFLY_HOST:-firefly.local}"
       FIREFLY_III_CLIENT_ID: "${FIREFLY_CLIENT_ID}"
 
@@ -191,6 +201,16 @@ services:
     security_opt:
       - no-new-privileges:true
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           memory: 256M
@@ -198,8 +218,6 @@ services:
         reservations:
           memory: 128M
           cpus: "0.25"
-    memswap_limit: 512M
-    mem_swappiness: 10
     logging:
       driver: "json-file"
       options:
@@ -208,10 +226,9 @@ services:
 
   cron:
     image: alpine
-    container_name: firefly_cron
-    restart: unless-stopped
+    hostname: cron
     depends_on:
-      app:
+      firefly:
         condition: service_started
       importer:
         condition: service_started
@@ -225,10 +242,10 @@ services:
       sh -c "apk add --no-cache tzdata wget docker-cli &&
       ln -sf /usr/share/zoneinfo/$$TZ /etc/localtime &&
       echo 'Waiting for Firefly to be ready...' &&
-      until wget -q --spider http://app:8080/api/v1/about; do echo 'Waiting...'; sleep 30; done &&
+      until wget -q --spider http://firefly:8080/api/v1/about; do echo 'Waiting...'; sleep 30; done &&
       echo 'Firefly is ready, setting up cron jobs...' &&
-      echo '0 3 * * * docker exec firefly_app php artisan firefly-iii:cron' > /tmp/crontab &&
-      echo '40 2 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer '$$FIREFLY_ACCESS_TOKEN'\" http://importer:8080/autoimport?directory=/import\\&secret='$$AUTO_IMPORT_SECRET >> /tmp/crontab &&
+      echo '0 3 * * * docker exec \$$(docker ps --filter \"label=com.docker.swarm.service.name=firefly_firefly\" --format \"{{.Names}}\") php artisan firefly-iii:cron' > /tmp/crontab &&
+      echo '40 2 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer '$$FIREFLY_ACCESS_TOKEN'\" http://firefly-importer:8080/autoimport?directory=/import\\&secret='$$AUTO_IMPORT_SECRET >> /tmp/crontab &&
       crontab /tmp/crontab &&
       rm /tmp/crontab &&
       echo 'Cron jobs configured:' &&
@@ -241,6 +258,16 @@ services:
     security_opt:
       - no-new-privileges:true
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           memory: 64M
@@ -248,8 +275,6 @@ services:
         reservations:
           memory: 32M
           cpus: "0.1"
-    memswap_limit: 128M
-    mem_swappiness: 10
     logging:
       driver: "json-file"
       options:

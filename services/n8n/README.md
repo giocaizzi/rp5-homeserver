@@ -47,6 +47,7 @@ Requires [infrastructure stack](../../infra) running first.
 
 - Repository: `https://github.com/giocaizzi/rp5-homeserver`
 - Container path: `services/n8n/docker-compose.yml`
+- **Deploy Mode**: Select "Swarm" (not "Standalone")
 Set environment variables in Portainer Stack → Environment Variables section.
 
 2. Add `n8n.local` to your local `/etc/hosts`

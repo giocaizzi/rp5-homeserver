@@ -1,18 +1,18 @@
 # Infrastructure Stack
 
-> *Deploy this stack first* - other services depend on the networks created here.
+> *Deploy this stack first using Docker Swarm* - other services depend on the networks created here.
 
 ## Network Architecture
 
 **Created Networks:**
-- `rp5_public` - Shared network for nginx ↔ service communication
-- `rp5_infra` - Internal infrastructure network
+- `rp5_public` - Shared overlay network for nginx ↔ service communication
+- `rp5_infra` - Internal infrastructure overlay network
 
 **Service Integration:**
-Services join `rp5_public` network to enable nginx routing without exposing ports directly.
+Services join `rp5_public` overlay network to enable nginx routing without exposing ports directly.
 
 ```
-Internet → Nginx (rp5_public) → Services (rp5_public + private networks)
+Internet → Nginx (rp5_public) → Services (rp5_public + private overlay networks)
 ```
 
 ## Services
@@ -61,7 +61,7 @@ To enable Portainer widget integration:
 2. Navigate to User account → API keys
 3. Generate a new API key
 4. Replace `ptr_xxxxxxxxxxxxxxxxxxxxx` in `services.yaml` with your actual API key
-5. Restart homepage container: `docker compose restart homepage`
+5. Restart homepage service: `docker service update --force infra_homepage`
 
 ## Widget Features
 
@@ -106,7 +106,7 @@ See [`.env.example`](./.env.example) for all environment variables.
    ```
 
 **Configure via Web UI:**
-1. Start the stack: `docker compose up -d`
+1. Deploy the infrastructure stack: `docker stack deploy -c docker-compose.yml infra`
 2. Access Backrest at `https://backrest.local`
 3. Create repository pointing to GCS bucket
 4. Set up backup plans with schedules and retention policies

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Sync and restart infra services on Raspberry Pi
+# Sync and deploy infra stack on Raspberry Pi using Docker Swarm
 # Usage: PI_SSH_USER=username [options] ./sync_infra.sh
 # 
 # Required environment variables:
@@ -11,7 +11,7 @@
 #   PI_INFRA_PATH - Remote infra directory path (default: /home/${PI_SSH_USER}/rp5-homeserver/infra)
 # 
 # Options:
-#   --pull        Pull latest Docker images before starting services
+#   --pull        Pull latest Docker images before deploying stack
 #   --help, -h    Show this help message
 
 set -e  # Exit on any error
@@ -51,7 +51,7 @@ error() {
 # Show help message
 show_help() {
     cat << EOF
-Sync and restart infra services on Raspberry Pi
+Sync and deploy infra stack on Raspberry Pi using Docker Swarm
 
 Usage: PI_SSH_USER=username [options] $0
 
@@ -63,7 +63,7 @@ Optional environment variables:
   PI_INFRA_PATH   Remote infra directory path (default: /home/\${PI_SSH_USER}/rp5-homeserver/infra)
 
 Options:
-  --pull          Pull latest Docker images before starting services
+  --pull          Pull latest Docker images before deploying stack
   --help, -h      Show this help message
 
 Examples:
@@ -126,6 +126,22 @@ test_ssh_connection() {
     success "SSH connection established"
 }
 
+# Initialize Docker Swarm if not already initialized
+initialize_swarm() {
+    log "Checking Docker Swarm status..."
+    if ssh "$PI_SSH_USER@$PI_HOST" "docker info --format '{{.Swarm.LocalNodeState}}'" | grep -q "active"; then
+        success "Docker Swarm already initialized"
+    else
+        log "Initializing Docker Swarm..."
+        if ssh "$PI_SSH_USER@$PI_HOST" "docker swarm init"; then
+            success "Docker Swarm initialized successfully"
+        else
+            error "Failed to initialize Docker Swarm"
+            exit 1
+        fi
+    fi
+}
+
 # Fix file ownership on remote Pi
 fix_remote_permissions() {
     log "Ensuring proper ownership of infra files..."
@@ -154,12 +170,22 @@ sync_infra() {
     fi
 }
 
-# Stop Docker Compose services
+# Stop Docker Stack services
 stop_services() {
-    log "Stopping current infra services..."
-    ssh "$PI_SSH_USER@$PI_HOST" "cd $PI_INFRA_PATH && docker-compose down" || {
-        warning "Failed to stop services (they may not be running)"
-    }
+    log "Stopping current infra stack..."
+    if ssh "$PI_SSH_USER@$PI_HOST" "docker stack ls --format '{{.Name}}' | grep -q '^infra$'"; then
+        ssh "$PI_SSH_USER@$PI_HOST" "docker stack rm infra" || {
+            warning "Failed to stop stack (it may not be running)"
+        }
+        # Wait for stack to be completely removed
+        log "Waiting for stack removal to complete..."
+        while ssh "$PI_SSH_USER@$PI_HOST" "docker stack ls --format '{{.Name}}' | grep -q '^infra$'"; do
+            sleep 2
+        done
+        success "Stack removed successfully"
+    else
+        log "No existing infra stack found"
+    fi
 }
 
 # Pull Docker images if requested
@@ -174,22 +200,25 @@ pull_images() {
     fi
 }
 
-# Start Docker Compose services
-start_services() {
-    log "Starting infra services..."
-    if ssh "$PI_SSH_USER@$PI_HOST" "cd $PI_INFRA_PATH && docker-compose up -d"; then
-        success "Infra services started successfully"
+# Deploy Docker Stack services
+deploy_services() {
+    log "Deploying infra stack..."
+    if ssh "$PI_SSH_USER@$PI_HOST" "cd $PI_INFRA_PATH && docker stack deploy -c docker-compose.yml infra"; then
+        success "Infra stack deployed successfully"
     else
-        error "Failed to start infra services"
+        error "Failed to deploy infra stack"
         exit 1
     fi
 }
 
 # Check final service status
 check_service_status() {
-    log "Checking service status..."
-    sleep 5  # Wait for services to start
-    ssh "$PI_SSH_USER@$PI_HOST" "cd $PI_INFRA_PATH && docker-compose ps"
+    log "Checking stack status..."
+    sleep 10  # Wait for services to start
+    ssh "$PI_SSH_USER@$PI_HOST" "docker stack ps infra"
+    echo
+    log "Stack services overview:"
+    ssh "$PI_SSH_USER@$PI_HOST" "docker stack services infra"
 }
 
 # Main execution function
@@ -201,7 +230,7 @@ main() {
     setup_configuration
     
     # Display execution info
-    log "Starting infra sync and restart process"
+    log "Starting infra sync and stack deployment process"
     log "SSH User: $PI_SSH_USER"
     log "Pi Host: $PI_HOST"
     log "Remote Path: $PI_INFRA_PATH"
@@ -209,19 +238,21 @@ main() {
     
     # Execute deployment steps
     test_ssh_connection
+    initialize_swarm
     fix_remote_permissions
     local version=$(display_version_info)
     sync_infra
     stop_services
     pull_images
-    start_services
+    deploy_services
     check_service_status
     
     # Success message
-    success "Infra sync and restart completed successfully!"
+    success "Infra sync and stack deployment completed successfully!"
     if [ -n "$version" ]; then
         log "Deployed version: $version"
     fi
+    log "Access Portainer at: https://portainer.local"
 }
 
 # Execute main function with all arguments

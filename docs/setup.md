@@ -1,6 +1,6 @@
 # Deployment
 
-Deploy RP5 Home Server stacks via Portainer's remote repository feature.
+Deploy RP5 Home Server stacks via Docker Swarm and Portainer's remote repository feature.
 
 ## Deployment Order
 
@@ -43,13 +43,24 @@ scp ./infra/nginx/ssl/*.pem pi@pi.local:~/rp5-homeserver/infra/nginx/ssl/
 scp /path/to/your/gcp_service_account.json pi@pi.local:~/rp5-homeserver/infra/backup/secrets/
   ```
 
-- Start the infrastructure stack with Docker compose:
+- Initialize Docker Swarm and deploy the infrastructure stack:
 
 ```bash
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker-compose up -d"
+# Initialize Docker Swarm (single-node cluster)
+ssh pi@pi.local "docker swarm init"
+
+# Deploy the infrastructure stack using Docker Swarm
+ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker stack deploy -c docker-compose.yml infra"
 ```
 
-> **Note**: You may see warnings about kernel memory limit capabilities not being supported. This is normal on Raspberry Pi systems where cgroups memory management isn't enabled by default. The containers will still run properly, but memory limits defined in the compose files will be ignored. To enable memory limits, you would need to add `cgroup_enable=memory cgroup_memory=1` to `/boot/firmware/cmdline.txt` and reboot, but this is optional for normal operation.
+> **Note**: Docker Swarm provides better orchestration, health monitoring, and rolling updates compared to Docker Compose. All services are deployed as part of a managed stack with automatic restart policies.
+
+Alternatively, use the automated sync script:
+
+```bash
+# Using the sync script (recommended)
+PI_SSH_USER=pi ./scripts/sync_infra.sh --pull
+```
 
 Update hostname resolution on your **local machine** (not on Pi):
 
@@ -66,16 +77,17 @@ See [infra README](../infra/README.md) for details.
 
 ### 2. Deploy service stacks
 
-Deploy services using Portainer's GitOps capabilities for automated updates.
+Deploy services using Portainer's GitOps capabilities with Docker Swarm stacks for automated updates.
 
 #### GitOps Setup (Recommended)
 
-Enable automated deployments with webhook integration:
+Enable automated deployments with webhook integration using Docker Swarm:
 
 1. **Add Stack from Git Repository:**
    - URL: `https://github.com/giocaizzi/rp5-homeserver`
    - Branch: `refs/heads/main`
    - Compose file: `services/{service}/docker-compose.yml`
+   - **Deploy Mode**: Select "Swarm" (not "Standalone")
    - Authentication: Configure if private repo
 
 2. **Enable GitOps Updates:**
@@ -94,7 +106,7 @@ Enable automated deployments with webhook integration:
    - Push to main branch
    - Verify automatic deployment in Portainer
 
-**Benefits:** Automatic updates, version control, audit trail, and rollback capabilities.
+**Benefits:** Automatic updates, version control, audit trail, rollback capabilities, and Docker Swarm orchestration features.
 
 See [GitOps Documentation](./gitops.md) for complete setup guide.
 
@@ -102,6 +114,7 @@ See [GitOps Documentation](./gitops.md) for complete setup guide.
 
 For services that don't require frequent updates:
 - Go to **Stacks** > **Add stack** > **From repository**
+- **Important**: Select "Swarm" as the deploy mode
 - Select the service stack (e.g. `services/n8n/docker-compose.yml`)
 - Click **Deploy the stack**
 

@@ -36,6 +36,7 @@ Deploy via Portainer using the remote repository feature.
 1. **Deploy via Portainer** pointing to:
    - Repository: `https://github.com/giocaizzi/rp5-homeserver`
    - Container path: `services/adguard/docker-compose.yml`
+   - **Deploy Mode**: Select "Swarm" (not "Standalone")
 
 2. **Set environment variables** in Portainer Stack → Environment Variables (optional):
    ```bash
@@ -66,7 +67,7 @@ Deploy via Portainer using the remote repository feature.
      HOMEPAGE_VAR_ADGUARD_USERNAME=your_admin_username
      HOMEPAGE_VAR_ADGUARD_PASSWORD=your_admin_password
      ```
-   - Restart homepage service to enable widget
+   - Restart homepage service: `docker service update --force infra_homepage`
 
 ### Troubleshooting:
 

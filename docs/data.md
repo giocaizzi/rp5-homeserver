@@ -1,10 +1,10 @@
 # Data & Volume Management
 
-Essential guide for data persistence and volume management in RP5 home server.
+Essential guide for data persistence and volume management in RP5 home server with Docker Swarm.
 
 ## Volume Strategy
 
-**Named Volumes for Persistent Data**: All services use Docker named volumes for persistent storage to ensure data integrity and easier management.
+**Named Volumes for Persistent Data**: All services use Docker named volumes for persistent storage to ensure data integrity and easier management in the single-node swarm cluster.
 
 **Bind Mounts for Configuration**: Only configuration files that may need external modification are mounted as bind mounts.
 
@@ -12,7 +12,7 @@ Essential guide for data persistence and volume management in RP5 home server.
 
 ```
 ~/rp5-homeserver/infra/
-├── docker-compose.yml       # Infrastructure stack compose file
+├── docker-compose.yml       # Infrastructure swarm stack compose file
 ├── .env                     # Environment variables
 └── nginx/
     ├── nginx.conf           # Nginx configuration (bind mount)
@@ -21,7 +21,7 @@ Essential guide for data persistence and volume management in RP5 home server.
         └── key.pem          # SSL private key (bind mount)
 ```
 
-**Named Volumes:**
+**Named Volumes (Swarm):**
 - `infra_portainer_data` - Portainer application data and configuration
 - `infra_netdata_cache` - Netdata performance metrics cache and time-series data
 - `infra_netdata_config` - Netdata custom configuration and alerts
@@ -45,7 +45,7 @@ Essential guide for data persistence and volume management in RP5 home server.
 
 ## Volume Pattern
 
-**Standard Named Volume Pattern** with `<stack>_<service>_<type>` naming:
+**Standard Named Volume Pattern** with `<stack>_<service>_<type>` naming for Docker Swarm:
 ```yaml
 volumes:
   stack_service_data:
@@ -54,7 +54,7 @@ volumes:
     driver: local
 ```
 
-**Volume Mounting**:
+**Volume Mounting in Swarm**:
 ```yaml
 services:
   service:
@@ -62,12 +62,16 @@ services:
       - stack_service_data:/data
       - stack_service_logs:/var/log/service
       - ./config.conf:/etc/service/config.conf:ro  # Config only
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager  # Ensures volume consistency
 ```
 
 **Examples**:
-- `infra_nginx_logs`, `infra_portainer_data`
-- `n8n_postgres_data`, `n8n_n8n_data`, `n8n_n8n_logs`  
-- `ollama_ollama_data`, `ollama_ollama_logs`
+- `infra_portainer_data`, `infra_netdata_cache`
+- `n8n_postgres_data`, `n8n_n8n_data`
+- `ollama_ollama_data`, `firefly_firefly_db`
 
 ## Volume Management
 

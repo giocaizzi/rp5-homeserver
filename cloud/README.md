@@ -98,7 +98,7 @@ scp ../infra/backup/secrets/gcp_service_account.json pi@pi.local:~/rp5-homeserve
 ### 5. Re-start infrastructure
 
 ```bash
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker-compose down && docker-compose up -d"
+ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker stack rm infra && sleep 10 && docker stack deploy -c docker-compose.yml infra"
 ```
 
 

@@ -61,7 +61,7 @@ GCP_SERVICE_ACCOUNT_FILE=./backup/secrets/gcp_service_account.json
 
 ```bash
 cd infra
-docker compose up -d
+docker stack deploy -c docker-compose.yml infra
 ```
 
 ### 4. Configure Backrest via Web UI
@@ -166,7 +166,7 @@ docker exec backrest restic -r /data/repos/rp5-homeserver check
 docker ps | grep backrest
 
 # Ensure infrastructure stack is running
-cd ~/rp5-homeserver/infra && docker compose up -d
+cd ~/rp5-homeserver/infra && docker stack deploy -c docker-compose.yml infra
 ```
 
 **Web UI not accessible:**

@@ -61,14 +61,14 @@
         href: https://firefly.{{HOMEPAGE_VAR_DOMAIN}}
         description: Personal finance manager
         icon: firefly.png
-        ping: http://firefly_app:8080
+        ping: http://firefly:8080
         widget:
           type: firefly
-          url: http://firefly_app:8080
+          url: http://firefly:8080
           key: "{{HOMEPAGE_VAR_FIREFLY_API_TOKEN}}"
 
     - Firefly Importer:
         href: https://firefly-importer.local
         description: Data import for Firefly III
         icon: firefly.png
-        ping: http://firefly_importer:8080
+        ping: http://firefly-importer:8080
