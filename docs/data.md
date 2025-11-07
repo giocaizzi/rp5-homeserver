@@ -13,12 +13,21 @@ Essential guide for data persistence and volume management in RP5 home server wi
 ```
 ~/rp5-homeserver/infra/
 ├── docker-compose.yml       # Infrastructure swarm stack compose file
-├── .env                     # Environment variables
-└── nginx/
-    ├── nginx.conf           # Nginx configuration (bind mount)
-    └── ssl/
-        ├── cert.pem         # SSL certificate (bind mount)
-        └── key.pem          # SSL private key (bind mount)
+├── .env                     # Optional environment variables (Netdata token only)
+├── VERSION                  # Infra version file (mounted as config)
+├── nginx/
+│   ├── nginx.conf           # Nginx configuration (bind mount)
+│   └── snippets/            # Nginx configuration snippets
+├── secrets/                 # Docker Swarm secrets (sensitive data)
+│   ├── ssl_cert.pem         # SSL certificate
+│   ├── ssl_key.pem          # SSL private key
+│   ├── cloudflared_token.txt
+│   ├── *_password.txt       # Service passwords
+│   └── *.json               # API keys and service accounts
+└── homepage/                # Homepage configuration (bind mount)
+    ├── services.yaml
+    ├── widgets.yaml
+    └── ...
 ```
 
 **Named Volumes (Swarm):**

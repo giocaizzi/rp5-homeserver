@@ -89,21 +89,29 @@ The API key provides read-only access to container information. Store securely a
 
 ## Configuration
 
-See [`.env.example`](./.env.example) for all environment variables.
+### Docker Swarm Secrets
+
+Sensitive configuration is managed via Docker Swarm secrets stored in `./secrets/`:
+
+**Required secrets:**
+- `ssl_cert` (`./secrets/cert.pem`) - SSL certificate
+- `ssl_key` (`./secrets/key.pem`) - SSL private key  
+- `cloudflared_token` (`./secrets/cloudflared_token.txt`) - Cloudflare tunnel token
+- `gcp_service_account` (`./secrets/gcp_service_account.json`) - GCP service account for backups
+
+**Service integration secrets:**
+- `portainer_api_key` (`./secrets/portainer_api_key.txt`) - Portainer API access
+- `backrest_admin_password` (`./secrets/backrest_admin_password.txt`) - Backrest web UI password  
+- `firefly_api_token` (`./secrets/firefly_api_token.txt`) - Firefly III API access
+- `adguard_password` (`./secrets/adguard_password.txt`) - AdGuard Home password
+- `domain` (`./secrets/domain.txt`) - Primary domain name
 
 ## Backup Setup
 
 **Prerequisites:**
 1. Google Cloud Storage bucket with service account access
-2. Create GCP service account key:
-   ```bash
-   # Download the JSON key file from Google Cloud Console
-   # Save as backup/secrets/gcp_service_account.json
-   ```
-3. Configure bucket name in `.env` file:
-   ```bash
-   GCP_SERVICE_ACCOUNT_FILE=./backup/secrets/gcp_service_account.json
-   ```
+2. Create GCP service account key and save to `./secrets/gcp_service_account.json`
+3. Set admin password in `./secrets/backrest_admin_password.txt`
 
 **Configure via Web UI:**
 1. Deploy the infrastructure stack: `docker stack deploy -c docker-compose.yml infra`
@@ -115,13 +123,16 @@ See [Backup Documentation](../docs/backup.md) for complete setup guide.
 
 ## Nginx Post-Setup
 
-### Generate certificates locally
+## SSL Setup
 
-SSL Certificates must be present in `./nginx/ssl` before starting the stack.
+SSL Certificates must be present as Docker Swarm secrets before starting the stack:
 
-See [SSL Generation Instructions](../docs/setup.md#1-infrastructure-stack).
+- `./secrets/cert.pem` - SSL certificate
+- `./secrets/key.pem` - SSL private key
 
-### Update hostsfile
+See [SSL Generation Instructions](../docs/setup.md#1-infrastructure-stack) for certificate generation.
+
+## Local Access Setup
 
 In order to pass `nginx` hostname resolution, add to your local `/etc/hosts` file:
 

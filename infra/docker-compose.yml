@@ -166,9 +166,6 @@ services:
       - netdata_lib:/var/lib/netdata        # persistent data
     networks:
       - infra_network
-    environment:
-      - NETDATA_CLAIM_TOKEN=${NETDATA_CLAIM_TOKEN:-}
-      - NETDATA_CLAIM_URL=https://app.netdata.cloud
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:19999/api/v1/info"]
       interval: 30s

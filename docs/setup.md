@@ -8,7 +8,7 @@ Deploy RP5 Home Server stacks via Docker Swarm and Portainer's remote repository
 
 ### 1. Infrastructure Stack
 
-Setup necessary files and folders on your RP5.
+Setup secrets and configuration files on your RP5.
 
 - Generate SSL certificates on local machine (not on Pi):
 
@@ -17,30 +17,62 @@ cd infra/nginx
 ./generate-ssl.sh
 ```
 
-- Create env file from example:
+- Create secrets directory structure:
+
+```bash
+mkdir -p ./infra/secrets
+```
+
+- Create secret files:
+
+```bash
+# SSL certificates
+cp ./infra/nginx/ssl/cert.pem ./infra/secrets/cert.pem
+cp ./infra/nginx/ssl/key.pem ./infra/secrets/key.pem
+
+# Cloudflare tunnel token
+echo "your_cloudflare_tunnel_token" > ./infra/secrets/cloudflared_token.txt
+
+# Service passwords and tokens (generate secure passwords)
+echo "your_backrest_admin_password" > ./infra/secrets/backrest_admin_password.txt
+echo "your_portainer_api_key" > ./infra/secrets/portainer_api_key.txt
+echo "your_firefly_api_token" > ./infra/secrets/firefly_api_token.txt
+echo "your_adguard_password" > ./infra/secrets/adguard_password.txt
+echo "yourdomain.com" > ./infra/secrets/domain.txt
+
+# GCP service account for backups (optional)
+cp /path/to/your/gcp_service_account.json ./infra/secrets/gcp_service_account.json
+```
+
+- Optionally configure Netdata Cloud integration:
 
 ```bash
 cp ./infra/.env.example ./infra/.env
+# Edit .env to add NETDATA_CLAIM_TOKEN if desired
 ```
-
-- Edit your `.env` file to add necessary variables.
 
 - Copy necessary files to RP5 via SCP with SSH:
 
 ```bash
 # Create directory structure
-ssh pi@pi.local "mkdir -p ~/rp5-homeserver/infra/{nginx/ssl,backup/secrets}"
+ssh pi@pi.local "mkdir -p ~/rp5-homeserver/infra/{nginx,secrets,homepage}"
 
 # Copy core infrastructure files
-scp ./infra/docker-compose.yml ./infra/.env pi@pi.local:~/rp5-homeserver/infra/
+scp ./infra/docker-compose.yml pi@pi.local:~/rp5-homeserver/infra/
+scp ./infra/VERSION pi@pi.local:~/rp5-homeserver/infra/
 
-# Copy nginx configuration and SSL certificates
+# Copy secrets directory
+scp -r ./infra/secrets/ pi@pi.local:~/rp5-homeserver/infra/
+
+# Copy nginx configuration
 scp ./infra/nginx/nginx.conf pi@pi.local:~/rp5-homeserver/infra/nginx/
-scp ./infra/nginx/ssl/*.pem pi@pi.local:~/rp5-homeserver/infra/nginx/ssl/
+scp -r ./infra/nginx/snippets/ pi@pi.local:~/rp5-homeserver/infra/nginx/
 
-# Copy GCP service account for backups (optional)
-# If you want to set up backups, copy the GCP credentials file
-scp /path/to/your/gcp_service_account.json pi@pi.local:~/rp5-homeserver/infra/backup/secrets/
+# Copy homepage configuration
+scp -r ./infra/homepage/ pi@pi.local:~/rp5-homeserver/infra/
+
+# Copy optional .env file if using Netdata Cloud
+# scp ./infra/.env pi@pi.local:~/rp5-homeserver/infra/
   ```
 
 - Initialize Docker Swarm and deploy the infrastructure stack:
