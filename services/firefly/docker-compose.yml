@@ -69,7 +69,7 @@ services:
         export DB_PASSWORD=$$(cat /run/secrets/db_password)
         export STATIC_CRON_TOKEN=$$(cat /run/secrets/static_cron_token)
         # Execute original entrypoint
-        exec /entrypoint.sh
+        exec /usr/local/bin/entrypoint.sh
     volumes:
       - firefly_upload:/var/www/html/storage/upload
     networks:
@@ -209,7 +209,7 @@ services:
         mkdir -p /import
         cp /run/secrets/import_config /import/config.json
         # Execute original entrypoint
-        exec /entrypoint.sh
+        exec /usr/local/bin/entrypoint.sh
     volumes:
       - firefly_upload:/var/www/html/storage/upload
     networks:
