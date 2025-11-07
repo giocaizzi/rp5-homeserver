@@ -20,45 +20,57 @@ services:
       - "8080"
     environment:
       # Application configuration
-      APP_ENV: production
-      APP_DEBUG: "false"
-      APP_KEY: "${APP_KEY}"
-      APP_URL: "https://${FIREFLY_HOST:-firefly.local}"
-      SITE_OWNER: "${SITE_OWNER:-admin@firefly.local}"
-      DEFAULT_LANGUAGE: "${DEFAULT_LANGUAGE:-en_US}"
-      DEFAULT_LOCALE: "${DEFAULT_LOCALE:-equal}"
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://firefly.giocaizzi.xyz
+      - SITE_OWNER=admin@firefly.local
+      - DEFAULT_LANGUAGE=en_US
+      - DEFAULT_LOCALE=equal
       
       # Timezone
-      TZ: "${TZ:-UTC}"
+      - TZ=Europe/Rome
       
       # Database configuration
-      DB_CONNECTION: mysql
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_DATABASE: "${DB_DATABASE:-firefly}"
-      DB_USERNAME: "${DB_USERNAME:-firefly}"
-      DB_PASSWORD: "${DB_PASSWORD}"
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=firefly
+      - DB_USERNAME=firefly
       
       # Security & Trust
-      TRUSTED_PROXIES: "**"
-      APP_LOG_LEVEL: "${APP_LOG_LEVEL:-notice}"
-      AUDIT_LOG_LEVEL: "${AUDIT_LOG_LEVEL:-emergency}"
+      - TRUSTED_PROXIES=**
+      - APP_LOG_LEVEL=notice
+      - AUDIT_LOG_LEVEL=emergency
       
       # Mail configuration (optional)
-      MAIL_MAILER: "${MAIL_MAILER:-log}"
-      MAIL_HOST: "${MAIL_HOST:-}"
-      MAIL_PORT: "${MAIL_PORT:-2525}"
-      MAIL_FROM: "${MAIL_FROM:-changeme@example.com}"
-      MAIL_USERNAME: "${MAIL_USERNAME:-}"
-      MAIL_PASSWORD: "${MAIL_PASSWORD:-}"
-      MAIL_ENCRYPTION: "${MAIL_ENCRYPTION:-}"
+      - MAIL_MAILER=log
+      - MAIL_HOST=
+      - MAIL_PORT=2525
+      - MAIL_FROM=changeme@example.com
+      - MAIL_USERNAME=
+      - MAIL_PASSWORD=
+      - MAIL_ENCRYPTION=
       
       # Authentication
-      LOGIN_PROVIDER: "${LOGIN_PROVIDER:-eloquent}"
+      - LOGIN_PROVIDER=eloquent
       
       # Feature flags
-      DISABLE_FRAME_HEADER: "${DISABLE_FRAME_HEADER:-false}"
-      DISABLE_CSP_HEADER: "${DISABLE_CSP_HEADER:-false}"
+      - DISABLE_FRAME_HEADER=false
+      - DISABLE_CSP_HEADER=false
+    secrets:
+      - app_key
+      - db_password
+      - static_cron_token
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        # Read secrets and set environment variables
+        export APP_KEY=$$(cat /run/secrets/app_key)
+        export DB_PASSWORD=$$(cat /run/secrets/db_password)
+        export STATIC_CRON_TOKEN=$$(cat /run/secrets/static_cron_token)
+        # Execute original entrypoint
+        exec /entrypoint.sh
     volumes:
       - firefly_upload:/var/www/html/storage/upload
     networks:
@@ -102,12 +114,14 @@ services:
     image: mariadb:lts
     hostname: db
     environment:
-      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
-      MYSQL_DATABASE: "${DB_DATABASE:-firefly}"
-      MYSQL_USER: "${DB_USERNAME:-firefly}"
-      MYSQL_PASSWORD: "${DB_PASSWORD}"
-      MARIADB_AUTO_UPGRADE: "1"
-      MARIADB_DISABLE_UPGRADE_BACKUP: "1"
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
+      - MYSQL_DATABASE=firefly
+      - MYSQL_USER=firefly
+      - MYSQL_PASSWORD_FILE=/run/secrets/db_password
+      - MARIADB_AUTO_UPGRADE=1
+      - MARIADB_DISABLE_UPGRADE_BACKUP=1
+    secrets:
+      - db_password
     volumes:
       - firefly_db:/var/lib/mysql
     networks:
@@ -157,34 +171,47 @@ services:
       - "8080"
     environment:
       # Firefly III connection
-      FIREFLY_III_URL: "http://firefly:8080"
-      VANITY_URL: "https://${FIREFLY_HOST:-firefly.local}"
-      FIREFLY_III_CLIENT_ID: "${FIREFLY_CLIENT_ID}"
-
-      # Lunch flow
-      LUNCH_FLOW_API_KEY: "${LUNCH_FLOW_API_KEY:-}"
+      - FIREFLY_III_URL=http://firefly:8080
+      - VANITY_URL=https://firefly.giocaizzi.xyz
       
       # Timezone and Locale
-      TZ: "${TZ:-UTC}"
-      FALLBACK_LOCALE: "${FALLBACK_LOCALE:-en_US}"
+      - TZ=Europe/Rome
+      - FALLBACK_LOCALE=en_US
       
       # Security
-      TRUSTED_PROXIES: "**"
-      EXPECT_SECURE_URL: "false"
-      VERIFY_TLS_SECURITY: "false"
+      - TRUSTED_PROXIES=**
+      - EXPECT_SECURE_URL=false
+      - VERIFY_TLS_SECURITY=false
       
       # Logging
-      LOG_LEVEL: "${IMPORTER_LOG_LEVEL:-info}"
+      - LOG_LEVEL=info
       
       # Performance
-      USE_CACHE: "true"
+      - USE_CACHE=true
       
       # Auto-import configuration
-      IMPORT_DIR_ALLOWLIST: "/import"
-      AUTO_IMPORT_SECRET: "${AUTO_IMPORT_SECRET}"
-      CAN_POST_AUTOIMPORT: "true"
-      CAN_POST_FILES: "true"
-      IGNORE_DUPLICATE_ERRORS: "${IGNORE_DUPLICATE_ERRORS:-false}"
+      - IMPORT_DIR_ALLOWLIST=/import
+      - CAN_POST_AUTOIMPORT=true
+      - CAN_POST_FILES=true
+      - IGNORE_DUPLICATE_ERRORS=false
+    secrets:
+      - firefly_client_id
+      - lunch_flow_api_key
+      - auto_import_secret
+      - import_config
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        # Read secrets and set environment variables
+        export FIREFLY_III_CLIENT_ID=$$(cat /run/secrets/firefly_client_id)
+        export LUNCH_FLOW_API_KEY=$$(cat /run/secrets/lunch_flow_api_key)
+        export AUTO_IMPORT_SECRET=$$(cat /run/secrets/auto_import_secret)
+        # Copy import config from secret to expected location
+        mkdir -p /import
+        cp /run/secrets/import_config /import/config.json
+        # Execute original entrypoint
+        exec /entrypoint.sh
     volumes:
       - firefly_upload:/var/www/html/storage/upload
     networks:
@@ -233,17 +260,20 @@ services:
       importer:
         condition: service_started
     environment:
-      TZ: "${TZ:-UTC}"
-      AUTO_IMPORT_SECRET: "${AUTO_IMPORT_SECRET}"
-      FIREFLY_ACCESS_TOKEN: "${FIREFLY_III_ACCESS_TOKEN}"
+      - TZ=Europe/Rome
+    secrets:
+      - auto_import_secret
+      - firefly_access_token
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: >
       sh -c "apk add --no-cache tzdata wget docker-cli &&
-      ln -sf /usr/share/zoneinfo/$$TZ /etc/localtime &&
+      ln -sf /usr/share/zoneinfo/Europe/Rome /etc/localtime &&
       echo 'Waiting for Firefly to be ready...' &&
       until wget -q --spider http://firefly:8080/api/v1/about; do echo 'Waiting...'; sleep 30; done &&
       echo 'Firefly is ready, setting up cron jobs...' &&
+      AUTO_IMPORT_SECRET=\$$(cat /run/secrets/auto_import_secret) &&
+      FIREFLY_ACCESS_TOKEN=\$$(cat /run/secrets/firefly_access_token) &&
       echo '0 3 * * * docker exec \$$(docker ps --filter \"label=com.docker.swarm.service.name=firefly_firefly\" --format \"{{.Names}}\") php artisan firefly-iii:cron' > /tmp/crontab &&
       echo '40 2 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer '$$FIREFLY_ACCESS_TOKEN'\" http://firefly-importer:8080/autoimport?directory=/import\\&secret='$$AUTO_IMPORT_SECRET >> /tmp/crontab &&
       crontab /tmp/crontab &&
@@ -286,3 +316,21 @@ volumes:
     driver: local
   firefly_db:
     driver: local
+
+secrets:
+  app_key:
+    file: ./secrets/app_key.txt
+  db_password:
+    file: ./secrets/db_password.txt
+  static_cron_token:
+    file: ./secrets/static_cron_token.txt
+  firefly_client_id:
+    file: ./secrets/firefly_client_id.txt
+  auto_import_secret:
+    file: ./secrets/auto_import_secret.txt
+  firefly_access_token:
+    file: ./secrets/firefly_access_token.txt
+  lunch_flow_api_key:
+    file: ./secrets/lunch_flow_api_key.txt
+  import_config:
+    file: ./secrets/config.json
