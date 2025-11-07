@@ -172,7 +172,7 @@ services:
 
 ### Automatic Service Token Creation
 
-GitHub webhooks are secured behind Cloudflare Access. The service token for webhook bypass is automatically created via Terraform. After running `terraform apply` in the cloud directory, get the credentials:
+GitHub Actions workflows use Cloudflare Access service tokens for webhook authentication. The service token is automatically created via Terraform. After running `terraform apply` in the cloud directory, get the credentials:
 
 ```bash
 # Get the webhook credentials
@@ -181,25 +181,52 @@ terraform output -raw github_webhook_client_id
 terraform output -raw github_webhook_client_secret
 ```
 
-### GitHub Webhook Configuration
+### GitHub Actions Deployment
 
-Configure repository webhooks with Cloudflare Access bypass:
-- **Payload URL**: `https://portainer.yourdomain.com/api/stacks/webhooks/{webhook-id}`
-- **Content-Type**: `application/json`
-- **Custom Headers**:
-  - `CF-Access-Client-Id: <client_id_from_terraform_output>`
-  - `CF-Access-Client-Secret: <client_secret_from_terraform_output>`
+Since GitHub webhooks cannot send custom headers, we use **GitHub Actions** to trigger deployments with proper Cloudflare Access authentication.
 
-### Test Webhook
+#### Setup Repository Secrets:
+1. Go to repository **Settings** → **Secrets and variables** → **Actions**
+2. Add these repository secrets:
+   
+   **Authentication:**
+   - `CF_ACCESS_CLIENT_ID`: Your client ID from terraform output
+   - `CF_ACCESS_CLIENT_SECRET`: Your client secret from terraform output
+   
+   **Configuration:**
+   - `PORTAINER_URL`: `https://portainer.yourdomain.com`
+   
+   **Webhook IDs (get from Portainer GitOps stacks):**
+   - `WEBHOOK_ID_N8N`: Your n8n webhook ID
+   - `WEBHOOK_ID_FIREFLY`: Your firefly webhook ID  
+   - `WEBHOOK_ID_ADGUARD`: Your adguard webhook ID
+   - `WEBHOOK_ID_OLLAMA`: Your ollama webhook ID (if used)
+
+#### Automated Deployment Workflow:
+The `.github/workflows/deploy.yml` automatically:
+- Detects which services changed in `services/` directory
+- Triggers deployment for only the changed services
+- Uses Cloudflare Access headers for authentication
+- Provides deployment status feedback
+
+#### Get Webhook IDs:
+For each GitOps-enabled stack in Portainer:
+1. Navigate to the stack in Portainer UI
+2. Find the **GitOps updates** section
+3. Copy the webhook URL
+4. Extract the ID from: `https://portainer.yourdomain.com/api/stacks/webhooks/{webhook-id}`
+5. Update the `WEBHOOK_URLS` in `.github/workflows/deploy.yml`
+
+### Test Webhook (Manual)
+
+Test individual webhooks manually:
 
 ```bash
 curl -X POST \
   -H "CF-Access-Client-Id: $(terraform output -raw github_webhook_client_id)" \
   -H "CF-Access-Client-Secret: $(terraform output -raw github_webhook_client_secret)" \
-  "https://portainer.yourdomain.com/api/stacks/webhooks/test"
+  "https://portainer.yourdomain.com/api/stacks/webhooks/{webhook-id}"
 ```
-
-Once configured, you can deploy services with GitOps enabled in Portainer!
 
 ## Webhook Configuration
 
@@ -216,29 +243,34 @@ Once configured, you can deploy services with GitOps enabled in Portainer!
 - Rate limiting applied (`general` zone)
 - No direct port exposure to internet
 
-### Troubleshooting Webhooks
+### Troubleshooting GitHub Actions Deployment
 
 **Common Issues:**
 
-1. **Webhook not triggering:**
-   - Check GitHub webhook delivery logs
-   - Verify Portainer URL accessibility
-   - Confirm webhook is active
+1. **Action not triggering:**
+   - Check if changes are in `services/` directory
+   - Verify push is to `main` branch
+   - Check GitHub Actions tab for workflow runs
 
-2. **Stack not updating:**
-   - Check stack activity logs in Portainer
-   - Verify Git repository accessibility
+2. **Authentication failures:**
+   - Verify repository secrets are set correctly
+   - Test webhook manually with `./test-webhooks.sh`
+   - Check Cloudflare Access policy allows service token
+
+3. **Webhook not found (404):**
+   - Verify webhook ID in `.github/workflows/deploy.yml`
+   - Check if Portainer stack has GitOps enabled
+   - Confirm webhook URL format is correct
+
+4. **Deployment failures:**
+   - Check Portainer stack activity logs
+   - Verify Git repository accessibility from Portainer
    - Confirm compose file path is correct
 
-3. **Network connectivity:**
-   - Test webhook URL manually: `curl -X POST {webhook_url}`
-   - Check nginx proxy configuration
-   - Verify DNS resolution
-
 **Monitoring:**
-- GitHub webhook delivery logs
+- GitHub Actions workflow logs
 - Portainer stack activity
-- Nginx access logs
+- Nginx access logs (webhook requests)
 - Container status in homepage
 
 ## Best Practices
