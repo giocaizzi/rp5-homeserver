@@ -37,7 +37,7 @@ jobs:
             {
               "n8n": "${{ secrets.WEBHOOK_ID_N8N }}",
               "firefly": "${{ secrets.WEBHOOK_ID_FIREFLY }}",
-              "adguard": "${{ secrets.WEBHOOK_ID_ADGUARD }}",
+              "adguard": "${{ secrets.WEBHOOK_ID_ADGUARD }}"
             }
         run: |
           webhook_id=$(echo '${{ env.WEBHOOK_IDS }}' | jq -r '.["${{ matrix.service }}"]')
