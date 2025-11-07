@@ -153,7 +153,7 @@ fix_remote_permissions() {
 # Read and display current version
 display_version_info() {
     if [ -f "$LOCAL_INFRA_PATH/VERSION" ]; then
-        local version=$(grep "VERSION=" "$LOCAL_INFRA_PATH/VERSION" | cut -d'=' -f2)
+        local version=$(cat "$LOCAL_INFRA_PATH/VERSION")
         log "Current infra version: $version"
         echo "$version"
     fi
