@@ -8,7 +8,7 @@ All scripts require environment variables for configuration. No sensitive defaul
 
 ### sync_infra.sh
 
-Syncs the local infra directory to the Raspberry Pi and restarts all infra services.
+Syncs the local infra directory to the Raspberry Pi and deploys the infrastructure stack using Docker Swarm.
 
 **Required Environment Variables:**
 - `PI_SSH_USER` - SSH username for the Pi
@@ -37,12 +37,13 @@ PI_SSH_USER=pi PI_INFRA_PATH=/opt/homeserver/infra ./sync_infra.sh --pull
 
 **What it does:**
 1. Tests SSH connection to the Pi
-2. Fixes ownership permissions on remote infra directory
-3. Syncs local infra directory to Pi using rsync
-4. Stops current Docker Compose services
-5. Optionally pulls latest Docker images (with `--pull` flag)
-6. Starts services with new configuration
-7. Shows final service status
+2. Initializes Docker Swarm if not already initialized
+3. Fixes ownership permissions on remote infra directory
+4. Syncs local infra directory to Pi using rsync
+5. Removes current Docker Swarm stack if it exists
+6. Optionally pulls latest Docker images (with `--pull` flag)
+7. Deploys the stack using `docker stack deploy`
+8. Shows final stack status and services
 
 ## Adding New Scripts
 

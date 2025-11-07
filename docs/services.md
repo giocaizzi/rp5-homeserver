@@ -20,18 +20,17 @@ services/new-service/
 └── README.md
 ```
 
-## Docker Compose Requirements
+## Docker Swarm Requirements
 
 ### Network Architecture
-Services must connect to **both** networks for proper nginx routing:
+Services must connect to **both** networks for proper nginx routing in Docker Swarm:
 
 ```yaml
 networks:
   # Private service network
   service_network:
-    driver: bridge
+    driver: overlay
     name: rp5_<service>
-    internal: false
   
   # Shared public network (created by infrastructure)
   public_network:
@@ -48,8 +47,11 @@ services:
 ### Complete Service Template
 
 ```yaml
+name: <service>
+
 networks:
   service_network:
+    driver: overlay
     name: rp5_<service>
   public_network:
     external: true
@@ -58,12 +60,11 @@ networks:
 services:
   service:
     image: <service>:latest
-    container_name: <service>
-    restart: unless-stopped
+    hostname: <service>
     expose: ["<port>"]  # No ports: section
     volumes:
-      - ./data/<service>:/data
-      - ./logs/<service>:/var/log
+      - service_data:/data
+      - service_logs:/var/log
     networks: 
       - service_network
       - public_network     # Required for nginx access
@@ -73,10 +74,28 @@ services:
     security_opt: [no-new-privileges:true]
     user: "1000:1000"
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits: {memory: 1G, cpus: "1.0"}
+        reservations: {memory: 512M, cpus: "0.5"}
     logging:
+      driver: "json-file"
       options: {max-size: "10m", max-file: "3"}
+
+volumes:
+  service_data:
+    driver: local
+  service_logs:
+    driver: local
 ```
 
 ## Nginx Integration
@@ -138,7 +157,7 @@ Automated deployment with webhook integration:
 For services requiring manual control:
 
 1. **Portainer UI:** Stacks → Add stack → Upload/Web editor
-2. **SSH deployment:** `docker compose up -d` in service directory
+2. **Docker Swarm deployment:** `docker stack deploy -c docker-compose.yml <stack-name>` for production
 
 See [Setup Guide](./setup.md#2-deploy-service-stacks) for detailed instructions.
 

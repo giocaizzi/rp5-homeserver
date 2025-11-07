@@ -1,11 +1,8 @@
-name: ollama
-
 networks:
   # Private network for ollama stack
   ollama_network:
-    driver: bridge
+    driver: overlay
     name: rp5_ollama
-    internal: false  # Allow external access via nginx proxy
 
   # External network to connect to nginx proxy
   public_network:
@@ -15,8 +12,7 @@ networks:
 services:
   ollama:
     image: ollama/ollama:latest
-    container_name: ollama
-    restart: unless-stopped
+    hostname: ollama
     expose:
       - "11434"
     environment:
@@ -52,6 +48,16 @@ services:
     # devices:
     #   - /dev/dri:/dev/dri  # For Intel GPU acceleration
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           memory: ${OLLAMA_MEMORY_LIMIT:-3G}  # Reduced from 4G for 8GB Pi
@@ -59,9 +65,6 @@ services:
         reservations:
           memory: ${OLLAMA_MEMORY_RESERVATION:-1G}  # Reduced from 2G
           cpus: "${OLLAMA_CPU_RESERVATION:-1.0}"
-    # Allow swap usage since host has swap enabled
-    memswap_limit: ${OLLAMA_MEMSWAP_LIMIT:-6G}  # Allow 2x memory limit in swap
-    mem_swappiness: 1     # Very conservative swap usage for AI workloads
     tmpfs:
       - /tmp:size=1G,noexec,nosuid,nodev
     ulimits:

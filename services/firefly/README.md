@@ -41,7 +41,7 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 1. **Clean up any previous failed deployments:**
    ```bash
    # Remove orphaned containers
-   ssh pi@pi.local  "docker stop firefly_app firefly_db firefly_importer firefly_cron 2>/dev/null; docker rm firefly_app firefly_db firefly_importer firefly_cron 2>/dev/null || true"
+   ssh pi@pi.local  "docker stop firefly_firefly firefly_db firefly_importer firefly_cron 2>/dev/null; docker rm firefly_firefly firefly_db firefly_importer firefly_cron 2>/dev/null || true"
    
    # Remove old volumes to ensure fresh database initialization
    ssh pi@pi.local  "docker volume rm firefly_firefly_db firefly_firefly_upload 2>/dev/null || true"
@@ -50,6 +50,7 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 2. **Deploy via Portainer** pointing to:
    - Repository: `https://github.com/giocaizzi/rp5-homeserver`
    - Container path: `services/firefly/docker-compose.yml`
+   - **Deploy Mode**: Select "Swarm" (not "Standalone")
 
 3. **Set required environment variables** in Portainer Stack → Environment Variables:
    ```bash
@@ -133,11 +134,11 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
    - UNCHECK "Confidential"
    - Copy the Client ID
    - Update `FIREFLY_CLIENT_ID` in Portainer environment variables
-   - Restart the stack
+   - Restart the stack in Portainer
 
 6. **Access Data Importer**:
    - Navigate to `https://firefly-importer.local`
-   - When prompted for Firefly III URL, use: `http://app:8080`
+   - When prompted for Firefly III URL, use: `http://firefly:8080`
    - Provide the Client ID generated in step 5
    - The system will use OAuth flow for authentication
 
@@ -178,7 +179,7 @@ The Data Importer supports:
 4. In Lunch Flow dashboard: **Destinations** → **Add Destination** → **API** → **Firefly III**
 5. Copy the generated API key
 6. Set `LUNCH_FLOW_API_KEY` environment variable in Portainer
-7. Restart the stack
+7. Restart the stack in Portainer
 
 ### Automated Lunch Flow Imports
 
@@ -202,10 +203,10 @@ Automated imports reuse a configuration you create manually first. See the [offi
    ```bash
    # Copy config directly to the running container (no volume mount needed)
    scp import/config.json pi.local:/tmp/config.json
-   ssh pi.local "docker cp /tmp/config.json firefly_importer:/import/config.json"
+   ssh pi.local "docker cp /tmp/config.json \$(docker ps --filter 'label=com.docker.swarm.service.name=firefly_importer' --format '{{.Names}}'):/import/config.json"
    
    # Verify the file is in the container
-   ssh pi.local "docker exec firefly_importer ls -la /import/"
+   ssh pi.local "docker exec \$(docker ps --filter 'label=com.docker.swarm.service.name=firefly_importer' --format '{{.Names}}') ls -la /import/"
    ```
 
    **Important**: Your config.json must include a valid personal access token for automated imports:
