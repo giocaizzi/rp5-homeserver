@@ -319,18 +319,26 @@ volumes:
 
 secrets:
   app_key:
-    file: ./secrets/app_key.txt
+    external: true
+    name: firefly_app_key
   db_password:
-    file: ./secrets/db_password.txt
+    external: true
+    name: firefly_db_password
   static_cron_token:
-    file: ./secrets/static_cron_token.txt
+    external: true
+    name: firefly_static_cron_token
   firefly_client_id:
-    file: ./secrets/firefly_client_id.txt
+    external: true
+    name: firefly_client_id
   auto_import_secret:
-    file: ./secrets/auto_import_secret.txt
+    external: true
+    name: firefly_auto_import_secret
   firefly_access_token:
-    file: ./secrets/firefly_access_token.txt
+    external: true
+    name: firefly_access_token
   lunch_flow_api_key:
-    file: ./secrets/lunch_flow_api_key.txt
+    external: true
+    name: firefly_lunch_flow_api_key
   import_config:
-    file: ./secrets/config.json
+    external: true
+    name: firefly_import_config
