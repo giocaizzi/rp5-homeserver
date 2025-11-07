@@ -28,10 +28,9 @@ services:
       # Web interface (proxied via nginx)
       - "3000"
     environment:
-      TZ: "${TZ:-UTC}"
-      # AdGuard Home configuration
-      AGH_CONFIG_PATH: "/opt/adguardhome/conf/AdGuardHome.yaml"
-      AGH_WORK_DIR: "/opt/adguardhome/work"
+      - TZ=Europe/Rome
+      - AGH_CONFIG_PATH=/opt/adguardhome/conf/AdGuardHome.yaml
+      - AGH_WORK_DIR=/opt/adguardhome/work
     volumes:
       - adguard_work:/opt/adguardhome/work
       - adguard_conf:/opt/adguardhome/conf

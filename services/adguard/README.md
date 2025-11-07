@@ -9,19 +9,14 @@ Self-hosted DNS server with ad blocking capabilities at `https://adguard.local`.
 
 **Authentication**: Web-based initial setup and user management
 **Resource Limits**: 256MB RAM, 0.5 CPU
+**Timezone**: Europe/Rome (hardcoded in docker-compose.yml)
 
 **Network**: 
 - Web interface accessible via nginx proxy (port 3000 proxied)
 - DNS services exposed on host ports (53, 853, 5443)
 - DNS-over-HTTPS available via nginx proxy at `https://adguard.local/dns-query`
 
-## Environment Setup
-
-Set environment variables in Portainer Stack → Environment Variables section:
-
-```bash
-TZ=UTC  # Timezone (optional, defaults to UTC)
-```
+**Integration**: Admin credentials managed via Docker Swarm secrets in infrastructure stack for Homepage dashboard integration.
 
 ## Deployment
 
@@ -38,36 +33,34 @@ Deploy via Portainer using the remote repository feature.
    - Container path: `services/adguard/docker-compose.yml`
    - **Deploy Mode**: Select "Swarm" (not "Standalone")
 
-2. **Set environment variables** in Portainer Stack → Environment Variables (optional):
-   ```bash
-   TZ=Europe/London  # Set your timezone
-   ```
-
-3. **Monitor deployment progress**:
+2. **Monitor deployment progress**:
    - Container startup: ~30-60 seconds
    - Initial configuration generation: automatic
 
-4. **Verify successful deployment**:
+3. **Verify successful deployment**:
    ```bash
    # Check container is healthy
-   ssh pi@pi.local "docker ps | grep adguard"
+   ssh pi@pi.local "docker service ls | grep adguard"
    
    # Test DNS resolution
    dig @pi.local google.com
    nslookup google.com pi.local
    ```
 
-5. **Access and setup**:
+4. **Access and setup**:
    - Navigate to `https://adguard.local`
    - Complete initial setup wizard
 
-6. **Homepage integration** (optional):
-   - After setup, update infrastructure `.env` file with:
+5. **Homepage integration**:
+   - After completing AdGuard setup, add admin credentials to infrastructure secrets:
      ```bash
-     HOMEPAGE_VAR_ADGUARD_USERNAME=your_admin_username
-     HOMEPAGE_VAR_ADGUARD_PASSWORD=your_admin_password
+     # On your local machine
+     echo "your_admin_username" > ./infra/secrets/adguard_username.txt  
+     echo "your_admin_password" > ./infra/secrets/adguard_password.txt
+     
+     # Sync to Pi and restart homepage
+     ./scripts/sync_infra.sh
      ```
-   - Restart homepage service: `docker service update --force infra_homepage`
 
 ### Troubleshooting:
 
