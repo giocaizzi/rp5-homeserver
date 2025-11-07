@@ -57,3 +57,19 @@ output "backup_service_account_key" {
   value       = google_service_account_key.backup_key.private_key
   sensitive   = true
 }
+
+# ============================================================================
+# GitOps Webhook Outputs
+# ============================================================================
+
+output "github_webhook_client_id" {
+  description = "Client ID for GitHub webhook service token"
+  value       = cloudflare_zero_trust_access_service_token.github_webhook.client_id
+  sensitive   = true
+}
+
+output "github_webhook_client_secret" {
+  description = "Client Secret for GitHub webhook service token"
+  value       = cloudflare_zero_trust_access_service_token.github_webhook.client_secret
+  sensitive   = true
+}

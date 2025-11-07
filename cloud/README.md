@@ -45,7 +45,13 @@ vim terraform.tfvars
 **Cloudflare Configuration:**
 - `cloudflare_api_token` - Create at [API Tokens](https://dash.cloudflare.com/profile/api-tokens)
 
-   > Permissions: `Zone:Zone Settings:Edit`, `Zone:Zone:Read` , `Zone:DNS:Edit`, `Account:Cloudflare Tunnel:Edit`, `Account:Access: Apps and Policies:Edit`
+   > **Required Permissions:** 
+   > - `Zone:Zone Settings:Edit`
+   > - `Zone:Zone:Read`
+   > - `Zone:DNS:Edit` 
+   > - `Account:Cloudflare Tunnel:Edit`
+   > - `Account:Access: Apps and Policies:Edit`
+   > - `Account:Access: Service Tokens:Edit` *(required for GitOps webhooks)*
 
 - `cloudflare_account_id` - From Cloudflare dashboard
 - `zone_name` - Your domain (e.g., example.com)
@@ -94,6 +100,8 @@ scp ../infra/backup/secrets/gcp_service_account.json pi@pi.local:~/rp5-homeserve
 ```bash
 ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker-compose down && docker-compose up -d"
 ```
+
+
 
 ## Cloudflare 
 
