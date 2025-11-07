@@ -26,6 +26,7 @@ Use environment variables for sensitive data.
 Document with a streamlined style.
 DO NOT summarize what YOU changed in any documentation. Just make the changes and update the docs as needed.
 ALWAYS keep secret keys and sensitive info out of the code, use environment variables or ignore files.
-DO NOT create unnecessary scripts.
+USE main /scripts only for essential automation tasks.
+DO NOT create unnecessary scripts, if a script might be needed, suggest it first.
 NEVER WAIT MORE THAN 5 seconds when retrying commands.
 </guidelines>
