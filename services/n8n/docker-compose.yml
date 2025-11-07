@@ -86,8 +86,7 @@ services:
     image: n8nio/n8n:latest
     hostname: n8n
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     expose:
       - "5678"
     environment:
