@@ -14,8 +14,7 @@ services:
     image: fireflyiii/core:latest
     hostname: firefly
     depends_on:
-      db:
-        condition: service_healthy
+    - db
     expose:
       - "8080"
     environment:
@@ -165,8 +164,7 @@ services:
     image: fireflyiii/data-importer:develop
     hostname: firefly-importer
     depends_on:
-      firefly:
-        condition: service_started
+      - firefly
     expose:
       - "8080"
     environment:
@@ -255,10 +253,8 @@ services:
     image: alpine
     hostname: cron
     depends_on:
-      firefly:
-        condition: service_started
-      importer:
-        condition: service_started
+      - firefly
+      - importer
     environment:
       - TZ=Europe/Rome
     secrets:
