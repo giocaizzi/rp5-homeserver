@@ -107,7 +107,11 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     hostname: cloudflared
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN}
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN_FILE=/run/secrets/cloudflared_token
+    secrets:
+      - cloudflared_token
     networks:
       - infra_network
     healthcheck:
@@ -259,31 +263,34 @@ services:
     hostname: homepage
     expose:
       - "3000"
-    env_file:
-      - ./VERSION
     environment:
       - PUID=0  # Run as root for Docker socket access
       - PGID=0
       - TZ=Europe/Rome
-      - HOMEPAGE_ALLOWED_HOSTS=homepage.local,localhost,homepage.giocaizzi.xyz
       # File-based secrets that Homepage will automatically read
+      - HOMEPAGE_ALLOWED_HOSTS=homepage.local,localhost,homepage.giocaizzi.xyz
       - HOMEPAGE_FILE_PORTAINER_API_KEY=/run/secrets/portainer_api_key
       - HOMEPAGE_FILE_BACKREST_PASSWORD=/run/secrets/backrest_admin_password
       - HOMEPAGE_FILE_FIREFLY_API_TOKEN=/run/secrets/firefly_api_token
       - HOMEPAGE_FILE_ADGUARD_PASSWORD=/run/secrets/adguard_password
+      - HOMEPAGE_FILE_DOMAIN=/run/secrets/domain
+      - HOMEPAGE_FILE_VERSION=/app/config/version
       # Regular configuration variables
       - HOMEPAGE_VAR_BACKREST_USERNAME=admin
       - HOMEPAGE_VAR_ADGUARD_USERNAME=admin
       - HOMEPAGE_VAR_LATITUDE=45.4642
       - HOMEPAGE_VAR_LONGITUDE=9.1900
       - HOMEPAGE_VAR_TIMEZONE=Europe/Rome
-      - HOMEPAGE_VAR_VERSION=1.0.0a1
-      - HOMEPAGE_VAR_DOMAIN=giocaizzi.xyz
     secrets:
       - portainer_api_key
       - backrest_admin_password
       - firefly_api_token
       - adguard_password
+      - domain
+    configs:
+      - source: version_config
+        target: /app/config/version
+        mode: 0444
     volumes:
       - ./homepage:/app/config  # Local config files
       - /var/run/docker.sock:/var/run/docker.sock  # Docker integration (writable)
@@ -355,3 +362,9 @@ secrets:
     file: ./secrets/cloudflared_token.txt
   gcp_service_account:
     file: ./secrets/gcp_service_account.json
+  domain:
+    file: ./secrets/domain.txt
+
+configs:
+  version_config:
+    file: ./VERSION

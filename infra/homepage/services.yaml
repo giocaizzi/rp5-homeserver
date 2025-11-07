@@ -2,7 +2,7 @@
 # Infrastructure Services
 - Infrastructure:
     - Portainer:
-        href: https://portainer.{{HOMEPAGE_VAR_DOMAIN}}
+        href: https://portainer.{{HOMEPAGE_FILE_DOMAIN}}
         description: Docker container management
         icon: portainer.png
         ping: http://portainer:9000/api/status
@@ -22,7 +22,7 @@
           url: http://netdata:19999
 
     - Backrest:
-        href: https://backrest.{{HOMEPAGE_VAR_DOMAIN}}
+        href: https://backrest.{{HOMEPAGE_FILE_DOMAIN}}
         description: Backup management
         icon: backrest.png
         ping: http://backrest:9898
@@ -44,7 +44,7 @@
           provider: adguard
           
     - N8N:
-        href: https://n8n.{{HOMEPAGE_VAR_DOMAIN}}
+        href: https://n8n.{{HOMEPAGE_FILE_DOMAIN}}
         description: Workflow automation
         icon: n8n.png
         ping: http://n8n:5678
@@ -56,7 +56,7 @@
         ping: http://ollama:11434
 
     - Firefly III:
-        href: https://firefly.{{HOMEPAGE_VAR_DOMAIN}}
+        href: https://firefly.{{HOMEPAGE_FILE_DOMAIN}}
         description: Personal finance manager
         icon: firefly.png
         ping: http://firefly:8080
