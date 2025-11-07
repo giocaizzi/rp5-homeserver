@@ -48,20 +48,20 @@ gcloud iam service-accounts keys create gcp_service_account.json \
 cd infra/backup/secrets
 
 # Download JSON key from Google Cloud Console and save as:
-# gcp_service_account.json
+# ./infra/secrets/gcp_service_account.json
 ```
 
-**Update environment:**
+**Set admin password:**
 ```bash
-# In infra/.env
-GCP_SERVICE_ACCOUNT_FILE=./backup/secrets/gcp_service_account.json
+# Create backrest admin password
+echo "your_secure_password" > ./infra/secrets/backrest_admin_password.txt
 ```
 
 ### 3. Deploy Stack
 
 ```bash
 cd infra
-docker compose up -d
+docker stack deploy -c docker-compose.yml infra
 ```
 
 ### 4. Configure Backrest via Web UI
@@ -166,7 +166,7 @@ docker exec backrest restic -r /data/repos/rp5-homeserver check
 docker ps | grep backrest
 
 # Ensure infrastructure stack is running
-cd ~/rp5-homeserver/infra && docker compose up -d
+cd ~/rp5-homeserver/infra && docker stack deploy -c docker-compose.yml infra
 ```
 
 **Web UI not accessible:**

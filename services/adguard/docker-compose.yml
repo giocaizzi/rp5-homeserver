@@ -1,11 +1,8 @@
-name: adguard
-
 networks:
   # Private network for adguard stack
   adguard_network:
-    driver: bridge
+    driver: overlay
     name: rp5_adguard
-    internal: false  # Allow external access via nginx proxy
   
   # External network to connect to nginx proxy
   public_network:
@@ -15,8 +12,7 @@ networks:
 services:
   adguard:
     image: adguard/adguardhome:latest
-    container_name: adguard
-    restart: unless-stopped
+    hostname: adguard
     ports:
       # DNS ports (host network mode for DNS)
       - "53:53/tcp"
@@ -32,10 +28,9 @@ services:
       # Web interface (proxied via nginx)
       - "3000"
     environment:
-      TZ: "${TZ:-UTC}"
-      # AdGuard Home configuration
-      AGH_CONFIG_PATH: "/opt/adguardhome/conf/AdGuardHome.yaml"
-      AGH_WORK_DIR: "/opt/adguardhome/work"
+      - TZ=Europe/Rome
+      - AGH_CONFIG_PATH=/opt/adguardhome/conf/AdGuardHome.yaml
+      - AGH_WORK_DIR=/opt/adguardhome/work
     volumes:
       - adguard_work:/opt/adguardhome/work
       - adguard_conf:/opt/adguardhome/conf
@@ -53,6 +48,16 @@ services:
     security_opt:
       - no-new-privileges:true
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           memory: 256M
@@ -60,8 +65,6 @@ services:
         reservations:
           memory: 128M
           cpus: "0.25"
-    memswap_limit: 512M
-    mem_swappiness: 10
     logging:
       driver: "json-file"
       options:

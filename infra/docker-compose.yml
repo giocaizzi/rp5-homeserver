@@ -1,30 +1,29 @@
-name: infra
-
 networks:
   # Public network - for nginx proxy to reach services
   public_network:
-    driver: bridge
+    external: true
     name: rp5_public
   
   # Infrastructure internal network
   infra_network:
-    driver: bridge
+    external: true
     name: rp5_infra
-    internal: false
 
 services:
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: infra_nginx
-    restart: unless-stopped
+    hostname: nginx
     ports:
       - "80:80"     # HTTP
       - "443:443"   # HTTPS
     volumes:
-      - ${NGINX_CONF_PATH}:/etc/nginx/nginx.conf:ro
-      - ${NGINX_SSL_PATH}:/etc/nginx/ssl:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/snippets:/etc/nginx/snippets:ro
+      - nginx_cache:/var/cache/nginx
+    secrets:
+      - ssl_cert
+      - ssl_key
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -39,21 +38,24 @@ services:
       - "stack=infrastructure"
     security_opt:
       - no-new-privileges:true
-    read_only: true
-    tmpfs:
-      - /var/cache/nginx
-      - /var/run
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
-          memory: 128M  # Nginx is lightweight
+          memory: 128M
           cpus: "0.5"
         reservations:
           memory: 64M
           cpus: "0.25"
-    # Allow swap usage since host has swap enabled
-    memswap_limit: 256M   # Allow 2x memory limit in swap
-    mem_swappiness: 10    # Prefer RAM but allow swap when needed
     logging:
       driver: "json-file"
       options:
@@ -63,8 +65,7 @@ services:
   # Portainer - Docker management UI (Business Edition)
   portainer:
     image: portainer/portainer-ee:latest
-    container_name: infra_portainer
-    restart: unless-stopped
+    hostname: portainer
     expose:
       - "9000"
       - "9443"
@@ -81,6 +82,16 @@ services:
     security_opt:
       - no-new-privileges:true
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           memory: 256M
@@ -88,20 +99,21 @@ services:
         reservations:
           memory: 128M
           cpus: "0.25"
-    # Allow swap usage since host has swap enabled
-    memswap_limit: 512M   # Allow 2x memory limit in swap
-    mem_swappiness: 10    # Prefer RAM but allow swap when needed
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
   
+  # Cloudflare Tunnel
   cloudflared:
     image: cloudflare/cloudflared:latest
-    container_name: infra_cloudflared
-    restart: unless-stopped
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN}
+    hostname: cloudflared
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN_FILE=/run/secrets/cloudflared_token
+    secrets:
+      - cloudflared_token
     networks:
       - infra_network
     healthcheck:
@@ -115,28 +127,27 @@ services:
       - no-new-privileges:true
     read_only: true
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           memory: 64M
-          cpus: "0.25"
+          cpus: "0.2"
         reservations:
           memory: 32M
-          cpus: "0.1"
-    # Allow swap usage since host has swap enabled
-    memswap_limit: 128M   # Allow 2x memory limit in swap
-    mem_swappiness: 10    # Prefer RAM but allow swap when needed
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   # Netdata - Real-time performance monitoring
   netdata:
     image: netdata/netdata:latest
-    container_name: infra_netdata
-    hostname: pi-netdata
-    restart: unless-stopped
+    hostname: netdata
     expose:
       - "19999"
     cap_add:
@@ -155,9 +166,6 @@ services:
       - netdata_lib:/var/lib/netdata        # persistent data
     networks:
       - infra_network
-    environment:
-      - NETDATA_CLAIM_TOKEN=${NETDATA_CLAIM_TOKEN:-}
-      - NETDATA_CLAIM_URL=https://app.netdata.cloud
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:19999/api/v1/info"]
       interval: 30s
@@ -167,6 +175,16 @@ services:
     labels:
       - "stack=infrastructure"
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           memory: 256M
@@ -174,9 +192,6 @@ services:
         reservations:
           memory: 128M
           cpus: "0.25"
-    # Allow swap usage since host has swap enabled
-    memswap_limit: 512M   # Allow 2x memory limit in swap
-    mem_swappiness: 10    # Prefer RAM but allow swap when needed
     logging:
       driver: "json-file"
       options:
@@ -186,8 +201,6 @@ services:
   # Backrest - Restic backup with Web UI
   backrest:
     image: garethgeorge/backrest:latest
-    container_name: infra_backrest
-    restart: unless-stopped
     hostname: backrest
     expose:
       - "9898"  # Web UI
@@ -195,17 +208,18 @@ services:
       - BACKREST_DATA=/data
       - BACKREST_CONFIG=/config/config.json
       - XDG_CACHE_HOME=/cache
-      - TZ=${TZ:-UTC}
+      - TZ=Europe/Rome
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp_service_account
     volumes:
       # Backrest data and config
       - backrest_data:/data
       - backrest_config:/config
       - backrest_cache:/cache
       # Backup targets
-      - ${USER_HOME}:/backup${USER_HOME}:ro
+      - /home/giorgiocaizzi:/backup/home/giorgiocaizzi:ro
       - /var/lib/docker/volumes:/backup/docker-volumes:ro
-      # GCP credentials
-      - ${GCP_SERVICE_ACCOUNT_FILE}:/gcp/credentials.json:ro
+    secrets:
+      - gcp_service_account
     networks:
       - infra_network
     labels:
@@ -213,6 +227,16 @@ services:
     security_opt:
       - no-new-privileges:true
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           memory: 512M
@@ -220,8 +244,6 @@ services:
         reservations:
           memory: 256M
           cpus: "0.5"
-    memswap_limit: 1G
-    mem_swappiness: 10
     logging:
       driver: "json-file"
       options:
@@ -237,32 +259,39 @@ services:
   # Homepage - Modern application dashboard
   homepage:
     image: ghcr.io/gethomepage/homepage:latest
-    container_name: infra_homepage
-    restart: unless-stopped
+    hostname: homepage
     expose:
       - "3000"
-    env_file:
-      - ./VERSION
     environment:
       - PUID=0  # Run as root for Docker socket access
       - PGID=0
-      - TZ=${TZ:-UTC}
-      - HOMEPAGE_ALLOWED_HOSTS=homepage.local,localhost,homepage.${HOMEPAGE_DOMAIN}
-      - HOMEPAGE_VAR_PORTAINER_API_KEY=${PORTAINER_API_KEY}
-      - HOMEPAGE_VAR_BACKREST_USERNAME=${BACKREST_ADMIN_USERNAME:-admin}
-      - HOMEPAGE_VAR_BACKREST_PASSWORD=${BACKREST_ADMIN_PASSWORD}
-      - HOMEPAGE_VAR_FIREFLY_API_TOKEN=${FIREFLY_API_TOKEN}
-      - HOMEPAGE_VAR_ADGUARD_USERNAME=${HOMEPAGE_VAR_ADGUARD_USERNAME}
-      - HOMEPAGE_VAR_ADGUARD_PASSWORD=${HOMEPAGE_VAR_ADGUARD_PASSWORD}
-      - HOMEPAGE_VAR_LATITUDE=${HOMEPAGE_LATITUDE:-41.9028}
-      - HOMEPAGE_VAR_LONGITUDE=${HOMEPAGE_LONGITUDE:-12.4964}
-      - HOMEPAGE_VAR_TIMEZONE=${HOMEPAGE_TIMEZONE:-Europe/Rome}
-      - HOMEPAGE_VAR_VERSION=${VERSION}
-      - HOMEPAGE_VAR_DOMAIN=${HOMEPAGE_DOMAIN}
-    group_add:
-      - "123"  # Docker group GID
+      - TZ=Europe/Rome
+      # File-based secrets that Homepage will automatically read
+      - HOMEPAGE_ALLOWED_HOSTS=homepage.local,localhost,homepage.giocaizzi.xyz
+      - HOMEPAGE_FILE_PORTAINER_API_KEY=/run/secrets/portainer_api_key
+      - HOMEPAGE_FILE_BACKREST_PASSWORD=/run/secrets/backrest_admin_password
+      - HOMEPAGE_FILE_FIREFLY_API_TOKEN=/run/secrets/firefly_api_token
+      - HOMEPAGE_FILE_ADGUARD_PASSWORD=/run/secrets/adguard_password
+      - HOMEPAGE_FILE_DOMAIN=/run/secrets/domain
+      - HOMEPAGE_FILE_VERSION=/app/config/version
+      # Regular configuration variables
+      - HOMEPAGE_VAR_BACKREST_USERNAME=admin
+      - HOMEPAGE_VAR_ADGUARD_USERNAME=admin
+      - HOMEPAGE_VAR_LATITUDE=45.4642
+      - HOMEPAGE_VAR_LONGITUDE=9.1900
+      - HOMEPAGE_VAR_TIMEZONE=Europe/Rome
+    secrets:
+      - portainer_api_key
+      - backrest_admin_password
+      - firefly_api_token
+      - adguard_password
+      - domain
+    configs:
+      - source: version_config
+        target: /app/config/version
+        mode: 0444
     volumes:
-      - ${HOMEPAGE_CONFIG_PATH:-./homepage}:/app/config  # Local config files
+      - ./homepage:/app/config  # Local config files
       - /var/run/docker.sock:/var/run/docker.sock  # Docker integration (writable)
     networks:
       - infra_network
@@ -272,6 +301,16 @@ services:
     security_opt:
       - no-new-privileges:true
     deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
       resources:
         limits:
           memory: 128M
@@ -279,21 +318,21 @@ services:
         reservations:
           memory: 64M
           cpus: "0.25"
-    memswap_limit: 256M
-    mem_swappiness: 10
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://0.0.0.0:3000/"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
 
 volumes:
+  nginx_cache:
+    driver: local
   portainer_data:
     driver: local
   netdata_config:
@@ -308,3 +347,27 @@ volumes:
     driver: local
   backrest_cache:
     driver: local
+
+secrets:
+  portainer_api_key:
+    file: ./secrets/portainer_api_key.txt
+  backrest_admin_password:
+    file: ./secrets/backrest_admin_password.txt
+  firefly_api_token:
+    file: ./secrets/firefly_api_token.txt
+  adguard_password:
+    file: ./secrets/adguard_password.txt
+  cloudflared_token:
+    file: ./secrets/cloudflared_token.txt
+  gcp_service_account:
+    file: ./secrets/gcp_service_account.json
+  domain:
+    file: ./secrets/domain.txt
+  ssl_cert:
+    file: ./secrets/cert.pem
+  ssl_key:
+    file: ./secrets/key.pem
+
+configs:
+  version_config:
+    file: ./VERSION

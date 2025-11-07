@@ -2,7 +2,7 @@
 # Infrastructure Services
 - Infrastructure:
     - Portainer:
-        href: https://portainer.{{HOMEPAGE_VAR_DOMAIN}}
+        href: https://portainer.{{HOMEPAGE_FILE_DOMAIN}}
         description: Docker container management
         icon: portainer.png
         ping: http://portainer:9000/api/status
@@ -10,7 +10,7 @@
           type: portainer
           url: http://portainer:9000
           env: 3
-          key: "{{HOMEPAGE_VAR_PORTAINER_API_KEY}}"
+          key: "{{HOMEPAGE_FILE_PORTAINER_API_KEY}}"
 
     - Netdata:
         href: https://netdata.local
@@ -22,7 +22,7 @@
           url: http://netdata:19999
 
     - Backrest:
-        href: https://backrest.{{HOMEPAGE_VAR_DOMAIN}}
+        href: https://backrest.{{HOMEPAGE_FILE_DOMAIN}}
         description: Backup management
         icon: backrest.png
         ping: http://backrest:9898
@@ -30,7 +30,7 @@
           type: backrest
           url: http://backrest:9898
           username: "{{HOMEPAGE_VAR_BACKREST_USERNAME}}"
-          password: "{{HOMEPAGE_VAR_BACKREST_PASSWORD}}"
+          password: "{{HOMEPAGE_FILE_BACKREST_PASSWORD}}"
 
 # Application Services  
 - Applications:
@@ -43,10 +43,10 @@
           type: adguard
           url: http://adguard:3000
           username: "{{HOMEPAGE_VAR_ADGUARD_USERNAME}}"
-          password: "{{HOMEPAGE_VAR_ADGUARD_PASSWORD}}"
+          password: "{{HOMEPAGE_FILE_ADGUARD_PASSWORD}}"
           
     - N8N:
-        href: https://n8n.{{HOMEPAGE_VAR_DOMAIN}}
+        href: https://n8n.{{HOMEPAGE_FILE_DOMAIN}}
         description: Workflow automation
         icon: n8n.png
         ping: http://n8n:5678
@@ -58,17 +58,17 @@
         ping: http://ollama:11434
 
     - Firefly III:
-        href: https://firefly.{{HOMEPAGE_VAR_DOMAIN}}
+        href: https://firefly.{{HOMEPAGE_FILE_DOMAIN}}
         description: Personal finance manager
         icon: firefly.png
-        ping: http://firefly_app:8080
+        ping: http://firefly:8080
         widget:
           type: firefly
-          url: http://firefly_app:8080
-          key: "{{HOMEPAGE_VAR_FIREFLY_API_TOKEN}}"
+          url: http://firefly:8080
+          key: "{{HOMEPAGE_FILE_FIREFLY_API_TOKEN}}"
 
     - Firefly Importer:
         href: https://firefly-importer.local
         description: Data import for Firefly III
         icon: firefly.png
-        ping: http://firefly_importer:8080
+        ping: http://firefly-importer:8080

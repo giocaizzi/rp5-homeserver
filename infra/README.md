@@ -1,18 +1,18 @@
 # Infrastructure Stack
 
-> *Deploy this stack first* - other services depend on the networks created here.
+> *Deploy this stack first using Docker Swarm* - other services depend on the networks created here.
 
 ## Network Architecture
 
 **Created Networks:**
-- `rp5_public` - Shared network for nginx ↔ service communication
-- `rp5_infra` - Internal infrastructure network
+- `rp5_public` - Shared overlay network for nginx ↔ service communication
+- `rp5_infra` - Internal infrastructure overlay network
 
 **Service Integration:**
-Services join `rp5_public` network to enable nginx routing without exposing ports directly.
+Services join `rp5_public` overlay network to enable nginx routing without exposing ports directly.
 
 ```
-Internet → Nginx (rp5_public) → Services (rp5_public + private networks)
+Internet → Nginx (rp5_public) → Services (rp5_public + private overlay networks)
 ```
 
 ## Services
@@ -61,7 +61,7 @@ To enable Portainer widget integration:
 2. Navigate to User account → API keys
 3. Generate a new API key
 4. Replace `ptr_xxxxxxxxxxxxxxxxxxxxx` in `services.yaml` with your actual API key
-5. Restart homepage container: `docker compose restart homepage`
+5. Restart homepage service: `docker service update --force infra_homepage`
 
 ## Widget Features
 
@@ -89,24 +89,32 @@ The API key provides read-only access to container information. Store securely a
 
 ## Configuration
 
-See [`.env.example`](./.env.example) for all environment variables.
+### Docker Swarm Secrets
+
+Sensitive configuration is managed via Docker Swarm secrets stored in `./secrets/`:
+
+**Required secrets:**
+- `ssl_cert` (`./secrets/cert.pem`) - SSL certificate
+- `ssl_key` (`./secrets/key.pem`) - SSL private key  
+- `cloudflared_token` (`./secrets/cloudflared_token.txt`) - Cloudflare tunnel token
+- `gcp_service_account` (`./secrets/gcp_service_account.json`) - GCP service account for backups
+
+**Service integration secrets:**
+- `portainer_api_key` (`./secrets/portainer_api_key.txt`) - Portainer API access
+- `backrest_admin_password` (`./secrets/backrest_admin_password.txt`) - Backrest web UI password  
+- `firefly_api_token` (`./secrets/firefly_api_token.txt`) - Firefly III API access
+- `adguard_password` (`./secrets/adguard_password.txt`) - AdGuard Home password
+- `domain` (`./secrets/domain.txt`) - Primary domain name
 
 ## Backup Setup
 
 **Prerequisites:**
 1. Google Cloud Storage bucket with service account access
-2. Create GCP service account key:
-   ```bash
-   # Download the JSON key file from Google Cloud Console
-   # Save as backup/secrets/gcp_service_account.json
-   ```
-3. Configure bucket name in `.env` file:
-   ```bash
-   GCP_SERVICE_ACCOUNT_FILE=./backup/secrets/gcp_service_account.json
-   ```
+2. Create GCP service account key and save to `./secrets/gcp_service_account.json`
+3. Set admin password in `./secrets/backrest_admin_password.txt`
 
 **Configure via Web UI:**
-1. Start the stack: `docker compose up -d`
+1. Deploy the infrastructure stack: `docker stack deploy -c docker-compose.yml infra`
 2. Access Backrest at `https://backrest.local`
 3. Create repository pointing to GCS bucket
 4. Set up backup plans with schedules and retention policies
@@ -115,13 +123,16 @@ See [Backup Documentation](../docs/backup.md) for complete setup guide.
 
 ## Nginx Post-Setup
 
-### Generate certificates locally
+## SSL Setup
 
-SSL Certificates must be present in `./nginx/ssl` before starting the stack.
+SSL Certificates must be present as Docker Swarm secrets before starting the stack:
 
-See [SSL Generation Instructions](../docs/setup.md#1-infrastructure-stack).
+- `./secrets/cert.pem` - SSL certificate
+- `./secrets/key.pem` - SSL private key
 
-### Update hostsfile
+See [SSL Generation Instructions](../docs/setup.md#1-infrastructure-stack) for certificate generation.
+
+## Local Access Setup
 
 In order to pass `nginx` hostname resolution, add to your local `/etc/hosts` file:
 

@@ -1,6 +1,6 @@
 # Deployment
 
-Deploy RP5 Home Server stacks via Portainer's remote repository feature.
+Deploy RP5 Home Server stacks via Docker Swarm and Portainer's remote repository feature.
 
 ## Deployment Order
 
@@ -8,7 +8,7 @@ Deploy RP5 Home Server stacks via Portainer's remote repository feature.
 
 ### 1. Infrastructure Stack
 
-Setup necessary files and folders on your RP5.
+Setup secrets and configuration files on your RP5.
 
 - Generate SSL certificates on local machine (not on Pi):
 
@@ -17,39 +17,82 @@ cd infra/nginx
 ./generate-ssl.sh
 ```
 
-- Create env file from example:
+- Create secrets directory structure:
+
+```bash
+mkdir -p ./infra/secrets
+```
+
+- Create secret files:
+
+```bash
+# SSL certificates
+cp ./infra/nginx/ssl/cert.pem ./infra/secrets/cert.pem
+cp ./infra/nginx/ssl/key.pem ./infra/secrets/key.pem
+
+# Cloudflare tunnel token
+echo "your_cloudflare_tunnel_token" > ./infra/secrets/cloudflared_token.txt
+
+# Service passwords and tokens (generate secure passwords)
+echo "your_backrest_admin_password" > ./infra/secrets/backrest_admin_password.txt
+echo "your_portainer_api_key" > ./infra/secrets/portainer_api_key.txt
+echo "your_firefly_api_token" > ./infra/secrets/firefly_api_token.txt
+echo "your_adguard_password" > ./infra/secrets/adguard_password.txt
+echo "yourdomain.com" > ./infra/secrets/domain.txt
+
+# GCP service account for backups (optional)
+cp /path/to/your/gcp_service_account.json ./infra/secrets/gcp_service_account.json
+```
+
+- Optionally configure Netdata Cloud integration:
 
 ```bash
 cp ./infra/.env.example ./infra/.env
+# Edit .env to add NETDATA_CLAIM_TOKEN if desired
 ```
-
-- Edit your `.env` file to add necessary variables.
 
 - Copy necessary files to RP5 via SCP with SSH:
 
 ```bash
 # Create directory structure
-ssh pi@pi.local "mkdir -p ~/rp5-homeserver/infra/{nginx/ssl,backup/secrets}"
+ssh pi@pi.local "mkdir -p ~/rp5-homeserver/infra/{nginx,secrets,homepage}"
 
 # Copy core infrastructure files
-scp ./infra/docker-compose.yml ./infra/.env pi@pi.local:~/rp5-homeserver/infra/
+scp ./infra/docker-compose.yml pi@pi.local:~/rp5-homeserver/infra/
+scp ./infra/VERSION pi@pi.local:~/rp5-homeserver/infra/
 
-# Copy nginx configuration and SSL certificates
+# Copy secrets directory
+scp -r ./infra/secrets/ pi@pi.local:~/rp5-homeserver/infra/
+
+# Copy nginx configuration
 scp ./infra/nginx/nginx.conf pi@pi.local:~/rp5-homeserver/infra/nginx/
-scp ./infra/nginx/ssl/*.pem pi@pi.local:~/rp5-homeserver/infra/nginx/ssl/
+scp -r ./infra/nginx/snippets/ pi@pi.local:~/rp5-homeserver/infra/nginx/
 
-# Copy GCP service account for backups (optional)
-# If you want to set up backups, copy the GCP credentials file
-scp /path/to/your/gcp_service_account.json pi@pi.local:~/rp5-homeserver/infra/backup/secrets/
+# Copy homepage configuration
+scp -r ./infra/homepage/ pi@pi.local:~/rp5-homeserver/infra/
+
+# Copy optional .env file if using Netdata Cloud
+# scp ./infra/.env pi@pi.local:~/rp5-homeserver/infra/
   ```
 
-- Start the infrastructure stack with Docker compose:
+- Initialize Docker Swarm and deploy the infrastructure stack:
 
 ```bash
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker-compose up -d"
+# Initialize Docker Swarm (single-node cluster)
+ssh pi@pi.local "docker swarm init"
+
+# Deploy the infrastructure stack using Docker Swarm
+ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker stack deploy -c docker-compose.yml infra"
 ```
 
-> **Note**: You may see warnings about kernel memory limit capabilities not being supported. This is normal on Raspberry Pi systems where cgroups memory management isn't enabled by default. The containers will still run properly, but memory limits defined in the compose files will be ignored. To enable memory limits, you would need to add `cgroup_enable=memory cgroup_memory=1` to `/boot/firmware/cmdline.txt` and reboot, but this is optional for normal operation.
+> **Note**: Docker Swarm provides better orchestration, health monitoring, and rolling updates compared to Docker Compose. All services are deployed as part of a managed stack with automatic restart policies.
+
+Alternatively, use the automated sync script:
+
+```bash
+# Using the sync script (recommended)
+PI_SSH_USER=pi ./scripts/sync_infra.sh --pull
+```
 
 Update hostname resolution on your **local machine** (not on Pi):
 
@@ -66,16 +109,17 @@ See [infra README](../infra/README.md) for details.
 
 ### 2. Deploy service stacks
 
-Deploy services using Portainer's GitOps capabilities for automated updates.
+Deploy services using Portainer's GitOps capabilities with Docker Swarm stacks for automated updates.
 
 #### GitOps Setup (Recommended)
 
-Enable automated deployments with webhook integration:
+Enable automated deployments with webhook integration using Docker Swarm:
 
 1. **Add Stack from Git Repository:**
    - URL: `https://github.com/giocaizzi/rp5-homeserver`
    - Branch: `refs/heads/main`
    - Compose file: `services/{service}/docker-compose.yml`
+   - **Deploy Mode**: Select "Swarm" (not "Standalone")
    - Authentication: Configure if private repo
 
 2. **Enable GitOps Updates:**
@@ -94,7 +138,7 @@ Enable automated deployments with webhook integration:
    - Push to main branch
    - Verify automatic deployment in Portainer
 
-**Benefits:** Automatic updates, version control, audit trail, and rollback capabilities.
+**Benefits:** Automatic updates, version control, audit trail, rollback capabilities, and Docker Swarm orchestration features.
 
 See [GitOps Documentation](./gitops.md) for complete setup guide.
 
@@ -102,6 +146,7 @@ See [GitOps Documentation](./gitops.md) for complete setup guide.
 
 For services that don't require frequent updates:
 - Go to **Stacks** > **Add stack** > **From repository**
+- **Important**: Select "Swarm" as the deploy mode
 - Select the service stack (e.g. `services/n8n/docker-compose.yml`)
 - Click **Deploy the stack**
 

@@ -50,14 +50,14 @@ Portainer supports two GitOps update methods:
 ## Architecture
 
 ```
-GitHub Repository → Webhook → Portainer → Docker Stack Update
+GitHub Repository → Webhook → Portainer → Docker Swarm Stack Update
      ↓                ↓           ↓              ↓
-[Push Event]    [HTTP POST]  [Git Pull]   [Redeploy]
+[Push Event]    [HTTP POST]  [Git Pull]   [Swarm Deploy]
 ```
 
 **Current Setup:**
-- Infrastructure: Manual deployment (SSH)
-- Services: GitOps via Portainer stacks
+- Infrastructure: Manual deployment (SSH) using Docker Swarm
+- Services: GitOps via Portainer swarm stacks
 - Webhook endpoint: `https://portainer.local/api/stacks/webhooks/{id}`
 
 ## Setup Guide
@@ -67,9 +67,13 @@ GitHub Repository → Webhook → Portainer → Docker Stack Update
 Infrastructure must be deployed manually via SSH as it contains Portainer itself.
 
 ```bash
-# Sync and deploy infrastructure
+# Initialize Docker Swarm and deploy infrastructure
+ssh pi@pi.local "docker swarm init"
 rsync -av ./infra/ pi@pi.local:~/rp5-homeserver/infra/
-ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker compose up -d"
+ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker stack deploy -c docker-compose.yml infra"
+
+# Or use the automated script
+PI_SSH_USER=pi ./scripts/sync_infra.sh --pull
 ```
 
 ### 2. Configure Service Stacks for GitOps
@@ -82,6 +86,7 @@ For each service in the `services/` directory:
    - URL: `https://github.com/giocaizzi/rp5-homeserver`
    - Reference: `refs/heads/main`
    - Compose file: `services/{service}/docker-compose.yml`
+   - **Deploy Mode:** Select "Swarm" (not "Standalone")
    - Authentication: Configure if private repo
 
 4. **Enable GitOps Updates:**
@@ -90,7 +95,7 @@ For each service in the `services/` directory:
    - **Webhook URL:** Copy the generated URL
 
 5. **Set Environment Variables** (if needed)
-6. **Deploy the Stack**
+6. **Deploy the Stack** (will create a Docker Swarm stack)
 
 ### 3. Configure GitHub Webhooks
 
