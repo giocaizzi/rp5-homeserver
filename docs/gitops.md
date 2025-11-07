@@ -4,7 +4,7 @@ Automated deployment and updates using Portainer's GitOps capabilities with GitH
 
 ## Terraform Configuration Summary
 
-The GitOps webhook setup is now fully integrated in `cloud/main.tf`:
+The GitOps webhook setup is fully integrated in `cloud/main.tf`:
 
 ### ✅ **What's Configured:**
 - **Service Token:** Creates `github-webhooks` token for API access
@@ -14,8 +14,8 @@ The GitOps webhook setup is now fully integrated in `cloud/main.tf`:
 
 ### 🚀 **Deployment Steps:**
 1. Deploy: `cd cloud && terraform apply`
-2. Get credentials: `terraform output github_webhook_service_token`
-3. Configure GitHub webhook with the credentials
+2. Get credentials: `terraform output -raw github_webhook_client_id` and `terraform output -raw github_webhook_client_secret`
+3. Configure GitHub webhook with the credentials (see [Cloudflare Access Integration](#cloudflare-access-integration))
 4. Test webhook delivery
 
 ---
@@ -167,6 +167,39 @@ services:
   app:
     image: myapp:${SERVICE_TAG:-stable}
 ```
+
+## Cloudflare Access Integration
+
+### Automatic Service Token Creation
+
+GitHub webhooks are secured behind Cloudflare Access. The service token for webhook bypass is automatically created via Terraform. After running `terraform apply` in the cloud directory, get the credentials:
+
+```bash
+# Get the webhook credentials
+cd cloud
+terraform output -raw github_webhook_client_id
+terraform output -raw github_webhook_client_secret
+```
+
+### GitHub Webhook Configuration
+
+Configure repository webhooks with Cloudflare Access bypass:
+- **Payload URL**: `https://portainer.yourdomain.com/api/stacks/webhooks/{webhook-id}`
+- **Content-Type**: `application/json`
+- **Custom Headers**:
+  - `CF-Access-Client-Id: <client_id_from_terraform_output>`
+  - `CF-Access-Client-Secret: <client_secret_from_terraform_output>`
+
+### Test Webhook
+
+```bash
+curl -X POST \
+  -H "CF-Access-Client-Id: $(terraform output -raw github_webhook_client_id)" \
+  -H "CF-Access-Client-Secret: $(terraform output -raw github_webhook_client_secret)" \
+  "https://portainer.yourdomain.com/api/stacks/webhooks/test"
+```
+
+Once configured, you can deploy services with GitOps enabled in Portainer!
 
 ## Webhook Configuration
 

@@ -101,39 +101,7 @@ scp ../infra/backup/secrets/gcp_service_account.json pi@pi.local:~/rp5-homeserve
 ssh pi@pi.local "cd ~/rp5-homeserver/infra && docker-compose down && docker-compose up -d"
 ```
 
-## GitOps Webhook Setup
 
-Enable automatic stack deployments in Portainer via GitHub webhooks with Cloudflare Access bypass.
-
-### Automatic Service Token Creation
-
-The service token for GitHub webhooks is automatically created via Terraform. After running `terraform apply`, get the credentials:
-
-```bash
-# Get the webhook credentials
-terraform output -raw github_webhook_client_id
-terraform output -raw github_webhook_client_secret
-```
-
-### GitHub Webhook Configuration
-
-Configure repository webhooks with:
-- **Payload URL**: `https://portainer.yourdomain.com/api/stacks/webhooks/{webhook-id}`
-- **Content-Type**: `application/json`
-- **Custom Headers**:
-  - `CF-Access-Client-Id: <client_id_from_terraform_output>`
-  - `CF-Access-Client-Secret: <client_secret_from_terraform_output>`
-
-### Test Webhook
-
-```bash
-curl -X POST \
-  -H "CF-Access-Client-Id: $(terraform output -raw github_webhook_client_id)" \
-  -H "CF-Access-Client-Secret: $(terraform output -raw github_webhook_client_secret)" \
-  "https://portainer.yourdomain.com/api/stacks/webhooks/test"
-```
-
-Once configured, you can deploy services with GitOps enabled in Portainer!
 
 ## Cloudflare 
 
