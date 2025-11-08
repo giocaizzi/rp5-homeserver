@@ -1,6 +1,6 @@
 # Firefly III Personal Finance Manager
 
-Self-hosted personal finance manager at `https://firefly.local` with data importer at `https://firefly-importer.local`.
+Self-hosted personal finance manager at `https://firefly.local` with data importer at `https://firefly-importer.local` and mobile-friendly frontend at `https://firefly-pico.local`.
 
 ## Configuration
 
@@ -8,10 +8,12 @@ Self-hosted personal finance manager at `https://firefly.local` with data import
 - `fireflyiii/core:latest` - Main application
 - `mariadb:lts` - Database (dedicated container)
 - `fireflyiii/data-importer:latest` - Data import tool
+- `cioraneanu/firefly-pico:latest` - Mobile-friendly web frontend
+- `postgres:16-alpine` - Pico database (dedicated container)
 - `alpine` - Cron job scheduler
 
 **Authentication**: Built-in user registration & authentication
-**Resource Limits**: 512MB RAM, 1 CPU (app) + 512MB RAM, 0.5 CPU (database)
+**Resource Limits**: 512MB RAM, 1 CPU (app) + 512MB RAM, 0.5 CPU (database) + 256MB RAM, 0.5 CPU (pico) + 256MB RAM, 0.5 CPU (pico-db)
 
 **Network**: Access via nginx proxy (no direct ports exposed)
 
@@ -32,7 +34,8 @@ Deploy via Portainer using the remote repository feature.
 
 **Nginx Configuration**: Firefly III is accessible at:
 - Main app: `https://firefly.local`
-- Data Importer: `https://firefly-importer.local`
+- Data Importer: `https://firefly-importer.local`  
+- Pico Frontend: `https://firefly-pico.local`
 
 The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 
@@ -41,10 +44,10 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 1. **Clean up any previous failed deployments:**
    ```bash
    # Remove orphaned containers
-   ssh pi@pi.local  "docker stop firefly_firefly firefly_db firefly_importer firefly_cron 2>/dev/null; docker rm firefly_firefly firefly_db firefly_importer firefly_cron 2>/dev/null || true"
+   ssh pi@pi.local  "docker stop firefly_firefly firefly_db firefly_importer firefly_cron firefly_pico firefly_pico-db 2>/dev/null; docker rm firefly_firefly firefly_db firefly_importer firefly_cron firefly_pico firefly_pico-db 2>/dev/null || true"
    
    # Remove old volumes to ensure fresh database initialization
-   ssh pi@pi.local  "docker volume rm firefly_firefly_db firefly_firefly_upload 2>/dev/null || true"
+   ssh pi@pi.local  "docker volume rm firefly_firefly_db firefly_firefly_upload firefly_firefly_pico_db 2>/dev/null || true"
    ```
 
 2. **Deploy via Portainer** pointing to:
@@ -56,6 +59,7 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
    ```bash
    APP_KEY=<generate-32-char-base64-key>
    DB_PASSWORD=<strong-password>
+   PICO_DB_PASSWORD=<strong-password>
    STATIC_CRON_TOKEN=<32-character-token>
    AUTO_IMPORT_SECRET=<16-character-secret>
    FIREFLY_CLIENT_ID=1
@@ -65,6 +69,9 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
    Generate tokens:
    ```bash
    # APP_KEY (base64 encoded 32 characters)
+   openssl rand -base64 32
+   
+   # DB_PASSWORD and PICO_DB_PASSWORD
    openssl rand -base64 32
    
    # STATIC_CRON_TOKEN and AUTO_IMPORT_SECRET
@@ -83,7 +90,8 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
    ```
 
 6. **Access and setup**:
-   - Navigate to `https://firefly.local`
+   - Navigate to `https://firefly.local` for the main application
+   - Navigate to `https://firefly-pico.local` for the mobile-friendly interface
    - Create your first user account
 
 ### Troubleshooting:
@@ -117,13 +125,13 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 1. **Generate required tokens** using commands above
 
 2. **Set environment variables** in Portainer:
-   - Set `APP_KEY`, `DB_PASSWORD`, `STATIC_CRON_TOKEN`, `AUTO_IMPORT_SECRET`
+   - Set `APP_KEY`, `DB_PASSWORD`, `PICO_DB_PASSWORD`, `STATIC_CRON_TOKEN`, `AUTO_IMPORT_SECRET`
    - Set `FIREFLY_CLIENT_ID=1` initially
 
 3. **Deploy the stack** in Portainer
 
 4. **Register first user**:
-   - Navigate to `https://firefly.local`
+   - Navigate to `https://firefly.local` (main app) or `https://firefly-pico.local` (mobile interface)
    - Create your account (first user becomes admin)
 
 5. **Generate OAuth Client ID for Data Importer**:
@@ -251,7 +259,20 @@ Access at `https://firefly-importer.local` with the OAuth credentials.
 
 Important data locations:
 - Database: MariaDB volume `firefly_db`
+- Pico Database: PostgreSQL volume `firefly_pico_db`
 - Uploads: Volume `firefly_upload`
 - Import configurations: `services/firefly/import/` (on Pi host filesystem)
 
 Include volumes in your backup strategy. Back up import configs separately if needed.
+
+## Firefly Pico Frontend
+
+The Pico frontend provides a mobile-optimized interface for Firefly III:
+
+- **Access**: `https://firefly-pico.local`
+- **Purpose**: Lightweight, mobile-friendly interface for quick access and data entry
+- **Database**: Uses its own PostgreSQL database for caching and performance
+- **Connection**: Connects to the main Firefly III instance via API
+- **Features**: Optimized for smartphones and tablets with simplified UI
+
+**Note**: Pico requires the main Firefly III instance to be running and accessible. It acts as a frontend that communicates with the Firefly III API.
