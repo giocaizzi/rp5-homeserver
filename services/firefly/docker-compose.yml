@@ -41,6 +41,14 @@ services:
       - APP_LOG_LEVEL=notice
       - AUDIT_LOG_LEVEL=emergency
       
+      # CORS Configuration
+      - CORS_ALLOWED_ORIGINS=https://firefly-pico.local,https://firefly.local,https://firefly.giocaizzi.xyz
+      - CORS_ALLOWED_METHODS=GET,POST,PUT,PATCH,DELETE,OPTIONS
+      - CORS_ALLOWED_HEADERS=Content-Type,Authorization,X-Requested-With,Accept,Origin
+      - CORS_EXPOSED_HEADERS=Authorization
+      - CORS_MAX_AGE=3600
+      - CORS_SUPPORTS_CREDENTIALS=true
+      
       # Mail configuration (optional)
       - MAIL_MAILER=log
       - MAIL_HOST=
