@@ -325,7 +325,7 @@ services:
       - TZ=Europe/Rome
     secrets:
       - pico_db_password
-    command:
+    entrypoint:
       - /bin/sh
       - -c
       - |
