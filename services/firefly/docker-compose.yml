@@ -359,11 +359,11 @@ services:
         window: 120s
       resources:
         limits:
-          memory: 256M
-          cpus: "0.5"
-        reservations:
           memory: 128M
           cpus: "0.25"
+        reservations:
+          memory: 64M
+          cpus: "0.1"
     logging:
       driver: "json-file"
       options:
@@ -406,11 +406,11 @@ services:
         window: 120s
       resources:
         limits:
-          memory: 256M
-          cpus: "0.5"
-        reservations:
           memory: 128M
           cpus: "0.25"
+        reservations:
+          memory: 64M
+          cpus: "0.1"
     logging:
       driver: "json-file"
       options:
