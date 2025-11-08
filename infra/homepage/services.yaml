@@ -67,6 +67,12 @@
           url: http://firefly:8080
           key: "{{HOMEPAGE_FILE_FIREFLY_API_TOKEN}}"
 
+    - Firefly Pico:
+        href: https://firefly-pico.local
+        description: Mobile-friendly Firefly III frontend
+        icon: firefly.png
+        ping: http://firefly-pico:80
+
     - Firefly Importer:
         href: https://firefly-importer.local
         description: Data import for Firefly III
