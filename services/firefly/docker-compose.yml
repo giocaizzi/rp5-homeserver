@@ -323,16 +323,9 @@ services:
       - DB_DATABASE=firefly-pico
       - DB_USERNAME=firefly-pico
       - TZ=Europe/Rome
+      - DB_PASSWORD_FILE=/run/secrets/pico_db_password
     secrets:
       - pico_db_password
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        # Read secrets and set environment variables
-        export DB_PASSWORD=$$(cat /run/secrets/pico_db_password)
-        # Execute original entrypoint
-        exec /usr/bin/supervisor -c /etc/supervisor/supervisord.conf
     networks:
       - firefly_network
       - public_network
