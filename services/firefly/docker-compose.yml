@@ -68,8 +68,8 @@ services:
         export APP_KEY=$$(cat /run/secrets/app_key)
         export DB_PASSWORD=$$(cat /run/secrets/db_password)
         export STATIC_CRON_TOKEN=$$(cat /run/secrets/static_cron_token)
-        # Execute original entrypoint
-        exec /usr/local/bin/entrypoint.sh
+        # Execute original entrypoint with apache start
+        exec /usr/local/bin/entrypoint.sh apache2-foreground
     volumes:
       - firefly_upload:/var/www/html/storage/upload
     networks:
@@ -208,8 +208,8 @@ services:
         # Copy import config from secret to expected location
         mkdir -p /var/www/html/import
         cp /run/secrets/import_config /var/www/html/import/config.json
-        # Execute original entrypoint
-        exec /usr/local/bin/entrypoint.sh
+        # Execute original entrypoint with apache start
+        exec /usr/local/bin/entrypoint.sh apache2-foreground
     volumes:
       - firefly_upload:/var/www/html/storage/upload
     networks:
