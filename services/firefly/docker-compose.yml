@@ -307,10 +307,122 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  pico:
+    image: cioraneanu/firefly-pico:latest
+    hostname: firefly-pico
+    depends_on:
+      - pico-db
+      - firefly
+    expose:
+      - "80"
+    environment:
+      - FIREFLY_URL=http://firefly:8080
+      - DB_CONNECTION=pgsql
+      - DB_HOST=pico-db
+      - DB_PORT=5432
+      - DB_DATABASE=firefly-pico
+      - DB_USERNAME=firefly-pico
+      - TZ=Europe/Rome
+    secrets:
+      - pico_db_password
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        # Read secrets and set environment variables
+        export DB_PASSWORD=$$(cat /run/secrets/pico_db_password)
+        # Execute original entrypoint
+        exec /usr/bin/supervisor -c /etc/supervisor/supervisord.conf
+    networks:
+      - firefly_network
+      - public_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "stack=firefly"
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+          cpus: "0.25"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  pico-db:
+    image: postgres:16-alpine
+    hostname: pico-db
+    environment:
+      - POSTGRES_DB=firefly-pico
+      - POSTGRES_USER=firefly-pico
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pico_db_password
+    secrets:
+      - pico_db_password
+    volumes:
+      - firefly_pico_db:/var/lib/postgresql/data
+    networks:
+      - firefly_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U firefly-pico -d firefly-pico"]
+      interval: 20s
+      timeout: 10s
+      retries: 6
+      start_period: 60s
+    labels:
+      - "stack=firefly"
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+        reservations:
+          memory: 128M
+          cpus: "0.25"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   firefly_upload:
     driver: local
   firefly_db:
+    driver: local
+  firefly_pico_db:
     driver: local
 
 secrets:
@@ -338,3 +450,6 @@ secrets:
   import_config:
     external: true
     name: firefly_import_config
+  pico_db_password:
+    external: true
+    name: firefly_pico_db_password
