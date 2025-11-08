@@ -325,14 +325,14 @@ services:
       - TZ=Europe/Rome
     secrets:
       - pico_db_password
-    entrypoint:
+    command:
       - /bin/sh
       - -c
       - |
         # Read secret and export as environment variable
         export DB_PASSWORD=$$(cat /run/secrets/pico_db_password)
-        # Start the original entrypoint
-        exec /docker-entrypoint.sh
+        # Start supervisord (the default process)
+        exec /usr/bin/supervisord -c /etc/supervisord.conf
     networks:
       - firefly_network
       - public_network
