@@ -50,6 +50,6 @@ Requires [infrastructure stack](../../infra) running first.
 - **Deploy Mode**: Select "Swarm" (not "Standalone")
 Set environment variables in Portainer Stack → Environment Variables section.
 
-2. Add `n8n.local` to your local `/etc/hosts`
+2. Add `n8n.home` to your local `/etc/hosts`
 
 3. Login at `https://n8n.home` with configured credentials.

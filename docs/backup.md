@@ -178,7 +178,7 @@ docker exec backrest wget -qO- http://localhost:9898/
 docker logs nginx | grep backrest
 
 # Verify hosts file
-cat /etc/hosts | grep backrest.local
+cat /etc/hosts | grep backrest.home
 ```
 
 **GCS authentication issues:**

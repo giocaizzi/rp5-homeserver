@@ -137,5 +137,5 @@ See [SSL Generation Instructions](../docs/setup.md#1-infrastructure-stack) for c
 In order to pass `nginx` hostname resolution, add to your local `/etc/hosts` file:
 
 ```
-192.168.x.x portainer.local netdata.local backrest.local homepage.local <other_service>.local
+192.168.x.x portainer.home netdata.home backrest.home homepage.home <other_service>.home
 ```

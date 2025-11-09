@@ -156,8 +156,8 @@ FIREFLY_API_TOKEN=your_api_token
 N8N_BASIC_AUTH_PASSWORD=secure_password
 
 # Service hostnames
-N8N_HOST=n8n.local
-FIREFLY_HOST=firefly.local
+N8N_HOST=n8n.home
+FIREFLY_HOST=firefly.home
 ```
 
 ### Dynamic Variables via Webhooks

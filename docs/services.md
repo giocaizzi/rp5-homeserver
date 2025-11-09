@@ -115,7 +115,7 @@ upstream <service> {
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name <service>.local;
+    server_name <service>.home;
     ssl_certificate /etc/nginx/ssl/cert.pem;
     ssl_private_key /etc/nginx/ssl/key.pem;
     

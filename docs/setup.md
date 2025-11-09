@@ -100,7 +100,7 @@ Update hostname resolution on your **local machine** (not on Pi):
 # Then add to your local machine /etc/hosts
 sudo vim /etc/hosts
 # Add (replace with your Pi's actual IP):
-# 192.168.x.x portainer.local netdata.local backrest.local <other_service>.local
+# 192.168.x.x portainer.home netdata.home backrest.home <other_service>.home
 ```
 
 Now you can access Portainer at `https://portainer.home` and control all services (stacks) via the web UI.
