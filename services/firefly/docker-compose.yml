@@ -316,7 +316,7 @@ services:
     expose:
       - "3000"
     environment:
-      - FIREFLY_URL=http://firefly:8080
+      - FIREFLY_URL=https://firefly.local
       - DB_CONNECTION=pgsql
       - DB_HOST=pico-db
       - DB_PORT=5432
