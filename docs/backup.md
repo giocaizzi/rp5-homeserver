@@ -155,7 +155,6 @@ docker exec backrest restic -r /data/repos/rp5-homeserver check
 
 - **Cache volume** for faster operations
 - **Incremental backups** reduce transfer size
-- **Resource limits** prevent system impact during backup
 - **Monthly integrity checks** ensure repository health
 
 ## Troubleshooting

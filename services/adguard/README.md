@@ -8,7 +8,6 @@ Self-hosted DNS server with ad blocking capabilities at `https://adguard.home`.
 - `adguard/adguardhome:latest` - DNS server and web interface
 
 **Authentication**: Web-based initial setup and user management
-**Resource Limits**: 256MB RAM, 0.5 CPU
 **Timezone**: Europe/Rome (hardcoded in docker-compose.yml)
 
 **Network**: 
