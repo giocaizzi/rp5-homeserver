@@ -276,3 +276,30 @@ The Pico frontend provides a mobile-optimized interface for Firefly III:
 - **Features**: Optimized for smartphones and tablets with simplified UI
 
 **Note**: Pico requires the main Firefly III instance to be running and accessible. It acts as a frontend that communicates with the Firefly III API.
+
+### Pico Setup
+
+After deploying the stack:
+
+1. **Generate Personal Access Token in Firefly III**:
+   - Login to `https://firefly.local`
+   - Go to **Profile → OAuth → Personal Access Tokens**
+   - Click "Create New Token"
+   - Name: "Pico"
+   - Select all scopes
+   - Copy the generated token
+
+2. **Configure Pico**:
+   - Navigate to `https://firefly-pico.local`
+   - Go to **Settings → App Config**
+   - Paste the **Personal Access Token** from step 1
+   - **Leave "Pico Backend URL" as default** (should be `https://firefly-pico.local`)
+     - This is where Pico's own API lives, NOT Firefly's URL
+   - Save settings
+
+3. **Verify connection**:
+   - Return to dashboard
+   - Should sync data from Firefly III
+   - Can now create transactions via Pico interface
+
+**Important**: `FIREFLY_URL` must be set to the public URL (`https://firefly.local`) that your browser can access, not the internal Docker URL. Pico's frontend JavaScript running in your browser needs to make API calls to Firefly, and it uses this URL.
