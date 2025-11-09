@@ -1,6 +1,6 @@
 # Firefly III Personal Finance Manager
 
-Self-hosted personal finance manager at `https://firefly.local` with data importer at `https://firefly-importer.local` and mobile-friendly frontend at `https://firefly-pico.local`.
+Self-hosted personal finance manager at `https://firefly.home` with data importer at `https://firefly-importer.home` and mobile-friendly frontend at `https://firefly-pico.home`.
 
 ## Configuration
 
@@ -33,9 +33,9 @@ Deploy via Portainer using the remote repository feature.
 **Important**: Ensure all required environment variables are set before deployment.
 
 **Nginx Configuration**: Firefly III is accessible at:
-- Main app: `https://firefly.local`
-- Data Importer: `https://firefly-importer.local`  
-- Pico Frontend: `https://firefly-pico.local`
+- Main app: `https://firefly.home`
+- Data Importer: `https://firefly-importer.home`  
+- Pico Frontend: `https://firefly-pico.home`
 
 The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 
@@ -90,8 +90,8 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
    ```
 
 6. **Access and setup**:
-   - Navigate to `https://firefly.local` for the main application
-   - Navigate to `https://firefly-pico.local` for the mobile-friendly interface
+   - Navigate to `https://firefly.home` for the main application
+   - Navigate to `https://firefly-pico.home` for the mobile-friendly interface
    - Create your first user account
 
 ### Troubleshooting:
@@ -131,21 +131,21 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 3. **Deploy the stack** in Portainer
 
 4. **Register first user**:
-   - Navigate to `https://firefly.local` (main app) or `https://firefly-pico.local` (mobile interface)
+   - Navigate to `https://firefly.home` (main app) or `https://firefly-pico.home` (mobile interface)
    - Create your account (first user becomes admin)
 
 5. **Generate OAuth Client ID for Data Importer**:
    - Login to Firefly III
    - Go to Profile → OAuth → "Create New Personal Access Client"
    - Name: "Data Importer"
-   - Redirect URL: `https://firefly-importer.local/callback`
+   - Redirect URL: `https://firefly-importer.home/callback`
    - UNCHECK "Confidential"
    - Copy the Client ID
    - Update `FIREFLY_CLIENT_ID` in Portainer environment variables
    - Restart the stack in Portainer
 
 6. **Access Data Importer**:
-   - Navigate to `https://firefly-importer.local`
+   - Navigate to `https://firefly-importer.home`
    - When prompted for Firefly III URL, use: `http://firefly:8080`
    - Provide the Client ID generated in step 5
    - The system will use OAuth flow for authentication
@@ -196,7 +196,7 @@ Automated imports reuse a configuration you create manually first. See the [offi
 **Setup Process**:
 
 1. **Create and test configuration manually**:
-   - Access the importer at `https://firefly-importer.local`
+   - Access the importer at `https://firefly-importer.home`
    - Select "Lunch Flow" as import method
    - Configure:
      - Which bank accounts to import from
@@ -220,7 +220,7 @@ Automated imports reuse a configuration you create manually first. See the [offi
    **Important**: Your config.json must include a valid personal access token for automated imports:
    
    a. **Generate personal access token**:
-      - Login to Firefly III at `https://firefly.local`
+      - Login to Firefly III at `https://firefly.home`
       - Go to Profile → OAuth → Personal Access Tokens
       - Click "Create New Token"
       - Name: "Data Importer Automated"
@@ -253,7 +253,7 @@ Automated imports reuse a configuration you create manually first. See the [offi
 - The `AUTO_IMPORT_SECRET` must be set in environment variables
 - Config files are NOT tracked in git (contain sensitive account IDs, mappings, and tokens)
 
-Access at `https://firefly-importer.local` with the OAuth credentials.
+Access at `https://firefly-importer.home` with the OAuth credentials.
 
 ## Backup
 
@@ -269,7 +269,7 @@ Include volumes in your backup strategy. Back up import configs separately if ne
 
 The Pico frontend provides a mobile-optimized interface for Firefly III:
 
-- **Access**: `https://firefly-pico.local`
+- **Access**: `https://firefly-pico.home`
 - **Purpose**: Lightweight, mobile-friendly interface for quick access and data entry
 - **Database**: Uses its own PostgreSQL database for caching and performance
 - **Connection**: Connects to the main Firefly III instance via API
@@ -282,7 +282,7 @@ The Pico frontend provides a mobile-optimized interface for Firefly III:
 After deploying the stack:
 
 1. **Generate Personal Access Token in Firefly III**:
-   - Login to `https://firefly.local`
+   - Login to `https://firefly.home`
    - Go to **Profile → OAuth → Personal Access Tokens**
    - Click "Create New Token"
    - Name: "Pico"
@@ -290,10 +290,10 @@ After deploying the stack:
    - Copy the generated token
 
 2. **Configure Pico**:
-   - Navigate to `https://firefly-pico.local`
+   - Navigate to `https://firefly-pico.home`
    - Go to **Settings → App Config**
    - Paste the **Personal Access Token** from step 1
-   - **Leave "Pico Backend URL" as default** (should be `https://firefly-pico.local`)
+   - **Leave "Pico Backend URL" as default** (should be `https://firefly-pico.home`)
      - This is where Pico's own API lives, NOT Firefly's URL
    - Save settings
 
@@ -309,6 +309,6 @@ After deploying the stack:
   - Cached config reads directly from Docker environment variables
   - Custom entrypoint exports `DB_PASSWORD` from Docker secret, then calls official entrypoint
 - **Two-layer architecture**:
-  1. **Browser → Pico Frontend (Nuxt.js)** - Public URL `https://firefly-pico.local`
+  1. **Browser → Pico Frontend (Nuxt.js)** - Public URL `https://firefly-pico.home`
   2. **Pico Backend (Laravel) → Firefly API** - Internal URL `http://firefly:8080`
 - Browser-based API calls work because Pico's backend proxies all requests to Firefly's REST API

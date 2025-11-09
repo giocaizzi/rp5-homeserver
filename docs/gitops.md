@@ -58,7 +58,7 @@ GitHub Repository → Webhook → Portainer → Docker Swarm Stack Update
 **Current Setup:**
 - Infrastructure: Manual deployment (SSH) using Docker Swarm
 - Services: GitOps via Portainer swarm stacks
-- Webhook endpoint: `https://portainer.local/api/stacks/webhooks/{id}`
+- Webhook endpoint: `https://portainer.home/api/stacks/webhooks/{id}`
 
 ## Setup Guide
 
@@ -80,7 +80,7 @@ PI_SSH_USER=pi ./scripts/sync_infra.sh --pull
 
 For each service in the `services/` directory:
 
-1. **Access Portainer** at `https://portainer.local`
+1. **Access Portainer** at `https://portainer.home`
 2. **Add Stack** → **Git Repository**
 3. **Configure Repository:**
    - URL: `https://github.com/giocaizzi/rp5-homeserver`
@@ -111,7 +111,7 @@ For each service stack with GitOps enabled:
 
 **Webhook URL Format:**
 ```
-https://portainer.local/api/stacks/webhooks/{webhook-id}
+https://portainer.home/api/stacks/webhooks/{webhook-id}
 ```
 
 ### 4. Test the Workflow
@@ -163,7 +163,7 @@ FIREFLY_HOST=firefly.local
 ### Dynamic Variables via Webhooks
 Pass variables through webhook URL:
 ```
-https://portainer.local/api/stacks/webhooks/{id}?SERVICE_TAG=latest
+https://portainer.home/api/stacks/webhooks/{id}?SERVICE_TAG=latest
 ```
 
 Reference in compose files:

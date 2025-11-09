@@ -23,7 +23,7 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private overlay netwo
 - WebSocket support for Portainer/N8N
 
 **Portainer EE** (`portainer/portainer-ee:latest`)
-- Docker management UI at `https://portainer.local`
+- Docker management UI at `https://portainer.home`
 - Business Edition with advanced features
 - Resource limited (256MB RAM max)
 - Read-only Docker socket access
@@ -36,19 +36,19 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private overlay netwo
 - Requires `CLOUDFLARED_TOKEN` environment variable
 
 **Netdata Monitoring** (`netdata/netdata:latest`)
-- Real-time system monitoring at `https://netdata.local`
+- Real-time system monitoring at `https://netdata.home`
 - Performance metrics, alerts, and dashboards
 - Integrated with host system via bind mounts
 
 **Backrest** (`garethgeorge/backrest:latest`)
-- Web UI for restic backups at `https://backrest.local`
+- Web UI for restic backups at `https://backrest.home`
 - Automated incremental backups to Google Cloud Storage
 - Backs up user home directory and Docker volumes
 - Configurable retention policy via web interface
 - Real-time backup monitoring and notifications
 
 **Homepage** (`ghcr.io/gethomepage/homepage:latest`)
-- Modern application dashboard at `https://homepage.local`
+- Modern application dashboard at `https://homepage.home`
 - Centralized access to all services
 - Real-time system stats and Docker container monitoring
 - Customizable widgets and service status indicators
@@ -57,7 +57,7 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private overlay netwo
 
 To enable Portainer widget integration:
 
-1. Access Portainer at `https://portainer.local`
+1. Access Portainer at `https://portainer.home`
 2. Navigate to User account → API keys
 3. Generate a new API key
 4. Replace `ptr_xxxxxxxxxxxxxxxxxxxxx` in `services.yaml` with your actual API key
@@ -115,7 +115,7 @@ Sensitive configuration is managed via Docker Swarm secrets stored in `./secrets
 
 **Configure via Web UI:**
 1. Deploy the infrastructure stack: `docker stack deploy -c docker-compose.yml infra`
-2. Access Backrest at `https://backrest.local`
+2. Access Backrest at `https://backrest.home`
 3. Create repository pointing to GCS bucket
 4. Set up backup plans with schedules and retention policies
 

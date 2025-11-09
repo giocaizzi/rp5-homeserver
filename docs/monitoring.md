@@ -12,7 +12,7 @@ bash <(curl -Ss https://my-netdata.io/kickstart.sh)
 ```
 
 **Access:**
-- Via nginx proxy: `https://netdata.local` (recommended)
+- Via nginx proxy: `https://netdata.home` (recommended)
 - Direct access: `http://pi.local:19999` (fallback)
 - Lightweight dashboard with real-time metrics
 - No authentication required (internal network only)

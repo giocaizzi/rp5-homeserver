@@ -303,7 +303,7 @@ Firefly III API has CORS headers for Pico:
 
 ```nginx
 location /api/ {
-    add_header 'Access-Control-Allow-Origin' 'https://firefly-pico.local' always;
+    add_header 'Access-Control-Allow-Origin' 'https://firefly-pico.home' always;
     add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
     add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type' always;
 }

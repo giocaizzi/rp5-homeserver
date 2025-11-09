@@ -16,7 +16,7 @@ Docker-based Backrest (restic with web UI) integrated into infrastructure stack.
 - Monthly: 6 snapshots
 - Yearly: 2 snapshots
 
-**Web UI:** https://backrest.local (accessible after setup)
+**Web UI:** https://backrest.home (accessible after setup)
 
 ## Setup
 
@@ -66,7 +66,7 @@ docker stack deploy -c docker-compose.yml infra
 
 ### 4. Configure Backrest via Web UI
 
-1. Access web UI at https://backrest.local
+1. Access web UI at https://backrest.home
 2. Create a new repository:
    - Name: `rp5-homeserver`
    - Type: `Google Cloud Storage`
@@ -92,14 +92,14 @@ Backups are scheduled via the Backrest web UI. No cron setup required.
 
 ### Manual Backup
 Trigger backups manually via the web UI:
-1. Navigate to https://backrest.local
+1. Navigate to https://backrest.home
 2. Select backup plan
 3. Click "Backup Now"
 
 ### Restore Operations
 
 **Via Web UI (Recommended):**
-1. Navigate to https://backrest.local
+1. Navigate to https://backrest.home
 2. Go to "Snapshots" tab
 3. Browse snapshot contents
 4. Select files/folders to restore
@@ -123,7 +123,7 @@ docker exec backrest restic -r /data/repos/rp5-homeserver restore latest \
 ## Monitoring
 
 **Web UI Dashboard:**
-- Access https://backrest.local
+- Access https://backrest.home
 - View backup status, last run times, and errors
 - Check repository size and snapshot counts
 - Monitor backup plan execution history

@@ -1,6 +1,6 @@
 # N8N Workflow Automation
 
-Self-hosted workflow automation at `https://n8n.local`.
+Self-hosted workflow automation at `https://n8n.home`.
 
 ## Configuration
 
@@ -52,4 +52,4 @@ Set environment variables in Portainer Stack → Environment Variables section.
 
 2. Add `n8n.local` to your local `/etc/hosts`
 
-3. Login at `https://n8n.local` with configured credentials.
+3. Login at `https://n8n.home` with configured credentials.

@@ -103,7 +103,7 @@ sudo vim /etc/hosts
 # 192.168.x.x portainer.local netdata.local backrest.local <other_service>.local
 ```
 
-Now you can access Portainer at `https://portainer.local` and control all services (stacks) via the web UI.
+Now you can access Portainer at `https://portainer.home` and control all services (stacks) via the web UI.
 
 See [infra README](../infra/README.md) for details.
 
