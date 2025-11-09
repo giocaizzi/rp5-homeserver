@@ -68,7 +68,7 @@
           key: "{{HOMEPAGE_FILE_FIREFLY_API_TOKEN}}"
 
     - Firefly Pico:
-        href: https://firefly-pico.local
+        href: https://firefly-pico.local/dashboard
         description: Mobile-friendly Firefly III frontend
         icon: firefly.png
         ping: http://firefly-pico:80
