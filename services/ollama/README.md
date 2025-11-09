@@ -6,7 +6,6 @@ Local AI inference server at `https://ollama.home`, optimized for Raspberry Pi 5
 
 **Container**: `ollama/ollama:latest`
 **Model**: Qwen3:1.7B (~1GB, Pi-optimized)
-**Resource Limits**: 3GB RAM, 3 CPU cores (Pi-optimized for 8GB system)
 **Access**: API via nginx proxy
 
 ## Pi Optimizations
@@ -31,11 +30,9 @@ curl https://ollama.home/api/generate \
 
 **Performance**: ~2-5 tokens/second on Pi 5
 
-## Environment Setup
+## Storage
 
-Copy `.env.example` to `.env` and configure memory limits based on available RAM.
-
-**Storage**: ~1GB for default model, plan accordingly for additional models.
+~1GB for default model, plan accordingly for additional models.
 
 ## Deployment
 

@@ -84,9 +84,6 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
-      resources:
-        limits: {memory: 1G, cpus: "1.0"}
-        reservations: {memory: 512M, cpus: "0.5"}
     logging:
       driver: "json-file"
       options: {max-size: "10m", max-file: "3"}
@@ -133,7 +130,6 @@ server {
 - **Access**: Only via nginx proxy (no direct ports)
 - **Data**: `./data/<service>` and `./logs/<service>`
 - **Security**: Non-root user, no-new-privileges
-- **Resources**: Pi-appropriate limits (≤2GB RAM, ≤2 CPU)
 - **Health**: 60s+ start period for Pi hardware
 
 ## Deployment Methods

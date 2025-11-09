@@ -140,7 +140,6 @@ Each service stack needs:
 - **Connection to `rp5_public`** for nginx access
 - **Environment variables** for sensitive configuration
 - **Health checks** for reliable deployments
-- **Resource limits** for stability
 
 ## Environment Variables
 
@@ -335,7 +334,7 @@ To migrate existing manually-deployed services to GitOps:
 ### Regular Tasks
 - **Review webhook deliveries** for failed deployments
 - **Update service configurations** as needed
-- **Monitor resource usage** and adjust limits
+- **Monitor resource usage** via Netdata
 - **Backup verification** and rotation
 
 ## Advanced Configuration

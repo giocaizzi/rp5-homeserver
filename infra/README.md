@@ -25,7 +25,6 @@ Internet → Nginx (rp5_public) → Services (rp5_public + private overlay netwo
 **Portainer EE** (`portainer/portainer-ee:latest`)
 - Docker management UI at `https://portainer.home`
 - Business Edition with advanced features
-- Resource limited (256MB RAM max)
 - Read-only Docker socket access
 
 > Using Business Edition for enhanced stack management capabilities.
