@@ -146,8 +146,7 @@ services:
         max-file: "3"
 
   importer:
-    # develop supports Lunch Flow integration (TODO: switch to stable when released)
-    image: fireflyiii/data-importer:develop
+    image: fireflyiii/data-importer:latest
     hostname: firefly-importer
     depends_on:
       - firefly
