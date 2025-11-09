@@ -113,6 +113,10 @@ ssh pi@pi.local "sudo systemctl stop systemd-resolved"
    - **Device level**: Configure individual devices to use Pi's IP as DNS server
    - **Testing**: Use `https://adguard.home` → Query Log to verify filtering
 
+6. **DNS rewrites for `.home` domains**:
+   - Configure DNS rewrites to resolve service domains (e.g., `portainer.home`)
+   - See [DNS & Hostname Resolution](../../docs/dns.md) for complete setup
+
 ## Setup Wizard Configuration
 
 During the initial setup wizard, configure these settings to match your environment:
@@ -229,6 +233,10 @@ ssh pi@pi.local "docker start adguard"
 - Router should point to Pi's IP for DNS
 - Ensure port 53 is not blocked by firewall
 
+**DNS Rewrites:**
+- Configure DNS rewrites for `.home` domains to enable service access
+- See [DNS & Hostname Resolution](../../docs/dns.md) for configuration guide
+
 **Client Testing:**
 ```bash
 # Test DNS resolution
@@ -239,4 +247,7 @@ dig @pi.local doubleclick.net
 
 # Test DNS-over-HTTPS
 curl -H "accept: application/dns-json" "https://adguard.home/dns-query?name=google.com&type=A"
+
+# Test .home domain resolution
+nslookup portainer.home
 ```

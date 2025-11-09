@@ -123,7 +123,7 @@ See [Backup Documentation](../docs/backup.md) for complete setup guide.
 
 ## Nginx Post-Setup
 
-## SSL Setup
+### SSL Setup
 
 SSL Certificates must be present as Docker Swarm secrets before starting the stack:
 
@@ -132,10 +132,12 @@ SSL Certificates must be present as Docker Swarm secrets before starting the sta
 
 See [SSL Generation Instructions](../docs/setup.md#1-infrastructure-stack) for certificate generation.
 
-## Local Access Setup
+### DNS Resolution Setup
 
-In order to pass `nginx` hostname resolution, add to your local `/etc/hosts` file:
+For services to be accessible via `.home` domains (e.g., `portainer.home`, `netdata.home`), configure DNS resolution:
 
-```
-192.168.x.x portainer.home netdata.home backrest.home homepage.home <other_service>.home
-```
+**Recommended**: Use AdGuard DNS rewrites for automatic network-wide resolution.
+
+**Alternative**: Manually add entries to `/etc/hosts` on each client device.
+
+See [DNS & Hostname Resolution](../docs/dns.md) for complete setup instructions.

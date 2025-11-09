@@ -94,16 +94,15 @@ Alternatively, use the automated sync script:
 PI_SSH_USER=pi ./scripts/sync_infra.sh --pull
 ```
 
-Update hostname resolution on your **local machine** (not on Pi):
+Configure DNS resolution for `.home` domains:
 
-```bash
-# Then add to your local machine /etc/hosts
-sudo vim /etc/hosts
-# Add (replace with your Pi's actual IP):
-# 192.168.x.x portainer.home netdata.home backrest.home <other_service>.home
-```
+**Recommended**: Use AdGuard DNS rewrites for automatic network-wide resolution.
 
-Now you can access Portainer at `https://portainer.home` and control all services (stacks) via the web UI.
+**Alternative**: Manually add entries to `/etc/hosts` on each client device.
+
+See [DNS & Hostname Resolution](./dns.md) for complete setup instructions.
+
+After DNS configuration, access Portainer at `https://portainer.home` and control all services (stacks) via the web UI.
 
 See [infra README](../infra/README.md) for details.
 
