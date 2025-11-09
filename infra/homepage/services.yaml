@@ -13,7 +13,7 @@
                 key: "{{HOMEPAGE_FILE_PORTAINER_API_KEY}}"
 
       - Netdata:
-            href: https://netdata.local
+            href: https://netdata.home
             description: Real-time system monitoring
             icon: netdata.png
             ping: http://netdata:19999/api/v1/info
@@ -35,7 +35,7 @@
 # Application Services
 - Security:
       - AdGuard Home:
-            href: https://adguard.local
+            href: https://adguard.home
             description: DNS server & ad blocker
             icon: adguard-home.png
             ping: http://adguard:3000
@@ -52,7 +52,7 @@
             ping: http://n8n:5678
 
       - Ollama:
-            href: https://ollama.local
+            href: https://ollama.home
             description: Local AI models
             icon: ollama.png
             ping: http://ollama:11434
@@ -70,13 +70,13 @@
             #     key: "{{HOMEPAGE_FILE_FIREFLY_API_TOKEN}}"
 
       - Firefly Pico:
-            href: https://firefly-pico.local/dashboard
+            href: https://firefly-pico.home/dashboard
             description: Mobile-friendly Firefly III frontend
             icon: firefly.png
             ping: http://firefly-pico:80
 
       - Firefly Importer:
-            href: https://firefly-importer.local
+            href: https://firefly-importer.home
             description: Data import for Firefly III
             icon: firefly.png
             ping: http://firefly-importer:8080

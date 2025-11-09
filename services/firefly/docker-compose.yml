@@ -22,7 +22,7 @@ services:
       - APP_ENV=production
       - APP_DEBUG=false
       - APP_URL=https://firefly.giocaizzi.xyz
-      - SITE_OWNER=admin@firefly.local
+      - SITE_OWNER=admin@firefly.home
       - DEFAULT_LANGUAGE=en_US
       - DEFAULT_LOCALE=equal
       

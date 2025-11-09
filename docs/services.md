@@ -6,10 +6,10 @@ Guidelines for adding service stacks that comply with RP5 architecture.
 
 Current services deployed:
 
-- **[Firefly III](../services/firefly/)** - Personal finance manager (`https://firefly.local`)
-- **[N8N](../services/n8n/)** - Workflow automation (`https://n8n.local`) 
-- **[Ollama](../services/ollama/)** - Local AI models (`https://ollama.local`)
-- **[AdGuard Home](../services/adguard/)** - DNS server & ad blocker (`https://adguard.local`)
+- **[Firefly III](../services/firefly/)** - Personal finance manager (`https://firefly.home`)
+- **[N8N](../services/n8n/)** - Workflow automation (`https://n8n.home`) 
+- **[Ollama](../services/ollama/)** - Local AI models (`https://ollama.home`)
+- **[AdGuard Home](../services/adguard/)** - DNS server & ad blocker (`https://adguard.home`)
 
 ## Required Structure
 
@@ -115,7 +115,7 @@ upstream <service> {
 ```nginx
 server {
     listen 443 ssl http2;
-    server_name <service>.local;
+    server_name <service>.home;
     ssl_certificate /etc/nginx/ssl/cert.pem;
     ssl_private_key /etc/nginx/ssl/key.pem;
     
@@ -142,7 +142,7 @@ server {
 Automated deployment with webhook integration:
 
 1. **Deploy via Portainer GitOps:**
-   - Access `https://portainer.local`
+   - Access `https://portainer.home`
    - Stacks → Add stack → Git Repository
    - Configure repository and enable GitOps webhooks
    - See [GitOps Documentation](./gitops.md) for details
@@ -166,7 +166,7 @@ See [Setup Guide](./setup.md#2-deploy-service-stacks) for detailed instructions.
 Brief README template:
 ```markdown
 # Service Name
-Purpose and access via `https://service.local`
+Purpose and access via `https://service.home`
 
 ## Configuration  
 Key settings and `.env.example` variables

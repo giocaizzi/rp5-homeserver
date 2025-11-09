@@ -156,16 +156,16 @@ External Request → Nginx (80/443) → Internal Service (overlay network)
 
 | Domain | Backend Service | Backend Port | Protocol | Notes |
 |--------|----------------|--------------|----------|-------|
-| `portainer.local` | `portainer` | 9000 | HTTP | Docker management |
-| `n8n.local` | `n8n` | 5678 | HTTP + WS | Workflow automation |
-| `ollama.local` | `ollama` | 11434 | HTTP | LLM inference |
-| `netdata.local` | `netdata` | 19999 | HTTP | System monitoring |
-| `backrest.local` | `backrest` | 9898 | HTTP | Backup management |
-| `firefly.local` | `firefly` | 8080 | HTTP | Financial management |
-| `firefly-importer.local` | `firefly-importer` | 8080 | HTTP | Data import |
-| `firefly-pico.local` | `firefly-pico` | **80** | HTTP | Mobile companion |
-| `homepage.local` | `homepage` | 3000 | HTTP | Dashboard |
-| `adguard.local` | `adguard` | 3000 | HTTP | DNS web UI |
+| `portainer.home` | `portainer` | 9000 | HTTP | Docker management |
+| `n8n.home` | `n8n` | 5678 | HTTP + WS | Workflow automation |
+| `ollama.home` | `ollama` | 11434 | HTTP | LLM inference |
+| `netdata.home` | `netdata` | 19999 | HTTP | System monitoring |
+| `backrest.home` | `backrest` | 9898 | HTTP | Backup management |
+| `firefly.home` | `firefly` | 8080 | HTTP | Financial management |
+| `firefly-importer.home` | `firefly-importer` | 8080 | HTTP | Data import |
+| `firefly-pico.home` | `firefly-pico` | **80** | HTTP | Mobile companion |
+| `homepage.home` | `homepage` | 3000 | HTTP | Dashboard |
+| `adguard.home` | `adguard` | 3000 | HTTP | DNS web UI |
 
 ## Port Exposure Strategy
 
@@ -303,7 +303,7 @@ Firefly III API has CORS headers for Pico:
 
 ```nginx
 location /api/ {
-    add_header 'Access-Control-Allow-Origin' 'https://firefly-pico.local' always;
+    add_header 'Access-Control-Allow-Origin' 'https://firefly-pico.home' always;
     add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
     add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type' always;
 }
