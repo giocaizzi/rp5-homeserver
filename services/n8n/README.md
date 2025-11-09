@@ -7,13 +7,11 @@ Self-hosted workflow automation at `https://n8n.home`.
 **Container**: `n8nio/n8n:latest`
 **Database**: PostgreSQL 16 (dedicated container, Pi-optimized)
 **Authentication**: HTTP Basic Auth (required)
-**Resource Limits**: 512MB RAM, 1 CPU (n8n) + 256MB RAM, 0.5 CPU (PostgreSQL)
 
 ## Key Settings
 
 **Raspberry Pi Optimizations**:
 - PostgreSQL tuned for 8GB Pi: 64MB shared buffers, 256MB cache
-- Reduced memory footprint: n8n 512MB, PostgreSQL 256MB
 - Conservative connection limits (20 max connections)
 - Optimized WAL and checkpoint settings for SD card longevity
 

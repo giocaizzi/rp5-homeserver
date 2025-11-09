@@ -96,13 +96,6 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
-      resources:
-        limits:
-          memory: 512M
-          cpus: "1.0"
-        reservations:
-          memory: 256M
-          cpus: "0.5"
     logging:
       driver: "json-file"
       options:
@@ -146,13 +139,6 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
-      resources:
-        limits:
-          memory: 512M
-          cpus: "0.5"
-        reservations:
-          memory: 256M
-          cpus: "0.25"
     logging:
       driver: "json-file"
       options:
@@ -236,13 +222,6 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
-      resources:
-        limits:
-          memory: 256M
-          cpus: "0.5"
-        reservations:
-          memory: 128M
-          cpus: "0.25"
     logging:
       driver: "json-file"
       options:
@@ -294,13 +273,6 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
-      resources:
-        limits:
-          memory: 64M
-          cpus: "0.25"
-        reservations:
-          memory: 32M
-          cpus: "0.1"
     logging:
       driver: "json-file"
       options:
@@ -357,13 +329,6 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
-      resources:
-        limits:
-          memory: 128M
-          cpus: "0.25"
-        reservations:
-          memory: 64M
-          cpus: "0.1"
     logging:
       driver: "json-file"
       options:
@@ -404,13 +369,6 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
-      resources:
-        limits:
-          memory: 128M
-          cpus: "0.25"
-        reservations:
-          memory: 64M
-          cpus: "0.1"
     logging:
       driver: "json-file"
       options:

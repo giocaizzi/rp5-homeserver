@@ -58,13 +58,6 @@ services:
         delay: 5s
         max_attempts: 3
         window: 120s
-      resources:
-        limits:
-          memory: 3G
-          cpus: "3.0"
-        reservations:
-          memory: 1G
-          cpus: "1.0"
     tmpfs:
       - /tmp:size=1G,noexec,nosuid,nodev
     ulimits:

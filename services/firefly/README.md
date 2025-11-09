@@ -13,8 +13,6 @@ Self-hosted personal finance manager at `https://firefly.home` with data importe
 - `alpine` - Cron job scheduler
 
 **Authentication**: Built-in user registration & authentication
-**Resource Limits**: 512MB RAM, 1 CPU (app) + 512MB RAM, 0.5 CPU (database) + 256MB RAM, 0.5 CPU (pico) + 256MB RAM, 0.5 CPU (pico-db)
-
 **Network**: Access via nginx proxy (no direct ports exposed)
 
 ## Environment Setup
@@ -116,7 +114,6 @@ The nginx configuration has been added to `/infra/nginx/nginx.conf`.
 
 **Performance Notes for Raspberry Pi:**
 - Database initialization slower on ARM architecture
-- Memory limits may cause swap usage (normal)
 - First-time deployment takes longer due to image pulls and volume initialization
 
 
