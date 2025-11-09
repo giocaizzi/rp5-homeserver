@@ -302,4 +302,13 @@ After deploying the stack:
    - Should sync data from Firefly III
    - Can now create transactions via Pico interface
 
-**Important**: `FIREFLY_URL` is set to `http://firefly:8080` (internal Docker service). Pico's backend uses this for server-side API calls. For browser-based API calls from Pico's frontend, CORS headers in nginx allow `https://firefly-pico.local` to access `https://firefly.local/api/` endpoints.
+**Important Architecture Notes**: 
+- `FIREFLY_URL=http://firefly:8080` - Pico backend uses internal Docker service name to connect to Firefly
+- **Laravel config system**: Official entrypoint runs `php artisan config:cache` which reads environment variables and caches configuration
+  - The `.env` file in the image has empty values, but this is irrelevant when config is cached
+  - Cached config reads directly from Docker environment variables
+  - Custom entrypoint exports `DB_PASSWORD` from Docker secret, then calls official entrypoint
+- **Two-layer architecture**:
+  1. **Browser → Pico Frontend (Nuxt.js)** - Public URL `https://firefly-pico.local`
+  2. **Pico Backend (Laravel) → Firefly API** - Internal URL `http://firefly:8080`
+- Browser-based API calls work because Pico's backend proxies all requests to Firefly's REST API
