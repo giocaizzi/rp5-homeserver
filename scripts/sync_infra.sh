@@ -252,7 +252,7 @@ main() {
     if [ -n "$version" ]; then
         log "Deployed version: $version"
     fi
-    log "Access Portainer at: https://portainer.local"
+    log "Access Portainer at: https://portainer.home"
 }
 
 # Execute main function with all arguments

@@ -1,6 +1,6 @@
 # AdGuard Home DNS Server & Ad Blocker
 
-Self-hosted DNS server with ad blocking capabilities at `https://adguard.local`.
+Self-hosted DNS server with ad blocking capabilities at `https://adguard.home`.
 
 ## Configuration
 
@@ -14,7 +14,7 @@ Self-hosted DNS server with ad blocking capabilities at `https://adguard.local`.
 **Network**: 
 - Web interface accessible via nginx proxy (port 3000 proxied)
 - DNS services exposed on host ports (53, 853, 5443)
-- DNS-over-HTTPS available via nginx proxy at `https://adguard.local/dns-query`
+- DNS-over-HTTPS available via nginx proxy at `https://adguard.home/dns-query`
 
 **Integration**: Admin credentials managed via Docker Swarm secrets in infrastructure stack for Homepage dashboard integration.
 
@@ -24,7 +24,7 @@ Requires [infrastructure stack](../../infra) running first.
 
 Deploy via Portainer using the remote repository feature.
 
-**Nginx Configuration**: AdGuard Home web interface is accessible at `https://adguard.local`
+**Nginx Configuration**: AdGuard Home web interface is accessible at `https://adguard.home`
 
 ### Deployment Steps:
 
@@ -48,7 +48,7 @@ Deploy via Portainer using the remote repository feature.
    ```
 
 4. **Access and setup**:
-   - Navigate to `https://adguard.local`
+   - Navigate to `https://adguard.home`
    - Complete initial setup wizard
 
 5. **Homepage integration**:
@@ -81,7 +81,7 @@ ssh pi@pi.local "sudo systemctl stop systemd-resolved"
 1. **Deploy the stack** in Portainer
 
 2. **Access web interface**:
-   - Navigate to `https://adguard.local`
+   - Navigate to `https://adguard.home`
    - Complete the initial setup wizard:
      - **Admin Web Interface**: 
        - Listen interface: `All interfaces`
@@ -111,7 +111,11 @@ ssh pi@pi.local "sudo systemctl stop systemd-resolved"
 5. **Client configuration**:
    - **Router level**: Set Pi's IP as primary DNS server in router settings
    - **Device level**: Configure individual devices to use Pi's IP as DNS server
-   - **Testing**: Use `https://adguard.local` → Query Log to verify filtering
+   - **Testing**: Use `https://adguard.home` → Query Log to verify filtering
+
+6. **DNS rewrites for `.home` domains**:
+   - Configure DNS rewrites to resolve service domains (e.g., `portainer.home`)
+   - See [DNS & Hostname Resolution](../../docs/dns.md) for complete setup
 
 ## Setup Wizard Configuration
 
@@ -140,7 +144,7 @@ During the initial setup wizard, configure these settings to match your environm
 - **Enable rate limiting** if exposed to internet
 
 ### **After Setup**
-- Web interface: `https://adguard.local`
+- Web interface: `https://adguard.home`
 - DNS server: Use Pi's IP (`192.168.1.151`) in router/device settings
 
 ## DNS Services
@@ -148,7 +152,7 @@ During the initial setup wizard, configure these settings to match your environm
 AdGuard Home provides multiple DNS protocols:
 
 - **Plain DNS**: Port 53 (TCP/UDP) - Standard DNS
-- **DNS-over-HTTPS**: Via nginx proxy at `https://adguard.local/dns-query` - Secure DNS over HTTPS
+- **DNS-over-HTTPS**: Via nginx proxy at `https://adguard.home/dns-query` - Secure DNS over HTTPS
 - **DNS-over-TLS**: Port 853/tcp - Secure DNS over TLS  
 - **DNS-over-QUIC**: Port 853/udp - Fast secure DNS
 - **DNSCrypt**: Port 5443 - Encrypted DNS
@@ -160,11 +164,11 @@ AdGuard Home provides multiple DNS protocols:
 - Secondary DNS: `1.1.1.1` (fallback)
 
 **iOS/Android DNS-over-HTTPS:**
-- URL: `https://adguard.local/dns-query`
+- URL: `https://adguard.home/dns-query`
 
 **Browser DNS-over-HTTPS:**
-- Firefox: `https://adguard.local/dns-query`
-- Chrome: `https://adguard.local/dns-query`
+- Firefox: `https://adguard.home/dns-query`
+- Chrome: `https://adguard.home/dns-query`
 
 ## Features
 
@@ -187,7 +191,7 @@ AdGuard Home provides multiple DNS protocols:
 
 ## Management
 
-**Web Interface**: Access at `https://adguard.local`
+**Web Interface**: Access at `https://adguard.home`
 - Dashboard with real-time statistics
 - Query log and blocked domains
 - Filter management and custom rules
@@ -229,6 +233,10 @@ ssh pi@pi.local "docker start adguard"
 - Router should point to Pi's IP for DNS
 - Ensure port 53 is not blocked by firewall
 
+**DNS Rewrites:**
+- Configure DNS rewrites for `.home` domains to enable service access
+- See [DNS & Hostname Resolution](../../docs/dns.md) for configuration guide
+
 **Client Testing:**
 ```bash
 # Test DNS resolution
@@ -238,5 +246,8 @@ dig @pi.local google.com
 dig @pi.local doubleclick.net
 
 # Test DNS-over-HTTPS
-curl -H "accept: application/dns-json" "https://adguard.local/dns-query?name=google.com&type=A"
+curl -H "accept: application/dns-json" "https://adguard.home/dns-query?name=google.com&type=A"
+
+# Test .home domain resolution
+nslookup portainer.home
 ```

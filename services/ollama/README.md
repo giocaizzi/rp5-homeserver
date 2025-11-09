@@ -1,6 +1,6 @@
 # Ollama Local LLM Server
 
-Local AI inference server at `https://ollama.local`, optimized for Raspberry Pi 5.
+Local AI inference server at `https://ollama.home`, optimized for Raspberry Pi 5.
 
 ## Configuration
 
@@ -21,11 +21,11 @@ Local AI inference server at `https://ollama.local`, optimized for Raspberry Pi 
 
 ## API Usage
 
-**Base URL**: `https://ollama.local`
+**Base URL**: `https://ollama.home`
 
 **Generate Text**:
 ```bash
-curl https://ollama.local/api/generate \
+curl https://ollama.home/api/generate \
   -d '{"model": "qwen3:1.7b", "prompt": "Hello!", "stream": false}'
 ```
 
