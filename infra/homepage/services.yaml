@@ -1,80 +1,82 @@
 ---
 # Infrastructure Services
 - Infrastructure:
-    - Portainer:
-        href: https://portainer.{{HOMEPAGE_FILE_DOMAIN}}
-        description: Docker container management
-        icon: portainer.png
-        ping: http://portainer:9000/api/status
-        widget:
-          type: portainer
-          url: http://portainer:9000
-          env: 3
-          key: "{{HOMEPAGE_FILE_PORTAINER_API_KEY}}"
+      - Portainer:
+            href: https://portainer.{{HOMEPAGE_FILE_DOMAIN}}
+            description: Docker container management
+            icon: portainer.png
+            ping: http://portainer:9000/api/status
+            widget:
+                type: portainer
+                url: http://portainer:9000
+                env: 3
+                key: "{{HOMEPAGE_FILE_PORTAINER_API_KEY}}"
 
-    - Netdata:
-        href: https://netdata.local
-        description: Real-time system monitoring
-        icon: netdata.png
-        ping: http://netdata:19999/api/v1/info
-        widget:
-          type: netdata
-          url: http://netdata:19999
+      - Netdata:
+            href: https://netdata.local
+            description: Real-time system monitoring
+            icon: netdata.png
+            ping: http://netdata:19999/api/v1/info
+            widget:
+                type: netdata
+                url: http://netdata:19999
 
-    - Backrest:
-        href: https://backrest.{{HOMEPAGE_FILE_DOMAIN}}
-        description: Backup management
-        icon: backrest.png
-        ping: http://backrest:9898
-        widget:
-          type: backrest
-          url: http://backrest:9898
-          username: "{{HOMEPAGE_VAR_BACKREST_USERNAME}}"
-          password: "{{HOMEPAGE_FILE_BACKREST_PASSWORD}}"
+      - Backrest:
+            href: https://backrest.{{HOMEPAGE_FILE_DOMAIN}}
+            description: Backup management
+            icon: backrest.png
+            ping: http://backrest:9898
+            widget:
+                type: backrest
+                url: http://backrest:9898
+                username: "{{HOMEPAGE_VAR_BACKREST_USERNAME}}"
+                password: "{{HOMEPAGE_FILE_BACKREST_PASSWORD}}"
 
-# Application Services  
+# Application Services
+- Security:
+      - AdGuard Home:
+            href: https://adguard.local
+            description: DNS server & ad blocker
+            icon: adguard-home.png
+            ping: http://adguard:3000
+            widget:
+                type: adguard
+                url: http://adguard:3000
+                username: "{{HOMEPAGE_VAR_ADGUARD_USERNAME}}"
+                password: "{{HOMEPAGE_FILE_ADGUARD_PASSWORD}}"
 - Applications:
-    - AdGuard Home:
-        href: https://adguard.local
-        description: DNS server & ad blocker
-        icon: adguard-home.png
-        ping: http://adguard:3000
-        widget:
-          type: adguard
-          url: http://adguard:3000
-          username: "{{HOMEPAGE_VAR_ADGUARD_USERNAME}}"
-          password: "{{HOMEPAGE_FILE_ADGUARD_PASSWORD}}"
-          
-    - N8N:
-        href: https://n8n.{{HOMEPAGE_FILE_DOMAIN}}
-        description: Workflow automation
-        icon: n8n.png
-        ping: http://n8n:5678
+      - N8N:
+            href: https://n8n.{{HOMEPAGE_FILE_DOMAIN}}
+            description: Workflow automation
+            icon: n8n.png
+            ping: http://n8n:5678
 
-    - Ollama:
-        href: https://ollama.local
-        description: Local AI models
-        icon: ollama.png
-        ping: http://ollama:11434
+      - Ollama:
+            href: https://ollama.local
+            description: Local AI models
+            icon: ollama.png
+            ping: http://ollama:11434
 
-    - Firefly III:
-        href: https://firefly.{{HOMEPAGE_FILE_DOMAIN}}
-        description: Personal finance manager
-        icon: firefly.png
-        ping: http://firefly:8080
-        widget:
-          type: firefly
-          url: http://firefly:8080
-          key: "{{HOMEPAGE_FILE_FIREFLY_API_TOKEN}}"
+- Finance:
+      - Firefly III:
+            href: https://firefly.{{HOMEPAGE_FILE_DOMAIN}}
+            description: Personal finance manager
+            icon: firefly.png
+            ping: http://firefly:8080
+            # Disabled for privacy
+            # widget:
+            #     type: firefly
+            #     url: http://firefly:8080
+            #     key: "{{HOMEPAGE_FILE_FIREFLY_API_TOKEN}}"
 
-    - Firefly Pico:
-        href: https://firefly-pico.local/dashboard
-        description: Mobile-friendly Firefly III frontend
-        icon: firefly.png
-        ping: http://firefly-pico:80
+      - Firefly Pico:
+            href: https://firefly-pico.local/dashboard
+            description: Mobile-friendly Firefly III frontend
+            icon: firefly.png
+            ping: http://firefly-pico:80
 
-    - Firefly Importer:
-        href: https://firefly-importer.local
-        description: Data import for Firefly III
-        icon: firefly.png
-        ping: http://firefly-importer:8080
+      - Firefly Importer:
+            href: https://firefly-importer.local
+            description: Data import for Firefly III
+            icon: firefly.png
+            ping: http://firefly-importer:8080

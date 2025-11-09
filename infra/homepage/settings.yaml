@@ -13,14 +13,22 @@ useEqualHeights: true
 
 # Layout configuration for better organization
 layout:
+  Applications:
+    style: row
+    columns: 3
+    icon: mdi-application-cog
+  Finance:
+    style: row
+    columns: 3
+    icon: mdi-currency-usd
   Infrastructure:
     style: row
     columns: 3
     icon: mdi-server-network
-  Applications:
-    style: row  
-    columns: 4
-    icon: mdi-application-cog
+  Security:
+    style: row
+    columns: 3
+    icon: mdi-shield-lock
 
 # Branding
 fav: "https://raw.githubusercontent.com/gethomepage/homepage/main/public/favicon.ico"
