@@ -329,10 +329,10 @@ services:
       - /bin/sh
       - -c
       - |
-        # Read secret and export as environment variable
+        # Export DB password from Docker secret
         export DB_PASSWORD=$$(cat /run/secrets/pico_db_password)
-        # Start supervisord (the default process)
-        exec /usr/bin/supervisord -c /etc/supervisord.conf
+        # Run official entrypoint (waits for DB, runs migrations, caches config from env vars, starts supervisord)
+        exec /docker-entrypoint.d/start.sh
     networks:
       - firefly_network
       - public_network
