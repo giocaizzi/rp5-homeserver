@@ -314,7 +314,7 @@ services:
       - pico-db
       - firefly
     expose:
-      - "3000"
+      - "80"
     environment:
       - FIREFLY_URL=http://firefly:8080
       - DB_CONNECTION=pgsql
