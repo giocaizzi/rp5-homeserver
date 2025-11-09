@@ -302,4 +302,4 @@ After deploying the stack:
    - Should sync data from Firefly III
    - Can now create transactions via Pico interface
 
-**Important**: `FIREFLY_URL` must be set to the public URL (`https://firefly.local`) that your browser can access, not the internal Docker URL. Pico's frontend JavaScript running in your browser needs to make API calls to Firefly, and it uses this URL.
+**Important**: `FIREFLY_URL` is set to `http://firefly:8080` (internal Docker service). Pico's backend uses this for server-side API calls. For browser-based API calls from Pico's frontend, CORS headers in nginx allow `https://firefly-pico.local` to access `https://firefly.local/api/` endpoints.
