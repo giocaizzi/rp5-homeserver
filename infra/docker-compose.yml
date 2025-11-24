@@ -141,6 +141,7 @@ services:
       - /sys:/host/sys:ro                   # host system metrics
       - /etc/passwd:/host/etc/passwd:ro     # optional for user mapping
       - /etc/group:/host/etc/group:ro       # optional
+      - ./netdata/netdata.conf:/etc/netdata/netdata.conf:ro  # custom config
       - netdata_config:/etc/netdata         # config directory
       - netdata_cache:/var/cache/netdata    # persistent cache
       - netdata_lib:/var/lib/netdata        # persistent data

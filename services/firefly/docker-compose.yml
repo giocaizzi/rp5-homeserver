@@ -248,8 +248,8 @@ services:
       echo 'Firefly is ready, setting up cron jobs...' &&
       AUTO_IMPORT_SECRET=\$$(cat /run/secrets/auto_import_secret) &&
       FIREFLY_ACCESS_TOKEN=\$$(cat /run/secrets/firefly_access_token) &&
-      echo '0 3 * * * docker exec \$$(docker ps --filter \"label=com.docker.swarm.service.name=firefly_firefly\" --format \"{{.Names}}\") php artisan firefly-iii:cron' > /tmp/crontab &&
-      echo '40 2 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer '$$FIREFLY_ACCESS_TOKEN'\" http://firefly-importer:8080/autoimport?directory=/var/www/html/import\\&secret='$$AUTO_IMPORT_SECRET >> /tmp/crontab &&
+      echo '0 6 * * * docker exec \$$(docker ps --filter \"label=com.docker.swarm.service.name=firefly_firefly\" --format \"{{.Names}}\") php artisan firefly-iii:cron' > /tmp/crontab &&
+      echo '0 6 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer '$$FIREFLY_ACCESS_TOKEN'\" http://firefly-importer:8080/autoimport?directory=/var/www/html/import\\&secret='$$AUTO_IMPORT_SECRET >> /tmp/crontab &&
       crontab /tmp/crontab &&
       rm /tmp/crontab &&
       echo 'Cron jobs configured:' &&
