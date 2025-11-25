@@ -102,6 +102,18 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        - homepage.group=Infrastructure
+        - homepage.name=Portainer
+        - homepage.icon=portainer.png
+        - homepage.href=https://portainer.{{HOMEPAGE_FILE_DOMAIN}}
+        - homepage.description=Docker container management
+        - homepage.ping=http://portainer:9000/api/status
+        - homepage.weight=101
+        - homepage.widget.type=portainer
+        - homepage.widget.url=http://portainer:9000
+        - homepage.widget.env=3
+        - homepage.widget.key={{HOMEPAGE_FILE_PORTAINER_API_KEY}}
     logging:
       <<: *logging-base
   
@@ -167,6 +179,16 @@ services:
       com.giocaizzi.tier: "core"
     deploy:
       <<: *deploy-base
+      labels:
+        - homepage.group=Infrastructure
+        - homepage.name=Netdata
+        - homepage.icon=netdata.png
+        - homepage.href=https://netdata.home
+        - homepage.description=Real-time system monitoring
+        - homepage.ping=http://netdata:19999/api/v1/info
+        - homepage.weight=102
+        - homepage.widget.type=netdata
+        - homepage.widget.url=http://netdata:19999
     logging:
       <<: *logging-base
 
@@ -202,6 +224,18 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        - homepage.group=Infrastructure
+        - homepage.name=Backrest
+        - homepage.icon=backrest.png
+        - homepage.href=https://backrest.{{HOMEPAGE_FILE_DOMAIN}}
+        - homepage.description=Backup management
+        - homepage.ping=http://backrest:9898
+        - homepage.weight=103
+        - homepage.widget.type=backrest
+        - homepage.widget.url=http://backrest:9898
+        - homepage.widget.username={{HOMEPAGE_VAR_BACKREST_USERNAME}}
+        - homepage.widget.password={{HOMEPAGE_FILE_BACKREST_PASSWORD}}
     logging:
       driver: "json-file"
       options:
@@ -230,11 +264,13 @@ services:
       - HOMEPAGE_FILE_BACKREST_PASSWORD=/run/secrets/backrest_admin_password
       - HOMEPAGE_FILE_FIREFLY_API_TOKEN=/run/secrets/firefly_api_token
       - HOMEPAGE_FILE_ADGUARD_PASSWORD=/run/secrets/adguard_password
+      - HOMEPAGE_FILE_GRAFANA_PASSWORD=/run/secrets/grafana_admin_password
       - HOMEPAGE_FILE_DOMAIN=/run/secrets/domain
       - HOMEPAGE_FILE_VERSION=/app/config/version
       # Regular configuration variables
       - HOMEPAGE_VAR_BACKREST_USERNAME=admin
       - HOMEPAGE_VAR_ADGUARD_USERNAME=admin
+      - HOMEPAGE_VAR_GRAFANA_USERNAME=admin
       - HOMEPAGE_VAR_LATITUDE=45.4642
       - HOMEPAGE_VAR_LONGITUDE=9.1900
       - HOMEPAGE_VAR_TIMEZONE=Europe/Rome
@@ -243,6 +279,7 @@ services:
       - backrest_admin_password
       - firefly_api_token
       - adguard_password
+      - grafana_admin_password
       - domain
     configs:
       - source: version_config
@@ -298,6 +335,8 @@ secrets:
     file: ./secrets/firefly_api_token.txt
   adguard_password:
     file: ./secrets/adguard_password.txt
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt
   cloudflared_token:
     file: ./secrets/cloudflared_token.txt
   gcp_service_account:

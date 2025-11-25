@@ -1,82 +1,14 @@
 ---
-# Infrastructure Services
-- Infrastructure:
-      - Portainer:
-            href: https://portainer.{{HOMEPAGE_FILE_DOMAIN}}
-            description: Docker container management
-            icon: portainer.png
-            ping: http://portainer:9000/api/status
-            widget:
-                type: portainer
-                url: http://portainer:9000
-                env: 3
-                key: "{{HOMEPAGE_FILE_PORTAINER_API_KEY}}"
-
-      - Netdata:
-            href: https://netdata.home
-            description: Real-time system monitoring
-            icon: netdata.png
-            ping: http://netdata:19999/api/v1/info
-            widget:
-                type: netdata
-                url: http://netdata:19999
-
-      - Backrest:
-            href: https://backrest.{{HOMEPAGE_FILE_DOMAIN}}
-            description: Backup management
-            icon: backrest.png
-            ping: http://backrest:9898
-            widget:
-                type: backrest
-                url: http://backrest:9898
-                username: "{{HOMEPAGE_VAR_BACKREST_USERNAME}}"
-                password: "{{HOMEPAGE_FILE_BACKREST_PASSWORD}}"
-
-# Application Services
-- Security:
-      - AdGuard Home:
-            href: https://adguard.home
-            description: DNS server & ad blocker
-            icon: adguard-home.png
-            ping: http://adguard:3000
-            widget:
-                type: adguard
-                url: http://adguard:3000
-                username: "{{HOMEPAGE_VAR_ADGUARD_USERNAME}}"
-                password: "{{HOMEPAGE_FILE_ADGUARD_PASSWORD}}"
-- Applications:
-      - N8N:
-            href: https://n8n.{{HOMEPAGE_FILE_DOMAIN}}
-            description: Workflow automation
-            icon: n8n.png
-            ping: http://n8n:5678
-
-      - Ollama:
-            href: https://ollama.home
-            description: Local AI models
-            icon: ollama.png
-            ping: http://ollama:11434
-
-- Finance:
-      - Firefly III:
-            href: https://firefly.{{HOMEPAGE_FILE_DOMAIN}}
-            description: Personal finance manager
-            icon: firefly.png
-            ping: http://firefly:8080
-            # Disabled for privacy
-            # widget:
-            #     type: firefly
-            #     url: http://firefly:8080
-            #     key: "{{HOMEPAGE_FILE_FIREFLY_API_TOKEN}}"
-
-      - Firefly Pico:
-            href: https://firefly-pico.home/dashboard
-            description: Mobile-friendly Firefly III frontend
-            icon: firefly.png
-            ping: http://firefly-pico:80
-
-      - Firefly Importer:
-            href: https://firefly-importer.home
-            description: Data import for Firefly III
-            icon: firefly.png
-            ping: http://firefly-importer:8080
+# Services are auto-discovered via Docker Swarm deploy labels
+# All services are defined in their respective docker-compose.yml files
+# using homepage.* labels under the deploy section.
+#
+# Group order (by weight):
+# - Infrastructure (100s): Portainer, Netdata, Backrest
+# - Observability (200s): Grafana, Prometheus, Loki, Tempo
+# - Security (300s): AdGuard Home
+# - Applications (400s): N8N, Ollama
+# - Finance (500s): Firefly III, Firefly Pico, Firefly Importer
+#
+# To add a new service, add homepage.* labels to its deploy section.
+# See: https://gethomepage.dev/configs/docker/#automatic-service-discovery

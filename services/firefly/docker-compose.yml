@@ -124,6 +124,14 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        - homepage.group=Finance
+        - homepage.name=Firefly III
+        - homepage.icon=firefly.png
+        - homepage.href=https://firefly.{{HOMEPAGE_FILE_DOMAIN}}
+        - homepage.description=Personal finance manager
+        - homepage.ping=http://firefly:8080
+        - homepage.weight=501
     logging:
       <<: *logging-base
 
@@ -229,6 +237,14 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        - homepage.group=Finance
+        - homepage.name=Firefly Importer
+        - homepage.icon=firefly.png
+        - homepage.href=https://firefly-importer.home
+        - homepage.description=Data import for Firefly III
+        - homepage.ping=http://firefly-importer:8080
+        - homepage.weight=503
     logging:
       <<: *logging-base
 
@@ -316,6 +332,14 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        - homepage.group=Finance
+        - homepage.name=Firefly Pico
+        - homepage.icon=firefly.png
+        - homepage.href=https://firefly-pico.home/dashboard
+        - homepage.description=Mobile-friendly Firefly III frontend
+        - homepage.ping=http://firefly-pico:80
+        - homepage.weight=502
     logging:
       <<: *logging-base
 
