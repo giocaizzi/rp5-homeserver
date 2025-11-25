@@ -235,7 +235,6 @@ services:
       - /etc/alloy/config.alloy
     environment:
       - DEPLOYMENT_ENV=production
-      - LANGFUSE_ENABLED=true
     secrets:
       - langfuse_public_key
       - langfuse_secret_key

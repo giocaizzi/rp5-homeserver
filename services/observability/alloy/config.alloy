@@ -26,15 +26,6 @@
 // Default environment: production
 
 // ========================================
-// RUNTIME ARGUMENTS
-// ========================================
-
-argument "langfuse_enabled" {
-  optional = true
-  comment  = "Enable Langfuse trace export (requires secrets)"
-}
-
-// ========================================
 // OTLP Receivers
 // ========================================
 

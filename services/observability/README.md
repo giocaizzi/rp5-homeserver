@@ -112,14 +112,6 @@ namespace → service → component → tier → env
 2. **Logs**: Docker containers → Alloy (autodiscovery) → Loki
 3. **Traces**: Applications → OTLP → Alloy → Tempo
 
-## Configuration
-
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LANGFUSE_ENABLED` | `false` | Enable Langfuse trace export (requires secrets) |
-
 ### Enabling Langfuse (Optional)
 
 To export traces to Langfuse for LLM observability:
@@ -130,14 +122,6 @@ To export traces to Langfuse for LLM observability:
    cp secrets/langfuse_secret_key.txt.example secrets/langfuse_secret_key.txt
    # Edit with actual values
    ```
-
-2. Set environment variable in docker-compose:
-   ```yaml
-   environment:
-     - LANGFUSE_ENABLED=true
-   ```
-
-3. Uncomment Langfuse exporter in `alloy/config.alloy`
 
 ## Deployment
 
