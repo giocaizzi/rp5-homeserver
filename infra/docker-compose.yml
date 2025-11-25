@@ -1,3 +1,35 @@
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "infra"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
+# =============================================================================
+# Networks
+# =============================================================================
 networks:
   # Public network - for nginx proxy to reach services
   public_network:
@@ -9,6 +41,9 @@ networks:
     external: true
     name: rp5_infra
 
+# =============================================================================
+# Services
+# =============================================================================
 services:
   # Nginx Reverse Proxy
   nginx:
@@ -35,25 +70,15 @@ services:
       timeout: 10s
       retries: 3
     labels:
-      - "stack=infrastructure"
-    security_opt:
-      - no-new-privileges:true
+      <<: *labels-base
+      com.giocaizzi.service: "nginx"
+      com.giocaizzi.component: "proxy"
+      com.giocaizzi.tier: "core"
+    <<: *security-base
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      <<: *logging-base
 
   # Portainer - Docker management UI (Business Edition)
   portainer:
@@ -69,27 +94,16 @@ services:
       - portainer_data:/data
     networks:
       - infra_network
-    # no extra healthcheck
     labels:
-      - "stack=infrastructure"
-    security_opt:
-      - no-new-privileges:true
+      <<: *labels-base
+      com.giocaizzi.service: "portainer"
+      com.giocaizzi.component: "management"
+      com.giocaizzi.tier: "core"
+    <<: *security-base
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      <<: *logging-base
   
   # Cloudflare Tunnel
   cloudflared:
@@ -108,21 +122,14 @@ services:
       timeout: 10s
       retries: 3
     labels:
-      - "stack=infrastructure"
-    security_opt:
-      - no-new-privileges:true
+      <<: *labels-base
+      com.giocaizzi.service: "cloudflared"
+      com.giocaizzi.component: "tunnel"
+      com.giocaizzi.tier: "core"
+    <<: *security-base
     read_only: true
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
 
   # Netdata - Real-time performance monitoring
   netdata:
@@ -134,7 +141,7 @@ services:
       - SYS_PTRACE           # needed for process monitoring
       - NET_ADMIN            # needed for network stats
     security_opt:
-      - apparmor:unconfined  # disable AppArmor restrictions
+      - apparmor:unconfined  # disable AppArmor restrictions (overrides base)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker metrics
       - /proc:/host/proc:ro                 # host processes
@@ -154,23 +161,14 @@ services:
       retries: 3
       start_period: 60s
     labels:
-      - "stack=infrastructure"
+      <<: *labels-base
+      com.giocaizzi.service: "netdata"
+      com.giocaizzi.component: "monitoring"
+      com.giocaizzi.tier: "core"
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      <<: *logging-base
 
   # Backrest - Restic backup with Web UI
   backrest:
@@ -197,20 +195,13 @@ services:
     networks:
       - infra_network
     labels:
-      - "stack=infrastructure"
-    security_opt:
-      - no-new-privileges:true
+      <<: *labels-base
+      com.giocaizzi.service: "backrest"
+      com.giocaizzi.component: "backup"
+      com.giocaizzi.tier: "core"
+    <<: *security-base
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     logging:
       driver: "json-file"
       options:
@@ -264,25 +255,15 @@ services:
       - infra_network
       - public_network
     labels:
-      - "stack=infrastructure"
-    security_opt:
-      - no-new-privileges:true
+      <<: *labels-base
+      com.giocaizzi.service: "homepage"
+      com.giocaizzi.component: "dashboard"
+      com.giocaizzi.tier: "core"
+    <<: *security-base
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      <<: *logging-base
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://0.0.0.0:3000/"]
       interval: 30s

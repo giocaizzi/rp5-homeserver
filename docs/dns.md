@@ -40,6 +40,7 @@ Edit `/etc/hosts` (Linux/macOS) or `C:\Windows\System32\drivers\etc\hosts` (Wind
 ```
 192.168.1.100 portainer.home netdata.home backrest.home homepage.home
 192.168.1.100 adguard.home firefly.home n8n.home ollama.home
+192.168.1.100 grafana.home otel.home
 ```
 
 **Pros**: Works without AdGuard  

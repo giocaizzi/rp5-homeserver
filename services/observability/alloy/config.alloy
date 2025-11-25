@@ -1,0 +1,368 @@
+// Grafana Alloy Configuration
+// Centralized OpenTelemetry collector for logs, traces, and metrics
+//
+// ========================================
+// DATA PIPELINES
+// ========================================
+// 1. OTEL Pipeline (source=otel)    - Apps sending OTLP traces/metrics/logs
+// 2. Docker Pipeline (source=docker) - Container log scraping
+// 3. Scrape Pipeline (source=scrape) - Prometheus metric scraping
+//
+// ========================================
+// LABEL SCHEMA (Docker <-> OTEL)
+// ========================================
+// Docker Label              -> Alloy Label    -> OTEL Attribute
+// com.giocaizzi.service     -> service_name   -> service.name
+// com.giocaizzi.version     -> version        -> service.version
+// com.giocaizzi.env         -> environment    -> deployment.environment
+// com.giocaizzi.tier        -> tier           -> (custom)
+// com.giocaizzi.component   -> component      -> (custom)
+// com.giocaizzi.namespace   -> namespace      -> (custom)
+// container_id              -> instance       -> service.instance.id
+// hostname                  -> host           -> host.name
+// (auto)                    -> source         -> (custom: otel/docker/scrape)
+//
+// Tier values: infra, app, observability
+// Default environment: production
+
+// ========================================
+// RUNTIME ARGUMENTS
+// ========================================
+
+argument "langfuse_enabled" {
+  optional = true
+  comment  = "Enable Langfuse trace export (requires secrets)"
+}
+
+// ========================================
+// OTLP Receivers
+// ========================================
+
+// Receive OTLP traces via HTTP
+otelcol.receiver.otlp "default" {
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.default.input]
+    logs    = [otelcol.processor.batch.default.input]
+    traces  = [otelcol.processor.batch.default.input]
+  }
+}
+
+// ========================================
+// Processors
+// ========================================
+
+// Batch processor for efficiency
+otelcol.processor.batch "default" {
+  timeout          = "5s"
+  send_batch_size  = 100
+
+  output {
+    metrics = [otelcol.processor.attributes.default.input]
+    logs    = [otelcol.processor.attributes.default.input]
+    traces  = [otelcol.processor.attributes.default.input]
+  }
+}
+
+// Normalize attributes for OTEL semantic conventions
+otelcol.processor.attributes "default" {
+  // Add source identifier for OTEL pipeline
+  action {
+    key    = "source"
+    value  = "otel"
+    action = "insert"
+  }
+
+  // Default tier for OTEL data (apps)
+  action {
+    key    = "tier"
+    value  = "app"
+    action = "insert"
+  }
+
+  // Default namespace for OTEL data (external apps)
+  action {
+    key    = "namespace"
+    value  = "external"
+    action = "insert"
+  }
+
+  // Default environment
+  action {
+    key    = "environment"
+    value  = "production"
+    action = "insert"
+  }
+
+  // Map deployment.environment.name to environment (overrides default if present)
+  action {
+    key            = "environment"
+    from_attribute = "deployment.environment.name"
+    action         = "upsert"
+  }
+
+  output {
+    metrics = [otelcol.exporter.prometheus.default.input]
+    logs    = [otelcol.exporter.loki.default.input]
+    traces  = [
+      otelcol.exporter.otlp.tempo.input,
+      otelcol.exporter.otlphttp.langfuse.input,
+    ]
+  }
+}
+
+// ========================================
+// Exporters
+// ========================================
+
+// Export metrics to Prometheus
+otelcol.exporter.prometheus "default" {
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+// Export logs to Loki
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.default.receiver]
+}
+
+// Export traces to Tempo via OTLP
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+    tls {
+      insecure = true
+    }
+  }
+}
+
+// ========================================
+// Langfuse Export
+// ========================================
+
+// Export traces to Langfuse via OTLP HTTP
+otelcol.exporter.otlphttp "langfuse" {
+  client {
+    endpoint = "http://langfuse:3000"
+    tls {
+      insecure = true
+    }
+    headers = {
+      "authorization" = "Basic " + encoding.base64(
+        local.file.langfuse_public_key.content + ":" + local.file.langfuse_secret_key.content
+      ),
+    }
+  }
+}
+
+local.file "langfuse_public_key" {
+  filename  = "/run/secrets/langfuse_public_key"
+  is_secret = true
+}
+
+local.file "langfuse_secret_key" {
+  filename  = "/run/secrets/langfuse_secret_key"
+  is_secret = true
+}
+
+// ========================================
+// Prometheus Remote Write
+// ========================================
+
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+}
+
+// ========================================
+// Loki Integration
+// ========================================
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+// ========================================
+// Docker Log Discovery & Scraping
+// ========================================
+
+// Discover Docker containers
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// Relabel Docker metadata to OTEL semantic attributes
+// Fallback chain: custom labels > swarm labels > compose labels > container metadata
+discovery.relabel "docker_labels" {
+  targets = discovery.docker.containers.targets
+
+  // service_name: container name -> compose service -> swarm service -> custom label
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "^/?(.+)$"
+    target_label  = "service_name"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+    regex         = "(.+)"
+    target_label  = "service_name"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_swarm_service_name"]
+    regex         = "(?:.+_)?(.+)"
+    target_label  = "service_name"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_giocaizzi_service"]
+    regex         = "(.+)"
+    target_label  = "service_name"
+  }
+
+  // environment from com.giocaizzi.env (default to production if not set)
+  rule {
+    target_label = "environment"
+    replacement  = "production"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_giocaizzi_env"]
+    regex         = "(.+)"
+    target_label  = "environment"
+  }
+
+  // tier from com.giocaizzi.tier
+  rule {
+    source_labels = ["__meta_docker_container_label_com_giocaizzi_tier"]
+    target_label  = "tier"
+  }
+
+  // component from com.giocaizzi.component
+  rule {
+    source_labels = ["__meta_docker_container_label_com_giocaizzi_component"]
+    target_label  = "component"
+  }
+
+  // version from com.giocaizzi.version (optional)
+  rule {
+    source_labels = ["__meta_docker_container_label_com_giocaizzi_version"]
+    regex         = "(.+)"
+    target_label  = "version"
+  }
+
+  // instance from container ID (short form)
+  rule {
+    source_labels = ["__meta_docker_container_id"]
+    regex         = "^(.{12}).*$"
+    target_label  = "instance"
+  }
+
+  // host from container hostname
+  rule {
+    source_labels = ["__meta_docker_container_hostname"]
+    target_label  = "host"
+  }
+
+  // namespace: compose project -> swarm stack -> custom label
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    regex         = "(.+)"
+    target_label  = "namespace"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_stack_namespace"]
+    regex         = "(.+)"
+    target_label  = "namespace"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_giocaizzi_namespace"]
+    regex         = "(.+)"
+    target_label  = "namespace"
+  }
+}
+
+// Scrape logs from discovered containers
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.docker_labels.output
+  forward_to = [loki.process.docker_logs.receiver]
+}
+
+// Process Docker logs
+loki.process "docker_logs" {
+  forward_to = [loki.write.default.receiver]
+
+  stage.docker {}
+
+  // Add source identifier for Docker pipeline
+  stage.static_labels {
+    values = {
+      source = "docker",
+    }
+  }
+}
+
+// ========================================
+// Prometheus Scraping
+// ========================================
+
+// Scrape Tempo metrics for service graphs and span metrics
+prometheus.scrape "tempo" {
+  targets = [{
+    __address__ = "tempo:3200",
+  }]
+  
+  forward_to      = [prometheus.relabel.scrape_labels.receiver]
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+}
+
+// Add standardized labels to scraped metrics
+prometheus.relabel "scrape_labels" {
+  forward_to = [prometheus.remote_write.default.receiver]
+
+  // Add source identifier for scrape pipeline
+  rule {
+    target_label = "source"
+    replacement  = "scrape"
+  }
+
+  // Tempo labels
+  rule {
+    source_labels = ["job"]
+    regex         = "prometheus.scrape.tempo"
+    target_label  = "service_name"
+    replacement   = "tempo"
+  }
+  rule {
+    source_labels = ["job"]
+    regex         = "prometheus.scrape.tempo"
+    target_label  = "tier"
+    replacement   = "observability"
+  }
+  rule {
+    source_labels = ["job"]
+    regex         = "prometheus.scrape.tempo"
+    target_label  = "component"
+    replacement   = "traces"
+  }
+  rule {
+    source_labels = ["job"]
+    regex         = "prometheus.scrape.tempo"
+    target_label  = "environment"
+    replacement   = "production"
+  }
+  rule {
+    source_labels = ["job"]
+    regex         = "prometheus.scrape.tempo"
+    target_label  = "namespace"
+    replacement   = "observability"
+  }
+}

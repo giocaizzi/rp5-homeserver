@@ -63,6 +63,15 @@ graph TB
             subgraph OllamaNet["rp5_ollama - Ollama Private Network"]
                 OllamaPriv["🤖 Ollama"]
             end
+            
+            subgraph ObsNet["observability_network - Observability Network"]
+                direction LR
+                Grafana["📊 Grafana<br/>:3000"]
+                Alloy["📡 Alloy<br/>:4317, :4318"]
+                Prometheus["📈 Prometheus<br/>:9090"]
+                Loki["📝 Loki<br/>:3100"]
+                Tempo["🔍 Tempo<br/>:3200"]
+            end
         end
     end
     
@@ -79,6 +88,15 @@ graph TB
     Nginx -.->|reverse proxy| Netdata
     Nginx -.->|reverse proxy| Backrest
     Nginx -.->|reverse proxy| Homepage2
+    Nginx -.->|reverse proxy| Grafana
+    Nginx -.->|reverse proxy| Alloy
+    
+    Alloy -.->|metrics| Prometheus
+    Alloy -.->|logs| Loki
+    Alloy -.->|traces| Tempo
+    Grafana -.->|query| Prometheus
+    Grafana -.->|query| Loki
+    Grafana -.->|query| Tempo
     
     Firefly -.-> FireflyDB
     Pico -.-> PicoDB
@@ -97,6 +115,7 @@ graph TB
     style N8NNet fill:#FCE4EC,stroke:#C2185B
     style AdGuardNet fill:#E0F2F1,stroke:#00796B
     style OllamaNet fill:#FFF9C4,stroke:#F57F17
+    style ObsNet fill:#E8F5E9,stroke:#388E3C
 ```
 
 ## Network Layers
@@ -166,6 +185,8 @@ External Request → Nginx (80/443) → Internal Service (overlay network)
 | `firefly-pico.home` | `firefly-pico` | **80** | HTTP | Mobile companion |
 | `homepage.home` | `homepage` | 3000 | HTTP | Dashboard |
 | `adguard.home` | `adguard` | 3000 | HTTP | DNS web UI |
+| `grafana.home` | `grafana` | 3000 | HTTP + WS | Observability dashboards |
+| `otel.home` | `alloy` | 4318 | HTTP | OTLP telemetry ingestion |
 
 ## Port Exposure Strategy
 
