@@ -86,18 +86,6 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
-      labels:
-        - homepage.group=Security
-        - homepage.name=AdGuard Home
-        - homepage.icon=adguard-home.png
-        - homepage.href=https://adguard.home
-        - homepage.description=DNS server & ad blocker
-        - homepage.ping=http://adguard:3000
-        - homepage.weight=301
-        - homepage.widget.type=adguard
-        - homepage.widget.url=http://adguard:3000
-        - homepage.widget.username={{HOMEPAGE_VAR_ADGUARD_USERNAME}}
-        - homepage.widget.password={{HOMEPAGE_FILE_ADGUARD_PASSWORD}}
     logging:
       <<: *logging-base
 

@@ -1,7 +1,5 @@
 ---
 # Docker configuration for homepage
 # Uses local Docker socket for container monitoring
-# Swarm mode enabled for automatic service discovery via deploy labels
 - my-docker:
     socket: /var/run/docker.sock
-    swarm: true

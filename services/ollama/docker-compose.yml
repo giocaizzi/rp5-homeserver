@@ -77,14 +77,6 @@ services:
     #   - /dev/dri:/dev/dri  # For Intel GPU acceleration
     deploy:
       <<: *deploy-base
-      labels:
-        - homepage.group=Applications
-        - homepage.name=Ollama
-        - homepage.icon=ollama.png
-        - homepage.href=https://ollama.home
-        - homepage.description=Local AI models
-        - homepage.ping=http://ollama:11434
-        - homepage.weight=402
     tmpfs:
       - /tmp:size=1G,noexec,nosuid,nodev
     ulimits:

@@ -102,18 +102,6 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
-      labels:
-        - homepage.group=Infrastructure
-        - homepage.name=Portainer
-        - homepage.icon=portainer.png
-        - homepage.href=https://portainer.{{HOMEPAGE_FILE_DOMAIN}}
-        - homepage.description=Docker container management
-        - homepage.ping=http://portainer:9000/api/status
-        - homepage.weight=101
-        - homepage.widget.type=portainer
-        - homepage.widget.url=http://portainer:9000
-        - homepage.widget.env=3
-        - homepage.widget.key={{HOMEPAGE_FILE_PORTAINER_API_KEY}}
     logging:
       <<: *logging-base
   
@@ -179,16 +167,6 @@ services:
       com.giocaizzi.tier: "core"
     deploy:
       <<: *deploy-base
-      labels:
-        - homepage.group=Infrastructure
-        - homepage.name=Netdata
-        - homepage.icon=netdata.png
-        - homepage.href=https://netdata.home
-        - homepage.description=Real-time system monitoring
-        - homepage.ping=http://netdata:19999/api/v1/info
-        - homepage.weight=102
-        - homepage.widget.type=netdata
-        - homepage.widget.url=http://netdata:19999
     logging:
       <<: *logging-base
 
@@ -224,18 +202,6 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
-      labels:
-        - homepage.group=Infrastructure
-        - homepage.name=Backrest
-        - homepage.icon=backrest.png
-        - homepage.href=https://backrest.{{HOMEPAGE_FILE_DOMAIN}}
-        - homepage.description=Backup management
-        - homepage.ping=http://backrest:9898
-        - homepage.weight=103
-        - homepage.widget.type=backrest
-        - homepage.widget.url=http://backrest:9898
-        - homepage.widget.username={{HOMEPAGE_VAR_BACKREST_USERNAME}}
-        - homepage.widget.password={{HOMEPAGE_FILE_BACKREST_PASSWORD}}
     logging:
       driver: "json-file"
       options:

@@ -179,14 +179,6 @@ services:
     user: "1000:1000"
     deploy:
       <<: *deploy-base
-      labels:
-        - homepage.group=Applications
-        - homepage.name=N8N
-        - homepage.icon=n8n.png
-        - homepage.href=https://n8n.{{HOMEPAGE_FILE_DOMAIN}}
-        - homepage.description=Workflow automation
-        - homepage.ping=http://n8n:5678
-        - homepage.weight=401
     tmpfs:
       - /tmp
     logging:
