@@ -92,3 +92,9 @@
                 url: http://grafana:3000
                 username: admin
                 password: "{{HOMEPAGE_FILE_GRAFANA_PASSWORD}}"
+
+      - Langfuse:
+            href: https://langfuse.home
+            description: LLM observability and tracing
+            icon: https://langfuse.com/langfuse_logo_white.svg
+            ping: http://langfuse:3000/api/public/health
