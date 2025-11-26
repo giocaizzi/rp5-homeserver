@@ -1,0 +1,280 @@
+# Observability Stack - Centralized Monitoring, Logging, and Tracing
+# Deployed via Portainer using remote repository feature
+
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "observability"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  # Public network - for nginx proxy to reach services
+  public_network:
+    external: true
+    name: rp5_public
+
+  # Internal observability network
+  observability_network:
+    driver: overlay
+    attachable: true
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  loki_data:
+    driver: local
+  tempo_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  alloy_data:
+    driver: local
+
+# =============================================================================
+# Secrets
+# =============================================================================
+secrets:
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password.txt
+  langfuse_public_key:
+    file: ./secrets/langfuse_public_key.txt
+  langfuse_secret_key:
+    file: ./secrets/langfuse_secret_key.txt
+
+# =============================================================================
+# Services
+# =============================================================================
+services:
+  # ========================================
+  # Prometheus - Metrics Storage
+  # ========================================
+  prometheus:
+    image: prom/prometheus:latest
+    hostname: prometheus
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "prometheus"
+      com.giocaizzi.component: "metrics"
+      com.giocaizzi.tier: "core"
+    expose:
+      - "9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-remote-write-receiver'
+    networks:
+      - observability_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # Loki - Log Aggregation
+  # ========================================
+  loki:
+    image: grafana/loki:latest
+    hostname: loki
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "loki"
+      com.giocaizzi.component: "logs"
+      com.giocaizzi.tier: "core"
+    expose:
+      - "3100"
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/loki-config.yaml
+    user: "root"
+    networks:
+      - observability_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # Tempo - Distributed Tracing
+  # ========================================
+  tempo:
+    image: grafana/tempo:latest
+    hostname: tempo
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "tempo"
+      com.giocaizzi.component: "traces"
+      com.giocaizzi.tier: "core"
+    expose:
+      - "3200"  # Tempo HTTP
+      - "4317"  # OTLP gRPC
+      - "4318"  # OTLP HTTP
+    volumes:
+      - ./tempo/tempo-config.yaml:/etc/tempo/tempo-config.yaml:ro
+      - tempo_data:/var/tempo
+    command: -config.file=/etc/tempo/tempo-config.yaml
+    networks:
+      - observability_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3200/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # Grafana Alloy - OpenTelemetry Collector
+  # ========================================
+  alloy:
+    image: grafana/alloy:latest
+    hostname: alloy
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "alloy"
+      com.giocaizzi.component: "collector"
+      com.giocaizzi.tier: "core"
+    expose:
+      - "12345" # Alloy metrics
+      - "4317"  # OTLP gRPC
+      - "4318"  # OTLP HTTP
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy_data:/var/lib/alloy/data
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    environment:
+      - DEPLOYMENT_ENV=production
+    secrets:
+      - langfuse_public_key
+      - langfuse_secret_key
+    networks:
+      - observability_network
+      - public_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:12345/-/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # Grafana - Dashboards and Visualization
+  # ========================================
+  grafana:
+    image: grafana/grafana:latest
+    hostname: grafana
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "grafana"
+      com.giocaizzi.component: "dashboards"
+      com.giocaizzi.tier: "core"
+    expose:
+      - "3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_SERVER_ROOT_URL=https://grafana.home/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=false
+      - GF_INSTALL_PLUGINS=
+      - GF_FEATURE_MANAGEMENT_ALLOW_EDITING=false
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+    secrets:
+      - grafana_admin_password
+    networks:
+      - observability_network
+      - public_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      <<: *logging-base

@@ -1,3 +1,35 @@
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "firefly"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
+# =============================================================================
+# Networks
+# =============================================================================
 networks:
   # Private network for firefly stack
   firefly_network:
@@ -9,6 +41,9 @@ networks:
     external: true
     name: rp5_public
 
+# =============================================================================
+# Services
+# =============================================================================
 services:
   firefly:
     image: fireflyiii/core:latest
@@ -82,25 +117,15 @@ services:
       retries: 5
       start_period: 120s
     labels:
-      - "stack=firefly"
-    security_opt:
-      - no-new-privileges:true
+      <<: *labels-base
+      com.giocaizzi.service: "firefly"
+      com.giocaizzi.component: "backend"
+      com.giocaizzi.tier: "core"
+    <<: *security-base
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      <<: *logging-base
 
   db:
     image: mariadb:lts
@@ -125,25 +150,15 @@ services:
       retries: 6
       start_period: 90s
     labels:
-      - "stack=firefly"
-    security_opt:
-      - no-new-privileges:true
+      <<: *labels-base
+      com.giocaizzi.service: "firefly-db"
+      com.giocaizzi.component: "database"
+      com.giocaizzi.tier: "core"
+    <<: *security-base
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      <<: *logging-base
 
   importer:
     image: fireflyiii/data-importer:latest
@@ -207,25 +222,15 @@ services:
       retries: 3
       start_period: 30s
     labels:
-      - "stack=firefly"
-    security_opt:
-      - no-new-privileges:true
+      <<: *labels-base
+      com.giocaizzi.service: "firefly-importer"
+      com.giocaizzi.component: "importer"
+      com.giocaizzi.tier: "extra"
+    <<: *security-base
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      <<: *logging-base
 
   cron:
     image: alpine
@@ -248,8 +253,8 @@ services:
       echo 'Firefly is ready, setting up cron jobs...' &&
       AUTO_IMPORT_SECRET=\$$(cat /run/secrets/auto_import_secret) &&
       FIREFLY_ACCESS_TOKEN=\$$(cat /run/secrets/firefly_access_token) &&
-      echo '0 3 * * * docker exec \$$(docker ps --filter \"label=com.docker.swarm.service.name=firefly_firefly\" --format \"{{.Names}}\") php artisan firefly-iii:cron' > /tmp/crontab &&
-      echo '40 2 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer '$$FIREFLY_ACCESS_TOKEN'\" http://firefly-importer:8080/autoimport?directory=/var/www/html/import\\&secret='$$AUTO_IMPORT_SECRET >> /tmp/crontab &&
+      echo '0 6 * * * docker exec \$$(docker ps --filter \"label=com.docker.swarm.service.name=firefly_firefly\" --format \"{{.Names}}\") php artisan firefly-iii:cron' > /tmp/crontab &&
+      echo '0 6 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer '$$FIREFLY_ACCESS_TOKEN'\" http://firefly-importer:8080/autoimport?directory=/var/www/html/import\\&secret='$$AUTO_IMPORT_SECRET >> /tmp/crontab &&
       crontab /tmp/crontab &&
       rm /tmp/crontab &&
       echo 'Cron jobs configured:' &&
@@ -258,25 +263,15 @@ services:
     networks:
       - firefly_network
     labels:
-      - "stack=firefly"
-    security_opt:
-      - no-new-privileges:true
+      <<: *labels-base
+      com.giocaizzi.service: "firefly-cron"
+      com.giocaizzi.component: "scheduler"
+      com.giocaizzi.tier: "extra"
+    <<: *security-base
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      <<: *logging-base
 
   pico:
     image: cioraneanu/firefly-pico:latest
@@ -314,25 +309,15 @@ services:
       retries: 5
       start_period: 120s
     labels:
-      - "stack=firefly"
-    security_opt:
-      - no-new-privileges:true
+      <<: *labels-base
+      com.giocaizzi.service: "firefly-pico"
+      com.giocaizzi.component: "frontend"
+      com.giocaizzi.tier: "extra"
+    <<: *security-base
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      <<: *logging-base
 
   pico-db:
     image: postgres:16-alpine
@@ -354,25 +339,15 @@ services:
       retries: 6
       start_period: 60s
     labels:
-      - "stack=firefly"
-    security_opt:
-      - no-new-privileges:true
+      <<: *labels-base
+      com.giocaizzi.service: "firefly-pico-db"
+      com.giocaizzi.component: "database"
+      com.giocaizzi.tier: "extra"
+    <<: *security-base
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      <<: *logging-base
 
 volumes:
   firefly_upload:

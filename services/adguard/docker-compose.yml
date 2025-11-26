@@ -1,3 +1,35 @@
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "adguard"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
+# =============================================================================
+# Networks
+# =============================================================================
 networks:
   # Private network for adguard stack
   adguard_network:
@@ -9,6 +41,9 @@ networks:
     external: true
     name: rp5_public
 
+# =============================================================================
+# Services
+# =============================================================================
 services:
   adguard:
     image: adguard/adguardhome:latest
@@ -44,25 +79,15 @@ services:
       retries: 3
       start_period: 30s
     labels:
-      - "stack=adguard"
-    security_opt:
-      - no-new-privileges:true
+      <<: *labels-base
+      com.giocaizzi.service: "adguard"
+      com.giocaizzi.component: "dns"
+      com.giocaizzi.tier: "core"
+    <<: *security-base
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      <<: *logging-base
 
 volumes:
   adguard_work:

@@ -1,7 +1,3 @@
 *.env
 *.pem
 *.log
-
-# Backup secrets (real files only, examples removed)
-infra/backup/secrets/restic_password.txt
-infra/backup/secrets/gcp_service_account.json

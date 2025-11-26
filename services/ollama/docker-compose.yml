@@ -1,3 +1,25 @@
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "ollama"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+# =============================================================================
+# Networks
+# =============================================================================
 networks:
   # Private network for ollama stack
   ollama_network:
@@ -9,6 +31,9 @@ networks:
     external: true
     name: rp5_public
 
+# =============================================================================
+# Services
+# =============================================================================
 services:
   ollama:
     image: ollama/ollama:latest
@@ -40,7 +65,10 @@ services:
       retries: 5
       start_period: 120s  # Allow more time for model loading
     labels:
-      - "stack=ollama"
+      <<: *labels-base
+      com.giocaizzi.service: "ollama"
+      com.giocaizzi.component: "ai"
+      com.giocaizzi.tier: "core"
     security_opt:
       - no-new-privileges:true
       - seccomp:unconfined  # Required for some AI operations
@@ -48,16 +76,7 @@ services:
     # devices:
     #   - /dev/dri:/dev/dri  # For Intel GPU acceleration
     deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: any
-        delay: 5s
-        max_attempts: 3
-        window: 120s
+      <<: *deploy-base
     tmpfs:
       - /tmp:size=1G,noexec,nosuid,nodev
     ulimits:

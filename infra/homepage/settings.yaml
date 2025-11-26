@@ -21,6 +21,10 @@ layout:
     style: row
     columns: 3
     icon: mdi-currency-usd
+  Observability:
+    style: row
+    columns: 3
+    icon: mdi-chart-timeline
   Infrastructure:
     style: row
     columns: 3
