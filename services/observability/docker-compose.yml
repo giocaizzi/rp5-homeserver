@@ -66,12 +66,12 @@ secrets:
   grafana_admin_password:
     external: true
     name: observability_grafana_admin_password
-  langfuse_public_key:
-    external: true
-    name: observability_langfuse_public_key
-  langfuse_secret_key:
-    external: true
-    name: observability_langfuse_secret_key
+  # langfuse_public_key:
+  #   external: true
+  #   name: observability_langfuse_public_key
+  # langfuse_secret_key:
+  #   external: true
+  #   name: observability_langfuse_secret_key
 
 # =============================================================================
 # Services
@@ -137,12 +137,8 @@ services:
     user: "root"
     networks:
       - observability_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3100/ready"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+    # Note: Loki uses scratch-based image without wget/curl, healthcheck disabled
+    # Docker Swarm restart policy handles recovery
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -173,12 +169,8 @@ services:
     command: -config.file=/etc/tempo/tempo-config.yaml
     networks:
       - observability_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3200/ready"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+    # Note: Tempo uses scratch-based image without wget/curl, healthcheck disabled
+    # Docker Swarm restart policy handles recovery
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -214,18 +206,14 @@ services:
       - /etc/alloy/config.alloy
     environment:
       - DEPLOYMENT_ENV=production
-    secrets:
-      - langfuse_public_key
-      - langfuse_secret_key
+    # secrets:
+    #   - langfuse_public_key
+    #   - langfuse_secret_key
     networks:
       - observability_network
       - public_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:12345/-/ready"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+    # Note: Alloy Debian-based image lacks wget, healthcheck disabled
+    # Docker Swarm restart policy handles recovery
     <<: *security-base
     deploy:
       <<: *deploy-base
