@@ -61,21 +61,47 @@ Unified labeling across all data pipelines for consistent querying and correlati
 Labels are applied in hierarchical order from broadest to most specific:
 
 ```
-namespace → service → component → tier → env
+namespace → service → component → role → tier → env
 ```
 
 | Order | Label | Description | Example Values |
 |-------|-------|-------------|----------------|
 | 1 | `namespace` | Stack/project grouping | `infra`, `firefly`, `n8n`, `observability` |
 | 2 | `service` | Service identifier | `nginx`, `prometheus`, `firefly` |
-| 3 | `component` | Logical function | `proxy`, `database`, `backend`, `collector` |
-| 4 | `tier` | Required (core) or optional (extra) | `core`, `extra` |
-| 5 | `env` | Deployment environment | `production` |
+| 3 | `component` | Architectural category | `app`, `data`, `gateway`, `observability` |
+| 4 | `role` | Specific function | `backend`, `database`, `proxy`, `metrics` |
+| 5 | `tier` | Criticality | `core`, `extra` |
+| 6 | `env` | Deployment environment | `production` |
 
 ### Tier Values
 
-- **`core`** - Required services for stack functionality (e.g., database, main backend, proxy)
-- **`extra`** - Optional/enhancement services (e.g., dashboards, importers, schedulers)
+| Value | Description |
+|-------|-------------|
+| `core` | Essential services for stack functionality |
+| `extra` | Optional/enhancement services |
+
+### Component Values (standardized)
+
+| Value | Description |
+|-------|-------------|
+| `app` | Application servers, APIs, web UIs, backends |
+| `data` | Databases (postgres, mysql, mariadb, clickhouse) |
+| `storage` | Object/file storage (minio, s3) |
+| `cache` | Caching layers (redis, valkey) |
+| `worker` | Background processors, schedulers |
+| `gateway` | Reverse proxies, load balancers, tunnels |
+| `network` | DNS, DHCP, networking services |
+| `observability` | Monitoring, logging, tracing, metrics |
+
+### Role Values (free-form)
+
+Specific function within the component. Examples:
+- `backend`, `frontend`, `web`, `api`
+- `database`, `analytics`
+- `proxy`, `tunnel`
+- `metrics`, `logs`, `traces`, `collector`
+- `scheduler`, `importer`, `processor`
+- `dns`, `dashboard`, `management`
 
 ### Full Label Reference
 
@@ -83,7 +109,8 @@ namespace → service → component → tier → env
 |-------|-------------|--------------|----------------|
 | `namespace` | Stack/project grouping | `com.giocaizzi.namespace` | - |
 | `service_name` | Service identifier | `com.giocaizzi.service` | `service.name` |
-| `component` | Logical component | `com.giocaizzi.component` | - |
+| `component` | Architectural category | `com.giocaizzi.component` | - |
+| `role` | Specific function | `com.giocaizzi.role` | - |
 | `tier` | Service tier (core/extra) | `com.giocaizzi.tier` | - |
 | `environment` | Deployment environment | `com.giocaizzi.env` | `deployment.environment` |
 | `version` | Service version | `com.giocaizzi.version` | `service.version` |

@@ -130,6 +130,7 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "langfuse-minio"
       com.giocaizzi.component: "storage"
+      com.giocaizzi.role: "object-storage"
       com.giocaizzi.tier: "core"
     entrypoint: sh
     command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
@@ -167,7 +168,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "langfuse-clickhouse"
-      com.giocaizzi.component: "database"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.role: "analytics"
       com.giocaizzi.tier: "core"
     user: "101:101"
     environment:
@@ -206,7 +208,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "langfuse-db"
-      com.giocaizzi.component: "database"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.role: "database"
       com.giocaizzi.tier: "core"
     environment:
       POSTGRES_DB: "langfuse"
@@ -245,6 +248,7 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "langfuse-redis"
       com.giocaizzi.component: "cache"
+      com.giocaizzi.role: "cache"
       com.giocaizzi.tier: "core"
     command: redis-server --requirepass langfuseredis
     expose:
@@ -276,6 +280,7 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "langfuse-worker"
       com.giocaizzi.component: "worker"
+      com.giocaizzi.role: "processor"
       com.giocaizzi.tier: "core"
     environment:
       <<: *langfuse-env
@@ -312,7 +317,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "langfuse"
-      com.giocaizzi.component: "web"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.role: "web"
       com.giocaizzi.tier: "core"
     environment:
       <<: *langfuse-env

@@ -1,0 +1,56 @@
+// Batch processor for efficiency
+otelcol.processor.batch "default" {
+  timeout         = "5s"
+  send_batch_size = 100
+
+  output {
+    metrics = [otelcol.processor.attributes.default.input]
+    logs    = [otelcol.processor.attributes.default.input]
+    traces  = [otelcol.processor.attributes.default.input]
+  }
+}
+
+// Normalize attributes for OTEL semantic conventions
+otelcol.processor.attributes "default" {
+  // Add source identifier for OTEL pipeline
+  action {
+    key    = "source"
+    value  = "otel"
+    action = "insert"
+  }
+
+  // Default tier for OTEL data
+  action {
+    key    = "tier"
+    value  = "core"
+    action = "insert"
+  }
+
+  // Default namespace for OTEL data (external apps)
+  action {
+    key    = "namespace"
+    value  = "external"
+    action = "insert"
+  }
+
+  // Default environment
+  action {
+    key    = "environment"
+    value  = "production"
+    action = "insert"
+  }
+
+  // Map deployment.environment.name to environment (overrides default if present)
+  action {
+    key            = "environment"
+    from_attribute = "deployment.environment.name"
+    action         = "upsert"
+  }
+
+  output {
+    metrics = [otelcol.exporter.prometheus.default.input]
+    logs    = [otelcol.exporter.loki.default.input]
+    traces  = [otelcol.exporter.otlp.tempo.input]
+    // To enable Langfuse, add: otelcol.exporter.otlphttp.langfuse.input
+  }
+}

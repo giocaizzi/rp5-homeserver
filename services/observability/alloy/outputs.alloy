@@ -1,0 +1,24 @@
+// Prometheus Remote Write
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+
+    queue_config {
+      capacity             = 5000
+      max_shards           = 3
+      min_shards           = 1
+      max_samples_per_send = 500
+      batch_send_deadline  = "5s"
+      min_backoff          = "1s"
+      max_backoff          = "30s"
+      retry_on_http_429    = true
+    }
+  }
+}
+
+// Loki Log Write
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
