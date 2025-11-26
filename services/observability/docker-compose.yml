@@ -42,7 +42,8 @@ networks:
   # Internal observability network
   observability_network:
     driver: overlay
-    attachable: true
+    name: rp5_observability
+    
 
 # =============================================================================
 # Volumes
