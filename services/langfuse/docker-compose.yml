@@ -289,7 +289,7 @@ services:
       - |
         export SALT=$$(cat /run/secrets/langfuse_salt)
         export ENCRYPTION_KEY=$$(cat /run/secrets/langfuse_encryption_key)
-        exec node ./node_modules/.bin/prisma migrate deploy --schema=./packages/shared/prisma/schema.prisma && node ./apps/worker/dist/index.js
+        exec dumb-init -- ./worker/entrypoint.sh node worker/dist/index.js
     expose:
       - "3030"
     networks:
@@ -343,7 +343,7 @@ services:
         export LANGFUSE_INIT_USER_PASSWORD=$$(cat /run/secrets/langfuse_admin_password)
         export LANGFUSE_INIT_PROJECT_PUBLIC_KEY=$$(cat /run/secrets/langfuse_public_key)
         export LANGFUSE_INIT_PROJECT_SECRET_KEY=$$(cat /run/secrets/langfuse_secret_key)
-        exec node server.js
+        exec dumb-init -- ./web/entrypoint.sh node ./web/server.js --keepAliveTimeout 110000
     expose:
       - "3000"
     networks:
