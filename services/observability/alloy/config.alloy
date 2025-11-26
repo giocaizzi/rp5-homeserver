@@ -104,7 +104,7 @@ otelcol.processor.attributes "default" {
     logs    = [otelcol.exporter.loki.default.input]
     traces  = [
       otelcol.exporter.otlp.tempo.input,
-      otelcol.exporter.otlphttp.langfuse.input,
+      // otelcol.exporter.otlphttp.langfuse.input,
     ]
   }
 }
@@ -146,47 +146,46 @@ otelcol.exporter.otlp "tempo" {
   }
 }
 
-// ========================================
-// Langfuse Export
-// ========================================
+// // ========================================
+// // Langfuse Export
+// // ========================================
 
-// Export traces to Langfuse via OTLP HTTP
-otelcol.exporter.otlphttp "langfuse" {
-  client {
-    endpoint = "http://langfuse:3000"
-    tls {
-      insecure = true
-    }
-    headers = {
-      "authorization" = "Basic " + encoding.base64(
-        local.file.langfuse_public_key.content + ":" + local.file.langfuse_secret_key.content
-      ),
-    }
-  }
+// // Langfuse secrets
+// local.file "langfuse_public_key" {
+//   filename  = "/run/secrets/langfuse_public_key"
+//   is_secret = true
+// }
 
-  retry_on_failure {
-    enabled          = true
-    initial_interval = "5s"
-    max_interval     = "30s"
-    max_elapsed_time = "5m"
-  }
+// local.file "langfuse_secret_key" {
+//   filename  = "/run/secrets/langfuse_secret_key"
+//   is_secret = true
+// }
 
-  sending_queue {
-    enabled       = true
-    num_consumers = 2
-    queue_size    = 500
-  }
-}
+// // Export traces to Langfuse via OTLP HTTP
+// otelcol.exporter.otlphttp "langfuse" {
+//   client {
+//     endpoint = "http://langfuse:3000"
+//     tls {
+//       insecure = true
+//     }
+//     headers = {
+//       "authorization" = "Basic " + encoding.base64(string.join([local.file.langfuse_public_key.content, local.file.langfuse_secret_key.content], ":")),
+//     }
+//   }
+//
+//   retry_on_failure {
+//     enabled          = true
+//     initial_interval = "5s"
+//     max_interval     = "30s"
+//     max_elapsed_time = "5m"
+//   }
 
-local.file "langfuse_public_key" {
-  filename  = "/run/secrets/langfuse_public_key"
-  is_secret = true
-}
-
-local.file "langfuse_secret_key" {
-  filename  = "/run/secrets/langfuse_secret_key"
-  is_secret = true
-}
+//   sending_queue {
+//     enabled       = true
+//     num_consumers = 2
+//     queue_size    = 500
+//   }
+// }
 
 // ========================================
 // Prometheus Remote Write
@@ -216,11 +215,7 @@ prometheus.remote_write "default" {
 loki.write "default" {
   endpoint {
     url = "http://loki:3100/loki/api/v1/push"
-
-    retry_on_http_429 = true
-    min_backoff       = "1s"
-    max_backoff       = "30s"
-    max_backoff_retries = 10
+    // Retry defaults: min_backoff_period=500ms, max_backoff_period=5m, max_backoff_retries=10
   }
 }
 
