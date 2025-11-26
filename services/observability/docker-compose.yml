@@ -66,12 +66,12 @@ secrets:
   grafana_admin_password:
     external: true
     name: observability_grafana_admin_password
-  langfuse_public_key:
-    external: true
-    name: observability_langfuse_public_key
-  langfuse_secret_key:
-    external: true
-    name: observability_langfuse_secret_key
+  # langfuse_public_key:
+  #   external: true
+  #   name: observability_langfuse_public_key
+  # langfuse_secret_key:
+  #   external: true
+  #   name: observability_langfuse_secret_key
 
 # =============================================================================
 # Services
@@ -214,9 +214,9 @@ services:
       - /etc/alloy/config.alloy
     environment:
       - DEPLOYMENT_ENV=production
-    secrets:
-      - langfuse_public_key
-      - langfuse_secret_key
+    # secrets:
+    #   - langfuse_public_key
+    #   - langfuse_secret_key
     networks:
       - observability_network
       - public_network

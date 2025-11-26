@@ -104,7 +104,7 @@ otelcol.processor.attributes "default" {
     logs    = [otelcol.exporter.loki.default.input]
     traces  = [
       otelcol.exporter.otlp.tempo.input,
-      otelcol.exporter.otlphttp.langfuse.input,
+      // otelcol.exporter.otlphttp.langfuse.input,
     ]
   }
 }
@@ -146,46 +146,46 @@ otelcol.exporter.otlp "tempo" {
   }
 }
 
-// ========================================
-// Langfuse Export
-// ========================================
+// // ========================================
+// // Langfuse Export
+// // ========================================
 
-// Langfuse secrets
-local.file "langfuse_public_key" {
-  filename  = "/run/secrets/langfuse_public_key"
-  is_secret = true
-}
+// // Langfuse secrets
+// local.file "langfuse_public_key" {
+//   filename  = "/run/secrets/langfuse_public_key"
+//   is_secret = true
+// }
 
-local.file "langfuse_secret_key" {
-  filename  = "/run/secrets/langfuse_secret_key"
-  is_secret = true
-}
+// local.file "langfuse_secret_key" {
+//   filename  = "/run/secrets/langfuse_secret_key"
+//   is_secret = true
+// }
 
-// Export traces to Langfuse via OTLP HTTP
-otelcol.exporter.otlphttp "langfuse" {
-  client {
-    endpoint = "http://langfuse:3000"
-    tls {
-      insecure = true
-    }
-    headers = {
-      "authorization" = "Basic " + encoding.base64(string.join([local.file.langfuse_public_key.content, local.file.langfuse_secret_key.content], ":")),
-    }
-  }
+// // Export traces to Langfuse via OTLP HTTP
+// otelcol.exporter.otlphttp "langfuse" {
+//   client {
+//     endpoint = "http://langfuse:3000"
+//     tls {
+//       insecure = true
+//     }
+//     headers = {
+//       "authorization" = "Basic " + encoding.base64(string.join([local.file.langfuse_public_key.content, local.file.langfuse_secret_key.content], ":")),
+//     }
+//   }
+//
+//   retry_on_failure {
+//     enabled          = true
+//     initial_interval = "5s"
+//     max_interval     = "30s"
+//     max_elapsed_time = "5m"
+//   }
 
-  retry_on_failure {
-    enabled          = true
-    initial_interval = "5s"
-    max_interval     = "30s"
-    max_elapsed_time = "5m"
-  }
-
-  sending_queue {
-    enabled       = true
-    num_consumers = 2
-    queue_size    = 500
-  }
-}
+//   sending_queue {
+//     enabled       = true
+//     num_consumers = 2
+//     queue_size    = 500
+//   }
+// }
 
 // ========================================
 // Prometheus Remote Write
