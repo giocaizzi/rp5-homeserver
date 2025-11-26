@@ -287,8 +287,8 @@ services:
       - /bin/sh
       - -c
       - |
-        export SALT=$(cat /run/secrets/langfuse_salt)
-        export ENCRYPTION_KEY=$(cat /run/secrets/langfuse_encryption_key)
+        export SALT=$$(cat /run/secrets/langfuse_salt)
+        export ENCRYPTION_KEY=$$(cat /run/secrets/langfuse_encryption_key)
         exec node ./node_modules/.bin/prisma migrate deploy --schema=./packages/shared/prisma/schema.prisma && node ./apps/worker/dist/index.js
     expose:
       - "3030"
@@ -337,12 +337,12 @@ services:
       - /bin/sh
       - -c
       - |
-        export SALT=$(cat /run/secrets/langfuse_salt)
-        export ENCRYPTION_KEY=$(cat /run/secrets/langfuse_encryption_key)
-        export NEXTAUTH_SECRET=$(cat /run/secrets/langfuse_nextauth_secret)
-        export LANGFUSE_INIT_USER_PASSWORD=$(cat /run/secrets/langfuse_admin_password)
-        export LANGFUSE_INIT_PROJECT_PUBLIC_KEY=$(cat /run/secrets/langfuse_public_key)
-        export LANGFUSE_INIT_PROJECT_SECRET_KEY=$(cat /run/secrets/langfuse_secret_key)
+        export SALT=$$(cat /run/secrets/langfuse_salt)
+        export ENCRYPTION_KEY=$$(cat /run/secrets/langfuse_encryption_key)
+        export NEXTAUTH_SECRET=$$(cat /run/secrets/langfuse_nextauth_secret)
+        export LANGFUSE_INIT_USER_PASSWORD=$$(cat /run/secrets/langfuse_admin_password)
+        export LANGFUSE_INIT_PROJECT_PUBLIC_KEY=$$(cat /run/secrets/langfuse_public_key)
+        export LANGFUSE_INIT_PROJECT_SECRET_KEY=$$(cat /run/secrets/langfuse_secret_key)
         exec node server.js
     expose:
       - "3000"
