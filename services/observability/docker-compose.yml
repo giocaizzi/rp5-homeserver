@@ -60,15 +60,18 @@ volumes:
     driver: local
 
 # =============================================================================
-# Secrets
+# Secrets (external - create on Pi before deployment)
 # =============================================================================
 secrets:
   grafana_admin_password:
-    file: ./secrets/grafana_admin_password.txt
+    external: true
+    name: observability_grafana_admin_password
   langfuse_public_key:
-    file: ./secrets/langfuse_public_key.txt
+    external: true
+    name: observability_langfuse_public_key
   langfuse_secret_key:
-    file: ./secrets/langfuse_secret_key.txt
+    external: true
+    name: observability_langfuse_secret_key
 
 # =============================================================================
 # Services
