@@ -215,11 +215,7 @@ prometheus.remote_write "default" {
 loki.write "default" {
   endpoint {
     url = "http://loki:3100/loki/api/v1/push"
-
-    retry_on_http_429 = true
-    min_backoff       = "1s"
-    max_backoff       = "30s"
-    max_backoff_retries = 10
+    // Retry defaults: min_backoff_period=500ms, max_backoff_period=5m, max_backoff_retries=10
   }
 }
 
