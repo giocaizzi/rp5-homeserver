@@ -89,13 +89,27 @@ For each service in the `services/` directory:
    - **Deploy Mode:** Select "Swarm" (not "Standalone")
    - Authentication: Configure if private repo
 
-4. **Enable GitOps Updates:**
+4. **Enable Relative Path Volumes:**
+   - Toggle **Enable relative path volumes** ON
+   - **Network filesystem path:** `/mnt/stacks/{service}` (unique per stack)
+   
+   > **Important:** Each stack needs a unique path. Using the same path for multiple stacks causes conflicts when Portainer clones the repository.
+
+   | Stack | Network filesystem path |
+   |-------|------------------------|
+   | observability | `/mnt/stacks/observability` |
+   | firefly | `/mnt/stacks/firefly` |
+   | n8n | `/mnt/stacks/n8n` |
+   | adguard | `/mnt/stacks/adguard` |
+   | ollama | `/mnt/stacks/ollama` |
+
+5. **Enable GitOps Updates:**
    - Toggle **GitOps updates** ON
    - **Mechanism:** Select "Webhook"
    - **Webhook URL:** Copy the generated URL
 
-5. **Set Environment Variables** (if needed)
-6. **Deploy the Stack** (will create a Docker Swarm stack)
+6. **Set Environment Variables** (if needed)
+7. **Deploy the Stack** (will create a Docker Swarm stack)
 
 ### 3. Configure GitHub Webhooks
 
