@@ -70,6 +70,7 @@ Raspberry Pi 5 (8GB) acting as a home server.
 3. Prefer built-in Swarm secrets for credentials.
 4. Use named overlay networks only when inter-service communication is required.
 5. Keep services reproducible—no host-specific paths except standardized mount locations under `/home/pi/`.
+6. When re-writing entrypoints to use secrets files, ensure the original entrypoint is preserved and called correctly.
 
 ### Deployment Process
 
