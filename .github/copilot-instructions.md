@@ -31,7 +31,7 @@ Raspberry Pi 5 (8GB) acting as a home server.
 
 - ARM64 Debian/Raspberry Pi OS.
 - Single-node **Docker Swarm**.
-- **Portainer** for remote Stack deployment.
+- **Portainer** for remote Stack deployment of all services except infrastructure.
 - `infra/` deployed manually via SSH from macOS to `/home/giorgiocaizzi/infra/` on Pi.
 - All other services deployed via Portainer Stacks (remote repo).
 - Source editing occurs on macOS, connected via SSH: `giorgiocaizzi@pi.local`.
