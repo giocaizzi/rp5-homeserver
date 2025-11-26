@@ -67,7 +67,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "ollama"
-      com.giocaizzi.component: "ai"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.role: "ai"
       com.giocaizzi.tier: "core"
     security_opt:
       - no-new-privileges:true

@@ -79,6 +79,40 @@ secrets:
 # =============================================================================
 services:
   # ========================================
+  # cAdvisor - Container Metrics Exporter
+  # ========================================
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    hostname: cadvisor
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "cadvisor"
+      com.giocaizzi.component: "observability"
+      com.giocaizzi.role: "metrics"
+      com.giocaizzi.tier: "core"
+    expose:
+      - "8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    # Ignored by Swarm - requires privileged mode
+    # privileged: true
+    # devices:
+    #   - /dev/kmsg
+    networks:
+      - observability_network
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      <<: *logging-base
+
+  # ========================================
   # Prometheus - Metrics Storage
   # ========================================
   prometheus:
@@ -87,7 +121,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "prometheus"
-      com.giocaizzi.component: "metrics"
+      com.giocaizzi.component: "observability"
+      com.giocaizzi.role: "metrics"
       com.giocaizzi.tier: "core"
     expose:
       - "9090"
@@ -127,7 +162,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "loki"
-      com.giocaizzi.component: "logs"
+      com.giocaizzi.component: "observability"
+      com.giocaizzi.role: "logs"
       com.giocaizzi.tier: "core"
     expose:
       - "3100"
@@ -158,7 +194,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "tempo"
-      com.giocaizzi.component: "traces"
+      com.giocaizzi.component: "observability"
+      com.giocaizzi.role: "traces"
       com.giocaizzi.tier: "core"
     expose:
       - "3200"  # Tempo HTTP
@@ -190,21 +227,22 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "alloy"
-      com.giocaizzi.component: "collector"
+      com.giocaizzi.component: "observability"
+      com.giocaizzi.role: "collector"
       com.giocaizzi.tier: "core"
     expose:
       - "12345" # Alloy metrics
       - "4317"  # OTLP gRPC
       - "4318"  # OTLP HTTP
     volumes:
-      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./alloy:/etc/alloy:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - alloy_data:/var/lib/alloy/data
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
       - --storage.path=/var/lib/alloy/data
-      - /etc/alloy/config.alloy
+      - /etc/alloy/
     environment:
       - DEPLOYMENT_ENV=production
     # secrets:
@@ -233,7 +271,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "grafana"
-      com.giocaizzi.component: "dashboards"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.role: "dashboards"
       com.giocaizzi.tier: "core"
     expose:
       - "3000"

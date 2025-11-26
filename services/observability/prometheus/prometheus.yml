@@ -15,11 +15,8 @@ global:
 rule_files:
   # - "alerts/*.yml"
 
-scrape_configs:
-  # All metrics flow through Alloy (OpenTelemetry collector):
-  # - App metrics: OTLP receiver -> Alloy -> Prometheus remote_write
-  # - Redis metrics: redis-exporter -> Alloy scraper -> Prometheus remote_write  
-  # - Nginx metrics: nginx-exporter -> Alloy scraper -> Prometheus remote_write
+scrape_configs: []
+  # All metrics flow through Alloy (OpenTelemetry collector).
   # This ensures consistent processing, labeling, and observability pipeline
 
 # Remote write configuration for long-term storage (optional)

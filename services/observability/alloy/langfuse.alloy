@@ -1,0 +1,43 @@
+// Langfuse OTLP Export
+// To enable:
+// 1. Create secrets: observability_langfuse_public_key, observability_langfuse_secret_key
+// 2. Uncomment secrets in docker-compose.yml (secrets section + alloy service secrets)
+// 3. Uncomment all blocks below
+// 4. Add otelcol.exporter.otlphttp.langfuse.input to traces output in otel-processors.alloy
+
+// // Langfuse secrets
+// local.file "langfuse_public_key" {
+//   filename  = "/run/secrets/langfuse_public_key"
+//   is_secret = true
+// }
+
+// local.file "langfuse_secret_key" {
+//   filename  = "/run/secrets/langfuse_secret_key"
+//   is_secret = true
+// }
+
+// // Export traces to Langfuse via OTLP HTTP
+// otelcol.exporter.otlphttp "langfuse" {
+//   client {
+//     endpoint = "http://langfuse:3000"
+//     tls {
+//       insecure = true
+//     }
+//     headers = {
+//       "authorization" = "Basic " + encoding.base64(string.join([local.file.langfuse_public_key.content, local.file.langfuse_secret_key.content], ":")),
+//     }
+//   }
+
+//   retry_on_failure {
+//     enabled          = true
+//     initial_interval = "5s"
+//     max_interval     = "30s"
+//     max_elapsed_time = "5m"
+//   }
+
+//   sending_queue {
+//     enabled       = true
+//     num_consumers = 2
+//     queue_size    = 500
+//   }
+// }

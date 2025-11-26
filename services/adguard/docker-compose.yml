@@ -81,7 +81,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "adguard"
-      com.giocaizzi.component: "dns"
+      com.giocaizzi.component: "network"
+      com.giocaizzi.role: "dns"
       com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
