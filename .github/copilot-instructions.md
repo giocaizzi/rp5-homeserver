@@ -54,7 +54,7 @@ Raspberry Pi 5 (8GB) acting as a home server.
 - Follow Docker Swarm best practices while keeping deployment simple and predictable.
 - Maintain clear structure between:
   - `infra/` → manually deployed Swarm stacks via SSH
-  - `services/` → Portainer-managed Stacks, never manually deployed.
+  - `services/` → Portainer-managed Stacks, never manually deployed or update via commands. ALWAYS via Portainer Remote Stack.
 ---
 
 # Guidelines
