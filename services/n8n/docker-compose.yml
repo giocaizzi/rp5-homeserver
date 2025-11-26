@@ -92,7 +92,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "n8n-db"
-      com.giocaizzi.component: "database"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.role: "database"
       com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
@@ -173,7 +174,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "n8n"
-      com.giocaizzi.component: "automation"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.role: "automation"
       com.giocaizzi.tier: "core"
     <<: *security-base
     user: "1000:1000"

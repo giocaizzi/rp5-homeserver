@@ -72,7 +72,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "nginx"
-      com.giocaizzi.component: "proxy"
+      com.giocaizzi.component: "gateway"
+      com.giocaizzi.role: "proxy"
       com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
@@ -97,7 +98,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "portainer"
-      com.giocaizzi.component: "management"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.role: "management"
       com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
@@ -124,7 +126,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "cloudflared"
-      com.giocaizzi.component: "tunnel"
+      com.giocaizzi.component: "gateway"
+      com.giocaizzi.role: "tunnel"
       com.giocaizzi.tier: "core"
     <<: *security-base
     read_only: true
@@ -168,7 +171,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "netdata"
-      com.giocaizzi.component: "monitoring"
+      com.giocaizzi.component: "observability"
+      com.giocaizzi.role: "monitoring"
       com.giocaizzi.tier: "core"
     deploy:
       <<: *deploy-base
@@ -202,7 +206,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "backrest"
-      com.giocaizzi.component: "backup"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.role: "backup"
       com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
@@ -265,7 +270,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "homepage"
-      com.giocaizzi.component: "dashboard"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.role: "dashboard"
       com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:

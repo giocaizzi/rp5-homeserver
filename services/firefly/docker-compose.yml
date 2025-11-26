@@ -119,7 +119,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "firefly"
-      com.giocaizzi.component: "backend"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.role: "backend"
       com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
@@ -152,7 +153,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "firefly-db"
-      com.giocaizzi.component: "database"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.role: "database"
       com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
@@ -224,7 +226,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "firefly-importer"
-      com.giocaizzi.component: "importer"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.role: "importer"
       com.giocaizzi.tier: "extra"
     <<: *security-base
     deploy:
@@ -265,7 +268,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "firefly-cron"
-      com.giocaizzi.component: "scheduler"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.role: "scheduler"
       com.giocaizzi.tier: "extra"
     <<: *security-base
     deploy:
@@ -311,7 +315,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "firefly-pico"
-      com.giocaizzi.component: "frontend"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.role: "frontend"
       com.giocaizzi.tier: "extra"
     <<: *security-base
     deploy:
@@ -341,7 +346,8 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "firefly-pico-db"
-      com.giocaizzi.component: "database"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.role: "database"
       com.giocaizzi.tier: "extra"
     <<: *security-base
     deploy:
