@@ -1,0 +1,365 @@
+# Langfuse - LLM Observability and Tracing Platform
+# Deployed via Portainer using remote repository feature
+# https://langfuse.com/docs/deployment/self-host
+
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "langfuse"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
+# Shared Langfuse environment variables
+x-langfuse-env: &langfuse-env
+  # Database
+  DATABASE_URL: "postgresql://langfuse:langfuse@langfuse-db:5432/langfuse"
+  # ClickHouse
+  CLICKHOUSE_MIGRATION_URL: "clickhouse://clickhouse:9000"
+  CLICKHOUSE_URL: "http://clickhouse:8123"
+  CLICKHOUSE_USER: "clickhouse"
+  CLICKHOUSE_PASSWORD: "clickhouse"
+  CLICKHOUSE_CLUSTER_ENABLED: "false"
+  # S3 (MinIO)
+  LANGFUSE_S3_EVENT_UPLOAD_BUCKET: "langfuse"
+  LANGFUSE_S3_EVENT_UPLOAD_REGION: "auto"
+  LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: "minio"
+  LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: "miniosecret"
+  LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: "http://minio:9000"
+  LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+  LANGFUSE_S3_EVENT_UPLOAD_PREFIX: "events/"
+  LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: "langfuse"
+  LANGFUSE_S3_MEDIA_UPLOAD_REGION: "auto"
+  LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: "minio"
+  LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: "miniosecret"
+  LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: "http://minio:9000"
+  LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: "true"
+  LANGFUSE_S3_MEDIA_UPLOAD_PREFIX: "media/"
+  LANGFUSE_S3_BATCH_EXPORT_ENABLED: "false"
+  # Redis
+  REDIS_HOST: "langfuse-redis"
+  REDIS_PORT: "6379"
+  REDIS_AUTH: "langfuseredis"
+  REDIS_TLS_ENABLED: "false"
+  # General
+  TELEMETRY_ENABLED: "false"
+  LANGFUSE_ENABLE_EXPERIMENTAL_FEATURES: "true"
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  # Private network for langfuse stack
+  langfuse_network:
+    driver: overlay
+    name: rp5_langfuse
+
+  # External network to connect to nginx proxy
+  public_network:
+    external: true
+    name: rp5_public
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  langfuse_db:
+    driver: local
+  minio_data:
+    driver: local
+  clickhouse_data:
+    driver: local
+  clickhouse_logs:
+    driver: local
+
+# =============================================================================
+# Secrets (external - create on Pi before deployment)
+# =============================================================================
+secrets:
+  langfuse_salt:
+    external: true
+    name: langfuse_salt
+  langfuse_encryption_key:
+    external: true
+    name: langfuse_encryption_key
+  langfuse_nextauth_secret:
+    external: true
+    name: langfuse_nextauth_secret
+  langfuse_admin_password:
+    external: true
+    name: langfuse_admin_password
+  langfuse_public_key:
+    external: true
+    name: langfuse_public_key
+  langfuse_secret_key:
+    external: true
+    name: langfuse_secret_key
+
+# =============================================================================
+# Services
+# =============================================================================
+services:
+  # ========================================
+  # MinIO - S3-compatible object storage
+  # ========================================
+  minio:
+    image: minio/minio:latest
+    hostname: minio
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "langfuse-minio"
+      com.giocaizzi.component: "storage"
+      com.giocaizzi.tier: "core"
+    entrypoint: sh
+    command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
+    environment:
+      MINIO_ROOT_USER: "minio"
+      MINIO_ROOT_PASSWORD: "miniosecret"
+    expose:
+      - "9000"  # S3 API
+      - "9001"  # Console
+    volumes:
+      - minio_data:/data
+    networks:
+      - langfuse_network
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # ClickHouse - OLAP database
+  # ========================================
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    hostname: clickhouse
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "langfuse-clickhouse"
+      com.giocaizzi.component: "database"
+      com.giocaizzi.tier: "core"
+    user: "101:101"
+    environment:
+      CLICKHOUSE_DB: "default"
+      CLICKHOUSE_USER: "clickhouse"
+      CLICKHOUSE_PASSWORD: "clickhouse"
+    expose:
+      - "8123"  # HTTP interface
+      - "9000"  # Native protocol
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+    networks:
+      - langfuse_network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # PostgreSQL - Primary database
+  # ========================================
+  langfuse-db:
+    image: postgres:16-alpine
+    hostname: langfuse-db
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "langfuse-db"
+      com.giocaizzi.component: "database"
+      com.giocaizzi.tier: "core"
+    environment:
+      POSTGRES_DB: "langfuse"
+      POSTGRES_USER: "langfuse"
+      POSTGRES_PASSWORD: "langfuse"
+      TZ: "Europe/Rome"
+      PGTZ: "Europe/Rome"
+    expose:
+      - "5432"
+    volumes:
+      - langfuse_db:/var/lib/postgresql/data
+    networks:
+      - langfuse_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse -d langfuse"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # Redis - Cache and queues
+  # ========================================
+  langfuse-redis:
+    image: redis:7-alpine
+    hostname: langfuse-redis
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "langfuse-redis"
+      com.giocaizzi.component: "cache"
+      com.giocaizzi.tier: "core"
+    command: redis-server --requirepass langfuseredis
+    expose:
+      - "6379"
+    networks:
+      - langfuse_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "langfuseredis", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # Langfuse Worker - Async event processing
+  # ========================================
+  langfuse-worker:
+    image: langfuse/langfuse-worker:latest
+    hostname: langfuse-worker
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "langfuse-worker"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.tier: "core"
+    environment:
+      <<: *langfuse-env
+      NEXTAUTH_URL: "https://langfuse.home"
+    secrets:
+      - langfuse_salt
+      - langfuse_encryption_key
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export SALT=$$(cat /run/secrets/langfuse_salt)
+        export ENCRYPTION_KEY=$$(cat /run/secrets/langfuse_encryption_key)
+        exec node ./node_modules/.bin/prisma migrate deploy --schema=./packages/shared/prisma/schema.prisma && node ./apps/worker/dist/index.js
+    expose:
+      - "3030"
+    networks:
+      - langfuse_network
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # Langfuse Web - Main application
+  # ========================================
+  langfuse:
+    image: langfuse/langfuse:latest
+    hostname: langfuse
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "langfuse"
+      com.giocaizzi.component: "web"
+      com.giocaizzi.tier: "core"
+    environment:
+      <<: *langfuse-env
+      NEXTAUTH_URL: "https://langfuse.home"
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
+      # Init configuration
+      LANGFUSE_INIT_ORG_ID: "default"
+      LANGFUSE_INIT_ORG_NAME: "Home Server"
+      LANGFUSE_INIT_PROJECT_ID: "default"
+      LANGFUSE_INIT_PROJECT_NAME: "Default Project"
+      LANGFUSE_INIT_USER_EMAIL: "admin@langfuse.local"
+      LANGFUSE_INIT_USER_NAME: "Admin"
+    secrets:
+      - langfuse_salt
+      - langfuse_encryption_key
+      - langfuse_nextauth_secret
+      - langfuse_admin_password
+      - langfuse_public_key
+      - langfuse_secret_key
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export SALT=$$(cat /run/secrets/langfuse_salt)
+        export ENCRYPTION_KEY=$$(cat /run/secrets/langfuse_encryption_key)
+        export NEXTAUTH_SECRET=$$(cat /run/secrets/langfuse_nextauth_secret)
+        export LANGFUSE_INIT_USER_PASSWORD=$$(cat /run/secrets/langfuse_admin_password)
+        export LANGFUSE_INIT_PROJECT_PUBLIC_KEY=$$(cat /run/secrets/langfuse_public_key)
+        export LANGFUSE_INIT_PROJECT_SECRET_KEY=$$(cat /run/secrets/langfuse_secret_key)
+        exec node server.js
+    expose:
+      - "3000"
+    networks:
+      - langfuse_network
+      - public_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/public/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      <<: *logging-base
