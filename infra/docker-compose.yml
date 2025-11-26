@@ -132,13 +132,18 @@ services:
       <<: *deploy-base
 
   # Netdata - Real-time performance monitoring
+  # NOTE: Per-container cgroup metrics are NOT available in Docker Swarm mode
+  # because Swarm ignores pid:host and some cap_add options. For container metrics,
+  # use cAdvisor in the observability stack instead (Grafana → Container Metrics).
   netdata:
     image: netdata/netdata:latest
     hostname: netdata
+    # pid: host  # UNSUPPORTED in Swarm - would be needed for per-container cgroups
     expose:
       - "19999"
     cap_add:
       - SYS_PTRACE           # needed for process monitoring
+      # - SYS_ADMIN          # UNSUPPORTED in Swarm - would be needed for cgroups
       - NET_ADMIN            # needed for network stats
     security_opt:
       - apparmor:unconfined  # disable AppArmor restrictions (overrides base)
