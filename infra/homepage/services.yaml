@@ -80,3 +80,36 @@
             description: Data import for Firefly III
             icon: firefly.png
             ping: http://firefly-importer:8080
+
+- Observability:
+      - Grafana:
+            href: https://grafana.{{HOMEPAGE_FILE_DOMAIN}}
+            description: Metrics and logs visualization
+            icon: grafana.png
+            ping: http://grafana:3000
+            widget:
+                type: grafana
+                url: http://grafana:3000
+                username: admin
+                password: "{{HOMEPAGE_FILE_GRAFANA_PASSWORD}}"
+
+      - Prometheus:
+            href: https://prometheus.home
+            description: Metrics collection
+            icon: prometheus.png
+            ping: http://prometheus:9090
+
+      - Loki:
+            description: Log aggregation
+            icon: loki.png
+            ping: http://loki:3100
+
+      - Tempo:
+            description: Distributed tracing
+            icon: tempo.png
+            ping: http://tempo:3200
+
+      - Alloy:
+            description: Telemetry collector
+            icon: grafana.png
+            ping: http://alloy:12345
