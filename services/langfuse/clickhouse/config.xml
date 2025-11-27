@@ -1,14 +1,19 @@
 <?xml version="1.0"?>
 <clickhouse>
-    <!-- Reduce background threads for ARM64/low-power -->
-    <background_pool_size>2</background_pool_size>
-    <background_move_pool_size>1</background_move_pool_size>
-    <background_fetches_pool_size>1</background_fetches_pool_size>
-    <background_common_pool_size>1</background_common_pool_size>
-    <background_buffer_flush_schedule_pool_size>1</background_buffer_flush_schedule_pool_size>
-    <background_schedule_pool_size>2</background_schedule_pool_size>
-    <background_message_broker_schedule_pool_size>1</background_message_broker_schedule_pool_size>
-    <background_distributed_schedule_pool_size>1</background_distributed_schedule_pool_size>
+    <!-- ARM64 optimized settings - balanced for startup and runtime -->
+    <background_pool_size>4</background_pool_size>
+    <background_move_pool_size>2</background_move_pool_size>
+    <background_fetches_pool_size>2</background_fetches_pool_size>
+    <background_common_pool_size>2</background_common_pool_size>
+    <background_buffer_flush_schedule_pool_size>2</background_buffer_flush_schedule_pool_size>
+    <background_schedule_pool_size>4</background_schedule_pool_size>
+    <background_message_broker_schedule_pool_size>2</background_message_broker_schedule_pool_size>
+    <background_distributed_schedule_pool_size>2</background_distributed_schedule_pool_size>
+
+    <!-- Table loading threads - critical for startup with existing data -->
+    <tables_loader_foreground_pool_size>2</tables_loader_foreground_pool_size>
+    <tables_loader_background_pool_size>2</tables_loader_background_pool_size>
+    <max_active_parts_loading_thread_pool_size>4</max_active_parts_loading_thread_pool_size>
 
     <!-- Reduce query threads -->
     <max_thread_pool_size>32</max_thread_pool_size>
@@ -19,11 +24,11 @@
     <max_concurrent_queries>10</max_concurrent_queries>
 
     <!-- Merge tree settings for reduced CPU -->
-    <!-- All values must be < background_pool_size * background_merges_mutations_concurrency_ratio (2*1=2) -->
+    <!-- All values must be < background_pool_size * background_merges_mutations_concurrency_ratio (4*1=4) -->
     <merge_tree>
-        <number_of_free_entries_in_pool_to_lower_max_size_of_merge>1</number_of_free_entries_in_pool_to_lower_max_size_of_merge>
-        <number_of_free_entries_in_pool_to_execute_mutation>1</number_of_free_entries_in_pool_to_execute_mutation>
-        <number_of_free_entries_in_pool_to_execute_optimize_entire_partition>1</number_of_free_entries_in_pool_to_execute_optimize_entire_partition>
+        <number_of_free_entries_in_pool_to_lower_max_size_of_merge>2</number_of_free_entries_in_pool_to_lower_max_size_of_merge>
+        <number_of_free_entries_in_pool_to_execute_mutation>2</number_of_free_entries_in_pool_to_execute_mutation>
+        <number_of_free_entries_in_pool_to_execute_optimize_entire_partition>2</number_of_free_entries_in_pool_to_execute_optimize_entire_partition>
         <max_bytes_to_merge_at_max_space_in_pool>1073741824</max_bytes_to_merge_at_max_space_in_pool>
         <parts_to_delay_insert>150</parts_to_delay_insert>
         <parts_to_throw_insert>300</parts_to_throw_insert>
