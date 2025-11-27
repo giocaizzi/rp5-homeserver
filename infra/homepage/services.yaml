@@ -51,6 +51,12 @@
             icon: n8n.png
             ping: http://n8n:5678
 
+      - ntfy:
+            href: https://ntfy.home
+            description: Push notification service
+            icon: ntfy.png
+            ping: http://ntfy:80/v1/health
+
       - Ollama:
             href: https://ollama.home
             description: Local AI models
