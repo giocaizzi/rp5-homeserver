@@ -125,6 +125,9 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 512M
     logging:
       <<: *logging-base
 
@@ -142,6 +145,7 @@ services:
       - db_password
     volumes:
       - firefly_db:/var/lib/mysql
+      - ./mariadb/mariadb.cnf:/etc/mysql/conf.d/custom.cnf:ro
     networks:
       - firefly_network
     healthcheck:
@@ -159,6 +163,9 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 256M
     logging:
       <<: *logging-base
 
@@ -232,6 +239,9 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 256M
     logging:
       <<: *logging-base
 
@@ -274,6 +284,9 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 64M
     logging:
       <<: *logging-base
 
@@ -321,12 +334,16 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 256M
     logging:
       <<: *logging-base
 
   pico-db:
     image: postgres:16-alpine
     hostname: pico-db
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     environment:
       - POSTGRES_DB=firefly-pico
       - POSTGRES_USER=firefly-pico
@@ -335,6 +352,7 @@ services:
       - pico_db_password
     volumes:
       - firefly_pico_db:/var/lib/postgresql/data
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
     networks:
       - firefly_network
     healthcheck:
@@ -352,6 +370,9 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 128M
     logging:
       <<: *logging-base
 

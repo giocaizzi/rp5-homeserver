@@ -87,6 +87,9 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 256M
     logging:
       <<: *logging-base
 

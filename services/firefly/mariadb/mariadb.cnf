@@ -1,0 +1,63 @@
+# MariaDB Configuration for Firefly III
+# Optimized for Raspberry Pi 5 ARM64 (8GB RAM)
+# Service memory limit: 256M
+
+[mysqld]
+# =============================================================================
+# InnoDB Configuration
+# =============================================================================
+innodb_buffer_pool_size = 128M
+innodb_log_file_size = 32M
+innodb_log_buffer_size = 8M
+innodb_flush_log_at_trx_commit = 2
+innodb_flush_method = O_DIRECT
+innodb_file_per_table = ON
+innodb_read_io_threads = 2
+innodb_write_io_threads = 2
+
+# =============================================================================
+# Connections
+# =============================================================================
+max_connections = 20
+thread_cache_size = 4
+table_open_cache = 200
+table_definition_cache = 200
+
+# =============================================================================
+# Memory Configuration
+# =============================================================================
+tmp_table_size = 16M
+max_heap_table_size = 16M
+sort_buffer_size = 256K
+read_buffer_size = 128K
+read_rnd_buffer_size = 256K
+join_buffer_size = 256K
+
+# =============================================================================
+# Query Cache (disabled in modern MariaDB, but explicit)
+# =============================================================================
+query_cache_type = 0
+query_cache_size = 0
+
+# =============================================================================
+# Logging
+# =============================================================================
+slow_query_log = 1
+slow_query_log_file = /var/lib/mysql/slow.log
+long_query_time = 2
+
+# =============================================================================
+# Performance Schema (disabled for ARM64)
+# =============================================================================
+performance_schema = OFF
+
+# =============================================================================
+# Binary Logging (disabled for single-node)
+# =============================================================================
+skip-log-bin
+
+# =============================================================================
+# Character Set
+# =============================================================================
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci

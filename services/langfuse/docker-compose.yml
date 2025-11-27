@@ -211,6 +211,7 @@ services:
   langfuse-db:
     image: postgres:16-alpine
     hostname: langfuse-db
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     labels:
       <<: *labels-base
       com.giocaizzi.service: "langfuse-db"
@@ -227,6 +228,7 @@ services:
       - "5432"
     volumes:
       - langfuse_db:/var/lib/postgresql/data
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
     networks:
       - langfuse_network
     healthcheck:
@@ -256,9 +258,11 @@ services:
       com.giocaizzi.component: "cache"
       com.giocaizzi.role: "cache"
       com.giocaizzi.tier: "core"
-    command: redis-server --requirepass langfuseredis
+    command: redis-server /etc/redis/redis.conf
     expose:
       - "6379"
+    volumes:
+      - ./redis/redis.conf:/etc/redis/redis.conf:ro
     networks:
       - langfuse_network
     healthcheck:
