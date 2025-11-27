@@ -77,7 +77,6 @@ services:
       com.giocaizzi.role: "notification"
       com.giocaizzi.tier: "core"
     <<: *security-base
-    user: "1000:1000"
     deploy:
       <<: *deploy-base
       resources:
