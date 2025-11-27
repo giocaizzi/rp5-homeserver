@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <!-- Reduce background threads for ARM64/low-power -->
+    <background_pool_size>2</background_pool_size>
+    <background_move_pool_size>1</background_move_pool_size>
+    <background_fetches_pool_size>1</background_fetches_pool_size>
+    <background_common_pool_size>1</background_common_pool_size>
+    <background_buffer_flush_schedule_pool_size>1</background_buffer_flush_schedule_pool_size>
+    <background_schedule_pool_size>2</background_schedule_pool_size>
+    <background_message_broker_schedule_pool_size>1</background_message_broker_schedule_pool_size>
+    <background_distributed_schedule_pool_size>1</background_distributed_schedule_pool_size>
+
+    <!-- Reduce query threads -->
+    <max_thread_pool_size>32</max_thread_pool_size>
+    <max_thread_pool_free_size>8</max_thread_pool_free_size>
+
+    <!-- Memory limits -->
+    <max_server_memory_usage_to_ram_ratio>0.5</max_server_memory_usage_to_ram_ratio>
+    <max_concurrent_queries>10</max_concurrent_queries>
+
+    <!-- Merge tree settings for reduced CPU -->
+    <merge_tree>
+        <number_of_free_entries_in_pool_to_lower_max_size_of_merge>2</number_of_free_entries_in_pool_to_lower_max_size_of_merge>
+        <max_bytes_to_merge_at_max_space_in_pool>1073741824</max_bytes_to_merge_at_max_space_in_pool>
+        <parts_to_delay_insert>150</parts_to_delay_insert>
+        <parts_to_throw_insert>300</parts_to_throw_insert>
+        <max_part_loading_threads>2</max_part_loading_threads>
+        <max_part_removal_threads>2</max_part_removal_threads>
+    </merge_tree>
+
+    <!-- Disable unnecessary features -->
+    <asynchronous_metric_log remove="1"/>
+    <metric_log remove="1"/>
+    <query_thread_log remove="1"/>
+    <trace_log remove="1"/>
+    <text_log remove="1"/>
+    <part_log remove="1"/>
+
+    <!-- Reduce mark cache (default 5GB is overkill) -->
+    <mark_cache_size>134217728</mark_cache_size>
+
+    <!-- Reduce uncompressed cache -->
+    <uncompressed_cache_size>67108864</uncompressed_cache_size>
+
+    <!-- Compression settings -->
+    <compression>
+        <case>
+            <min_part_size>10000000000</min_part_size>
+            <min_part_size_ratio>0.01</min_part_size_ratio>
+            <method>lz4</method>
+        </case>
+    </compression>
+</clickhouse>
