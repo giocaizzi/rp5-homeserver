@@ -56,6 +56,16 @@
             description: Push notification service
             icon: ntfy.png
             ping: http://ntfy:80/v1/health
+            widget:
+                type: customapi
+                url: http://ntfy:80/v1/stats
+                mappings:
+                    - field: messages
+                      label: Messages
+                      format: number
+                    - field: messages_rate
+                      label: Messages/s
+                      format: number
 
       - Ollama:
             href: https://ollama.home
