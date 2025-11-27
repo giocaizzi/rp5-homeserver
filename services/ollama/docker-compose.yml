@@ -17,6 +17,16 @@ x-deploy-base: &deploy-base
     max_attempts: 3
     window: 120s
 
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "50m"  # Larger for AI operations
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
 # =============================================================================
 # Networks
 # =============================================================================
@@ -70,14 +80,14 @@ services:
       com.giocaizzi.component: "app"
       com.giocaizzi.role: "ai"
       com.giocaizzi.tier: "core"
-    security_opt:
-      - no-new-privileges:true
-      - seccomp:unconfined  # Required for some AI operations
-    # GPU access (if available)
-    # devices:
-    #   - /dev/dri:/dev/dri  # For Intel GPU acceleration
+    <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
     tmpfs:
       - /tmp:size=1G,noexec,nosuid,nodev
     ulimits:
@@ -86,10 +96,7 @@ services:
         hard: -1
       stack: 67108864
     logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"  # Larger logs for AI operations
-        max-file: "3"
+      <<: *logging-base
 
 volumes:
   ollama_data:

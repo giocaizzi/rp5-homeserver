@@ -94,6 +94,19 @@ volumes:
     driver: local
 
 # =============================================================================
+# Configs (inline - deployed with stack)
+# =============================================================================
+configs:
+  clickhouse_config:
+    file: ./clickhouse/config.xml
+  clickhouse_users:
+    file: ./clickhouse/users.xml
+  postgres_config:
+    file: ./postgres/postgresql.conf
+  redis_config:
+    file: ./redis/redis.conf
+
+# =============================================================================
 # Secrets (external - create on Pi before deployment)
 # =============================================================================
 secrets:
@@ -126,12 +139,6 @@ services:
   minio:
     image: minio/minio:latest
     hostname: minio
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "langfuse-minio"
-      com.giocaizzi.component: "storage"
-      com.giocaizzi.role: "object-storage"
-      com.giocaizzi.tier: "core"
     entrypoint: sh
     command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
     environment:
@@ -150,6 +157,12 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "langfuse-minio"
+      com.giocaizzi.component: "storage"
+      com.giocaizzi.role: "object-storage"
+      com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -165,12 +178,6 @@ services:
   clickhouse:
     image: clickhouse/clickhouse-server:latest
     hostname: clickhouse
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "langfuse-clickhouse"
-      com.giocaizzi.component: "data"
-      com.giocaizzi.role: "analytics"
-      com.giocaizzi.tier: "core"
     user: "101:101"
     environment:
       CLICKHOUSE_DB: "default"
@@ -182,8 +189,13 @@ services:
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - clickhouse_logs:/var/log/clickhouse-server
-      - ./clickhouse/config.xml:/etc/clickhouse-server/config.d/custom.xml:ro
-      - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/custom.xml:ro
+    configs:
+      - source: clickhouse_config
+        target: /etc/clickhouse-server/config.d/custom.xml
+        mode: 0444
+      - source: clickhouse_users
+        target: /etc/clickhouse-server/users.d/custom.xml
+        mode: 0444
     networks:
       - langfuse_network
     healthcheck:
@@ -192,16 +204,18 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "langfuse-clickhouse"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.role: "analytics"
+      com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
       <<: *deploy-base
       resources:
         limits:
-          cpus: "0.5"
           memory: 512M
-        reservations:
-          cpus: "0.1"
-          memory: 128M
     logging:
       <<: *logging-base
 
@@ -211,12 +225,7 @@ services:
   langfuse-db:
     image: postgres:16-alpine
     hostname: langfuse-db
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "langfuse-db"
-      com.giocaizzi.component: "data"
-      com.giocaizzi.role: "database"
-      com.giocaizzi.tier: "core"
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     environment:
       POSTGRES_DB: "langfuse"
       POSTGRES_USER: "langfuse"
@@ -227,6 +236,10 @@ services:
       - "5432"
     volumes:
       - langfuse_db:/var/lib/postgresql/data
+    configs:
+      - source: postgres_config
+        target: /etc/postgresql/postgresql.conf
+        mode: 0444
     networks:
       - langfuse_network
     healthcheck:
@@ -235,6 +248,12 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "langfuse-db"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.role: "database"
+      com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -250,15 +269,13 @@ services:
   langfuse-redis:
     image: redis:7-alpine
     hostname: langfuse-redis
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "langfuse-redis"
-      com.giocaizzi.component: "cache"
-      com.giocaizzi.role: "cache"
-      com.giocaizzi.tier: "core"
-    command: redis-server --requirepass langfuseredis
+    command: redis-server /etc/redis/redis.conf
     expose:
       - "6379"
+    configs:
+      - source: redis_config
+        target: /etc/redis/redis.conf
+        mode: 0444
     networks:
       - langfuse_network
     healthcheck:
@@ -267,6 +284,12 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "langfuse-redis"
+      com.giocaizzi.component: "cache"
+      com.giocaizzi.role: "cache"
+      com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -282,12 +305,6 @@ services:
   langfuse-worker:
     image: langfuse/langfuse-worker:latest
     hostname: langfuse-worker
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "langfuse-worker"
-      com.giocaizzi.component: "worker"
-      com.giocaizzi.role: "processor"
-      com.giocaizzi.tier: "core"
     environment:
       <<: *langfuse-env
       NEXTAUTH_URL: "https://langfuse.home"
@@ -305,6 +322,12 @@ services:
       - "3030"
     networks:
       - langfuse_network
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "langfuse-worker"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.role: "processor"
+      com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -320,12 +343,6 @@ services:
   langfuse:
     image: langfuse/langfuse:latest
     hostname: langfuse
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "langfuse"
-      com.giocaizzi.component: "app"
-      com.giocaizzi.role: "web"
-      com.giocaizzi.tier: "core"
     environment:
       <<: *langfuse-env
       NEXTAUTH_URL: "https://langfuse.home"
@@ -367,6 +384,12 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "langfuse"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.role: "web"
+      com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
       <<: *deploy-base
