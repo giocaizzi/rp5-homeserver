@@ -103,11 +103,12 @@
             description: Metrics and logs visualization
             icon: grafana.png
             ping: http://grafana:3000
-            version: 2
             widget:
                 type: grafana
+                version: 2
                 url: http://grafana:3000
-                key: "{{HOMEPAGE_FILE_GRAFANA_API_TOKEN}}"
+                username: admin
+                password: "{{HOMEPAGE_FILE_GRAFANA_ADMIN_PASSWORD}}"
 
       - Langfuse:
             href: https://langfuse.home
