@@ -1,5 +1,8 @@
 <?xml version="1.0"?>
 <clickhouse>
+    <!-- Network settings - allow connections from other containers -->
+    <listen_host>0.0.0.0</listen_host>
+
     <!-- ARM64 optimized settings - balanced for startup and runtime -->
     <background_pool_size>4</background_pool_size>
     <background_move_pool_size>2</background_move_pool_size>
