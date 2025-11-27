@@ -81,12 +81,15 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "adguard"
-      com.giocaizzi.component: "network"
+      com.giocaizzi.component: "gateway"
       com.giocaizzi.role: "dns"
       com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 256M
     logging:
       <<: *logging-base
 

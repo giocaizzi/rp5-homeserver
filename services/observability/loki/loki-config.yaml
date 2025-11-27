@@ -38,7 +38,7 @@ compactor:
   compaction_interval: 10m
   retention_enabled: true
   retention_delete_delay: 2h
-  retention_delete_worker_count: 150
+  retention_delete_worker_count: 4
   delete_request_store: filesystem
 
 limits_config:
@@ -61,10 +61,10 @@ querier:
   max_concurrent: 4
 
 query_scheduler:
-  max_outstanding_requests_per_tenant: 256
+  max_outstanding_requests_per_tenant: 64
 
 frontend:
-  max_outstanding_per_tenant: 256
+  max_outstanding_per_tenant: 64
   compress_responses: true
 
 analytics:

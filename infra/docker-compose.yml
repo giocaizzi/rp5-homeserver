@@ -69,6 +69,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 10s
     labels:
       <<: *labels-base
       com.giocaizzi.service: "nginx"
@@ -78,6 +79,9 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 128M
     logging:
       <<: *logging-base
 
@@ -104,6 +108,9 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 256M
     logging:
       <<: *logging-base
   
@@ -133,6 +140,11 @@ services:
     read_only: true
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      <<: *logging-base
 
   # Netdata - Real-time performance monitoring
   # NOTE: Per-container cgroup metrics are NOT available in Docker Swarm mode
@@ -176,6 +188,9 @@ services:
       com.giocaizzi.tier: "core"
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 384M
     logging:
       <<: *logging-base
 
@@ -212,6 +227,9 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 512M
     logging:
       driver: "json-file"
       options:
@@ -276,6 +294,9 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      resources:
+        limits:
+          memory: 384M
     logging:
       <<: *logging-base
     healthcheck:

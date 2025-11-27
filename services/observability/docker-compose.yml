@@ -84,12 +84,6 @@ services:
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     hostname: cadvisor
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "cadvisor"
-      com.giocaizzi.component: "observability"
-      com.giocaizzi.role: "metrics"
-      com.giocaizzi.tier: "core"
     expose:
       - "8080"
     volumes:
@@ -104,6 +98,19 @@ services:
     #   - /dev/kmsg
     networks:
       - observability_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "cadvisor"
+      com.giocaizzi.component: "gateway"
+      com.giocaizzi.role: "metrics-exporter"
+      com.giocaizzi.tier: "core"
+    <<: *security-base
     deploy:
       <<: *deploy-base
       resources:
@@ -118,17 +125,8 @@ services:
   prometheus:
     image: prom/prometheus:latest
     hostname: prometheus
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "prometheus"
-      com.giocaizzi.component: "observability"
-      com.giocaizzi.role: "metrics"
-      com.giocaizzi.tier: "core"
     expose:
       - "9090"
-    volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -137,6 +135,9 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--web.enable-lifecycle'
       - '--web.enable-remote-write-receiver'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
     networks:
       - observability_network
     healthcheck:
@@ -144,6 +145,13 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+      start_period: 30s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "prometheus"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.role: "metrics"
+      com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -159,24 +167,24 @@ services:
   loki:
     image: grafana/loki:latest
     hostname: loki
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "loki"
-      com.giocaizzi.component: "observability"
-      com.giocaizzi.role: "logs"
-      com.giocaizzi.tier: "core"
     expose:
       - "3100"
+    command: -config.file=/etc/loki/loki-config.yaml
     volumes:
       - ./loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
       - loki_data:/loki
-    command: -config.file=/etc/loki/loki-config.yaml
-    user: "root"
     networks:
       - observability_network
     # Note: Loki uses scratch-based image without wget/curl, healthcheck disabled
     # Docker Swarm restart policy handles recovery
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "loki"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.role: "logs"
+      com.giocaizzi.tier: "core"
     <<: *security-base
+    user: "root"
     deploy:
       <<: *deploy-base
       resources:
@@ -191,24 +199,24 @@ services:
   tempo:
     image: grafana/tempo:latest
     hostname: tempo
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "tempo"
-      com.giocaizzi.component: "observability"
-      com.giocaizzi.role: "traces"
-      com.giocaizzi.tier: "core"
     expose:
       - "3200"  # Tempo HTTP
       - "4317"  # OTLP gRPC
       - "4318"  # OTLP HTTP
+    command: -config.file=/etc/tempo/tempo-config.yaml
     volumes:
       - ./tempo/tempo-config.yaml:/etc/tempo/tempo-config.yaml:ro
       - tempo_data:/var/tempo
-    command: -config.file=/etc/tempo/tempo-config.yaml
     networks:
       - observability_network
     # Note: Tempo uses scratch-based image without wget/curl, healthcheck disabled
     # Docker Swarm restart policy handles recovery
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "tempo"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.role: "traces"
+      com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -224,20 +232,10 @@ services:
   alloy:
     image: grafana/alloy:latest
     hostname: alloy
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "alloy"
-      com.giocaizzi.component: "observability"
-      com.giocaizzi.role: "collector"
-      com.giocaizzi.tier: "core"
     expose:
       - "12345" # Alloy metrics
       - "4317"  # OTLP gRPC
       - "4318"  # OTLP HTTP
-    volumes:
-      - ./alloy:/etc/alloy:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - alloy_data:/var/lib/alloy/data
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
@@ -248,11 +246,21 @@ services:
     # secrets:
     #   - langfuse_public_key
     #   - langfuse_secret_key
+    volumes:
+      - ./alloy:/etc/alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy_data:/var/lib/alloy/data
     networks:
       - observability_network
       - public_network
     # Note: Alloy Debian-based image lacks wget, healthcheck disabled
     # Docker Swarm restart policy handles recovery
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "alloy"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.role: "collector"
+      com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -268,17 +276,8 @@ services:
   grafana:
     image: grafana/grafana:latest
     hostname: grafana
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "grafana"
-      com.giocaizzi.component: "app"
-      com.giocaizzi.role: "dashboards"
-      com.giocaizzi.tier: "core"
     expose:
       - "3000"
-    volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-      - grafana_data:/var/lib/grafana
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password
@@ -292,6 +291,9 @@ services:
       - GF_ANALYTICS_CHECK_FOR_UPDATES=false
     secrets:
       - grafana_admin_password
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
     networks:
       - observability_network
       - public_network
@@ -301,6 +303,12 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "grafana"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.role: "dashboards"
+      com.giocaizzi.tier: "core"
     <<: *security-base
     deploy:
       <<: *deploy-base
