@@ -1,13 +1,13 @@
 # MariaDB Configuration for Firefly III
 # Optimized for Raspberry Pi 5 ARM64 (8GB RAM)
-# Service memory limit: 256M
+# Service memory limit: 384M
 
 [mysqld]
 # =============================================================================
 # InnoDB Configuration
 # =============================================================================
-innodb_buffer_pool_size = 128M
-innodb_log_file_size = 32M
+innodb_buffer_pool_size = 192M
+innodb_log_file_size = 48M
 innodb_log_buffer_size = 8M
 innodb_flush_log_at_trx_commit = 2
 innodb_flush_method = O_DIRECT

@@ -81,7 +81,7 @@ services:
     labels:
       <<: *labels-base
       com.giocaizzi.service: "adguard"
-      com.giocaizzi.component: "network"
+      com.giocaizzi.component: "gateway"
       com.giocaizzi.role: "dns"
       com.giocaizzi.tier: "core"
     <<: *security-base
