@@ -62,7 +62,104 @@ Raspberry Pi 5 (8GB) acting as a home server.
 
 ### YAML Style
 
-- Use anchors and aliases to reduce duplication where appropriate.
+### Docker Compose Standardization
+
+Every stack should utilize anchors for common configuration blocks.
+
+```yaml
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "<stack-name>"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+```
+
+**Service template pattern:**
+```yaml
+service-name:
+  image: <image>
+  hostname: <hostname>
+  # depends_on: [<services>]  # if applicable
+  # ports:                    # only for host-exposed services (DNS, HTTP ingress)
+  #   - "<host>:<container>"
+  expose:                     # internal service ports
+    - "<port>"
+  # command: [...]            # if overriding default
+  environment:
+    - KEY=value
+    # - KEY_FILE=/run/secrets/<secret>  # for images supporting _FILE suffix
+  secrets:
+    - <secret_name>
+  volumes:
+    - <volume>:<path>
+    - ./<config>:<path>:ro
+  configs:
+    - source: <config_name>
+      target: <path>
+      mode: 0444
+  # entrypoint:               # only when wrapping secrets into env vars
+  #   - /bin/sh
+  #   - -c
+  #   - |
+  #     export VAR=$$(cat /run/secrets/<secret>)
+  #     exec <original-entrypoint>
+  networks:
+    - <stack>_network
+    # - public_network        # only if nginx-proxied
+  healthcheck:
+    test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:<port>/<path>"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 30s         # REQUIRED - adjust per service startup time
+  labels:
+    <<: *labels-base
+    com.giocaizzi.service: "<stack>-<service>"  # e.g., "firefly-db", "langfuse-redis"
+    com.giocaizzi.component: "<component>"       # app | data | worker | cache | storage | gateway
+    com.giocaizzi.role: "<role>"                 # descriptive: database, web, proxy, dns, collector
+    com.giocaizzi.tier: "<tier>"                 # core | extra
+  <<: *security-base
+  # user: "<uid>:<gid>"       # if non-root required
+  deploy:
+    <<: *deploy-base
+    resources:
+      limits:
+        memory: <limit>M      # Required - sized for ARM64
+      # reservations:         # only for memory-critical services (ollama)
+      #   memory: <reserve>M
+  logging:
+    <<: *logging-base
+```
+
+**Component values:**
+- `app` — Primary application service (web UI, API)
+- `data` — Database (postgres, mariadb, clickhouse)
+- `worker` — Background processor, cron, async tasks
+- `cache` — Redis, memcached
+- `storage` — Object storage (minio), file storage
+- `gateway` — Reverse proxy, tunnel, DNS
+
+**Network naming:** `rp5_<stack>` (overlay, named)
 
 ### Docker Swarm
 
