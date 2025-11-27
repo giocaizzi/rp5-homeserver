@@ -1,0 +1,50 @@
+# =============================================================================
+# ntfy Server Configuration
+# https://docs.ntfy.sh/config/
+# =============================================================================
+
+# Base URL (externally visible URL)
+base-url: "https://ntfy.home"
+
+# Listen address
+listen-http: ":80"
+
+# Behind nginx proxy - use X-Forwarded-For for rate limiting
+behind-proxy: true
+
+# =============================================================================
+# Message Cache
+# =============================================================================
+# SQLite-based cache persists messages across restarts
+cache-file: "/var/cache/ntfy/cache.db"
+cache-duration: "24h"
+
+# =============================================================================
+# Attachments
+# =============================================================================
+attachment-cache-dir: "/var/cache/ntfy/attachments"
+attachment-total-size-limit: "1G"
+attachment-file-size-limit: "15M"
+attachment-expiry-duration: "24h"
+
+# =============================================================================
+# Authentication - Private Instance
+# =============================================================================
+auth-file: "/var/lib/ntfy/user.db"
+auth-default-access: "deny-all"
+enable-login: true
+
+# =============================================================================
+# iOS Instant Notifications
+# =============================================================================
+# Forward poll requests to ntfy.sh for APNS delivery
+upstream-base-url: "https://ntfy.sh"
+
+# =============================================================================
+# Rate Limiting (private instance defaults)
+# =============================================================================
+visitor-subscription-limit: 50
+visitor-request-limit-burst: 120
+visitor-request-limit-replenish: "5s"
+visitor-attachment-total-size-limit: "200M"
+visitor-attachment-daily-bandwidth-limit: "500M"
