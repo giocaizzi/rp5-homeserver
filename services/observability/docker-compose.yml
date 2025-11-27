@@ -78,46 +78,6 @@ secrets:
 # Services
 # =============================================================================
 services:
-  # ========================================
-  # cAdvisor - Container Metrics Exporter
-  # ========================================
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    hostname: cadvisor
-    expose:
-      - "8080"
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    # Ignored by Swarm - requires privileged mode
-    # privileged: true
-    # devices:
-    #   - /dev/kmsg
-    networks:
-      - observability_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/healthz"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "cadvisor"
-      com.giocaizzi.component: "gateway"
-      com.giocaizzi.role: "metrics-exporter"
-      com.giocaizzi.tier: "core"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      resources:
-        limits:
-          memory: 128M
-    logging:
-      <<: *logging-base
 
   # ========================================
   # Prometheus - Metrics Storage

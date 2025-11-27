@@ -147,9 +147,6 @@ services:
       <<: *logging-base
 
   # Netdata - Real-time performance monitoring
-  # NOTE: Per-container cgroup metrics are NOT available in Docker Swarm mode
-  # because Swarm ignores pid:host and some cap_add options. For container metrics,
-  # use cAdvisor in the observability stack instead (Grafana → Container Metrics).
   netdata:
     image: netdata/netdata:latest
     hostname: netdata

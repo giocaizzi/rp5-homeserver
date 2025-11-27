@@ -68,7 +68,7 @@ Specific function within the component. Examples:
 | `otel-processors.alloy` | Batch + attributes processors |
 | `otel-exporters.alloy` | Exporters to Loki, Prometheus, Tempo |
 | `docker-logs.alloy` | Docker discovery, relabeling, log processing |
-| `prometheus-scrape.alloy` | cAdvisor and Tempo scrape + relabeling |
+| `prometheus-scrape.alloy` | Tempo scrape + relabeling |
 | `langfuse.alloy` | Langfuse OTLP export (disabled by default) |
 
 ## Enabling Langfuse Export
