@@ -215,7 +215,7 @@ services:
       <<: *deploy-base
       resources:
         limits:
-          memory: 512M
+          memory: 1024M
     logging:
       <<: *logging-base
 
