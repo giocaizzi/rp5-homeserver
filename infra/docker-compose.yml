@@ -142,6 +142,8 @@ services:
       resources:
         limits:
           memory: 128M
+    logging:
+      <<: *logging-base
 
   # Netdata - Real-time performance monitoring
   # NOTE: Per-container cgroup metrics are NOT available in Docker Swarm mode
