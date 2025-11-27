@@ -182,6 +182,8 @@ services:
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - clickhouse_logs:/var/log/clickhouse-server
+      - ./clickhouse/config.xml:/etc/clickhouse-server/config.d/custom.xml:ro
+      - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/custom.xml:ro
     networks:
       - langfuse_network
     healthcheck:
@@ -195,7 +197,11 @@ services:
       <<: *deploy-base
       resources:
         limits:
+          cpus: "0.5"
           memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 128M
     logging:
       <<: *logging-base
 
