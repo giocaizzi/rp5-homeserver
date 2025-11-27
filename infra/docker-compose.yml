@@ -80,7 +80,7 @@ services:
       <<: *deploy-base
       resources:
         limits:
-          memory: 64M
+          memory: 128M
     logging:
       <<: *logging-base
 
@@ -187,7 +187,7 @@ services:
       <<: *deploy-base
       resources:
         limits:
-          memory: 256M
+          memory: 384M
     logging:
       <<: *logging-base
 
@@ -293,7 +293,7 @@ services:
       <<: *deploy-base
       resources:
         limits:
-          memory: 256M
+          memory: 384M
     logging:
       <<: *logging-base
     healthcheck:
