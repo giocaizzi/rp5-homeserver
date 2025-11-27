@@ -255,7 +255,7 @@ services:
       - HOMEPAGE_FILE_BACKREST_PASSWORD=/run/secrets/backrest_admin_password
       - HOMEPAGE_FILE_FIREFLY_API_TOKEN=/run/secrets/firefly_api_token
       - HOMEPAGE_FILE_ADGUARD_PASSWORD=/run/secrets/adguard_password
-      - HOMEPAGE_FILE_GRAFANA_PASSWORD=/run/secrets/grafana_admin_password
+      - HOMEPAGE_FILE_GRAFANA_ADMIN_PASSWORD=/run/secrets/grafana_admin_password
       - HOMEPAGE_FILE_DOMAIN=/run/secrets/domain
       - HOMEPAGE_FILE_VERSION=/app/config/version
       # Regular configuration variables

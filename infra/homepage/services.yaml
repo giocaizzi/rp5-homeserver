@@ -51,6 +51,22 @@
             icon: n8n.png
             ping: http://n8n:5678
 
+      - ntfy:
+            href: https://ntfy.home
+            description: Push notification service
+            icon: ntfy.png
+            ping: http://ntfy:80/v1/health
+            widget:
+                type: customapi
+                url: http://ntfy:80/v1/stats
+                mappings:
+                    - field: messages
+                      label: Messages
+                      format: number
+                    - field: messages_rate
+                      label: Messages/s
+                      format: number
+
       - Ollama:
             href: https://ollama.home
             description: Local AI models
@@ -89,9 +105,10 @@
             ping: http://grafana:3000
             widget:
                 type: grafana
+                version: 2
                 url: http://grafana:3000
                 username: admin
-                password: "{{HOMEPAGE_FILE_GRAFANA_PASSWORD}}"
+                password: "{{HOMEPAGE_FILE_GRAFANA_ADMIN_PASSWORD}}"
 
       - Langfuse:
             href: https://langfuse.home
