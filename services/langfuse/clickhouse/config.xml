@@ -21,6 +21,7 @@
     <!-- Merge tree settings for reduced CPU -->
     <merge_tree>
         <number_of_free_entries_in_pool_to_lower_max_size_of_merge>2</number_of_free_entries_in_pool_to_lower_max_size_of_merge>
+        <number_of_free_entries_in_pool_to_execute_mutation>2</number_of_free_entries_in_pool_to_execute_mutation>
         <max_bytes_to_merge_at_max_space_in_pool>1073741824</max_bytes_to_merge_at_max_space_in_pool>
         <parts_to_delay_insert>150</parts_to_delay_insert>
         <parts_to_throw_insert>300</parts_to_throw_insert>
