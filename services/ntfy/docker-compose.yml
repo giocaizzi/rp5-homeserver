@@ -48,7 +48,7 @@ services:
 
   ntfy:
     image: binwiederhier/ntfy:latest
-    hostname: ntfy
+    hostname: ntfy-app
     command: serve
     expose:
       - "80"
@@ -72,10 +72,11 @@ services:
       start_period: 40s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "ntfy"
+      com.giocaizzi.service: "notifications"
       com.giocaizzi.component: "app"
       com.giocaizzi.role: "notification"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "ntfy"
     <<: *security-base
     deploy:
       <<: *deploy-base

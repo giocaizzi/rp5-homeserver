@@ -88,11 +88,7 @@ terraform output -raw cloudflare_tunnel_credentials
 
 Extract Service Account Key:
 ```bash
-terraform output -raw backup_service_account_key | base64 -d > ../infra/backup/secrets/gcp_service_account.json
-# and scp to rp5-homeserver
-# make backup/secrets directory if it doesn't exist
-ssh pi@pi.local "mkdir -p ~/rp5-homeserver/infra/backup/secrets"
-scp ../infra/backup/secrets/gcp_service_account.json pi@pi.local:~/rp5-homeserver/infra/backup/secrets/gcp_service_account.json
+terraform output -raw backup_service_account_key | base64 -d > ../infra/secrets/gcp_service_account.json
 ```
 
 ### 5. Re-start infrastructure

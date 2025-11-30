@@ -47,7 +47,7 @@ networks:
 services:
   adguard:
     image: adguard/adguardhome:latest
-    hostname: adguard
+    hostname: adguard-app
     ports:
       # DNS ports (host network mode for DNS)
       - "53:53/tcp"
@@ -80,10 +80,11 @@ services:
       start_period: 30s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "adguard"
+      com.giocaizzi.service: "dns"
       com.giocaizzi.component: "gateway"
       com.giocaizzi.role: "dns"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "adguard"
     <<: *security-base
     deploy:
       <<: *deploy-base

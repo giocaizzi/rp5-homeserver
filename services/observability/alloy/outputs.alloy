@@ -1,7 +1,7 @@
 // Prometheus Remote Write
 prometheus.remote_write "default" {
   endpoint {
-    url = "http://prometheus:9090/api/v1/write"
+    url = "http://observability-prometheus:9090/api/v1/write"
 
     queue_config {
       capacity             = 5000
@@ -19,6 +19,6 @@ prometheus.remote_write "default" {
 // Loki Log Write
 loki.write "default" {
   endpoint {
-    url = "http://loki:3100/loki/api/v1/push"
+    url = "http://observability-loki:3100/loki/api/v1/push"
   }
 }

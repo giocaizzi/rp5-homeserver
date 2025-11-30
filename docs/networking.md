@@ -1,399 +1,138 @@
-# Network Architecture
+# Networking
 
-Complete network topology and port mapping for the RP5 home server.
-
-## Network Design Principles
-
-1. **Single Entry Point**: Nginx reverse proxy is the only web entry point (ports 80/443)
-2. **Overlay Networks**: Services communicate via Docker Swarm overlay networks
-3. **DNS Exceptions**: AdGuard DNS requires host-level port exposure for DNS functionality
-4. **Security**: Services use `expose` (overlay network only), not `ports` (host network)
-
-## Network Topology
-
-```mermaid
-%%{init: {'theme':'base'}}%%
-graph TB
-    subgraph Internet["☁️ INTERNET"]
-        CF[Cloudflare Tunnel]
-    end
-    
-    subgraph Host["🖥️ HOST NETWORK - pi.local"]
-        subgraph HostPorts["Host Exposed Ports"]
-            Nginx["🔒 Nginx<br/>80/tcp, 443/tcp"]
-            AdGuardHost["🛡️ AdGuard DNS<br/>53, 853, 5443"]
-        end
-        
-        subgraph Swarm["🐳 Docker Swarm Overlay Networks"]
-            subgraph PublicNet["rp5_public - Public Network"]
-                direction LR
-                Firefly["💰 Firefly III<br/>:8080"]
-                Importer["📥 Firefly Importer<br/>:8080"]
-                Pico["📱 Firefly Pico<br/>:80"]
-                N8N["🔄 N8N<br/>:5678"]
-                Ollama["🤖 Ollama<br/>:11434"]
-                Homepage["🏠 Homepage<br/>:3000"]
-                AdGuardWeb["🛡️ AdGuard Web<br/>:3000"]
-            end
-            
-            subgraph InfraNet["rp5_infra - Infrastructure Network"]
-                direction LR
-                Portainer["🐋 Portainer<br/>:9000"]
-                Netdata["📊 Netdata<br/>:19999"]
-                Backrest["💾 Backrest<br/>:9898"]
-                Cloudflared["☁️ Cloudflared<br/>(no port)"]
-                Homepage2["🏠 Homepage<br/>:3000"]
-            end
-            
-            subgraph FireflyNet["rp5_firefly - Firefly Private Network"]
-                direction LR
-                FireflyDB["🗄️ MariaDB"]
-                PicoDB["🗄️ PostgreSQL"]
-                Cron["⏰ Cron"]
-            end
-            
-            subgraph N8NNet["rp5_n8n - N8N Private Network"]
-                N8NDB["🗄️ PostgreSQL"]
-            end
-            
-            subgraph AdGuardNet["rp5_adguard - AdGuard Private Network"]
-                AdGuardPriv["🛡️ AdGuard"]
-            end
-            
-            subgraph OllamaNet["rp5_ollama - Ollama Private Network"]
-                OllamaPriv["🤖 Ollama"]
-            end
-            
-            subgraph ObsNet["observability_network - Observability Network"]
-                direction LR
-                Grafana["📊 Grafana<br/>:3000"]
-                Alloy["📡 Alloy<br/>:4317, :4318"]
-                Prometheus["📈 Prometheus<br/>:9090"]
-                Loki["📝 Loki<br/>:3100"]
-                Tempo["🔍 Tempo<br/>:3200"]
-            end
-        end
-    end
-    
-    CF --> Nginx
-    
-    Nginx -.->|reverse proxy| Firefly
-    Nginx -.->|reverse proxy| Importer
-    Nginx -.->|reverse proxy| Pico
-    Nginx -.->|reverse proxy| N8N
-    Nginx -.->|reverse proxy| Ollama
-    Nginx -.->|reverse proxy| Homepage
-    Nginx -.->|reverse proxy| AdGuardWeb
-    Nginx -.->|reverse proxy| Portainer
-    Nginx -.->|reverse proxy| Netdata
-    Nginx -.->|reverse proxy| Backrest
-    Nginx -.->|reverse proxy| Homepage2
-    Nginx -.->|reverse proxy| Grafana
-    Nginx -.->|reverse proxy| Alloy
-    
-    Alloy -.->|metrics| Prometheus
-    Alloy -.->|logs| Loki
-    Alloy -.->|traces| Tempo
-    Grafana -.->|query| Prometheus
-    Grafana -.->|query| Loki
-    Grafana -.->|query| Tempo
-    
-    Firefly -.-> FireflyDB
-    Pico -.-> PicoDB
-    Firefly -.-> Cron
-    N8N -.-> N8NDB
-    AdGuardWeb -.-> AdGuardPriv
-    Ollama -.-> OllamaPriv
-    
-    Cloudflared -.->|tunnel| Nginx
-    
-    style Nginx fill:#4CAF50,stroke:#2E7D32,color:#fff
-    style AdGuardHost fill:#00BCD4,stroke:#0097A7,color:#fff
-    style PublicNet fill:#E3F2FD,stroke:#1976D2
-    style InfraNet fill:#FFF3E0,stroke:#F57C00
-    style FireflyNet fill:#F3E5F5,stroke:#7B1FA2
-    style N8NNet fill:#FCE4EC,stroke:#C2185B
-    style AdGuardNet fill:#E0F2F1,stroke:#00796B
-    style OllamaNet fill:#FFF9C4,stroke:#F57F17
-    style ObsNet fill:#E8F5E9,stroke:#388E3C
-```
+Network topology, DNS resolution, and routing for single-node Docker Swarm.
 
 ## Network Layers
 
-![Network Layers](diagrams/network-layers.mmd)
-
 ```mermaid
-%%{init: {'theme':'base'}}%%
 flowchart LR
-    subgraph Layer1["Layer 1: Host Network"]
-        HostNginx["Nginx<br/>80/443"]
-        HostDNS["AdGuard DNS<br/>53, 853, 5443"]
+    subgraph L1["Host Ports"]
+        nginx[":80/:443"]
+        dns[":53"]
     end
-    
-    subgraph Layer2["Layer 2: Reverse Proxy"]
-        Routing["Nginx Routes"]
+
+    subgraph L2["Overlay Networks"]
+        public["rp5_public"]
+        infra["rp5_infra"]
+        stacks["rp5_<stack>"]
     end
-    
-    subgraph Layer3["Layer 3: Overlay Networks"]
-        Public["rp5_public"]
-        Infra["rp5_infra"]
+
+    subgraph L3["Services"]
+        apps["Applications"]
+        dbs["Databases"]
     end
-    
-    subgraph Layer4["Layer 4: Services"]
-        Apps["Applications<br/>(expose ports)"]
-    end
-    
-    subgraph Layer5["Layer 5: Private Networks"]
-        DBs["Databases<br/>(internal only)"]
-    end
-    
-    Internet --> HostNginx
-    Internet --> HostDNS
-    HostNginx --> Routing
-    Routing --> Public
-    Routing --> Infra
-    Public --> Apps
-    Infra --> Apps
-    Apps --> DBs
-    
-    style Layer1 fill:#4CAF50,stroke:#2E7D32,color:#fff
-    style Layer2 fill:#2196F3,stroke:#1565C0,color:#fff
-    style Layer3 fill:#FF9800,stroke:#E65100,color:#fff
-    style Layer4 fill:#9C27B0,stroke:#6A1B9A,color:#fff
-    style Layer5 fill:#607D8B,stroke:#37474F,color:#fff
+
+    Internet --> nginx
+    LAN --> dns
+    nginx --> public
+    public --> apps
+    infra --> apps
+    stacks --> dbs
 ```
-
-## Nginx Reverse Proxy Routing
-
-Nginx (listening on host ports 80/443) routes to internal services:
-
-```
-External Request → Nginx (80/443) → Internal Service (overlay network)
-```
-
-### Service Routing Table
-
-| Domain | Backend Service | Backend Port | Protocol | Notes |
-|--------|----------------|--------------|----------|-------|
-| `portainer.home` | `portainer` | 9000 | HTTP | Docker management |
-| `n8n.home` | `n8n` | 5678 | HTTP + WS | Workflow automation |
-| `ollama.home` | `ollama` | 11434 | HTTP | LLM inference |
-| `netdata.home` | `netdata` | 19999 | HTTP | System monitoring |
-| `backrest.home` | `backrest` | 9898 | HTTP | Backup management |
-| `firefly.home` | `firefly` | 8080 | HTTP | Financial management |
-| `firefly-importer.home` | `firefly-importer` | 8080 | HTTP | Data import |
-| `firefly-pico.home` | `firefly-pico` | **80** | HTTP | Mobile companion |
-| `homepage.home` | `homepage` | 3000 | HTTP | Dashboard |
-| `adguard.home` | `adguard` | 3000 | HTTP | DNS web UI |
-| `grafana.home` | `grafana` | 3000 | HTTP + WS | Observability dashboards |
-| `otel.home` | `alloy` | 4318 | HTTP | OTLP telemetry ingestion |
 
 ## Port Exposure Strategy
 
-### Host-Level Ports (Direct Binding)
+| Type | Directive | Scope | Use Case |
+|------|-----------|-------|----------|
+| Host | `ports:` | Internet/LAN | nginx (80/443), AdGuard DNS (53) |
+| Overlay | `expose:` | Swarm internal | All other services |
 
-**Only these services bind to host ports:**
+**Rule**: Only nginx and AdGuard bind host ports. All other services use `expose` for overlay network access.
 
-| Service | Ports | Protocol | Purpose |
-|---------|-------|----------|---------|
-| **Nginx** | 80 | TCP | HTTP entry point |
-| **Nginx** | 443 | TCP | HTTPS entry point |
-| **AdGuard** | 53 | TCP/UDP | DNS queries |
-| **AdGuard** | 853 | TCP/UDP | DNS-over-TLS |
-| **AdGuard** | 5443 | TCP/UDP | DNSCrypt |
+## Networks
 
-### Overlay Network Ports (Internal Only)
+| Network | Type | Purpose |
+|---------|------|---------|
+| `rp5_public` | External overlay | nginx → proxied services |
+| `rp5_infra` | External overlay | Infrastructure services |
+| `rp5_<stack>` | Stack overlay | Private per-stack communication |
 
-All other services use `expose` directive, making ports available **only on Docker overlay networks**:
+Services join `rp5_public` only if nginx-proxied. Databases stay on private stack networks.
+
+## Nginx Routing
+
+nginx reverse-proxies all `.home` domains to internal services via overlay DNS.
+
+| Domain | Service | Port |
+|--------|---------|------|
+| `portainer.home` | `infra_portainer` | 9000 |
+| `netdata.home` | `infra_netdata` | 19999 |
+| `backrest.home` | `infra_backrest` | 9898 |
+| `homepage.home` | `infra_homepage` | 3000 |
+| `n8n.home` | `n8n_n8n` | 5678 |
+| `firefly.home` | `firefly_firefly` | 8080 |
+| `firefly-importer.home` | `firefly_importer` | 8080 |
+| `firefly-pico.home` | `firefly_pico` | 80 |
+| `adguard.home` | `adguard_adguard` | 3000 |
+| `ollama.home` | `ollama_ollama` | 11434 |
+| `grafana.home` | `observability_grafana` | 3000 |
+| `langfuse.home` | `langfuse_langfuse` | 3000 |
+| `ntfy.home` | `ntfy_ntfy` | 80 |
+
+**DNS Format**: `<stack>_<service>` (Swarm cross-stack resolution).
+
+## DNS Resolution
+
+Configure clients to resolve `.home` domains to the Pi's IP address.
+
+### AdGuard DNS Rewrites (Recommended)
+
+1. Access `https://adguard.home`
+2. **Filters** → **DNS rewrites** → **Add DNS rewrite**
+3. Add wildcard:
+   - **Domain**: `*.home`
+   - **IP Address**: `192.168.1.100` (Pi's IP)
+
+This resolves all `.home` domains to the Pi. nginx routes to individual services.
+
+### Client Configuration
+
+**Network-wide** (recommended): Set Pi's IP as primary DNS in router DHCP settings.
+
+**Per-device**: Edit `/etc/hosts` (Linux/macOS) or `C:\Windows\System32\drivers\etc\hosts`:
+```
+192.168.1.100 portainer.home netdata.home backrest.home homepage.home
+192.168.1.100 firefly.home n8n.home grafana.home langfuse.home ntfy.home
+```
+
+### Static IP for Pi
+
+Ensure Pi has static IP to avoid DNS resolution issues:
+
+**Option 1**: DHCP reservation in router (recommended)  
+**Option 2**: Static config in `/etc/dhcpcd.conf`:
+```bash
+interface eth0
+static ip_address=192.168.1.100/24
+static routers=192.168.1.1
+static domain_name_servers=1.1.1.1 8.8.8.8
+```
+
+## Service Configuration
 
 ```yaml
-# Correct - overlay network only
-expose:
-  - "8080"
+# Nginx-proxied service
+networks:
+  - <stack>_network      # Private
+  - public_network       # nginx access
 
-# Incorrect - would expose to host
-ports:
-  - "8080:8080"
+# Database (internal only)
+networks:
+  - <stack>_network      # Private only
 ```
 
-## Firefly Pico Internal Architecture
-
-Special case: Pico has internal routing via nginx inside the container.
-
-### Request Flow
-
-![Pico Request Flow](diagrams/pico-request-flow.mmd)
-
-```mermaid
-%%{init: {'theme':'base'}}%%
-sequenceDiagram
-    participant Client as 🌐 Client Browser
-    participant ExtNginx as 🔒 External Nginx<br/>(Host)
-    participant PicoNginx as 🔧 Pico Nginx<br/>(:80)
-    participant Nuxt as ⚡ Nuxt Frontend<br/>(:3000)
-    participant PHP as 🐘 PHP-FPM<br/>(:9000)
-    participant Laravel as 🎨 Laravel API
-    participant Firefly as 💰 Firefly III API<br/>(:8080)
-    
-    Note over Client,Firefly: Request Flow for /api/user
-    Client->>ExtNginx: HTTPS /api/user
-    ExtNginx->>PicoNginx: HTTP firefly-pico:80/api/user
-    PicoNginx->>PHP: FastCGI localhost:9000
-    PHP->>Laravel: Execute PHP code
-    Laravel->>Firefly: GET http://firefly:8080/api/v1/about
-    Firefly-->>Laravel: JSON response
-    Laravel-->>PHP: JSON response
-    PHP-->>PicoNginx: JSON response
-    PicoNginx-->>ExtNginx: JSON response
-    ExtNginx-->>Client: HTTPS JSON response
-    
-    Note over Client,Firefly: Request Flow for /_nuxt/app.js
-    Client->>ExtNginx: HTTPS /_nuxt/app.js
-    ExtNginx->>PicoNginx: HTTP firefly-pico:80/_nuxt/app.js
-    PicoNginx->>Nuxt: Proxy localhost:3000
-    Nuxt-->>PicoNginx: JavaScript file
-    PicoNginx-->>ExtNginx: JavaScript file
-    ExtNginx-->>Client: HTTPS JavaScript
-```
-
-### Pico Container Internal Ports
-
-![Pico Internal Ports](diagrams/pico-internal-ports.mmd)
-
-```mermaid
-%%{init: {'theme':'base'}}%%
-graph TB
-    subgraph Container["🐳 firefly-pico Container"]
-        subgraph Exposed["Exposed to Overlay Network"]
-            Port80["Port 80<br/>Internal Nginx"]
-        end
-        
-        subgraph Internal["Internal (localhost only)"]
-            Port3000["Port 3000<br/>Nuxt.js Frontend"]
-            Port9000["Port 9000<br/>PHP-FPM"]
-        end
-        
-        Port80 -->|"Location /api/*"| Port9000
-        Port80 -->|"Location /_nuxt/*"| Port3000
-        Port80 -->|"Location /*"| Port3000
-        
-        Port9000 --> Laravel["Laravel<br/>Backend"]
-        Port3000 --> Nuxt["Nuxt<br/>Frontend"]
-    end
-    
-    ExtNginx["External Nginx"] -->|"firefly-pico:80"| Port80
-    
-    style Port80 fill:#4CAF50,stroke:#2E7D32,color:#fff
-    style Port3000 fill:#FF9800,stroke:#E65100,color:#fff
-    style Port9000 fill:#2196F3,stroke:#1565C0,color:#fff
-    style ExtNginx fill:#9C27B0,stroke:#6A1B9A,color:#fff
-```
-
-### Why Port 80 (Not 3000)?
-
-| Connection | Result | Reason |
-|------------|--------|--------|
-| `firefly-pico:3000` | ❌ API calls fail | Direct to Nuxt, bypasses nginx routing |
-| `firefly-pico:80` | ✅ API works | Nginx routes `/api/*` to PHP-FPM |
-
-**Critical**: External nginx must connect to `firefly-pico:80` (not `:3000`) to get proper API routing.
-
-## Network Security
-
-### Firewall Rules
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Internet → Cloudflare Tunnel → Nginx (443) → Services      │
-│  LAN → Nginx (80/443) → Services                             │
-│  LAN → AdGuard (53, 853, 5443) → DNS                         │
-│  Services ↔ Overlay Networks (internal only)                 │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Service Isolation
-
-- Each service stack has its own private overlay network
-- Services join `rp5_public` network only if they need nginx access
-- Infrastructure services use `rp5_infra` network
-- Databases remain on private networks, never exposed to public network
-
-### CORS Configuration
-
-Firefly III API has CORS headers for Pico:
-
-```nginx
-location /api/ {
-    add_header 'Access-Control-Allow-Origin' 'https://firefly-pico.home' always;
-    add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
-    add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type' always;
-}
-```
-
-## Network Verification
-
-### Check Running Services
+## Verification
 
 ```bash
+# Check DNS resolution
+nslookup portainer.home
+
+# Check service ports
 docker ps --format 'table {{.Names}}\t{{.Ports}}'
+
+# Test connectivity from nginx
+docker exec $(docker ps -q -f name=infra_nginx) nc -zv n8n_n8n 5678
+
+# DNS resolution inside Swarm
+docker exec $(docker ps -q -f name=infra_nginx) nslookup firefly_firefly
 ```
-
-### Verify Overlay Network Connectivity
-
-```bash
-# From nginx container, test backend connectivity
-docker exec $(docker ps --filter 'name=infra_nginx' --format '{{.Names}}') \
-  nc -zv firefly-pico 80
-
-# Should return: firefly-pico (10.0.x.x:80) open
-```
-
-### Check Service Resolution
-
-```bash
-# DNS resolution within overlay network
-docker exec $(docker ps --filter 'name=infra_nginx' --format '{{.Names}}') \
-  nslookup firefly-pico
-```
-
-## Troubleshooting
-
-### Service Not Accessible via Nginx
-
-1. Check service is on `rp5_public` network
-2. Verify correct port in `expose` directive
-3. Confirm nginx backend configuration matches exposed port
-4. Test direct connectivity: `docker exec nginx_container nc -zv service_name port`
-
-### DNS Resolution Fails
-
-1. Check service is on same overlay network as client
-2. Use service name (not hostname) for DNS: `firefly-pico` not `firefly_pico`
-3. Verify Docker DNS resolver: `127.0.0.11` should be in `/etc/resolv.conf`
-
-### Port Conflicts
-
-If services fail to start due to port conflicts:
-
-1. Check host-level ports: `sudo netstat -tlnp | grep ':<port>'`
-2. Verify only nginx and AdGuard use host ports
-3. All other services should use `expose`, not `ports`
-
-## Migration Notes
-
-### Changed Port Mappings (2025-11-09)
-
-**Firefly Pico:**
-- **Before**: Exposed port 3000 (Nuxt frontend directly) → API calls failed
-- **After**: Expose port 80 (internal nginx) → Proper routing to Laravel backend
-- **Reason**: Direct Nuxt access bypassed internal nginx routing, breaking API calls
-
-**Impact**: Requires nginx config update + service redeployment.
-
-## Best Practices
-
-1. **Always use `expose`** for services behind nginx
-2. **Use `ports`** only for DNS (AdGuard) or direct host access requirements
-3. **Test connectivity** from nginx container before adding to config
-4. **Document port changes** in this file when modifying services
-5. **Verify overlay network** membership for all services needing nginx access

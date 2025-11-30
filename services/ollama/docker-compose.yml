@@ -47,7 +47,7 @@ networks:
 services:
   ollama:
     image: ollama/ollama:latest
-    hostname: ollama
+    hostname: ollama-app
     expose:
       - "11434"
     environment:
@@ -76,10 +76,11 @@ services:
       start_period: 120s  # Allow more time for model loading
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "ollama"
+      com.giocaizzi.service: "llm"
       com.giocaizzi.component: "app"
       com.giocaizzi.role: "ai"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "ollama"
     <<: *security-base
     deploy:
       <<: *deploy-base

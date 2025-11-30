@@ -1,82 +1,106 @@
-# ntfy
+# 📢 ntfy
 
-Self-hosted push notification service.
+> Self-hosted push notification service
 
-## Configuration
+**URL**: `https://ntfy.home`
 
-Private instance configured via `server.yml`:
+---
 
-- **Authentication:** `deny-all` default access, login enabled
-- **Message cache:** SQLite-based, 24h retention
-- **Attachments:** Enabled, 15MB per file, 1GB total cache
-- **iOS support:** Upstream forwarding to ntfy.sh for APNS
-- **Reverse proxy:** `behind-proxy` enabled for correct rate limiting
+## 🚀 Quick Start
 
-### Configuration Methods
+1. Deploy via Portainer → Swarm mode
+2. Access `https://ntfy.home`
+3. Create admin user via CLI (see below)
 
-1. **Config file** (`server.yml`): Main configuration, mounted as Swarm config
-2. **CLI commands**: Runtime user/ACL management (persists in auth DB)
-3. **Declarative users**: Uncomment `auth-users` in `server.yml` for GitOps
+---
 
-### Declarative Users (Optional)
+## 📦 Architecture
 
-Bcrypt password hashes are **safe to commit** (one-way, not reversible).
+| Container | Image | Purpose |
+|-----------|-------|---------|
+| ntfy | `binwiederhier/ntfy:latest` | Notification server |
+
+---
+
+## 🔐 Secrets
+
+No deployment secrets required. Users created via CLI after deployment.
+
+---
+
+## ⚙️ Configuration
+
+Main config: `server.yml` (mounted as Swarm config)
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| `default-access` | `deny-all` | Require authentication |
+| `behind-proxy` | `true` | Correct rate limiting |
+| `cache-duration` | `24h` | Message retention |
+| `attachment-total-size-limit` | `1G` | Max attachment cache |
+| `attachment-file-size-limit` | `15M` | Per-file limit |
+
+iOS support via upstream forwarding to ntfy.sh for APNS.
+
+---
+
+## 👤 User Management
+
+### Create Admin User
 
 ```bash
-# Generate bcrypt password hash
-docker run --rm -it binwiederhier/ntfy user hash
-# Enter password when prompted → outputs $2a$10$...
+ssh pi@pi.local
+docker exec -it $(docker ps -qf name=ntfy_ntfy) /bin/sh
+
+# Inside container
+ntfy user add --role=admin admin
+ntfy token add admin  # Optional: create API token
 ```
 
-Then uncomment in `server.yml`:
+### Add Regular Users
 
+```bash
+ntfy user add myuser
+```
+
+### Declarative Users (GitOps)
+
+Bcrypt hashes are **safe to commit** (one-way, not reversible).
+
+```bash
+# Generate bcrypt hash
+docker run --rm -it binwiederhier/ntfy user hash
+# Enter password → outputs $2a$10$...
+```
+
+Uncomment in `server.yml`:
 ```yaml
 auth-users:
   - "admin:$2a$10$YOUR_HASH:admin"
+  - "user:$2a$10$HASH:user"
 ```
 
 > ⚠️ **Never commit access tokens** (`tk_...`) — they are bearer credentials.
-> Create tokens via CLI and store privately.
 
-## Post-Deployment Setup
+---
 
-After first deployment, create an admin user via CLI:
-
-```bash
-# SSH into the Pi
-ssh pi@pi.local
-
-# Exec into the container
-docker exec -it $(docker ps -q -f name=ntfy_ntfy) /bin/sh
-
-# Create admin user
-ntfy user add --role=admin admin
-
-# (Optional) Create access token for API usage
-ntfy token add admin
-```
-
-## Access Control
-
-Add users and topic permissions:
+## 🔒 Access Control
 
 ```bash
-# Add regular user
-ntfy user add myuser
-
 # Grant topic access
-ntfy access myuser alerts rw        # read-write to 'alerts'
-ntfy access myuser logs ro          # read-only to 'logs'
-ntfy access everyone public ro      # anonymous read access to 'public'
+ntfy access myuser alerts rw      # read-write
+ntfy access myuser logs ro        # read-only
+ntfy access everyone public ro    # anonymous read
 
-# UnifiedPush support (anonymous write to up* topics)
+# UnifiedPush support
 ntfy access everyone "up*" write
 ```
 
-## Usage
+---
+
+## 📖 Usage Examples
 
 ### Publish (authenticated)
-
 ```bash
 curl -u admin:PASSWORD \
   -d "Hello from ntfy!" \
@@ -84,33 +108,23 @@ curl -u admin:PASSWORD \
 ```
 
 ### Subscribe
-
 ```bash
 curl -u admin:PASSWORD \
   -s https://ntfy.home/alerts/json
 ```
 
-### With access token
-
+### With Access Token
 ```bash
 curl -H "Authorization: Bearer tk_..." \
   -d "Token auth message" \
   https://ntfy.home/alerts
 ```
 
-## Volumes
+---
 
-| Volume | Path | Purpose |
-|--------|------|---------|
-| `ntfy_cache` | `/var/cache/ntfy` | Message cache DB, attachments |
-| `ntfy_data` | `/var/lib/ntfy` | User/auth database |
+## 💾 Volumes
 
-## Network
-
-- **Internal:** `rp5_ntfy` (overlay)
-- **External:** `rp5_public` (nginx proxy)
-
-## Resources
-
-- **Memory limit:** 256MB
-- **Port:** 80 (exposed to nginx via overlay network)
+| Volume | Purpose |
+|--------|---------|
+| `ntfy_cache` | Message cache, attachments |
+| `ntfy_data` | User/auth database |

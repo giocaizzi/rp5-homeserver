@@ -1,53 +1,64 @@
-# N8N Workflow Automation
+# ⚡ n8n
 
-Self-hosted workflow automation at `https://n8n.home`.
+> Workflow automation platform
 
-## Configuration
+**URL**: `https://n8n.home`
 
-**Container**: `n8nio/n8n:latest`
-**Database**: PostgreSQL 16 (dedicated container, Pi-optimized)
-**Authentication**: HTTP Basic Auth (required)
+---
 
-## Key Settings
+## 🚀 Quick Start
 
-**Raspberry Pi Optimizations**:
-- PostgreSQL tuned for 8GB Pi: 64MB shared buffers, 256MB cache
-- Conservative connection limits (20 max connections)
-- Optimized WAL and checkpoint settings for SD card longevity
+1. Create secrets (see below)
+2. Deploy via Portainer → Swarm mode
+3. Login at `https://n8n.home` with basic auth credentials
 
-**Security**:
-- HTTPS-only configuration (nginx handles SSL)
-- Basic auth: username `admin`, password via env
-- Secure cookies enabled
-- PostgreSQL with scram-sha-256 authentication
+---
 
-**Performance**:
-- Main process execution (Pi-optimized)
-- 7-day data retention with auto-pruning
-- Non-root user execution
-- Dedicated PostgreSQL database for better performance
+## 📦 Architecture
 
-**Network**: Access only via nginx proxy (no direct ports)
+| Container | Image | Purpose |
+|-----------|-------|---------|
+| n8n-db | `postgres:16-alpine` | Database (Pi-optimized) |
+| n8n-app | `n8nio/n8n:latest` | Workflow engine + web UI |
 
-## Environment Setup
+---
 
-Copy `.env.example` to `.env` and set:
-- `N8N_BASIC_AUTH_PASSWORD` (required - use strong password)
-- `POSTGRES_PASSWORD` (required - use strong database password)
-- Optional: `POSTGRES_USER`, `POSTGRES_DB` (defaults: n8n, n8n)
-- Optional: paths and timezone
+## 🔐 Secrets
 
-## Deployment
+| Secret | Generate |
+|--------|----------|
+| `n8n_postgres_password` | `openssl rand -base64 32 \| docker secret create n8n_postgres_password -` |
+| `n8n_auth_password` | `openssl rand -base64 32 \| docker secret create n8n_auth_password -` |
 
-Requires [infrastructure stack](../../infra) running first.
+---
 
-1. Deploy via Portainer pointing to:
+## ⚙️ Configuration
 
-- Repository: `https://github.com/giocaizzi/rp5-homeserver`
-- Container path: `services/n8n/docker-compose.yml`
-- **Deploy Mode**: Select "Swarm" (not "Standalone")
-Set environment variables in Portainer Stack → Environment Variables section.
+### Pi Optimizations
 
-2. Add `n8n.home` to your local `/etc/hosts`
+PostgreSQL tuned for Raspberry Pi 5 (8GB):
 
-3. Login at `https://n8n.home` with configured credentials.
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| `shared_buffers` | 64MB | Memory for caching |
+| `effective_cache_size` | 256MB | Query planner hint |
+| `max_connections` | 20 | Conservative for ARM |
+
+Config: `./postgres/postgresql.conf`
+
+### n8n Settings
+
+| Setting | Value |
+|---------|-------|
+| Execution mode | Main process (Pi-optimized) |
+| Data retention | 7 days (auto-pruning) |
+| Auth | HTTP Basic (`admin` + secret) |
+
+---
+
+## 💾 Volumes
+
+| Volume | Purpose |
+|--------|---------|
+| `n8n_postgres_data` | Database storage |
+| `n8n_data` | Workflows, credentials |

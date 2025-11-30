@@ -78,7 +78,7 @@ services:
   # ========================================
   prometheus:
     image: prom/prometheus:latest
-    hostname: prometheus
+    hostname: observability-prometheus
     expose:
       - "9090"
     command:
@@ -102,10 +102,11 @@ services:
       start_period: 30s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "prometheus"
+      com.giocaizzi.service: "metrics"
       com.giocaizzi.component: "data"
       com.giocaizzi.role: "metrics"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "prometheus"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -120,7 +121,7 @@ services:
   # ========================================
   loki:
     image: grafana/loki:latest
-    hostname: loki
+    hostname: observability-loki
     expose:
       - "3100"
     command: -config.file=/etc/loki/loki-config.yaml
@@ -133,10 +134,11 @@ services:
     # Docker Swarm restart policy handles recovery
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "loki"
+      com.giocaizzi.service: "logs"
       com.giocaizzi.component: "data"
       com.giocaizzi.role: "logs"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "loki"
     <<: *security-base
     user: "root"
     deploy:
@@ -152,7 +154,7 @@ services:
   # ========================================
   tempo:
     image: grafana/tempo:latest
-    hostname: tempo
+    hostname: observability-tempo
     expose:
       - "3200"  # Tempo HTTP
       - "4317"  # OTLP gRPC
@@ -167,10 +169,11 @@ services:
     # Docker Swarm restart policy handles recovery
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "tempo"
+      com.giocaizzi.service: "traces"
       com.giocaizzi.component: "data"
       com.giocaizzi.role: "traces"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "tempo"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -185,7 +188,7 @@ services:
   # ========================================
   alloy:
     image: grafana/alloy:latest
-    hostname: alloy
+    hostname: observability-alloy
     expose:
       - "12345" # Alloy metrics
       - "4317"  # OTLP gRPC
@@ -208,10 +211,11 @@ services:
     # Docker Swarm restart policy handles recovery
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "alloy"
+      com.giocaizzi.service: "collector"
       com.giocaizzi.component: "worker"
       com.giocaizzi.role: "collector"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "alloy"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -226,7 +230,7 @@ services:
   # ========================================
   grafana:
     image: grafana/grafana:latest
-    hostname: grafana
+    hostname: observability-grafana
     expose:
       - "3000"
     environment:
@@ -256,10 +260,11 @@ services:
       start_period: 30s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "grafana"
+      com.giocaizzi.service: "dashboard"
       com.giocaizzi.component: "app"
-      com.giocaizzi.role: "dashboards"
+      com.giocaizzi.role: "dashboard"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "grafana"
     <<: *security-base
     deploy:
       <<: *deploy-base

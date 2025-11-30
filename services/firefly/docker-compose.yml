@@ -47,7 +47,7 @@ networks:
 services:
   firefly:
     image: fireflyiii/core:latest
-    hostname: firefly
+    hostname: firefly-app
     depends_on:
     - db
     expose:
@@ -66,7 +66,7 @@ services:
       
       # Database configuration
       - DB_CONNECTION=mysql
-      - DB_HOST=db
+      - DB_HOST=firefly-db
       - DB_PORT=3306
       - DB_DATABASE=firefly
       - DB_USERNAME=firefly
@@ -118,10 +118,11 @@ services:
       start_period: 120s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "firefly"
+      com.giocaizzi.service: "app"
       com.giocaizzi.component: "app"
       com.giocaizzi.role: "backend"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "firefly"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -133,7 +134,7 @@ services:
 
   db:
     image: mariadb:lts
-    hostname: db
+    hostname: firefly-db
     environment:
       - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
       - MYSQL_DATABASE=firefly
@@ -159,10 +160,11 @@ services:
       start_period: 90s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "firefly-db"
+      com.giocaizzi.service: "db"
       com.giocaizzi.component: "data"
       com.giocaizzi.role: "database"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "mariadb"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -181,7 +183,7 @@ services:
       - "8080"
     environment:
       # Firefly III connection
-      - FIREFLY_III_URL=http://firefly:8080
+      - FIREFLY_III_URL=http://firefly-app:8080
       - VANITY_URL=https://firefly.giocaizzi.xyz
       
       # Timezone and Locale
@@ -235,10 +237,11 @@ services:
       start_period: 30s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "firefly-importer"
+      com.giocaizzi.service: "importer"
       com.giocaizzi.component: "worker"
       com.giocaizzi.role: "importer"
       com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "firefly-importer"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -250,7 +253,7 @@ services:
 
   cron:
     image: alpine
-    hostname: cron
+    hostname: firefly-cron
     depends_on:
       - firefly
       - importer
@@ -265,7 +268,7 @@ services:
       sh -c "apk add --no-cache tzdata wget docker-cli &&
       ln -sf /usr/share/zoneinfo/Europe/Rome /etc/localtime &&
       echo 'Waiting for Firefly to be ready...' &&
-      until wget -q --spider http://firefly:8080/api/v1/about; do echo 'Waiting...'; sleep 30; done &&
+      until wget -q --spider http://firefly-app:8080/api/v1/about; do echo 'Waiting...'; sleep 30; done &&
       echo 'Firefly is ready, setting up cron jobs...' &&
       AUTO_IMPORT_SECRET=\$$(cat /run/secrets/auto_import_secret) &&
       FIREFLY_ACCESS_TOKEN=\$$(cat /run/secrets/firefly_access_token) &&
@@ -280,10 +283,11 @@ services:
       - firefly_network
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "firefly-cron"
+      com.giocaizzi.service: "scheduler"
       com.giocaizzi.component: "worker"
       com.giocaizzi.role: "scheduler"
       com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "alpine"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -302,9 +306,9 @@ services:
     expose:
       - "80"
     environment:
-      - FIREFLY_URL=http://firefly:8080
+      - FIREFLY_URL=http://firefly-app:8080
       - DB_CONNECTION=pgsql
-      - DB_HOST=pico-db
+      - DB_HOST=firefly-pico-db
       - DB_PORT=5432
       - DB_DATABASE=firefly-pico
       - DB_USERNAME=firefly-pico
@@ -330,10 +334,11 @@ services:
       start_period: 120s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "firefly-pico"
+      com.giocaizzi.service: "pico"
       com.giocaizzi.component: "app"
       com.giocaizzi.role: "frontend"
       com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "firefly-pico"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -345,7 +350,7 @@ services:
 
   pico-db:
     image: postgres:16-alpine
-    hostname: pico-db
+    hostname: firefly-pico-db
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     environment:
       - POSTGRES_DB=firefly-pico
@@ -369,10 +374,11 @@ services:
       start_period: 60s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "firefly-pico-db"
+      com.giocaizzi.service: "pico-db"
       com.giocaizzi.component: "data"
       com.giocaizzi.role: "database"
       com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "postgres"
     <<: *security-base
     deploy:
       <<: *deploy-base

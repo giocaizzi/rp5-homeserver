@@ -1,18 +1,189 @@
-# Monitoring
+# Monitoring & Observability
+
+Observability stack using OTEL-compliant practices with Grafana, Loki, Tempo, and Prometheus.
+
+---
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     observability stack                         │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
+│  │   Grafana   │  │   Alloy     │  │ Prometheus  │             │
+│  │ (Dashboard) │  │ (Collector) │  │  (Metrics)  │             │
+│  └─────────────┘  └──────┬──────┘  └─────────────┘             │
+│                          │                                      │
+│         ┌────────────────┼────────────────┐                    │
+│         │                │                │                     │
+│  ┌──────▼──────┐  ┌──────▼──────┐  ┌──────▼──────┐             │
+│  │    Loki     │  │    Tempo    │  │ Prometheus  │             │
+│  │   (Logs)    │  │  (Traces)   │  │  (Metrics)  │             │
+│  └─────────────┘  └─────────────┘  └─────────────┘             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Components
+
+| Service | Hostname | Technology | Role | Port |
+|---------|----------|------------|------|------|
+| Grafana | `observability-grafana` | grafana | Dashboard & visualization | 3000 |
+| Alloy | `observability-alloy` | alloy | Telemetry collector | 12345, 4317, 4318 |
+| Prometheus | `observability-prometheus` | prometheus | Metrics storage | 9090 |
+| Loki | `observability-loki` | loki | Log aggregation | 3100 |
+| Tempo | `observability-tempo` | tempo | Distributed tracing | 3200, 4317, 4318 |
+
+---
 
 ## Host Monitoring
 
 ### Netdata
-Lightweight real-time monitoring installed directly on the Raspberry Pi host (not containerized).
+Lightweight real-time monitoring running as a Docker container in the infra stack.
 
-**Installation:**
-```bash
-# On RP5 host
-bash <(curl -Ss https://my-netdata.io/kickstart.sh)
-```
+**Hostname:** `infra-netdata`
 
 **Access:**
 - Via nginx proxy: `https://netdata.home` (recommended)
 - Direct access: `http://pi.local:19999` (fallback)
-- Lightweight dashboard with real-time metrics
+- Real-time system metrics and alerts
 - No authentication required (internal network only)
+
+---
+
+## Telemetry Pipeline
+
+### Grafana Alloy
+
+Unified telemetry collector handling logs, metrics, and traces.
+
+**Endpoints:**
+- Health UI: `http://observability-alloy:12345`
+- OTLP gRPC: `observability-alloy:4317`
+- OTLP HTTP: `observability-alloy:4318`
+
+**Pipelines:**
+
+| Pipeline | Source | Destination | Labels |
+|----------|--------|-------------|--------|
+| Docker Logs | Docker socket | Loki | `namespace`, `service`, `technology`, `component`, `role` |
+| Prometheus Scrape | Internal services | Prometheus | `job`, `instance`, `service_name`, `technology` |
+| OTLP Traces | Application SDKs | Tempo | OTEL semantic conventions |
+
+### Label Schema
+
+Labels extracted from Docker containers and forwarded to observability backends:
+
+| Label | Source | Description |
+|-------|--------|-------------|
+| `namespace` | `com.giocaizzi.namespace` | Stack name (e.g., `firefly`, `n8n`) |
+| `service_name` | `com.giocaizzi.service` | Logical service name (e.g., `app`, `db`) |
+| `technology` | `com.giocaizzi.technology` | Implementation technology (e.g., `postgres`, `redis`) |
+| `component` | `com.giocaizzi.component` | Component type (`app`, `data`, `worker`, `gateway`) |
+| `role` | `com.giocaizzi.role` | Service role (`database`, `cache`, `proxy`, `backend`...) |
+
+---
+
+## Metrics Collection
+
+### Prometheus Targets
+
+Prometheus scrapes metrics from internal services via Alloy.
+
+| Target | Endpoint | Metrics |
+|--------|----------|---------|
+| Prometheus | `observability-prometheus:9090/metrics` | Self-monitoring |
+| Loki | `observability-loki:3100/metrics` | Log ingestion stats |
+| Tempo | `observability-tempo:3200/metrics` | Trace ingestion stats |
+| Alloy | `observability-alloy:12345/metrics` | Pipeline health |
+
+---
+
+## Log Aggregation
+
+### Loki
+
+Horizontally-scalable log aggregation with label-based indexing.
+
+**Endpoint:** `http://observability-loki:3100`
+
+**Log Sources:**
+- Docker container logs (via Alloy `loki.source.docker`)
+- All containers with `com.giocaizzi.namespace` label
+
+**Query Examples:**
+```logql
+# All logs from firefly stack
+{namespace="firefly"}
+
+# Database logs across all stacks
+{technology=~"postgres|mariadb"}
+
+# Error logs from app components
+{component="app"} |= "error"
+```
+
+---
+
+## Distributed Tracing
+
+### Tempo
+
+Distributed tracing backend for OTLP-compatible traces.
+
+**Endpoints:**
+- Query API: `http://observability-tempo:3200`
+- OTLP gRPC: `observability-tempo:4317`
+- OTLP HTTP: `observability-tempo:4318`
+
+**Instrumented Services:**
+- Langfuse (auto-instrumented)
+- n8n (via OTEL SDK)
+- Custom applications with OTEL SDK
+
+---
+
+## Grafana Dashboards
+
+### Access
+- URL: `https://grafana.home`
+- Default credentials in Swarm secrets
+
+### Data Sources (Pre-configured)
+| Name | Type | URL |
+|------|------|-----|
+| Prometheus | prometheus | `http://observability-prometheus:9090` |
+| Loki | loki | `http://observability-loki:3100` |
+| Tempo | tempo | `http://observability-tempo:3200` |
+
+---
+
+## Alerting
+
+Alerting is handled via Grafana alerting rules, with notifications sent to ntfy.
+
+**Alert Channels:**
+- ntfy: `https://ntfy.home/alerts`
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Logs not appearing in Loki:**
+1. Check container has `com.giocaizzi.namespace` label
+2. Verify Alloy can access Docker socket
+3. Check Alloy logs: `docker service logs observability_alloy`
+
+**Traces not appearing in Tempo:**
+1. Verify OTLP endpoint configuration in application
+2. Check Tempo is receiving data: `curl http://observability-tempo:3200/ready`
+3. Check Alloy OTLP receiver: `curl http://observability-alloy:12345/metrics`
+
+**High memory usage:**
+- Reduce Loki retention period
+- Adjust Prometheus scrape intervals
+- Check Tempo trace sampling rate
