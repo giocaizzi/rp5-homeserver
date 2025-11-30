@@ -139,17 +139,6 @@ Specific function within the component. Examples:
 2. **Logs**: Docker containers → Alloy (autodiscovery) → Loki
 3. **Traces**: Applications → OTLP → Alloy → Tempo
 
-### Enabling Langfuse (Optional)
-
-To export traces to Langfuse for LLM observability:
-
-1. Create secrets:
-   ```bash
-   cp secrets/langfuse_public_key.txt.example secrets/langfuse_public_key.txt
-   cp secrets/langfuse_secret_key.txt.example secrets/langfuse_secret_key.txt
-   # Edit with actual values
-   ```
-
 ## Deployment
 
 Deployed via Portainer using the remote repository feature in Swarm mode.

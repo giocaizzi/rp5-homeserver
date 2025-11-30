@@ -51,6 +51,5 @@ otelcol.processor.attributes "default" {
     metrics = [otelcol.exporter.prometheus.default.input]
     logs    = [otelcol.exporter.loki.default.input]
     traces  = [otelcol.exporter.otlp.tempo.input]
-    // To enable Langfuse, add: otelcol.exporter.otlphttp.langfuse.input
   }
 }
