@@ -69,11 +69,3 @@ Specific function within the component. Examples:
 | `otel-exporters.alloy` | Exporters to Loki, Prometheus, Tempo |
 | `docker-logs.alloy` | Docker discovery, relabeling, log processing |
 | `prometheus-scrape.alloy` | Tempo scrape + relabeling |
-| `langfuse.alloy` | Langfuse OTLP export (disabled by default) |
-
-## Enabling Langfuse Export
-
-1. Create secrets: `observability_langfuse_public_key`, `observability_langfuse_secret_key`
-2. Uncomment secrets in `docker-compose.yml`
-3. Uncomment all blocks in `langfuse.alloy`
-4. Add `otelcol.exporter.otlphttp.langfuse.input` to traces output in `otel-processors.alloy`
