@@ -68,20 +68,34 @@ Unified telemetry collector handling logs, metrics, and traces.
 
 | Pipeline | Source | Destination | Labels |
 |----------|--------|-------------|--------|
-| Docker Logs | Docker socket | Loki | `namespace`, `service`, `technology`, `component`, `role` |
+| Docker Logs | Docker socket | Loki | `service_namespace`, `service_name`, `technology`, `component`, `tier`, `level` |
 | Prometheus Scrape | Internal services | Prometheus | `job`, `instance`, `service_name`, `technology` |
 | OTLP Traces | Application SDKs | Tempo | OTEL semantic conventions |
 
 ### Label Schema
 
-Labels extracted from Docker containers and forwarded to observability backends:
+Labels extracted from Docker containers and forwarded to observability backends. Names follow OTEL semantic conventions (dots → underscores).
+
+**Indexed Labels (Low Cardinality):**
 
 | Label | Source | Description |
 |-------|--------|-------------|
-| `namespace` | `com.giocaizzi.namespace` | Stack name (e.g., `firefly`, `n8n`) |
+| `service_namespace` | `com.giocaizzi.namespace` | Stack name (e.g., `firefly`, `n8n`) |
 | `service_name` | `com.giocaizzi.service` | Logical service name (e.g., `app`, `db`) |
+| `deployment_environment_name` | `com.giocaizzi.env` | Environment (`production`, `staging`, `dev`) |
 | `technology` | `com.giocaizzi.technology` | Implementation technology (e.g., `postgres`, `redis`) |
+| `tier` | `com.giocaizzi.tier` | Service tier (`core`, `extra`) |
 | `component` | `com.giocaizzi.component` | Component type (`app`, `data`, `worker`, `gateway`) |
+| `source` | Auto-detected | Pipeline source (`docker`, `otel`, `scrape`) |
+| `level` | Extracted | Log severity (`info`, `error`, etc.) |
+
+**Metadata Labels (High Cardinality):**
+
+| Label | Source | Description |
+|-------|--------|-------------|
+| `service_instance_id` | Container ID | Unique instance identifier |
+| `service_version` | `com.giocaizzi.version` | Service version |
+| `host_name` | Hostname | Container/host name |
 | `role` | `com.giocaizzi.role` | Service role (`database`, `cache`, `proxy`, `backend`...) |
 
 ---
@@ -116,13 +130,16 @@ Horizontally-scalable log aggregation with label-based indexing.
 **Query Examples:**
 ```logql
 # All logs from firefly stack
-{namespace="firefly"}
+{service_namespace="firefly"}
 
 # Database logs across all stacks
 {technology=~"postgres|mariadb"}
 
 # Error logs from app components
-{component="app"} |= "error"
+{component="app", level="error"}
+
+# Filter by instance (structured metadata)
+{service_namespace="firefly"} | service_instance_id="abc123"
 ```
 
 ---

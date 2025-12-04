@@ -126,16 +126,22 @@ environment:
 
 ## 🏷️ Label Schema
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md#label-schema) for full reference.
+See [alloy/README.md](./alloy/README.md) for full reference.
 
-Key labels applied by Alloy:
+Key labels applied by Alloy (OTEL-compliant names):
 
 | Label | Source | Example |
-|-------|--------|---------|
-| `namespace` | `com.giocaizzi.namespace` | `infra`, `n8n` |
+|-------|--------|--------|
+| `service_namespace` | `com.giocaizzi.namespace` | `infra`, `n8n` |
 | `service_name` | `com.giocaizzi.service` | `nginx`, `prometheus` |
+| `deployment_environment_name` | `com.giocaizzi.env` | `production` |
+| `technology` | `com.giocaizzi.technology` | `postgres`, `redis`, `nginx` |
+| `tier` | `com.giocaizzi.tier` | `core`, `extra` |
 | `component` | `com.giocaizzi.component` | `app`, `data`, `worker`, `gateway` |
 | `source` | Auto-detected | `otel`, `docker`, `scrape` |
+| `level` | Extracted | `info`, `error`, `warn` |
+
+**Structured Metadata (high cardinality):** `service_instance_id`, `service_version`, `host_name`, `role`
 
 ---
 
