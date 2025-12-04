@@ -12,12 +12,13 @@ Centralized OpenTelemetry collector for logs, traces, and metrics.
 │  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐                    │
 │  │   Docker    │     │    OTLP     │     │  Prometheus │                    │
 │  │   Logs      │     │  Receiver   │     │   Scrape    │                    │
+│  │             │     │             │     │  (modules)  │                    │
 │  └──────┬──────┘     └──────┬──────┘     └──────┬──────┘                    │
 │         │                   │                   │                            │
 │         ▼                   ▼                   ▼                            │
 │  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐                    │
 │  │  Relabel    │     │   Batch     │     │  Relabel    │                    │
-│  │  + Process  │     │ + Transform │     │             │                    │
+│  │  + Process  │     │ + Attributes│     │  (module)   │                    │
 │  └──────┬──────┘     └──────┬──────┘     └──────┬──────┘                    │
 │         │                   │                   │                            │
 │         │            ┌──────┴──────┐            │                            │
@@ -29,6 +30,10 @@ Centralized OpenTelemetry collector for logs, traces, and metrics.
 │      │ Loki │     │ Loki │ │Prom  │ │Tempo │ │Prom  │                       │
 │      │Write │     │Export│ │Export│ │OTLP  │ │Write │                       │
 │      └──────┘     └──────┘ └──────┘ └──────┘ └──────┘                       │
+│                                                                              │
+│  ═══════════════════════════════════════════════════════════════════════    │
+│                           outputs.alloy                                      │
+│  ═══════════════════════════════════════════════════════════════════════    │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -162,9 +167,45 @@ Docker labels are mapped via relabeling rules:
 
 | File | Purpose |
 |------|---------|
+| `modules.alloy` | Reusable custom components (`scrape_with_labels`, `scrape_observability`) |
 | `outputs.alloy` | Loki + Prometheus remote write endpoints |
 | `otel-receivers.alloy` | OTLP HTTP/gRPC receivers |
 | `otel-processors.alloy` | Batch + transform processors (OTEL → underscore labels) |
 | `otel-exporters.alloy` | Exporters to Loki, Prometheus, Tempo |
 | `docker-logs.alloy` | Docker discovery, relabeling, log processing |
-| `prometheus-scrape.alloy` | Observability stack metric scraping |
+| `prometheus-scrape.alloy` | Prometheus metric scraping using custom components |
+
+## Custom Components
+
+Defined in `modules.alloy` using Alloy's `declare` block for code reuse.
+
+### `scrape_with_labels`
+
+Generic scraper with OTEL-aligned labels. Accepts service metadata and forwards to `prometheus.remote_write.default`.
+
+```alloy
+scrape_with_labels "service_name" {
+  address           = "host:port"
+  service_namespace = "stack_name"
+  service_name      = "service"
+  tier              = "core"       // optional, default: "core"
+  component         = "data"       // optional, default: "data"
+  role              = "database"
+  technology        = "postgres"
+  scrape_interval   = "30s"        // optional, default: "30s"
+  scrape_timeout    = "10s"        // optional, default: "10s"
+}
+```
+
+### `scrape_observability`
+
+Specialized scraper for observability stack services. Pre-sets `service_namespace=observability`, `tier=core`, `component=observability`.
+
+```alloy
+scrape_observability "service_name" {
+  address         = "host:port"
+  service_name    = "traces"     // traces, metrics, logs, collector
+  technology      = "tempo"
+  scrape_interval = "15s"        // optional, default: "15s"
+}
+```

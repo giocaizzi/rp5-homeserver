@@ -40,6 +40,11 @@ networks:
   public_network:
     external: true
     name: rp5_public
+  
+  # External network for observability (Alloy scraping)
+  observability_network:
+    external: true
+    name: rp5_observability
 
 # =============================================================================
 # Services
@@ -171,6 +176,46 @@ services:
       resources:
         limits:
           memory: 384M
+    logging:
+      <<: *logging-base
+
+  # MySQL/MariaDB Exporter - Metrics for Prometheus/Alloy
+  mysql-exporter:
+    image: prom/mysqld-exporter:latest
+    hostname: firefly-mysql-exporter
+    expose:
+      - "9104"
+    secrets:
+      - db_password
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        DB_PASS=$$(cat /run/secrets/db_password)
+        export DATA_SOURCE_NAME="firefly:$${DB_PASS}@(firefly-db:3306)/firefly"
+        exec /bin/mysqld_exporter
+    networks:
+      - firefly_network
+      - observability_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9104/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "mysql-exporter"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.role: "exporter"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "mysqld-exporter"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 64M
     logging:
       <<: *logging-base
 
@@ -385,6 +430,48 @@ services:
       resources:
         limits:
           memory: 128M
+    logging:
+      <<: *logging-base
+
+  # PostgreSQL Exporter for Pico DB - Metrics for Prometheus/Alloy
+  pico-postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    hostname: firefly-postgres-exporter
+    expose:
+      - "9187"
+    environment:
+      - DATA_SOURCE_URI=firefly-pico-db:5432/firefly-pico?sslmode=disable
+      - DATA_SOURCE_USER=firefly-pico
+    secrets:
+      - pico_db_password
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export DATA_SOURCE_PASS=$$(cat /run/secrets/pico_db_password)
+        exec /bin/postgres_exporter
+    networks:
+      - firefly_network
+      - observability_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9187/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "postgres-exporter"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.role: "exporter"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "postgres-exporter"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 64M
     logging:
       <<: *logging-base
 

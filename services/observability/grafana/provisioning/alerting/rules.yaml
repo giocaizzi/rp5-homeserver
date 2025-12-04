@@ -1,0 +1,437 @@
+apiVersion: 1
+
+groups:
+  # ===========================================
+  # Database Alerts
+  # ===========================================
+  - orgId: 1
+    name: Database Alerts
+    folder: Alerts
+    interval: 1m
+    rules:
+      - uid: postgres-down
+        title: PostgreSQL Down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: pg_up
+              instant: true
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: []
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - B
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: B
+              refId: C
+              type: threshold
+        dashboardUid: ""
+        panelId: 0
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: PostgreSQL instance {{ $labels.service_namespace }}/{{ $labels.service_name }} is down
+          description: The PostgreSQL exporter is unable to connect to the database.
+        labels:
+          severity: critical
+        isPaused: false
+
+      - uid: postgres-low-cache-hit
+        title: PostgreSQL Low Cache Hit Ratio
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: (sum by (service_namespace, service_name) (pg_stat_database_blks_hit) / (sum by (service_namespace, service_name) (pg_stat_database_blks_hit) + sum by (service_namespace, service_name) (pg_stat_database_blks_read))) * 100
+              instant: true
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 90
+                    type: lt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 10m
+        annotations:
+          summary: PostgreSQL cache hit ratio is low for {{ $labels.service_namespace }}/{{ $labels.service_name }}
+          description: Cache hit ratio is {{ $value | printf "%.1f" }}% (threshold 90%).
+        labels:
+          severity: warning
+
+      - uid: mariadb-down
+        title: MariaDB Down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: mysql_up
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: MariaDB instance {{ $labels.service_namespace }}/{{ $labels.service_name }} is down
+          description: The MySQL exporter is unable to connect to the database.
+        labels:
+          severity: critical
+
+  # ===========================================
+  # Redis Alerts
+  # ===========================================
+  - orgId: 1
+    name: Redis Alerts
+    folder: Alerts
+    interval: 1m
+    rules:
+      - uid: redis-down
+        title: Redis Down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: redis_up
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: Redis instance {{ $labels.service_namespace }}/{{ $labels.service_name }} is down
+          description: The Redis exporter is unable to connect to Redis.
+        labels:
+          severity: critical
+
+      - uid: redis-high-memory
+        title: Redis High Memory Usage
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: redis_memory_used_bytes / redis_memory_max_bytes * 100
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 80
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Redis memory usage is high for {{ $labels.service_namespace }}/{{ $labels.service_name }}
+          description: Memory usage is at {{ $value | printf "%.1f" }}% (threshold 80%).
+        labels:
+          severity: warning
+
+  # ===========================================
+  # Exporter Health Alerts
+  # ===========================================
+  - orgId: 1
+    name: Exporter Health
+    folder: Alerts
+    interval: 1m
+    rules:
+      - uid: exporter-down
+        title: Metrics Exporter Down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: up{job=~".*exporter.*|clickhouse"}
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Metrics exporter {{ $labels.job }} is down
+          description: The exporter at {{ $labels.instance }} has been down for 5 minutes.
+        labels:
+          severity: warning
+
+  # ===========================================
+  # Observability Stack Alerts
+  # ===========================================
+  - orgId: 1
+    name: Observability Stack
+    folder: Alerts
+    interval: 1m
+    rules:
+      - uid: loki-down
+        title: Loki Down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: up{job="loki"}
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: Loki is down
+          description: The Loki log aggregation service is unreachable.
+        labels:
+          severity: critical
+
+      - uid: tempo-down
+        title: Tempo Down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: up{job="tempo"}
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: Tempo is down
+          description: The Tempo distributed tracing service is unreachable.
+        labels:
+          severity: critical
+
+      - uid: alloy-down
+        title: Alloy Down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: up{job="alloy"}
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: Alloy is down
+          description: The Alloy telemetry collector is unreachable.
+        labels:
+          severity: critical
