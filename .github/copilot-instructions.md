@@ -12,6 +12,7 @@ Enterprise-level senior AI coding assistant for **Raspberry Pi 5 home-server**. 
 - Reject unnecessary abstraction, scripts, or automation.
 - Produce optimal, production-ready code.
 - Resolve queries fully before yielding.
+- Whenever a substantial change is made, review also this file (`.github/copilot-instructions.md`) and update it accordingly. This file defines the rules you must follow, must be imperative, clear, and concise. Always follow current content and style.
 
 ---
 
@@ -26,7 +27,7 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 
 **Workflow:**
 - Edit locally on macOS → sync/push → deploy.
-- SSH target: `giorgiocaizzi@pi.local` (use in docs, not personal info).
+- SSH target: `giorgiocaizzi@pi.local` (use for operations, NOT in docs as its personal info).
 - `infra/` deployed to `/home/giorgiocaizzi/rp5-server` on Pi.
 - Sync entire `infra/` folder (contains `VERSION` file).
 - Reuse scripts in `/scripts`; propose new ones only if essential.
@@ -104,7 +105,7 @@ service-name:
   #     exec <original-entrypoint>
   networks:
     - <stack>_network
-    # - public_network                  # nginx-proxied services only
+    # - rp5_public                       # required for nginx-proxied services
   healthcheck:
     test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:<port>/<path>"]
     interval: 30s
@@ -113,10 +114,11 @@ service-name:
     start_period: 30s                   # adjust per service startup time
   labels:
     <<: *labels-base
-    com.giocaizzi.service: "<stack>-<service>"
-    com.giocaizzi.component: "<component>"  # app | data | worker | cache | storage | gateway
-    com.giocaizzi.role: "<role>"            # database | web | proxy | dns | scheduler
+    com.giocaizzi.service: "<service-name>"
+    com.giocaizzi.component: "<component>"  # app | data | worker | gateway
+    com.giocaizzi.role: "<role>"            # functional role (database, proxy, backend, scheduler...)
     com.giocaizzi.tier: "<tier>"            # core | extra
+    com.giocaizzi.technology: "<tech>"      # image/tool name (postgres, redis, nginx...)
   <<: *security-base
   # user: "<uid>:<gid>"
   deploy:
@@ -130,9 +132,15 @@ service-name:
     <<: *logging-base
 ```
 
-**Component values:** `app` (UI/API), `data` (database), `worker` (async tasks), `cache`, `storage`, `gateway`.
+**Component values:** `app`, `data`, `worker`, `gateway`.
 
-**Network naming:** `rp5_<stack>` (overlay).
+**Naming patterns:**
+
+| Element | Pattern | Example |
+|---------|---------|--------|
+| Secret | `<stack>_<name>` | `n8n_postgres_password` |
+| Network | `rp5_<stack>` | `rp5_n8n` |
+| Hostname | `<stack>-<service>` | `n8n-db` |
 
 ---
 
@@ -181,8 +189,21 @@ service-name:
 # Documentation
 
 - Technical, direct, no filler.
+- Always keep docs updated with architecture changes.
+- Follow current structure and style.
 - Explain only what's needed to execute or maintain.
 - Use `pi@pi.local` and `/home/pi/rp5-server` (no personal info).
+- Use Mermaid diagrams for architecture, STRICTLY when helpful.
+
+**README structure (required sections):**
+1. Title with emoji + one-line description
+2. 🚀 Quick Start
+3. 📦 Architecture — container table
+4. 🔐 Secrets — with generation commands
+5. ⚙️ Configuration — if needed
+6. 💾 Volumes
+
+Add service-specific sections as needed.
 
 ---
 

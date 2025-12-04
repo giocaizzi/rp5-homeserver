@@ -1,14 +1,36 @@
+// =============================================================================
+// DOCKER LOG COLLECTION PIPELINE
+// =============================================================================
+// Collects logs from Docker containers and enriches them with OTEL-aligned labels.
+// Labels use OTEL semconv naming converted to underscore format.
+//
+// Label Schema (OTEL Semconv → Loki/Prometheus Label):
+//   service.name              → service_name
+//   service.namespace         → service_namespace
+//   service.version           → service_version
+//   service.instance.id       → service_instance_id
+//   deployment.environment.name → deployment_environment_name
+//   host.name                 → host_name
+//
+// Custom Labels (no OTEL equivalent):
+//   tier, component, role, technology, source, level
+// =============================================================================
+
 // Discover Docker containers
 discovery.docker "containers" {
   host = "unix:///var/run/docker.sock"
 }
 
-// Relabel Docker metadata to OTEL semantic attributes
+// Relabel Docker metadata to OTEL-aligned labels
 // Fallback chain: custom labels > swarm labels > compose labels > container metadata
 discovery.relabel "docker_labels" {
   targets = discovery.docker.containers.targets
 
-  // service_name: container name -> compose service -> swarm service -> custom label
+  // ---------------------------------------------------------------------------
+  // INDEXED LABELS (low cardinality - used for filtering)
+  // ---------------------------------------------------------------------------
+
+  // service_name: container name → compose service → swarm service → custom label
   rule {
     source_labels = ["__meta_docker_container_name"]
     regex         = "^/?(.+)$"
@@ -30,70 +52,93 @@ discovery.relabel "docker_labels" {
     target_label  = "service_name"
   }
 
-  // environment from com.giocaizzi.env (default to production if not set)
+  // service_namespace: compose project → swarm stack → custom label
+  // Default: external (for containers without namespace)
   rule {
-    target_label = "environment"
+    target_label = "service_namespace"
+    replacement  = "external"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    regex         = "(.+)"
+    target_label  = "service_namespace"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_stack_namespace"]
+    regex         = "(.+)"
+    target_label  = "service_namespace"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_giocaizzi_namespace"]
+    regex         = "(.+)"
+    target_label  = "service_namespace"
+  }
+
+  // deployment_environment_name: default production (OTEL: deployment.environment.name)
+  rule {
+    target_label = "deployment_environment_name"
     replacement  = "production"
   }
   rule {
     source_labels = ["__meta_docker_container_label_com_giocaizzi_env"]
     regex         = "(.+)"
-    target_label  = "environment"
+    target_label  = "deployment_environment_name"
   }
 
-  // tier from com.giocaizzi.tier
+  // tier: core/extra (default: core)
+  rule {
+    target_label = "tier"
+    replacement  = "core"
+  }
   rule {
     source_labels = ["__meta_docker_container_label_com_giocaizzi_tier"]
+    regex         = "(.+)"
     target_label  = "tier"
   }
 
-  // component from com.giocaizzi.component
+  // component: app/data/cache/worker/gateway/network/observability
   rule {
     source_labels = ["__meta_docker_container_label_com_giocaizzi_component"]
+    regex         = "(.+)"
     target_label  = "component"
   }
 
-  // role from com.giocaizzi.role
-  rule {
-    source_labels = ["__meta_docker_container_label_com_giocaizzi_role"]
-    target_label  = "role"
-  }
+  // ---------------------------------------------------------------------------
+  // METADATA LABELS (high cardinality - stored as structured metadata)
+  // ---------------------------------------------------------------------------
 
-  // version from com.giocaizzi.version (optional)
-  rule {
-    source_labels = ["__meta_docker_container_label_com_giocaizzi_version"]
-    regex         = "(.+)"
-    target_label  = "version"
-  }
-
-  // instance from container ID (short form)
+  // service_instance_id: container ID (short form, 12 chars)
   rule {
     source_labels = ["__meta_docker_container_id"]
     regex         = "^(.{12}).*$"
-    target_label  = "instance"
+    target_label  = "service_instance_id"
   }
 
-  // host from container hostname
+  // service_version: from custom label (optional)
+  rule {
+    source_labels = ["__meta_docker_container_label_com_giocaizzi_version"]
+    regex         = "(.+)"
+    target_label  = "service_version"
+  }
+
+  // host_name: container hostname
   rule {
     source_labels = ["__meta_docker_container_hostname"]
-    target_label  = "host"
+    target_label  = "host_name"
   }
 
-  // namespace: compose project -> swarm stack -> custom label
+  // role: specific function within component (free-form)
   rule {
-    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    source_labels = ["__meta_docker_container_label_com_giocaizzi_role"]
     regex         = "(.+)"
-    target_label  = "namespace"
+    target_label  = "role"
   }
+
+  // technology: implementation technology (postgres, nginx, redis, etc.)
   rule {
-    source_labels = ["__meta_docker_container_label_com_docker_stack_namespace"]
+    source_labels = ["__meta_docker_container_label_com_giocaizzi_technology"]
     regex         = "(.+)"
-    target_label  = "namespace"
-  }
-  rule {
-    source_labels = ["__meta_docker_container_label_com_giocaizzi_namespace"]
-    regex         = "(.+)"
-    target_label  = "namespace"
+    target_label  = "technology"
   }
 }
 

@@ -1,205 +1,81 @@
-# Backup System
+# Backup
 
-Docker-based Backrest (restic with web UI) integrated into infrastructure stack. Backs up user data and Docker volumes to Google Cloud Storage.
+Backrest (restic with web UI) backs up Docker volumes to Google Cloud Storage.
 
-## Architecture
+**Web UI**: `https://backrest.home`
 
-**Backup Targets:**
-- `${USER_HOME}` - User home directory
-- `/var/lib/docker/volumes` - All Docker volumes (n8n, ollama, portainer data)
+## How It Works
 
-**Storage:** Google Cloud Storage bucket with incremental snapshots
+Backrest mounts `/var/lib/docker/volumes` read-only and creates incremental snapshots to GCS.
 
-**Retention Policy (configured in Web UI):**
-- Daily: 7 snapshots
-- Weekly: 4 snapshots  
-- Monthly: 6 snapshots
-- Yearly: 2 snapshots
-
-**Web UI:** https://backrest.home (accessible after setup)
+| Component | Description |
+|-----------|-------------|
+| **Backend** | Restic with GCS storage |
+| **Retention** | Configurable (default: 7 daily, 4 weekly, 6 monthly, 2 yearly) |
+| **Schedule** | Configured per backup plan in Web UI |
 
 ## Setup
 
-### 1. Google Cloud Storage
+### 1. GCS Bucket (via Terraform)
 
-**Create bucket:**
+GCS bucket and service account are provisioned by Terraform. See [`cloud/README.md`](../cloud/README.md).
+
+After `terraform apply`:
 ```bash
-gsutil mb gs://your-backup-bucket-name
+terraform output -raw backup_service_account_key | base64 -d > ../infra/secrets/gcp_service_account.json
 ```
 
-**Create service account:**
-```bash
-gcloud iam service-accounts create restic-backup \
-  --description="Restic backup service account" \
-  --display-name="Restic Backup"
+### 2. Configure Backrest
 
-gcloud projects add-iam-policy-binding YOUR-PROJECT-ID \
-  --member="serviceAccount:restic-backup@YOUR-PROJECT-ID.iam.gserviceaccount.com" \
-  --role="roles/storage.objectAdmin"
+1. Access `https://backrest.home`
+2. **Add repository**:
+   - Type: Google Cloud Storage
+   - Path: `gs:<bucket>:/`
+   - Environment: `GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp_service_account`
+3. **Create backup plan**:
+   - Source: `/backup/docker-volumes`
+   - Schedule: Daily at preferred time (e.g., 6:00 AM UTC)
+   - Retention: 7 daily, 4 weekly, 6 monthly, 2 yearly
 
-gcloud iam service-accounts keys create gcp_service_account.json \
-  --iam-account=restic-backup@YOUR-PROJECT-ID.iam.gserviceaccount.com
-```
+## What to Back Up
 
-### 2. Configure Secrets
+**Critical volumes** (databases, config, user data):
+- All `*_db` and `*_data` volumes containing databases
+- Configuration volumes (`portainer_data`, `backrest_config`, `grafana_data`)
+- User uploads and attachments
 
-**Create GCP service account key file:**
-```bash
-cd infra/backup/secrets
+**Non-critical** (can be regenerated):
+- Cache volumes (`nginx_cache`, `netdata_cache`)
+- Log volumes (`*_logs`)
+- Metrics/traces (time-series data that ages out)
 
-# Download JSON key from Google Cloud Console and save as:
-# ./infra/secrets/gcp_service_account.json
-```
+Each service README documents its volumes under **💾 Volumes**.
 
-**Set admin password:**
-```bash
-# Create backrest admin password
-echo "your_secure_password" > ./infra/secrets/backrest_admin_password.txt
-```
+## Restore
 
-### 3. Deploy Stack
+### Via Web UI
 
-```bash
-cd infra
-docker stack deploy -c docker-compose.yml infra
-```
+1. `https://backrest.home` → Snapshots
+2. Browse snapshot contents
+3. Select files → Restore
 
-### 4. Configure Backrest via Web UI
+### Via CLI
 
-1. Access web UI at https://backrest.home
-2. Create a new repository:
-   - Name: `rp5-homeserver`
-   - Type: `Google Cloud Storage`
-   - Path: `gs:<GCS_BUCKET_NAME>:/`
-   - Password: Strong repository password (save this securely)
-   - Environment variables:
-     - `GOOGLE_APPLICATION_CREDENTIALS=/gcp/credentials.json`
-     - `GOOGLE_PROJECT_ID=your-gcp-project-id`
-3. Create backup plans:
-   - **User Home Backup**:
-     - Paths: `/backup/home/<username>`
-     - Schedule: Daily at 2 AM
-     - Retention: Keep last 7 daily, 4 weekly, 6 monthly, 2 yearly
-   - **Docker Volumes Backup**:
-     - Paths: `/backup/docker-volumes`
-     - Schedule: Daily at 3 AM
-     - Retention: Keep last 7 daily, 4 weekly, 6 monthly, 2 yearly
-
-## Usage
-
-### Automated Backup
-Backups are scheduled via the Backrest web UI. No cron setup required.
-
-### Manual Backup
-Trigger backups manually via the web UI:
-1. Navigate to https://backrest.home
-2. Select backup plan
-3. Click "Backup Now"
-
-### Restore Operations
-
-**Via Web UI (Recommended):**
-1. Navigate to https://backrest.home
-2. Go to "Snapshots" tab
-3. Browse snapshot contents
-4. Select files/folders to restore
-5. Choose restore location
-6. Execute restore
-
-**Via CLI (Advanced):**
-Access the container directly for restic commands:
 ```bash
 # List snapshots
-docker exec backrest restic -r /data/repos/rp5-homeserver snapshots
+docker exec backrest restic -r /data/repos/<repo> snapshots
 
-# Browse files
-docker exec backrest restic -r /data/repos/rp5-homeserver ls latest /backup/home/<username>
-
-# Restore specific directory
-docker exec backrest restic -r /data/repos/rp5-homeserver restore latest \
-  --target /restore --include /backup/home/<username>/Documents
+# Restore specific path
+docker exec backrest restic -r /data/repos/<repo> restore latest \
+  --target /restore --include <path>
 ```
 
-## Monitoring
+## Verification
 
-**Web UI Dashboard:**
-- Access https://backrest.home
-- View backup status, last run times, and errors
-- Check repository size and snapshot counts
-- Monitor backup plan execution history
-
-**Container logs:**
 ```bash
-docker logs -f backrest
+# Check repository integrity
+docker exec backrest restic -r /data/repos/<repo> check
+
+# Repository stats
+docker exec backrest restic -r /data/repos/<repo> stats latest
 ```
-
-**Repository status (via CLI):**
-```bash
-docker exec backrest restic -r /data/repos/rp5-homeserver snapshots
-docker exec backrest restic -r /data/repos/rp5-homeserver stats latest
-```
-
-**Check repository integrity:**
-```bash
-docker exec backrest restic -r /data/repos/rp5-homeserver check
-```
-
-## Security
-
-- Repository encrypted with strong password
-- GCP service account with minimal permissions
-- Secrets managed via Docker secrets (not environment variables)
-- Read-only access to backup sources
-
-## Performance
-
-- **Cache volume** for faster operations
-- **Incremental backups** reduce transfer size
-- **Monthly integrity checks** ensure repository health
-
-## Troubleshooting
-
-**Container not running:**
-```bash
-# Check container status
-docker ps | grep backrest
-
-# Ensure infrastructure stack is running
-cd ~/rp5-homeserver/infra && docker stack deploy -c docker-compose.yml infra
-```
-
-**Web UI not accessible:**
-```bash
-# Check if service is listening
-docker exec backrest wget -qO- http://localhost:9898/
-
-# Check nginx proxy
-docker logs nginx | grep backrest
-
-# Verify hosts file
-cat /etc/hosts | grep backrest.home
-```
-
-**GCS authentication issues:**
-```bash
-# Verify credentials file
-docker exec backrest ls -la /gcp/credentials.json
-
-# Test GCS access
-docker exec backrest env GOOGLE_APPLICATION_CREDENTIALS=/gcp/credentials.json \
-  gsutil ls gs://<GCS_BUCKET_NAME>
-```
-
-**Repository issues:**
-```bash
-# Check repository in web UI under "Repositories" tab
-# Or repair via CLI:
-docker exec backrest restic -r /data/repos/rp5-homeserver rebuild-index
-docker exec backrest restic -r /data/repos/rp5-homeserver prune
-```
-
-**Backup failures:**
-1. Check web UI notifications
-2. Review backup plan logs in web UI
-3. Check container logs: `docker logs backrest`
-4. Verify backup paths are accessible in container

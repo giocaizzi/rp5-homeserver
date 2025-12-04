@@ -1,7 +1,27 @@
+// =============================================================================
+// PROMETHEUS METRIC SCRAPING
+// =============================================================================
+// Scrapes metrics from observability stack services and adds OTEL-aligned labels.
+//
+// Scraped Services:
+//   - Tempo (traces backend)
+//   - Prometheus (metrics backend)
+//   - Loki (logs backend)
+//   - Alloy (collector)
+//
+// Label Schema (OTEL Semconv → Prometheus Label):
+//   service.name              → service_name
+//   service.namespace         → service_namespace
+//   deployment.environment.name → deployment_environment_name
+//
+// Custom Labels:
+//   tier, component, role, technology, source
+// =============================================================================
+
 // Scrape Tempo metrics for service graphs and span metrics
 prometheus.scrape "tempo" {
   targets = [{
-    __address__ = "tempo:3200",
+    __address__ = "observability-tempo:3200",
   }]
 
   forward_to      = [prometheus.relabel.observability_labels.receiver]
@@ -12,7 +32,7 @@ prometheus.scrape "tempo" {
 // Scrape Prometheus self-metrics
 prometheus.scrape "prometheus" {
   targets = [{
-    __address__ = "prometheus:9090",
+    __address__ = "observability-prometheus:9090",
   }]
 
   forward_to      = [prometheus.relabel.observability_labels.receiver]
@@ -23,7 +43,7 @@ prometheus.scrape "prometheus" {
 // Scrape Loki metrics
 prometheus.scrape "loki" {
   targets = [{
-    __address__ = "loki:3100",
+    __address__ = "observability-loki:3100",
   }]
 
   forward_to      = [prometheus.relabel.observability_labels.receiver]
@@ -42,17 +62,17 @@ prometheus.scrape "alloy" {
   scrape_timeout  = "10s"
 }
 
-// Add standardized labels to observability stack metrics
+// Add OTEL-aligned labels to observability stack metrics
 prometheus.relabel "observability_labels" {
   forward_to = [prometheus.remote_write.default.receiver]
 
-  // Add source identifier
+  // ---------------------------------------------------------------------------
+  // COMMON LABELS (all observability services)
+  // ---------------------------------------------------------------------------
   rule {
     target_label = "source"
     replacement  = "scrape"
   }
-
-  // Default labels for all observability services
   rule {
     target_label = "tier"
     replacement  = "core"
@@ -62,20 +82,24 @@ prometheus.relabel "observability_labels" {
     replacement  = "observability"
   }
   rule {
-    target_label = "environment"
+    target_label = "deployment_environment_name"
     replacement  = "production"
   }
   rule {
-    target_label = "namespace"
-    replacement  = "rp5_observability"
+    target_label = "service_namespace"
+    replacement  = "observability"
   }
 
-  // Tempo labels
+  // ---------------------------------------------------------------------------
+  // SERVICE-SPECIFIC LABELS
+  // ---------------------------------------------------------------------------
+
+  // Tempo
   rule {
     source_labels = ["job"]
     regex         = "prometheus.scrape.tempo"
     target_label  = "service_name"
-    replacement   = "tempo"
+    replacement   = "traces"
   }
   rule {
     source_labels = ["job"]
@@ -83,13 +107,19 @@ prometheus.relabel "observability_labels" {
     target_label  = "role"
     replacement   = "traces"
   }
+  rule {
+    source_labels = ["job"]
+    regex         = "prometheus.scrape.tempo"
+    target_label  = "technology"
+    replacement   = "tempo"
+  }
 
-  // Prometheus labels
+  // Prometheus
   rule {
     source_labels = ["job"]
     regex         = "prometheus.scrape.prometheus"
     target_label  = "service_name"
-    replacement   = "prometheus"
+    replacement   = "metrics"
   }
   rule {
     source_labels = ["job"]
@@ -97,13 +127,19 @@ prometheus.relabel "observability_labels" {
     target_label  = "role"
     replacement   = "metrics"
   }
+  rule {
+    source_labels = ["job"]
+    regex         = "prometheus.scrape.prometheus"
+    target_label  = "technology"
+    replacement   = "prometheus"
+  }
 
-  // Loki labels
+  // Loki
   rule {
     source_labels = ["job"]
     regex         = "prometheus.scrape.loki"
     target_label  = "service_name"
-    replacement   = "loki"
+    replacement   = "logs"
   }
   rule {
     source_labels = ["job"]
@@ -111,18 +147,30 @@ prometheus.relabel "observability_labels" {
     target_label  = "role"
     replacement   = "logs"
   }
+  rule {
+    source_labels = ["job"]
+    regex         = "prometheus.scrape.loki"
+    target_label  = "technology"
+    replacement   = "loki"
+  }
 
-  // Alloy labels
+  // Alloy
   rule {
     source_labels = ["job"]
     regex         = "prometheus.scrape.alloy"
     target_label  = "service_name"
-    replacement   = "alloy"
+    replacement   = "collector"
   }
   rule {
     source_labels = ["job"]
     regex         = "prometheus.scrape.alloy"
     target_label  = "role"
     replacement   = "collector"
+  }
+  rule {
+    source_labels = ["job"]
+    regex         = "prometheus.scrape.alloy"
+    target_label  = "technology"
+    replacement   = "alloy"
   }
 }
