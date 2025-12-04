@@ -17,7 +17,7 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 1,
   "id": null,
   "links": [],
   "liveNow": false,
@@ -40,7 +40,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "# ⚡ Next.js Application Monitoring\n\nComprehensive observability for the Next.js application including HTTP performance, AI/LLM token usage, cache efficiency, and Node.js runtime metrics. Native OpenTelemetry instrumentation via OTLP.",
+        "content": "# 🔴 Redis Cache Monitoring\n\nReal-time metrics from Redis including memory usage, command throughput, cache performance, and connection statistics. Data collected via redis-exporter.",
         "mode": "markdown"
       },
       "pluginVersion": "10.0.0",
@@ -55,240 +55,57 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 0
-      },
-      "id": 1,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource_prometheus}"
-          },
-          "expr": "rate(http_server_duration_milliseconds_count{service_name=\"app\"}[5m])",
-          "legendFormat": "{{http_method}} {{http_route}}",
-          "refId": "A"
-        }
-      ],
-      "title": "HTTP Request Rate",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource_prometheus}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "ms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "legend": {
-          "calcs": ["mean", "max"],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource_prometheus}"
-          },
-          "expr": "histogram_quantile(0.50, sum(rate(http_server_duration_milliseconds_bucket{service_name=\"app\"}[5m])) by (le, http_route))",
-          "legendFormat": "p50 {{http_route}}",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource_prometheus}"
-          },
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_duration_milliseconds_bucket{service_name=\"app\"}[5m])) by (le, http_route))",
-          "legendFormat": "p95 {{http_route}}",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource_prometheus}"
-          },
-          "expr": "histogram_quantile(0.99, sum(rate(http_server_duration_milliseconds_bucket{service_name=\"app\"}[5m])) by (le, http_route))",
-          "legendFormat": "p99 {{http_route}}",
-          "refId": "C"
-        }
-      ],
-      "title": "HTTP Response Time (Percentiles)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${datasource_prometheus}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "text": "Down"
+                },
+                "1": {
+                  "color": "green",
+                  "text": "Up"
+                }
+              },
+              "type": "value"
+            }
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
               }
             ]
           },
-          "unit": "short"
-        },
-        "overrides": []
+          "unit": "none"
+        }
       },
       "gridPos": {
         "h": 4,
-        "w": 6,
+        "w": 4,
         "x": 0,
-        "y": 8
+        "y": 3
       },
-      "id": 3,
+      "id": 1,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
           "calcs": ["lastNotNull"],
           "fields": ""
         },
-        "textMode": "auto"
+        "textMode": "value_and_name"
       },
       "pluginVersion": "10.0.0",
       "targets": [
@@ -297,11 +114,12 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(rate(http_server_duration_milliseconds_count{service_name=\"app\"}[5m]))",
+          "expr": "redis_up{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}",
+          "legendFormat": "Status",
           "refId": "A"
         }
       ],
-      "title": "Total Request Rate",
+      "title": "Redis Status",
       "type": "stat"
     },
     {
@@ -324,29 +142,148 @@
               },
               {
                 "color": "yellow",
-                "value": 100
+                "value": 50
               },
               {
                 "color": "red",
-                "value": 500
+                "value": 100
               }
             ]
           },
-          "unit": "ms"
-        },
-        "overrides": []
+          "unit": "short"
+        }
       },
       "gridPos": {
         "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 8
+        "w": 4,
+        "x": 4,
+        "y": 3
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
+          },
+          "expr": "redis_connected_clients{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}",
+          "refId": "A"
+        }
+      ],
+      "title": "Connected Clients",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource_prometheus}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 80
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 3
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
+          },
+          "expr": "(redis_memory_used_bytes{service_namespace=\"$service_namespace\", service_name=\"$service_name\"} / redis_memory_max_bytes{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}) * 100",
+          "refId": "A"
+        }
+      ],
+      "title": "Memory Usage %",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource_prometheus}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 3
       },
       "id": 4,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
@@ -362,11 +299,11 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_duration_milliseconds_bucket{service_name=\"app\"}[5m])) by (le))",
+          "expr": "redis_memory_used_bytes{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}",
           "refId": "A"
         }
       ],
-      "title": "p95 Latency",
+      "title": "Memory Used",
       "type": "stat"
     },
     {
@@ -386,24 +323,31 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1.5
+              },
+              {
+                "color": "red",
+                "value": 2
               }
             ]
           },
           "unit": "short"
-        },
-        "overrides": []
+        }
       },
       "gridPos": {
         "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 8
+        "w": 4,
+        "x": 16,
+        "y": 3
       },
       "id": 5,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
@@ -419,11 +363,11 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(sessions_created_total)",
+          "expr": "redis_mem_fragmentation_ratio{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}",
           "refId": "A"
         }
       ],
-      "title": "Total Sessions Created",
+      "title": "Memory Fragmentation",
       "type": "stat"
     },
     {
@@ -447,20 +391,19 @@
             ]
           },
           "unit": "short"
-        },
-        "overrides": []
+        }
       },
       "gridPos": {
         "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 8
+        "w": 4,
+        "x": 20,
+        "y": 3
       },
       "id": 6,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
-        "justifyMode": "auto",
+        "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
           "values": false,
@@ -476,11 +419,11 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(cache_hits_total + cache_misses_total)",
+          "expr": "sum(redis_db_keys{service_namespace=\"$service_namespace\", service_name=\"$service_name\"})",
           "refId": "A"
         }
       ],
-      "title": "Total Cache Operations",
+      "title": "Total Keys",
       "type": "stat"
     },
     {
@@ -517,7 +460,7 @@
             "spanNulls": false,
             "stacking": {
               "group": "A",
-              "mode": "normal"
+              "mode": "none"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -533,7 +476,7 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "ops"
         },
         "overrides": []
       },
@@ -541,12 +484,12 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 12
+        "y": 7
       },
       "id": 7,
       "options": {
         "legend": {
-          "calcs": ["sum"],
+          "calcs": ["mean", "max"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -562,21 +505,12 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(increase(cache_hits_total[5m]))",
-          "legendFormat": "Cache Hits",
+          "expr": "rate(redis_commands_processed_total{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}[5m])",
+          "legendFormat": "Commands/sec",
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource_prometheus}"
-          },
-          "expr": "sum(increase(cache_misses_total[5m]))",
-          "legendFormat": "Cache Misses",
-          "refId": "B"
         }
       ],
-      "title": "Cache Hit/Miss Rate",
+      "title": "Commands per Second",
       "type": "timeseries"
     },
     {
@@ -629,7 +563,7 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "percentunit"
         },
         "overrides": []
       },
@@ -637,12 +571,12 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 7
       },
       "id": 8,
       "options": {
         "legend": {
-          "calcs": ["sum"],
+          "calcs": ["mean"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -658,39 +592,12 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(increase(llm_tokens_input_total[5m]))",
-          "legendFormat": "LLM Input Tokens",
+          "expr": "rate(redis_keyspace_hits_total{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}[5m]) / (rate(redis_keyspace_hits_total{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}[5m]) + rate(redis_keyspace_misses_total{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}[5m]))",
+          "legendFormat": "Hit Rate",
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource_prometheus}"
-          },
-          "expr": "sum(increase(llm_tokens_output_total[5m]))",
-          "legendFormat": "LLM Output Tokens",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource_prometheus}"
-          },
-          "expr": "sum(increase(cache_tokens_input_total[5m]))",
-          "legendFormat": "Cache Input Tokens",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource_prometheus}"
-          },
-          "expr": "sum(increase(cache_tokens_output_total[5m]))",
-          "legendFormat": "Cache Output Tokens",
-          "refId": "D"
         }
       ],
-      "title": "AI Token Usage",
+      "title": "Cache Hit Rate",
       "type": "timeseries"
     },
     {
@@ -743,7 +650,7 @@
               }
             ]
           },
-          "unit": "percent"
+          "unit": "bytes"
         },
         "overrides": []
       },
@@ -751,7 +658,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 20
+        "y": 15
       },
       "id": 9,
       "options": {
@@ -772,12 +679,21 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "nodejs_eventloop_utilization_ratio * 100",
-          "legendFormat": "Event Loop Utilization",
+          "expr": "redis_memory_used_bytes{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}",
+          "legendFormat": "Used",
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
+          },
+          "expr": "redis_memory_max_bytes{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}",
+          "legendFormat": "Max",
+          "refId": "B"
         }
       ],
-      "title": "Node.js Event Loop Utilization",
+      "title": "Memory Usage",
       "type": "timeseries"
     },
     {
@@ -830,20 +746,51 @@
               }
             ]
           },
-          "unit": "s"
+          "unit": "short"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Evicted"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Expired"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 20
+        "y": 15
       },
       "id": 10,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": ["sum"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -859,8 +806,8 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "nodejs_eventloop_delay_p50_seconds",
-          "legendFormat": "p50",
+          "expr": "rate(redis_evicted_keys_total{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}[5m])",
+          "legendFormat": "Evicted",
           "refId": "A"
         },
         {
@@ -868,21 +815,12 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "nodejs_eventloop_delay_p90_seconds",
-          "legendFormat": "p90",
+          "expr": "rate(redis_expired_keys_total{service_namespace=\"$service_namespace\", service_name=\"$service_name\"}[5m])",
+          "legendFormat": "Expired",
           "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${datasource_prometheus}"
-          },
-          "expr": "nodejs_eventloop_delay_p99_seconds",
-          "legendFormat": "p99",
-          "refId": "C"
         }
       ],
-      "title": "Node.js Event Loop Delay",
+      "title": "Keys Evicted/Expired",
       "type": "timeseries"
     },
     {
@@ -894,7 +832,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 28
+        "y": 23
       },
       "id": 11,
       "options": {
@@ -913,24 +851,21 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "{service_name=\"app\"}",
+          "expr": "{service_namespace=\"$service_namespace\", technology=\"redis\"}",
           "refId": "A"
         }
       ],
-      "title": "Application Logs",
+      "title": "Redis Logs",
       "type": "logs"
     }
   ],
   "refresh": "10s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["app", "nextjs", "ai"],
+  "tags": ["redis", "cache", "database"],
   "templating": {
     "list": [
       {
-        "name": "datasource_prometheus",
-        "type": "datasource",
-        "query": "prometheus",
         "current": {
           "selected": false,
           "text": "Prometheus",
@@ -939,15 +874,15 @@
         "hide": 0,
         "includeAll": false,
         "multi": false,
+        "name": "datasource_prometheus",
         "options": [],
+        "query": "prometheus",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false
+        "skipUrlSync": false,
+        "type": "datasource"
       },
       {
-        "name": "datasource_loki",
-        "type": "datasource",
-        "query": "loki",
         "current": {
           "selected": false,
           "text": "Loki",
@@ -956,10 +891,57 @@
         "hide": 0,
         "includeAll": false,
         "multi": false,
+        "name": "datasource_loki",
         "options": [],
+        "query": "loki",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "langfuse",
+          "value": "langfuse"
+        },
+        "definition": "label_values(redis_up, service_namespace)",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "service_namespace",
+        "options": [],
+        "query": {
+          "query": "label_values(redis_up, service_namespace)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "cache",
+          "value": "cache"
+        },
+        "definition": "label_values(redis_up{service_namespace=\"$service_namespace\"}, service_name)",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "service_name",
+        "options": [],
+        "query": {
+          "query": "label_values(redis_up{service_namespace=\"$service_namespace\"}, service_name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
       }
     ]
   },
@@ -969,8 +951,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "⚡ Next.js Application Dashboard",
-  "uid": "nextjs-app",
+  "title": "🔴 Redis",
+  "uid": "redis",
   "version": 0,
   "weekStart": ""
 }

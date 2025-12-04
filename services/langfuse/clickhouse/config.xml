@@ -3,6 +3,15 @@
     <!-- Network settings - allow connections from other containers -->
     <listen_host>0.0.0.0</listen_host>
 
+    <!-- Prometheus metrics endpoint (for Alloy scraping) -->
+    <prometheus>
+        <endpoint>/metrics</endpoint>
+        <port>9363</port>
+        <metrics>true</metrics>
+        <events>true</events>
+        <asynchronous_metrics>true</asynchronous_metrics>
+    </prometheus>
+
     <!-- Memory limits for ARM64 (Pi 5 with 8GB) -->
     <max_server_memory_usage_to_ram_ratio>0.5</max_server_memory_usage_to_ram_ratio>
     <max_concurrent_queries>10</max_concurrent_queries>

@@ -1,3 +1,10 @@
+// =============================================================================
+// OUTPUT ENDPOINTS
+// =============================================================================
+// Backend write endpoints for metrics and logs.
+// All pipelines converge here before reaching storage backends.
+// =============================================================================
+
 // Prometheus Remote Write
 prometheus.remote_write "default" {
   endpoint {

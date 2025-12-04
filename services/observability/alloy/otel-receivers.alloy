@@ -1,4 +1,15 @@
-// OTLP Receiver - HTTP and gRPC endpoints for traces, metrics, and logs
+// =============================================================================
+// OTEL RECEIVERS
+// =============================================================================
+// OTLP endpoints for traces, metrics, and logs from instrumented applications.
+//
+// Endpoints:
+//   - HTTP: 0.0.0.0:4318
+//   - gRPC: 0.0.0.0:4317
+//
+// Pipeline: receiver → batch → attributes → exporters
+// =============================================================================
+
 otelcol.receiver.otlp "default" {
   http {
     endpoint = "0.0.0.0:4318"
