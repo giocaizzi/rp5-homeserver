@@ -105,7 +105,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 0
+        "y": 3
       },
       "id": 1,
       "options": {
@@ -126,12 +126,12 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} |~ \"\\\"(GET|POST|PUT|DELETE|PATCH)\" [5m])) by (service_name)",
+          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\"(GET|POST|PUT|DELETE|PATCH)\" [5m])) by (service_name)",
           "legendFormat": "Total Requests",
           "refId": "A"
         }
       ],
-      "title": "Nginx Request Rate",
+      "title": "Request Rate",
       "type": "timeseries"
     },
     {
@@ -253,7 +253,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 3
       },
       "id": 2,
       "options": {
@@ -274,7 +274,7 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} |~ \"\\\" (2[0-9]{2}) \" [5m]))",
+          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (2[0-9]{2}) \" [5m]))",
           "legendFormat": "2xx Success",
           "refId": "A"
         },
@@ -283,7 +283,7 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} |~ \"\\\" (3[0-9]{2}) \" [5m]))",
+          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (3[0-9]{2}) \" [5m]))",
           "legendFormat": "3xx Redirect",
           "refId": "B"
         },
@@ -292,7 +292,7 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} |~ \"\\\" (4[0-9]{2}) \" [5m]))",
+          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (4[0-9]{2}) \" [5m]))",
           "legendFormat": "4xx Client Error",
           "refId": "C"
         },
@@ -301,12 +301,12 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} |~ \"\\\" (5[0-9]{2}) \" [5m]))",
+          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (5[0-9]{2}) \" [5m]))",
           "legendFormat": "5xx Server Error",
           "refId": "D"
         }
       ],
-      "title": "Nginx HTTP Status Codes",
+      "title": "HTTP Status Codes",
       "type": "timeseries"
     },
     {
@@ -337,7 +337,7 @@
         "h": 4,
         "w": 6,
         "x": 0,
-        "y": 8
+        "y": 11
       },
       "id": 3,
       "options": {
@@ -359,7 +359,7 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} [5m]))",
+          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} [5m]))",
           "refId": "A"
         }
       ],
@@ -398,7 +398,7 @@
         "h": 4,
         "w": 6,
         "x": 6,
-        "y": 8
+        "y": 11
       },
       "id": 4,
       "options": {
@@ -420,7 +420,7 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} |~ \"\\\" (4[0-9]{2}) \" [5m]))",
+          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (4[0-9]{2}) \" [5m]))",
           "refId": "A"
         }
       ],
@@ -459,7 +459,7 @@
         "h": 4,
         "w": 6,
         "x": 12,
-        "y": 8
+        "y": 11
       },
       "id": 5,
       "options": {
@@ -481,7 +481,7 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} |~ \"\\\" (5[0-9]{2}) \" [5m]))",
+          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (5[0-9]{2}) \" [5m]))",
           "refId": "A"
         }
       ],
@@ -524,7 +524,7 @@
         "h": 4,
         "w": 6,
         "x": 18,
-        "y": 8
+        "y": 11
       },
       "id": 6,
       "options": {
@@ -546,7 +546,7 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "(sum(rate({service_name=\"nginx\"} |~ \"\\\" (2[0-9]{2}) \" [5m])) / sum(rate({service_name=\"nginx\"} [5m]))) * 100",
+          "expr": "(sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (2[0-9]{2}) \" [5m])) / sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} [5m]))) * 100",
           "refId": "A"
         }
       ],
@@ -611,7 +611,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 12
+        "y": 15
       },
       "id": 7,
       "options": {
@@ -632,7 +632,7 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} |~ \"GET\" [5m]))",
+          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"GET\" [5m]))",
           "legendFormat": "GET",
           "refId": "A"
         },
@@ -641,7 +641,7 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} |~ \"POST\" [5m]))",
+          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"POST\" [5m]))",
           "legendFormat": "POST",
           "refId": "B"
         },
@@ -650,7 +650,7 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} |~ \"PUT\" [5m]))",
+          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"PUT\" [5m]))",
           "legendFormat": "PUT",
           "refId": "C"
         },
@@ -659,12 +659,12 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} |~ \"DELETE\" [5m]))",
+          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"DELETE\" [5m]))",
           "legendFormat": "DELETE",
           "refId": "D"
         }
       ],
-      "title": "Nginx Requests by HTTP Method",
+      "title": "Requests by HTTP Method",
       "type": "timeseries"
     },
     {
@@ -725,7 +725,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 15
       },
       "id": 8,
       "options": {
@@ -746,12 +746,12 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "sum(rate({service_name=\"nginx\"} | json | unwrap bytes_sent [5m])) by (service_name)",
+          "expr": "sum(sum_over_time({service_namespace=\"$service_namespace\", technology=\"nginx\"} | json | bytes_sent != \"\" | unwrap bytes_sent | __error__=\"\" [5m])) by (service_name)",
           "legendFormat": "Bytes Sent",
           "refId": "A"
         }
       ],
-      "title": "Nginx Bandwidth",
+      "title": "Bandwidth",
       "type": "timeseries"
     },
     {
@@ -763,7 +763,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 23
       },
       "id": 9,
       "options": {
@@ -782,11 +782,11 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "{service_name=\"nginx\"}",
+          "expr": "{service_namespace=\"$service_namespace\", technology=\"nginx\"}",
           "refId": "A"
         }
       ],
-      "title": "Nginx Access Logs",
+      "title": "Access Logs",
       "type": "logs"
     },
     {
@@ -798,7 +798,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 28
+        "y": 31
       },
       "id": 10,
       "options": {
@@ -817,24 +817,21 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "{service_name=\"nginx\"} |~ \"(error|warn)\"",
+          "expr": "{service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"(error|warn)\"",
           "refId": "A"
         }
       ],
-      "title": "Nginx Error Logs",
+      "title": "Error Logs",
       "type": "logs"
     }
   ],
   "refresh": "10s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["nginx", "proxy"],
+  "tags": ["nginx", "proxy", "infra"],
   "templating": {
     "list": [
       {
-        "name": "datasource_loki",
-        "type": "datasource",
-        "query": "loki",
         "current": {
           "selected": false,
           "text": "Loki",
@@ -843,10 +840,37 @@
         "hide": 0,
         "includeAll": false,
         "multi": false,
+        "name": "datasource_loki",
         "options": [],
+        "query": "loki",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "infra",
+          "value": "infra"
+        },
+        "definition": "label_values({technology=\"nginx\"}, service_namespace)",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "service_namespace",
+        "options": [],
+        "query": {
+          "label": "service_namespace",
+          "refId": "LokiVariableQueryEditor-VariableQuery",
+          "stream": "{technology=\"nginx\"}",
+          "type": 1
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
       }
     ]
   },
@@ -856,7 +880,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "🟢 Nginx Dashboard",
+  "title": "🟢 Nginx",
   "uid": "nginx",
   "version": 0,
   "weekStart": ""

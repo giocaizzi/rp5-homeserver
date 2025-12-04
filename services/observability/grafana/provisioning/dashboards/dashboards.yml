@@ -1,11 +1,35 @@
 apiVersion: 1
 
 providers:
-  - name: 'Default'
+  # Observability stack dashboards (Loki, Tempo, Prometheus health)
+  - name: 'observability'
     orgId: 1
-    folder: ''
+    folder: 'observability'
+    folderUid: 'observability'
     type: file
     disableDeletion: false
     editable: true
     options:
-      path: /etc/grafana/provisioning/dashboards
+      path: /etc/grafana/provisioning/dashboards/observability
+
+  # giocaizzi-xyz stack dashboards (personal website)
+  - name: 'giocaizzi-xyz'
+    orgId: 1
+    folder: 'giocaizzi-xyz'
+    folderUid: 'giocaizzi-xyz'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/giocaizzi-xyz
+
+  # Shared technology dashboards (PostgreSQL, MariaDB, Redis, Nginx)
+  - name: 'shared'
+    orgId: 1
+    folder: 'shared'
+    folderUid: 'shared'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/shared

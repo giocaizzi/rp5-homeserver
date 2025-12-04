@@ -80,6 +80,11 @@ networks:
     external: true
     name: rp5_public
 
+  # External network for observability (Alloy scraping)
+  observability_network:
+    external: true
+    name: rp5_observability
+
 # =============================================================================
 # Volumes
 # =============================================================================
@@ -187,6 +192,7 @@ services:
     expose:
       - "8123"  # HTTP interface
       - "9000"  # Native protocol
+      - "9363"  # Prometheus metrics
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - clickhouse_logs:/var/log/clickhouse-server
@@ -199,6 +205,7 @@ services:
         mode: 0444
     networks:
       - langfuse_network
+      - observability_network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
       interval: 30s
@@ -300,6 +307,79 @@ services:
       resources:
         limits:
           memory: 128M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # Redis Exporter - Metrics for Prometheus/Alloy
+  # ========================================
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    hostname: langfuse-redis-exporter
+    expose:
+      - "9121"
+    environment:
+      - REDIS_ADDR=redis://langfuse-redis:6379
+      - REDIS_PASSWORD=langfuseredis
+    networks:
+      - langfuse_network
+      - observability_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9121/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "redis-exporter"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.role: "exporter"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "redis-exporter"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 64M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # PostgreSQL Exporter - Metrics for Prometheus/Alloy
+  # ========================================
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    hostname: langfuse-postgres-exporter
+    expose:
+      - "9187"
+    environment:
+      - DATA_SOURCE_URI=langfuse-db:5432/langfuse?sslmode=disable
+      - DATA_SOURCE_USER=langfuse
+      - DATA_SOURCE_PASS=langfuse
+    networks:
+      - langfuse_network
+      - observability_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9187/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "postgres-exporter"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.role: "exporter"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "postgres-exporter"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 64M
     logging:
       <<: *logging-base
 

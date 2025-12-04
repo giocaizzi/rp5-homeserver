@@ -1,13 +1,8 @@
 // =============================================================================
 // PROMETHEUS METRIC SCRAPING
 // =============================================================================
-// Scrapes metrics from observability stack services and adds OTEL-aligned labels.
-//
-// Scraped Services:
-//   - Tempo (traces backend)
-//   - Prometheus (metrics backend)
-//   - Loki (logs backend)
-//   - Alloy (collector)
+// Scrapes metrics from services using reusable custom components.
+// Uses modules defined in modules.alloy for DRY configuration.
 //
 // Label Schema (OTEL Semconv → Prometheus Label):
 //   service.name              → service_name
@@ -18,159 +13,116 @@
 //   tier, component, role, technology, source
 // =============================================================================
 
-// Scrape Tempo metrics for service graphs and span metrics
-prometheus.scrape "tempo" {
-  targets = [{
-    __address__ = "observability-tempo:3200",
-  }]
+// =============================================================================
+// OBSERVABILITY STACK SERVICES
+// =============================================================================
 
-  forward_to      = [prometheus.relabel.observability_labels.receiver]
-  scrape_interval = "15s"
-  scrape_timeout  = "10s"
+scrape_observability "tempo" {
+  address      = "observability-tempo:3200"
+  service_name = "traces"
+  technology   = "tempo"
 }
 
-// Scrape Prometheus self-metrics
-prometheus.scrape "prometheus" {
-  targets = [{
-    __address__ = "observability-prometheus:9090",
-  }]
-
-  forward_to      = [prometheus.relabel.observability_labels.receiver]
-  scrape_interval = "15s"
-  scrape_timeout  = "10s"
+scrape_observability "prometheus" {
+  address      = "observability-prometheus:9090"
+  service_name = "metrics"
+  technology   = "prometheus"
 }
 
-// Scrape Loki metrics
-prometheus.scrape "loki" {
-  targets = [{
-    __address__ = "observability-loki:3100",
-  }]
-
-  forward_to      = [prometheus.relabel.observability_labels.receiver]
-  scrape_interval = "15s"
-  scrape_timeout  = "10s"
+scrape_observability "loki" {
+  address      = "observability-loki:3100"
+  service_name = "logs"
+  technology   = "loki"
 }
 
-// Scrape Alloy self-metrics
-prometheus.scrape "alloy" {
-  targets = [{
-    __address__ = "localhost:12345",
-  }]
-
-  forward_to      = [prometheus.relabel.observability_labels.receiver]
-  scrape_interval = "15s"
-  scrape_timeout  = "10s"
+scrape_observability "alloy" {
+  address      = "localhost:12345"
+  service_name = "collector"
+  technology   = "alloy"
 }
 
-// Add OTEL-aligned labels to observability stack metrics
-prometheus.relabel "observability_labels" {
-  forward_to = [prometheus.remote_write.default.receiver]
+// =============================================================================
+// DATABASE EXPORTER SCRAPING
+// =============================================================================
+// Scrapes metrics from database exporters in service stacks.
+// Each exporter is on the rp5_observability network for access.
+// =============================================================================
 
-  // ---------------------------------------------------------------------------
-  // COMMON LABELS (all observability services)
-  // ---------------------------------------------------------------------------
-  rule {
-    target_label = "source"
-    replacement  = "scrape"
-  }
-  rule {
-    target_label = "tier"
-    replacement  = "core"
-  }
-  rule {
-    target_label = "component"
-    replacement  = "observability"
-  }
-  rule {
-    target_label = "deployment_environment_name"
-    replacement  = "production"
-  }
-  rule {
-    target_label = "service_namespace"
-    replacement  = "observability"
-  }
+// -----------------------------------------------------------------------------
+// n8n Stack - PostgreSQL Exporter
+// -----------------------------------------------------------------------------
+scrape_with_labels "n8n_postgres" {
+  address           = "n8n-postgres-exporter:9187"
+  service_namespace = "n8n"
+  service_name      = "db"
+  tier              = "core"
+  component         = "data"
+  role              = "database"
+  technology        = "postgres"
+}
 
-  // ---------------------------------------------------------------------------
-  // SERVICE-SPECIFIC LABELS
-  // ---------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// firefly Stack - MariaDB Exporter
+// -----------------------------------------------------------------------------
+scrape_with_labels "firefly_mysql" {
+  address           = "firefly-mysql-exporter:9104"
+  service_namespace = "firefly"
+  service_name      = "db"
+  tier              = "core"
+  component         = "data"
+  role              = "database"
+  technology        = "mariadb"
+}
 
-  // Tempo
-  rule {
-    source_labels = ["job"]
-    regex         = "prometheus.scrape.tempo"
-    target_label  = "service_name"
-    replacement   = "traces"
-  }
-  rule {
-    source_labels = ["job"]
-    regex         = "prometheus.scrape.tempo"
-    target_label  = "role"
-    replacement   = "traces"
-  }
-  rule {
-    source_labels = ["job"]
-    regex         = "prometheus.scrape.tempo"
-    target_label  = "technology"
-    replacement   = "tempo"
-  }
+// -----------------------------------------------------------------------------
+// firefly Stack - Pico PostgreSQL Exporter
+// -----------------------------------------------------------------------------
+scrape_with_labels "firefly_pico_postgres" {
+  address           = "firefly-postgres-exporter:9187"
+  service_namespace = "firefly"
+  service_name      = "pico-db"
+  tier              = "extra"
+  component         = "data"
+  role              = "database"
+  technology        = "postgres"
+}
 
-  // Prometheus
-  rule {
-    source_labels = ["job"]
-    regex         = "prometheus.scrape.prometheus"
-    target_label  = "service_name"
-    replacement   = "metrics"
-  }
-  rule {
-    source_labels = ["job"]
-    regex         = "prometheus.scrape.prometheus"
-    target_label  = "role"
-    replacement   = "metrics"
-  }
-  rule {
-    source_labels = ["job"]
-    regex         = "prometheus.scrape.prometheus"
-    target_label  = "technology"
-    replacement   = "prometheus"
-  }
+// -----------------------------------------------------------------------------
+// langfuse Stack - PostgreSQL Exporter
+// -----------------------------------------------------------------------------
+scrape_with_labels "langfuse_postgres" {
+  address           = "langfuse-postgres-exporter:9187"
+  service_namespace = "langfuse"
+  service_name      = "db"
+  tier              = "core"
+  component         = "data"
+  role              = "database"
+  technology        = "postgres"
+}
 
-  // Loki
-  rule {
-    source_labels = ["job"]
-    regex         = "prometheus.scrape.loki"
-    target_label  = "service_name"
-    replacement   = "logs"
-  }
-  rule {
-    source_labels = ["job"]
-    regex         = "prometheus.scrape.loki"
-    target_label  = "role"
-    replacement   = "logs"
-  }
-  rule {
-    source_labels = ["job"]
-    regex         = "prometheus.scrape.loki"
-    target_label  = "technology"
-    replacement   = "loki"
-  }
+// -----------------------------------------------------------------------------
+// langfuse Stack - Redis Exporter
+// -----------------------------------------------------------------------------
+scrape_with_labels "langfuse_redis" {
+  address           = "langfuse-redis-exporter:9121"
+  service_namespace = "langfuse"
+  service_name      = "cache"
+  tier              = "core"
+  component         = "data"
+  role              = "cache"
+  technology        = "redis"
+  scrape_interval   = "15s"
+}
 
-  // Alloy
-  rule {
-    source_labels = ["job"]
-    regex         = "prometheus.scrape.alloy"
-    target_label  = "service_name"
-    replacement   = "collector"
-  }
-  rule {
-    source_labels = ["job"]
-    regex         = "prometheus.scrape.alloy"
-    target_label  = "role"
-    replacement   = "collector"
-  }
-  rule {
-    source_labels = ["job"]
-    regex         = "prometheus.scrape.alloy"
-    target_label  = "technology"
-    replacement   = "alloy"
-  }
+// -----------------------------------------------------------------------------
+// langfuse Stack - ClickHouse Native Metrics
+// -----------------------------------------------------------------------------
+scrape_with_labels "langfuse_clickhouse" {
+  address           = "langfuse-clickhouse:9363"
+  service_namespace = "langfuse"
+  service_name      = "analytics"
+  tier              = "core"
+  component         = "data"
+  role              = "analytics"
+  technology        = "clickhouse"
 }

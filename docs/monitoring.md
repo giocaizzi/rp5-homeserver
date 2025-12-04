@@ -106,12 +106,27 @@ Labels extracted from Docker containers and forwarded to observability backends.
 
 Prometheus scrapes metrics from internal services via Alloy.
 
+**Observability Stack:**
+
 | Target | Endpoint | Metrics |
 |--------|----------|---------|
 | Prometheus | `observability-prometheus:9090/metrics` | Self-monitoring |
 | Loki | `observability-loki:3100/metrics` | Log ingestion stats |
 | Tempo | `observability-tempo:3200/metrics` | Trace ingestion stats |
 | Alloy | `observability-alloy:12345/metrics` | Pipeline health |
+
+**Database Exporters:**
+
+| Target | Stack | Endpoint | Metrics |
+|--------|-------|----------|---------|
+| n8n-postgres-exporter | n8n | `:9187/metrics` | PostgreSQL stats |
+| firefly-mysql-exporter | firefly | `:9104/metrics` | MariaDB stats |
+| firefly-postgres-exporter | firefly | `:9187/metrics` | Pico PostgreSQL |
+| langfuse-postgres-exporter | langfuse | `:9187/metrics` | Langfuse PostgreSQL |
+| langfuse-redis-exporter | langfuse | `:9121/metrics` | Redis stats |
+| langfuse-clickhouse | langfuse | `:9363/metrics` | ClickHouse stats |
+
+Exporters use entrypoint scripts to inject credentials from Docker Swarm secrets.
 
 ---
 
@@ -168,6 +183,29 @@ Distributed tracing backend for OTLP-compatible traces.
 - URL: `https://grafana.home`
 - Default credentials in Swarm secrets
 
+### Dashboard Organization
+
+Dashboards are organized in folders by purpose:
+
+| Folder | Dashboards | Description |
+|--------|------------|-------------|
+| `infra` | docker-overview | Docker Swarm container resources |
+| `observability` | health | Loki/Tempo/Prometheus/Alloy health |
+| `giocaizzi-xyz` | app, ai | Personal website application |
+| `shared` | postgresql, mariadb, redis, nginx | Technology-specific dashboards (multi-instance) |
+
+### Dashboard Variables
+
+Dashboards use variables for dynamic filtering:
+
+| Variable | Purpose | Example Values |
+|----------|---------|----------------|
+| `$service_namespace` | Filter by stack | `n8n`, `firefly`, `langfuse` |
+| `$service_name` | Filter by service | `db`, `cache`, `app` |
+| `$datasource` | Select Prometheus/Loki instance | — |
+
+Shared dashboards (PostgreSQL, Redis) use both variables for multi-instance support.
+
 ### Data Sources (Pre-configured)
 | Name | Type | URL |
 |------|------|-----|
@@ -183,6 +221,17 @@ Alerting is handled via Grafana alerting rules, with notifications sent to ntfy.
 
 **Alert Channels:**
 - ntfy: `https://ntfy.home/alerts`
+
+**Provisioned Alert Rules:**
+
+| Group | Alerts |
+|-------|--------|
+| Database Alerts | PostgreSQL Down, PostgreSQL Low Cache Hit, MariaDB Down |
+| Redis Alerts | Redis Down, Redis High Memory |
+| Exporter Health | Metrics Exporter Down |
+| Observability Stack | Loki Down, Tempo Down, Alloy Down |
+
+Alert rules are provisioned via `grafana/provisioning/alerting/rules.yaml`.
 
 ---
 

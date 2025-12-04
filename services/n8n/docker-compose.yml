@@ -40,6 +40,11 @@ networks:
   public_network:
     external: true
     name: rp5_public
+  
+  # External network for observability (Alloy scraping)
+  observability_network:
+    external: true
+    name: rp5_observability
 
 # =============================================================================
 # Services
@@ -82,6 +87,48 @@ services:
       resources:
         limits:
           memory: 256M
+    logging:
+      <<: *logging-base
+
+  # PostgreSQL Exporter - Metrics for Prometheus/Alloy
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    hostname: n8n-postgres-exporter
+    expose:
+      - "9187"
+    environment:
+      - DATA_SOURCE_URI=n8n-db:5432/n8n?sslmode=disable
+      - DATA_SOURCE_USER=n8n
+    secrets:
+      - postgres_password
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export DATA_SOURCE_PASS=$$(cat /run/secrets/postgres_password)
+        exec /bin/postgres_exporter
+    networks:
+      - n8n_network
+      - observability_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9187/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "postgres-exporter"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.role: "exporter"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "postgres-exporter"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 64M
     logging:
       <<: *logging-base
 
