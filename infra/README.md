@@ -1,142 +1,150 @@
-# Infrastructure Stack
+# 🏗️ Infrastructure Stack
 
-> *Deploy this stack first using Docker Swarm* - other services depend on the networks created here.
+> Core infrastructure: reverse proxy, management UI, tunnel, monitoring, backups, dashboard
 
-## Network Architecture
+**Deploy first** — other stacks depend on networks created here.
 
-**Created Networks:**
-- `rp5_public` - Shared overlay network for nginx ↔ service communication
-- `rp5_infra` - Internal infrastructure overlay network
+---
 
-**Service Integration:**
-Services join `rp5_public` overlay network to enable nginx routing without exposing ports directly.
+## 🚀 Quick Start
 
+```bash
+# 1. Create secrets in ./secrets/
+# 2. Sync and deploy
+./scripts/sync_infra.sh
 ```
-Internet → Nginx (rp5_public) → Services (rp5_public + private overlay networks)
+
+---
+
+## 📦 Architecture
+
+| Container | Image | Purpose |
+|-----------|-------|---------|
+| nginx | `nginx:alpine` | Reverse proxy, SSL termination |
+| portainer | `portainer/portainer-ee:latest` | Docker management UI |
+| cloudflared | `cloudflare/cloudflared:latest` | Secure tunnel (no port forwarding) |
+| netdata | `netdata/netdata:latest` | Real-time system monitoring |
+| backrest | `garethgeorge/backrest:latest` | Restic backup web UI |
+| homepage | `ghcr.io/gethomepage/homepage:latest` | Service dashboard |
+
+---
+
+## 🌐 Networks
+
+This stack creates shared networks for inter-stack communication:
+
+| Network | Type | Purpose |
+|---------|------|---------|
+| `rp5_public` | overlay, external | nginx ↔ services routing |
+| `rp5_infra` | overlay, internal | Infrastructure-only |
+
+Services join `rp5_public` to receive nginx routing without exposing ports.
+
+---
+
+## 🔐 Secrets
+
+File-based secrets in `./secrets/` (gitignored):
+
+| Secret | File | Purpose |
+|--------|------|---------|
+| `ssl_cert` | `cert.pem` | SSL certificate |
+| `ssl_key` | `key.pem` | SSL private key |
+| `cloudflared_token` | `cloudflared_token.txt` | Tunnel token |
+| `gcp_service_account` | `gcp_service_account.json` | GCS backup credentials |
+| `portainer_api_key` | `portainer_api_key.txt` | Homepage widget |
+| `backrest_admin_password` | `backrest_admin_password.txt` | Backrest + Homepage |
+| `firefly_api_token` | `firefly_api_token.txt` | Homepage widget |
+| `adguard_password` | `adguard_password.txt` | Homepage widget |
+| `grafana_admin_password` | `grafana_admin_password.txt` | Homepage widget |
+| `domain` | `domain.txt` | Production domain |
+
+```bash
+# Generate random passwords
+openssl rand -base64 32 > ./secrets/backrest_admin_password.txt
 ```
 
-## Services
+---
 
-**Nginx Reverse Proxy** (`nginx:alpine`)
-- SSL termination and routing for all services
+## 📖 Services
+
+### Nginx Reverse Proxy
+
+SSL termination and routing for all `.home` domains. Config in `./nginx/nginx.conf`.
+
 - Rate limiting and security headers
-- WebSocket support for Portainer/N8N
+- WebSocket support (Portainer, n8n)
+- Snippets: `proxy-headers.conf`, `ssl-params.conf`, `websocket-support.conf`
 
-**Portainer EE** (`portainer/portainer-ee:latest`)
-- Docker management UI at `https://portainer.home`
-- Business Edition with advanced features
-- Read-only Docker socket access
+### Portainer
 
-> Using Business Edition for enhanced stack management capabilities.
-> Get a free license (less than 3 nodes) at [Portainer](https://www.portainer.io/).
+Docker management at `https://portainer.home`.
 
-**Cloudflare Tunnel** (`cloudflare/cloudflared:latest`)
-- Secure external access without port forwarding
-- Requires `CLOUDFLARED_TOKEN` environment variable
+> Business Edition (free for ≤3 nodes) — get license at [portainer.io](https://www.portainer.io/)
 
-**Netdata Monitoring** (`netdata/netdata:latest`)
-- Real-time system monitoring at `https://netdata.home`
-- Performance metrics, alerts, and dashboards
-- Integrated with host system via bind mounts
+**API Key Setup** (for Homepage widget):
+1. Portainer → User account → API keys
+2. Generate new key
+3. Save to `./secrets/portainer_api_key.txt`
+4. Re-sync: `./scripts/sync_infra.sh`
 
-**Backrest** (`garethgeorge/backrest:latest`)
-- Web UI for restic backups at `https://backrest.home`
-- Automated incremental backups to Google Cloud Storage
-- Backs up user home directory and Docker volumes
-- Configurable retention policy via web interface
-- Real-time backup monitoring and notifications
+### Cloudflared
 
-**Homepage** (`ghcr.io/gethomepage/homepage:latest`)
-- Modern application dashboard at `https://homepage.home`
-- Centralized access to all services
-- Real-time system stats and Docker container monitoring
-- Customizable widgets and service status indicators
+Secure external access without port forwarding. Requires tunnel token from Cloudflare dashboard.
 
-## Portainer API Key Setup
+### Netdata
 
-To enable Portainer widget integration:
+Real-time monitoring at `https://netdata.home`. Metrics, alerts, dashboards.
 
-1. Access Portainer at `https://portainer.home`
-2. Navigate to User account → API keys
-3. Generate a new API key
-4. Replace `ptr_xxxxxxxxxxxxxxxxxxxxx` in `services.yaml` with your actual API key
-5. Restart homepage service: `docker service update --force infra_homepage`
+### Backrest
 
-## Widget Features
+Backup web UI at `https://backrest.home`. Automated incremental backups to GCS via restic.
 
-With API integration enabled, the Portainer widget will show:
-- Container count by status
-- Stack information
-- Resource usage
+See [docs/backup.md](../docs/backup.md) for setup.
 
-## Security Note
+### Homepage
 
-The API key provides read-only access to container information. Store securely and rotate periodically.
+Service dashboard at `https://homepage.home`. Config files in `./homepage/`.
 
-## Volumes & Data
+---
 
-**Named Volumes:**
-- `portainer_data` - Portainer configuration and stacks
-- `netdata_cache` - Monitoring metrics cache
-- `netdata_config` - Custom monitoring configuration
-- `netdata_lib` - Monitoring runtime data
-- `backrest_data` - Backup metadata and state
-- `backrest_config` - Backup plans and repository config
-- `backrest_cache` - Restic cache for performance
+## ⚙️ SSL Setup
 
-> Homepage uses local config files from `./homepage/` directory.
+Certificates required before first deployment:
 
-## Configuration
+```bash
+# Generate self-signed (dev) or use Let's Encrypt/Cloudflare (prod)
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout ./secrets/key.pem \
+  -out ./secrets/cert.pem \
+  -subj "/CN=*.home"
+```
 
-### Docker Swarm Secrets
+See [docs/setup.md](../docs/setup.md) for production SSL.
 
-Sensitive configuration is managed via Docker Swarm secrets stored in `./secrets/`:
+---
 
-**Required secrets:**
-- `ssl_cert` (`./secrets/cert.pem`) - SSL certificate
-- `ssl_key` (`./secrets/key.pem`) - SSL private key  
-- `cloudflared_token` (`./secrets/cloudflared_token.txt`) - Cloudflare tunnel token
-- `gcp_service_account` (`./secrets/gcp_service_account.json`) - GCP service account for backups
+## 🌍 DNS Resolution
 
-**Service integration secrets:**
-- `portainer_api_key` (`./secrets/portainer_api_key.txt`) - Portainer API access
-- `backrest_admin_password` (`./secrets/backrest_admin_password.txt`) - Backrest web UI password  
-- `firefly_api_token` (`./secrets/firefly_api_token.txt`) - Firefly III API access
-- `adguard_password` (`./secrets/adguard_password.txt`) - AdGuard Home password
-- `domain` (`./secrets/domain.txt`) - Primary domain name
+For `.home` domains to resolve:
 
-## Backup Setup
+**Recommended**: AdGuard DNS rewrites (network-wide)  
+**Alternative**: Manual `/etc/hosts` entries per device
 
-**Prerequisites:**
-1. Google Cloud Storage bucket with service account access
-2. Create GCP service account key and save to `./secrets/gcp_service_account.json`
-3. Set admin password in `./secrets/backrest_admin_password.txt`
+See [docs/dns.md](../docs/dns.md) for complete setup.
 
-**Configure via Web UI:**
-1. Deploy the infrastructure stack: `docker stack deploy -c docker-compose.yml infra`
-2. Access Backrest at `https://backrest.home`
-3. Create repository pointing to GCS bucket
-4. Set up backup plans with schedules and retention policies
+---
 
-See [Backup Documentation](../docs/backup.md) for complete setup guide.
+## 💾 Volumes
 
-## Nginx Post-Setup
+| Volume | Purpose |
+|--------|---------|
+| `portainer_data` | Portainer config, stacks |
+| `netdata_cache` | Metrics cache |
+| `netdata_config` | Custom config |
+| `netdata_lib` | Runtime data |
+| `backrest_data` | Backup metadata |
+| `backrest_config` | Backup plans |
+| `backrest_cache` | Restic cache |
 
-### SSL Setup
-
-SSL Certificates must be present as Docker Swarm secrets before starting the stack:
-
-- `./secrets/cert.pem` - SSL certificate
-- `./secrets/key.pem` - SSL private key
-
-See [SSL Generation Instructions](../docs/setup.md#1-infrastructure-stack) for certificate generation.
-
-### DNS Resolution Setup
-
-For services to be accessible via `.home` domains (e.g., `portainer.home`, `netdata.home`), configure DNS resolution:
-
-**Recommended**: Use AdGuard DNS rewrites for automatic network-wide resolution.
-
-**Alternative**: Manually add entries to `/etc/hosts` on each client device.
-
-See [DNS & Hostname Resolution](../docs/dns.md) for complete setup instructions.
+> Homepage uses bind-mounted `./homepage/` configs.

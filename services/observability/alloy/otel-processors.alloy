@@ -1,3 +1,22 @@
+// =============================================================================
+// OTEL TELEMETRY PROCESSORS
+// =============================================================================
+// Processes incoming OTLP telemetry (logs, metrics, traces) and sets defaults.
+//
+// OTEL Semantic Convention Attributes:
+//   service.name              → service_name
+//   service.namespace         → service_namespace
+//   service.version           → service_version
+//   service.instance.id       → service_instance_id
+//   deployment.environment.name → deployment_environment_name
+//   host.name                 → host_name
+//
+// Custom Attributes:
+//   tier, component, role, source (no dots, stored as-is)
+//
+// Pipeline: receiver → batch → attributes → exporters
+// =============================================================================
+
 // Batch processor for efficiency
 otelcol.processor.batch "default" {
   timeout         = "5s"
@@ -10,41 +29,55 @@ otelcol.processor.batch "default" {
   }
 }
 
-// Normalize attributes for OTEL semantic conventions
+// Set defaults for missing attributes
 otelcol.processor.attributes "default" {
-  // Add source identifier for OTEL pipeline
-  action {
-    key    = "source"
-    value  = "otel"
-    action = "insert"
-  }
+  // ---------------------------------------------------------------------------
+  // OTEL SEMANTIC CONVENTION ATTRIBUTES
+  // Dots auto-converted to underscores by exporters
+  // ---------------------------------------------------------------------------
 
-  // Default tier for OTEL data
+  // Default namespace for external apps
   action {
-    key    = "tier"
-    value  = "core"
-    action = "insert"
-  }
-
-  // Default namespace for OTEL data (external apps)
-  action {
-    key    = "namespace"
+    key    = "service.namespace"
     value  = "external"
     action = "insert"
   }
 
   // Default environment
   action {
-    key    = "environment"
+    key    = "deployment.environment.name"
     value  = "production"
     action = "insert"
   }
 
-  // Map deployment.environment.name to environment (overrides default if present)
+  // ---------------------------------------------------------------------------
+  // CUSTOM ATTRIBUTES (no dots)
+  // ---------------------------------------------------------------------------
+
+  // Source identifier for OTEL pipeline
   action {
-    key            = "environment"
-    from_attribute = "deployment.environment.name"
-    action         = "upsert"
+    key    = "source"
+    value  = "otel"
+    action = "insert"
+  }
+
+  // Default tier
+  action {
+    key    = "tier"
+    value  = "core"
+    action = "insert"
+  }
+
+  // ---------------------------------------------------------------------------
+  // LOKI LABEL HINTS
+  // ---------------------------------------------------------------------------
+  // Only these become indexed Loki labels.
+  // Dots auto-convert: service.name → service_name
+  //                    deployment.environment.name → deployment_environment_name
+  action {
+    key    = "loki.resource.labels"
+    value  = "service.name, service.namespace, deployment.environment.name, tier, component, source"
+    action = "insert"
   }
 
   output {

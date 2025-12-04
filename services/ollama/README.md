@@ -1,41 +1,80 @@
-# Ollama Local LLM Server
+# 🤖 Ollama
 
-Local AI inference server at `https://ollama.home`, optimized for Raspberry Pi 5.
+> Local LLM inference server optimized for Raspberry Pi 5
 
-## Configuration
+**URL**: `https://ollama.home`
 
-**Container**: `ollama/ollama:latest`
-**Model**: Qwen3:1.7B (~1GB, Pi-optimized)
-**Access**: API via nginx proxy
+---
 
-## Pi Optimizations
+## 🚀 Quick Start
 
-**Hardware Limits**:
-- VRAM: 1GB max
-- Flash attention: disabled
-- Single model loading
-- Custom entrypoint for smart model management
+1. Deploy via Portainer → Swarm mode
+2. Wait for model download (~1GB, first run only)
+3. Access API at `https://ollama.home`
 
-**Smart Loading**: Model only downloaded if not present (faster restarts)
+---
 
-## API Usage
+## 📦 Architecture
 
-**Base URL**: `https://ollama.home`
+| Container | Image | Purpose |
+|-----------|-------|---------|
+| ollama | `ollama/ollama:latest` | LLM inference server |
 
-**Generate Text**:
+---
+
+## 🔐 Secrets
+
+No secrets required. API is unauthenticated.
+
+---
+
+## ⚙️ Pi Constraints
+
+Raspberry Pi 5 (8GB) limitations:
+
+| Setting | Value | Reason |
+|---------|-------|--------|
+| Max VRAM | 1GB | Shared memory |
+| Flash attention | Disabled | ARM compatibility |
+| Concurrent models | 1 | Memory limits |
+| Default model | `qwen3:1.7b` | ~1GB, Pi-optimized |
+
+**Smart Loading**: Custom entrypoint only downloads model if not present (faster restarts).
+
+---
+
+## 📖 API Usage
+
+### Generate Text
+
 ```bash
 curl https://ollama.home/api/generate \
   -d '{"model": "qwen3:1.7b", "prompt": "Hello!", "stream": false}'
 ```
 
-**Performance**: ~2-5 tokens/second on Pi 5
+### Chat
 
-## Storage
+```bash
+curl https://ollama.home/api/chat \
+  -d '{
+    "model": "qwen3:1.7b",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "stream": false
+  }'
+```
 
-~1GB for default model, plan accordingly for additional models.
+### List Models
 
-## Deployment
+```bash
+curl https://ollama.home/api/tags
+```
 
-Requires [infrastructure stack](../../infra) running first.
+**Performance**: ~2-5 tokens/second on Pi 5.
 
-> **First run is slow** because it downloads model (several minutes), subsequent starts are fast.
+---
+
+## 💾 Volumes
+
+| Volume | Purpose |
+|--------|---------|
+| `ollama_data` | Models (~1GB per model) |

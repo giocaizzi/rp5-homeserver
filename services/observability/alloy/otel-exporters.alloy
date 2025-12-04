@@ -1,9 +1,27 @@
+// =============================================================================
+// OTEL TELEMETRY EXPORTERS
+// =============================================================================
+// Exports processed OTLP telemetry to backend storage systems.
+//
+// Destinations:
+//   - Metrics → Prometheus (via remote write)
+//   - Logs    → Loki (labels controlled by loki.resource.labels hint)
+//   - Traces  → Tempo (via OTLP gRPC)
+//
+// Label Handling:
+//   - Loki: Uses loki.resource.labels hint set in otel-processors.alloy
+//           Only indexed labels become Loki labels; rest is structured metadata
+//   - Prometheus: Resource attributes become metric labels automatically
+//   - Tempo: All attributes preserved as span/resource attributes
+// =============================================================================
+
 // Export metrics to Prometheus
 otelcol.exporter.prometheus "default" {
   forward_to = [prometheus.remote_write.default.receiver]
 }
 
 // Export logs to Loki
+// Label extraction controlled by loki.resource.labels hint in processor
 otelcol.exporter.loki "default" {
   forward_to = [loki.write.default.receiver]
 }
@@ -11,7 +29,7 @@ otelcol.exporter.loki "default" {
 // Export traces to Tempo via OTLP
 otelcol.exporter.otlp "tempo" {
   client {
-    endpoint = "tempo:4317"
+    endpoint = "observability-tempo:4317"
     tls {
       insecure = true
     }

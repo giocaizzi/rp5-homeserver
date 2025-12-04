@@ -47,7 +47,7 @@ networks:
 services:
   db:
     image: postgres:16-alpine
-    hostname: db
+    hostname: n8n-db
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     environment:
       - POSTGRES_DB=n8n
@@ -71,10 +71,11 @@ services:
       start_period: 60s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "n8n-db"
+      com.giocaizzi.service: "db"
       com.giocaizzi.component: "data"
       com.giocaizzi.role: "database"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "postgres"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -86,7 +87,7 @@ services:
 
   n8n:
     image: n8nio/n8n:latest
-    hostname: n8n
+    hostname: n8n-app
     depends_on:
       - db
     expose:
@@ -104,7 +105,7 @@ services:
       
       # Database configuration
       - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=db
+      - DB_POSTGRESDB_HOST=n8n-db
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=n8n
       - DB_POSTGRESDB_USER=n8n
@@ -156,10 +157,11 @@ services:
       start_period: 60s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "n8n"
+      com.giocaizzi.service: "app"
       com.giocaizzi.component: "app"
       com.giocaizzi.role: "automation"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "n8n"
     <<: *security-base
     user: "1000:1000"
     deploy:

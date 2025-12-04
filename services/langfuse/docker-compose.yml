@@ -36,8 +36,8 @@ x-langfuse-env: &langfuse-env
   # Database
   DATABASE_URL: "postgresql://langfuse:langfuse@langfuse-db:5432/langfuse"
   # ClickHouse
-  CLICKHOUSE_MIGRATION_URL: "clickhouse://clickhouse:9000"
-  CLICKHOUSE_URL: "http://clickhouse:8123"
+  CLICKHOUSE_MIGRATION_URL: "clickhouse://langfuse-clickhouse:9000"
+  CLICKHOUSE_URL: "http://langfuse-clickhouse:8123"
   CLICKHOUSE_USER: "clickhouse"
   CLICKHOUSE_PASSWORD: "clickhouse"
   CLICKHOUSE_CLUSTER_ENABLED: "false"
@@ -46,14 +46,14 @@ x-langfuse-env: &langfuse-env
   LANGFUSE_S3_EVENT_UPLOAD_REGION: "auto"
   LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: "minio"
   LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: "miniosecret"
-  LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: "http://minio:9000"
+  LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: "http://langfuse-minio:9000"
   LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
   LANGFUSE_S3_EVENT_UPLOAD_PREFIX: "events/"
   LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: "langfuse"
   LANGFUSE_S3_MEDIA_UPLOAD_REGION: "auto"
   LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: "minio"
   LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: "miniosecret"
-  LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: "http://minio:9000"
+  LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: "http://langfuse-minio:9000"
   LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: "true"
   LANGFUSE_S3_MEDIA_UPLOAD_PREFIX: "media/"
   LANGFUSE_S3_BATCH_EXPORT_ENABLED: "false"
@@ -138,7 +138,7 @@ services:
   # ========================================
   minio:
     image: minio/minio:latest
-    hostname: minio
+    hostname: langfuse-minio
     entrypoint: sh
     command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
     environment:
@@ -159,10 +159,11 @@ services:
       start_period: 30s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "langfuse-minio"
-      com.giocaizzi.component: "storage"
+      com.giocaizzi.service: "storage"
+      com.giocaizzi.component: "data"
       com.giocaizzi.role: "object-storage"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "minio"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -177,7 +178,7 @@ services:
   # ========================================
   clickhouse:
     image: clickhouse/clickhouse-server:latest
-    hostname: clickhouse
+    hostname: langfuse-clickhouse
     user: "101:101"
     environment:
       CLICKHOUSE_DB: "default"
@@ -206,10 +207,11 @@ services:
       start_period: 180s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "langfuse-clickhouse"
+      com.giocaizzi.service: "analytics"
       com.giocaizzi.component: "data"
       com.giocaizzi.role: "analytics"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "clickhouse"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -250,10 +252,11 @@ services:
       start_period: 30s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "langfuse-db"
+      com.giocaizzi.service: "db"
       com.giocaizzi.component: "data"
       com.giocaizzi.role: "database"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "postgres"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -286,10 +289,11 @@ services:
       start_period: 10s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "langfuse-redis"
-      com.giocaizzi.component: "cache"
+      com.giocaizzi.service: "cache"
+      com.giocaizzi.component: "data"
       com.giocaizzi.role: "cache"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "redis"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -324,10 +328,11 @@ services:
       - langfuse_network
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "langfuse-worker"
+      com.giocaizzi.service: "worker"
       com.giocaizzi.component: "worker"
       com.giocaizzi.role: "processor"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "langfuse-worker"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -342,7 +347,7 @@ services:
   # ========================================
   langfuse:
     image: langfuse/langfuse:latest
-    hostname: langfuse
+    hostname: langfuse-app
     environment:
       <<: *langfuse-env
       NEXTAUTH_URL: "https://langfuse.home"
@@ -386,10 +391,11 @@ services:
       start_period: 60s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "langfuse"
+      com.giocaizzi.service: "app"
       com.giocaizzi.component: "app"
       com.giocaizzi.role: "web"
       com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "langfuse"
     <<: *security-base
     deploy:
       <<: *deploy-base

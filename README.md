@@ -4,28 +4,29 @@ Raspberry Pi 5 Docker Swarm-based home server.
 
 ## 🚀 Quick Start
 
-1. Deploy the [infrastructure stack](infra/README.md) with Docker Swarm and [Portainer](./setup.md).
-2. Then access Portainer at `https://portainer.home` to deploy desired services using swarm stacks.
+1. Deploy the [infrastructure stack](infra/README.md) with Docker Swarm
+2. Access Portainer at `https://portainer.home` to deploy services
 
 ## 🧩 Services
 
-Applications available for deployment:
+| Service | URL | Description |
+|---------|-----|-------------|
+| **[N8N](./services/n8n/README.md)** | `https://n8n.home` | Workflow automation |
+| **[Firefly III](./services/firefly/README.md)** | `https://firefly.home` | Personal finance |
+| **[AdGuard Home](./services/adguard/README.md)** | `https://adguard.home` | DNS & ad blocking |
+| **[Ollama](./services/ollama/README.md)** | `https://ollama.home` | Local LLM server |
+| **[Langfuse](./services/langfuse/README.md)** | `https://langfuse.home` | LLM observability |
+| **[Ntfy](./services/ntfy/README.md)** | `https://ntfy.home` | Push notifications |
+| **[Observability](./services/observability/README.md)** | `https://grafana.home` | Grafana, Loki, Tempo, Prometheus |
 
-- **[N8N](./services/n8n/README.md)** - Workflow automation (`https://n8n.home`)
-- **[Ollama](./services/ollama/README.md)** - Local LLM server (`https://ollama.home`)
-- **[Firefly III](./services/firefly/README.md)** - Personal finance manager (`https://firefly.home`)
-- **[AdGuard Home](./services/adguard/README.md)** - DNS server & ad blocker (`https://adguard.home`)
-
-> [How to add a service](./docs/services.md)
-
-Infrastructure components:
-- **Portainer** - Docker management UI (`https://portainer.home`)
-- **Nginx** - Reverse proxy and SSL termination
-- **Cloudflare Tunnel** - Secure external access without port forwarding
-- **Netdata** - Real-time system monitoring (`https://netdata.home`)
-- **Backrest** - Web UI for restic backups (`https://backrest.home`)
-- **Homepage** - Application dashboard (`https://homepage.home`)
+**Infrastructure** (deployed with `infra/`):
+- **Portainer** — Docker management (`https://portainer.home`)
+- **Nginx** — Reverse proxy & SSL
+- **Cloudflare Tunnel** — Secure external access
+- **Netdata** — System monitoring (`https://netdata.home`)
+- **Backrest** — Backup UI (`https://backrest.home`)
+- **Homepage** — Dashboard (`https://homepage.home`)
 
 ## 📚 Documentation
 
-[Read the docs here](./docs/README.md).
+See [docs/](./docs/README.md) for architecture, networking, backup, and deployment guides.
