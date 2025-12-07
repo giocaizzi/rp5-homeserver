@@ -75,7 +75,12 @@ prometheus.remote_write "default" {
     queue_config {
       capacity             = 10000
       max_shards           = 5
+      min_shards           = 1
       max_samples_per_send = 2000
+      batch_send_deadline  = "5s"
+      min_backoff          = "1s"
+      max_backoff          = "30s"
+      retry_on_http_429    = true
     }
   }
 }

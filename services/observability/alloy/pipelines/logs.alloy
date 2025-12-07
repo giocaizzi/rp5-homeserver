@@ -55,6 +55,9 @@ loki.source.docker "logs" {
 loki.process "docker" {
   forward_to = [loki.write.default.receiver]
 
+  // Docker-specific log parsing
+  stage.docker {}
+
   // Add source label
   stage.static_labels {
     values = {
@@ -76,21 +79,38 @@ loki.process "docker" {
     ]
   }
 
-  // Try to parse JSON logs and extract level
-  stage.json {
-    expressions = {
-      level   = "level",
-      message = "msg",
-    }
+  // Extract log level from common patterns
+  // Matches: level=info, level="info", "level":"info", [INFO], INFO:, etc.
+  stage.regex {
+    expression = "(?i)(?:level[=:\"]\\s*\"?(?P<level>\\w+)|\\[(?P<level_bracket>DEBUG|INFO|WARN|WARNING|ERROR|FATAL|TRACE)\\]|^(?P<level_prefix>DEBUG|INFO|WARN|WARNING|ERROR|FATAL|TRACE):)"
   }
 
-  // Normalize log levels
+  // Set detected_level from whichever capture group matched
+  stage.template {
+    source   = "detected_level"
+    template = "{{ or .level .level_bracket .level_prefix \"\" }}"
+  }
+
+  // Normalize level values to lowercase
+  stage.template {
+    source   = "detected_level"
+    template = "{{ .detected_level | ToLower }}"
+  }
+
+  // Normalize "warning" to "warn"
+  stage.replace {
+    expression = "warning"
+    source     = "detected_level"
+    replace    = "warn"
+  }
+
+  // Default to "info" if no level detected
   stage.template {
     source   = "level"
-    template = "{{ ToLower .Value }}"
+    template = "{{ if .detected_level }}{{ .detected_level }}{{ else }}info{{ end }}"
   }
 
-  // Extract level as label when present
+  // Add level as label
   stage.labels {
     values = {
       level = "",

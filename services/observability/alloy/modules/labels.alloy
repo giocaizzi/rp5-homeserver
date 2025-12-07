@@ -132,6 +132,7 @@ declare "docker_labels" {
     // -------------------------------------------------------------------------
     rule {
       source_labels = ["__meta_docker_container_id"]
+      regex         = "^(.{12}).*$"
       target_label  = "service_instance_id"
     }
     rule {

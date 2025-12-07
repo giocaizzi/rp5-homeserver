@@ -39,7 +39,8 @@ otelcol.receiver.otlp "default" {
 // Batches telemetry data before export for efficiency
 
 otelcol.processor.batch "default" {
-  timeout = "5s"
+  timeout         = "5s"
+  send_batch_size = 100
 
   output {
     metrics = [otelcol.processor.attributes.default.input]
@@ -54,16 +55,39 @@ otelcol.processor.batch "default" {
 // Injects standard attributes into all telemetry
 
 otelcol.processor.attributes "default" {
+  // Default namespace for external apps
+  action {
+    key    = "service.namespace"
+    value  = "external"
+    action = "insert"
+  }
+
+  // Default environment
   action {
     key    = "deployment.environment.name"
     value  = "production"
-    action = "upsert"
+    action = "insert"
   }
 
+  // Source identifier
   action {
     key    = "source"
     value  = "otel"
-    action = "upsert"
+    action = "insert"
+  }
+
+  // Default tier
+  action {
+    key    = "tier"
+    value  = "core"
+    action = "insert"
+  }
+
+  // Loki label hints - controls which attributes become indexed labels
+  action {
+    key    = "loki.resource.labels"
+    value  = "service.name, service.namespace, deployment.environment.name, tier, component, source"
+    action = "insert"
   }
 
   output {
@@ -104,5 +128,18 @@ otelcol.exporter.otlp "tempo" {
       insecure             = true
       insecure_skip_verify = true
     }
+  }
+
+  retry_on_failure {
+    enabled          = true
+    initial_interval = "5s"
+    max_interval     = "30s"
+    max_elapsed_time = "5m"
+  }
+
+  sending_queue {
+    enabled       = true
+    num_consumers = 2
+    queue_size    = 500
   }
 }
