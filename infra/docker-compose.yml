@@ -46,14 +46,15 @@ networks:
 # =============================================================================
 services:
   # Nginx Reverse Proxy
-  nginx:
+  proxy:
     image: nginx:alpine
-    hostname: infra-nginx
+    hostname: infra-proxy
     ports:
       - "80:80"     # HTTP
       - "443:443"   # HTTPS
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./nginx/snippets:/etc/nginx/snippets:ro
       - nginx_cache:/var/cache/nginx
     secrets:
@@ -65,7 +66,7 @@ services:
       - public_network
       - infra_network
     healthcheck:
-      test: ["CMD", "nginx", "-t"]
+      test: ["CMD-SHELL", "nc -z localhost 80 && nc -z localhost 443"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -74,7 +75,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "proxy"
       com.giocaizzi.component: "gateway"
-      com.giocaizzi.role: "proxy"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "nginx"
     <<: *security-base
@@ -87,9 +87,9 @@ services:
       <<: *logging-base
 
   # Portainer - Docker management UI (Business Edition)
-  portainer:
+  management:
     image: portainer/portainer-ee:latest
-    hostname: infra-portainer
+    hostname: infra-management
     expose:
       - "9000"
       - "9443"
@@ -104,7 +104,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "management"
       com.giocaizzi.component: "app"
-      com.giocaizzi.role: "management"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "portainer"
     <<: *security-base
@@ -117,9 +116,9 @@ services:
       <<: *logging-base
   
   # Cloudflare Tunnel
-  cloudflared:
+  tunnel:
     image: cloudflare/cloudflared:latest
-    hostname: infra-cloudflared
+    hostname: infra-tunnel
     command: tunnel --no-autoupdate run
     environment:
       - TUNNEL_TOKEN_FILE=/run/secrets/cloudflared_token
@@ -136,7 +135,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "tunnel"
       com.giocaizzi.component: "gateway"
-      com.giocaizzi.role: "tunnel"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "cloudflared"
     <<: *security-base
@@ -150,9 +148,9 @@ services:
       <<: *logging-base
 
   # Netdata - Real-time performance monitoring
-  netdata:
+  monitoring:
     image: netdata/netdata:latest
-    hostname: infra-netdata
+    hostname: infra-monitoring
     # pid: host  # UNSUPPORTED in Swarm - would be needed for per-container cgroups
     expose:
       - "19999"
@@ -184,7 +182,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "monitoring"
       com.giocaizzi.component: "app"
-      com.giocaizzi.role: "monitoring"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "netdata"
     deploy:
@@ -196,9 +193,9 @@ services:
       <<: *logging-base
 
   # Backrest - Restic backup with Web UI
-  backrest:
+  backup:
     image: garethgeorge/backrest:latest
-    hostname: infra-backrest
+    hostname: infra-backup
     expose:
       - "9898"  # Web UI
     environment:
@@ -223,7 +220,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "backup"
       com.giocaizzi.component: "app"
-      com.giocaizzi.role: "backup"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "backrest"
     <<: *security-base
@@ -245,9 +241,9 @@ services:
       start_period: 10s
 
   # Homepage - Modern application dashboard
-  homepage:
+  dashboard:
     image: ghcr.io/gethomepage/homepage:latest
-    hostname: infra-homepage
+    hostname: infra-dashboard
     expose:
       - "3000"
     environment:
@@ -291,7 +287,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "dashboard"
       com.giocaizzi.component: "app"
-      com.giocaizzi.role: "dashboard"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "homepage"
     <<: *security-base

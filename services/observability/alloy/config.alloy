@@ -1,0 +1,94 @@
+// =============================================================================
+// ALLOY CONFIGURATION - ENTRY POINT
+// =============================================================================
+// Main configuration file that imports modules and pipelines, defines shared
+// resources (discovery, outputs), and wires everything together.
+//
+// Architecture:
+//   config.alloy (this file)
+//   ├── modules/          → Reusable label extraction components
+//   │   └── labels.alloy
+//   └── pipelines/        → Data collection pipelines
+//       ├── otel.alloy    → OTLP receivers + processors + exporters
+//       ├── logs.alloy    → Docker log collection
+//       └── metrics.alloy → Prometheus scraping
+//
+// Data Flow:
+//   OTLP → otel pipeline → backends
+//   Docker → logs pipeline → Loki
+//   Exporters → metrics pipeline → Prometheus
+// =============================================================================
+
+// =============================================================================
+// IMPORTS
+// =============================================================================
+
+import.file "modules" {
+  filename = "/etc/alloy/modules"
+}
+
+import.file "pipelines" {
+  filename = "/etc/alloy/pipelines"
+}
+
+// =============================================================================
+// SHARED DOCKER DISCOVERY
+// =============================================================================
+// Single Docker discovery instance shared by logs and metrics pipelines.
+// Reduces Docker API calls and ensures consistent target view.
+
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "30s"
+
+  filter {
+    name   = "status"
+    values = ["running"]
+  }
+}
+
+// =============================================================================
+// MODULE INSTANTIATION
+// =============================================================================
+// Instantiate label extraction modules with shared discovery targets
+
+modules.docker_labels "docker_labels" {
+  targets = discovery.docker.containers.targets
+}
+
+modules.exporter_targets "exporter_targets" {
+  targets = modules.docker_labels.output
+}
+
+// =============================================================================
+// OUTPUT ENDPOINTS
+// =============================================================================
+// Backend write endpoints used by all pipelines
+
+// -----------------------------------------------------------------------------
+// Prometheus Remote Write
+// -----------------------------------------------------------------------------
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://observability-metrics-store:9090/api/v1/write"
+
+    queue_config {
+      capacity             = 10000
+      max_shards           = 5
+      max_samples_per_send = 2000
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Loki Write
+// -----------------------------------------------------------------------------
+loki.write "default" {
+  endpoint {
+    url = "http://observability-log-store:3100/loki/api/v1/push"
+
+    queue_config {
+      capacity = 10000
+    }
+  }
+}

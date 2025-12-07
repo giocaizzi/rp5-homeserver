@@ -1,0 +1,108 @@
+// =============================================================================
+// OTEL PIPELINE
+// =============================================================================
+// Receives telemetry via OTLP (HTTP/gRPC), processes with batching and
+// attribute injection, then exports to appropriate backends.
+//
+// Data Flow:
+//   OTLP Receivers → Batch Processor → Attribute Processor → Backend Exporters
+//
+// Backends:
+//   Metrics → Prometheus remote_write (mimir/prometheus)
+//   Logs    → Loki
+//   Traces  → Tempo
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// OTLP RECEIVERS
+// -----------------------------------------------------------------------------
+// HTTP: port 4318, gRPC: port 4317
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.default.input]
+    logs    = [otelcol.processor.batch.default.input]
+    traces  = [otelcol.processor.batch.default.input]
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BATCH PROCESSOR
+// -----------------------------------------------------------------------------
+// Batches telemetry data before export for efficiency
+
+otelcol.processor.batch "default" {
+  timeout = "5s"
+
+  output {
+    metrics = [otelcol.processor.attributes.default.input]
+    logs    = [otelcol.processor.attributes.default.input]
+    traces  = [otelcol.processor.attributes.default.input]
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ATTRIBUTES PROCESSOR
+// -----------------------------------------------------------------------------
+// Injects standard attributes into all telemetry
+
+otelcol.processor.attributes "default" {
+  action {
+    key    = "deployment.environment.name"
+    value  = "production"
+    action = "upsert"
+  }
+
+  action {
+    key    = "source"
+    value  = "otel"
+    action = "upsert"
+  }
+
+  output {
+    metrics = [otelcol.exporter.prometheus.default.input]
+    logs    = [otelcol.exporter.loki.default.input]
+    traces  = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+// -----------------------------------------------------------------------------
+// PROMETHEUS EXPORTER (Metrics)
+// -----------------------------------------------------------------------------
+// Exposes OTEL metrics on :8889 for Prometheus scrape
+// Note: This is for metrics received via OTLP, not scraped metrics
+
+otelcol.exporter.prometheus "default" {
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+// -----------------------------------------------------------------------------
+// LOKI EXPORTER (Logs)
+// -----------------------------------------------------------------------------
+// Forwards OTEL logs to Loki
+
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.default.receiver]
+}
+
+// -----------------------------------------------------------------------------
+// TEMPO EXPORTER (Traces)
+// -----------------------------------------------------------------------------
+// Forwards traces to Tempo via OTLP gRPC
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "observability-trace-store:4317"
+    tls {
+      insecure             = true
+      insecure_skip_verify = true
+    }
+  }
+}

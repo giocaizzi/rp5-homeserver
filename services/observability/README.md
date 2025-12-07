@@ -82,6 +82,28 @@ Config files:
 | `./alloy/` | OTEL collector pipelines |
 | `./grafana/provisioning/` | Datasources, dashboards |
 
+### Alloy Modular Architecture
+
+```
+alloy/
+├── config.alloy           # Entry point - imports, discovery, outputs
+├── modules/
+│   └── labels.alloy       # Reusable label extraction (declare blocks)
+└── pipelines/
+    ├── otel.alloy         # OTLP receivers → processors → exporters
+    ├── logs.alloy         # Docker log collection → Loki
+    └── metrics.alloy      # Prometheus scraping → remote_write
+```
+
+**Data Flow:**
+- OTLP → `otel.alloy` → Prometheus/Loki/Tempo
+- Docker containers → `logs.alloy` → Loki
+- Exporters → `metrics.alloy` → Prometheus
+
+**Modules:**
+- `modules/labels.alloy` contains `declare` blocks for reusable label extraction
+- Used by both logs and metrics pipelines for consistent labeling
+
 ---
 
 ## 📖 OTEL Integration

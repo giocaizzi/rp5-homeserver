@@ -45,9 +45,9 @@ networks:
 # Services
 # =============================================================================
 services:
-  ollama:
+  llm:
     image: ollama/ollama:latest
-    hostname: ollama-app
+    hostname: ollama-llm
     expose:
       - "11434"
     environment:
@@ -78,7 +78,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "llm"
       com.giocaizzi.component: "app"
-      com.giocaizzi.role: "ai"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "ollama"
     <<: *security-base

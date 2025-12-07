@@ -76,9 +76,9 @@ services:
   # ========================================
   # Prometheus - Metrics Storage
   # ========================================
-  prometheus:
+  metrics-store:
     image: prom/prometheus:latest
-    hostname: observability-prometheus
+    hostname: observability-metrics-store
     expose:
       - "9090"
     command:
@@ -102,9 +102,8 @@ services:
       start_period: 30s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "metrics"
+      com.giocaizzi.service: "metrics-store"
       com.giocaizzi.component: "data"
-      com.giocaizzi.role: "metrics"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "prometheus"
     <<: *security-base
@@ -119,9 +118,9 @@ services:
   # ========================================
   # Loki - Log Aggregation
   # ========================================
-  loki:
+  log-store:
     image: grafana/loki:latest
-    hostname: observability-loki
+    hostname: observability-log-store
     expose:
       - "3100"
     command: -config.file=/etc/loki/loki-config.yaml
@@ -134,9 +133,8 @@ services:
     # Docker Swarm restart policy handles recovery
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "logs"
+      com.giocaizzi.service: "log-store"
       com.giocaizzi.component: "data"
-      com.giocaizzi.role: "logs"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "loki"
     <<: *security-base
@@ -152,13 +150,14 @@ services:
   # ========================================
   # Tempo - Distributed Tracing
   # ========================================
-  tempo:
+  # Receives traces ONLY from Alloy via OTLP gRPC.
+  # All external trace ingestion goes through Alloy for processing.
+  trace-store:
     image: grafana/tempo:latest
-    hostname: observability-tempo
+    hostname: observability-trace-store
     expose:
-      - "3200"  # Tempo HTTP
-      - "4317"  # OTLP gRPC
-      - "4318"  # OTLP HTTP
+      - "3200"  # Tempo HTTP (queries)
+      - "4317"  # OTLP gRPC (from Alloy only)
     command: -config.file=/etc/tempo/tempo-config.yaml
     volumes:
       - ./tempo/tempo-config.yaml:/etc/tempo/tempo-config.yaml:ro
@@ -169,9 +168,8 @@ services:
     # Docker Swarm restart policy handles recovery
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "traces"
+      com.giocaizzi.service: "trace-store"
       com.giocaizzi.component: "data"
-      com.giocaizzi.role: "traces"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "tempo"
     <<: *security-base
@@ -186,9 +184,9 @@ services:
   # ========================================
   # Grafana Alloy - OpenTelemetry Collector
   # ========================================
-  alloy:
+  collector:
     image: grafana/alloy:latest
-    hostname: observability-alloy
+    hostname: observability-collector
     expose:
       - "12345" # Alloy metrics
       - "4317"  # OTLP gRPC
@@ -197,7 +195,7 @@ services:
       - run
       - --server.http.listen-addr=0.0.0.0:12345
       - --storage.path=/var/lib/alloy/data
-      - /etc/alloy/
+      - /etc/alloy/config.alloy
     environment:
       - DEPLOYMENT_ENV=production
     volumes:
@@ -213,7 +211,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "collector"
       com.giocaizzi.component: "worker"
-      com.giocaizzi.role: "collector"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "alloy"
     <<: *security-base
@@ -228,9 +225,9 @@ services:
   # ========================================
   # Grafana - Dashboards and Visualization
   # ========================================
-  grafana:
+  dashboard:
     image: grafana/grafana:latest
-    hostname: observability-grafana
+    hostname: observability-dashboard
     expose:
       - "3000"
     environment:
@@ -262,7 +259,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "dashboard"
       com.giocaizzi.component: "app"
-      com.giocaizzi.role: "dashboard"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "grafana"
     <<: *security-base

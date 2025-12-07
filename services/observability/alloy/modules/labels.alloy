@@ -1,0 +1,268 @@
+// =============================================================================
+// REUSABLE LABEL MODULES
+// =============================================================================
+// Provides reusable components for extracting and applying OTEL-aligned labels
+// from Docker container metadata. Used by both logs and metrics pipelines.
+//
+// Label Schema (OTEL Semconv → Storage Label):
+//   service.name              → service_name
+//   service.namespace         → service_namespace
+//   deployment.environment.name → deployment_environment_name
+//
+// Custom Labels:
+//   tier, component, technology, source
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// docker_labels: Extract service labels from Docker container metadata
+// -----------------------------------------------------------------------------
+// Transforms __meta_docker_* labels into OTEL-aligned service labels.
+// Uses fallback chain: custom labels > swarm labels > compose labels > defaults
+//
+// Arguments:
+//   targets - Discovery targets with __meta_docker_* labels
+//
+// Exports:
+//   output - Relabeled targets with service_* labels
+//   rules  - The configured relabeling rules
+// -----------------------------------------------------------------------------
+declare "docker_labels" {
+  argument "targets" {
+    optional = false
+    comment  = "Targets with Docker metadata labels"
+  }
+
+  discovery.relabel "labels" {
+    targets = argument.targets.value
+
+    // -------------------------------------------------------------------------
+    // SERVICE_NAMESPACE: Stack/project grouping
+    // Fallback: custom label > swarm stack > compose project > "external"
+    // -------------------------------------------------------------------------
+    rule {
+      target_label = "service_namespace"
+      replacement  = "external"
+    }
+    rule {
+      source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+      regex         = "(.+)"
+      target_label  = "service_namespace"
+    }
+    rule {
+      source_labels = ["__meta_docker_container_label_com_docker_stack_namespace"]
+      regex         = "(.+)"
+      target_label  = "service_namespace"
+    }
+    rule {
+      source_labels = ["__meta_docker_container_label_com_giocaizzi_namespace"]
+      regex         = "(.+)"
+      target_label  = "service_namespace"
+    }
+
+    // -------------------------------------------------------------------------
+    // SERVICE_NAME: Logical service identifier
+    // Fallback: custom label > swarm service > compose service > container name
+    // -------------------------------------------------------------------------
+    rule {
+      source_labels = ["__meta_docker_container_name"]
+      regex         = "^/?(.+)$"
+      target_label  = "service_name"
+    }
+    rule {
+      source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+      regex         = "(.+)"
+      target_label  = "service_name"
+    }
+    rule {
+      source_labels = ["__meta_docker_container_label_com_docker_swarm_service_name"]
+      regex         = "(?:.+_)?(.+)"
+      target_label  = "service_name"
+    }
+    rule {
+      source_labels = ["__meta_docker_container_label_com_giocaizzi_service"]
+      regex         = "(.+)"
+      target_label  = "service_name"
+    }
+
+    // -------------------------------------------------------------------------
+    // TIER: Service criticality (core/extra)
+    // -------------------------------------------------------------------------
+    rule {
+      target_label = "tier"
+      replacement  = "core"
+    }
+    rule {
+      source_labels = ["__meta_docker_container_label_com_giocaizzi_tier"]
+      regex         = "(.+)"
+      target_label  = "tier"
+    }
+
+    // -------------------------------------------------------------------------
+    // COMPONENT: Architectural layer (app/data/worker/gateway)
+    // -------------------------------------------------------------------------
+    rule {
+      target_label = "component"
+      replacement  = "app"
+    }
+    rule {
+      source_labels = ["__meta_docker_container_label_com_giocaizzi_component"]
+      regex         = "(.+)"
+      target_label  = "component"
+    }
+
+    // -------------------------------------------------------------------------
+    // TECHNOLOGY: Implementation technology
+    // -------------------------------------------------------------------------
+    rule {
+      source_labels = ["__meta_docker_container_label_com_giocaizzi_technology"]
+      regex         = "(.+)"
+      target_label  = "technology"
+    }
+
+    // -------------------------------------------------------------------------
+    // DEPLOYMENT_ENVIRONMENT_NAME: Always "production"
+    // -------------------------------------------------------------------------
+    rule {
+      target_label = "deployment_environment_name"
+      replacement  = "production"
+    }
+
+    // -------------------------------------------------------------------------
+    // HIGH-CARDINALITY METADATA (for structured metadata, not indexed)
+    // -------------------------------------------------------------------------
+    rule {
+      source_labels = ["__meta_docker_container_id"]
+      target_label  = "service_instance_id"
+    }
+    rule {
+      source_labels = ["__meta_docker_container_label_com_giocaizzi_version"]
+      regex         = "(.+)"
+      target_label  = "service_version"
+    }
+    rule {
+      source_labels = ["__meta_docker_container_name"]
+      regex         = "^/?(.+)$"
+      target_label  = "host_name"
+    }
+  }
+
+  export "output" {
+    value = discovery.relabel.labels.output
+  }
+
+  export "rules" {
+    value = discovery.relabel.labels.rules
+  }
+}
+
+// -----------------------------------------------------------------------------
+// exporter_targets: Filter and prepare exporter targets for scraping
+// -----------------------------------------------------------------------------
+// Filters discovered containers to only exporters and sets scrape address.
+// Uses technology label to identify exporters and map to correct ports.
+//
+// Arguments:
+//   targets - Discovery targets with Docker metadata (already relabeled)
+//
+// Exports:
+//   output - Filtered targets ready for prometheus.scrape
+// -----------------------------------------------------------------------------
+declare "exporter_targets" {
+  argument "targets" {
+    optional = false
+    comment  = "Relabeled targets from docker_labels"
+  }
+
+  discovery.relabel "exporters" {
+    targets = argument.targets.value
+
+    // Keep only exporter technologies
+    rule {
+      source_labels = ["technology"]
+      regex         = "(postgres-exporter|mysqld-exporter|redis-exporter|clickhouse)"
+      action        = "keep"
+    }
+
+    // Map technology to metrics port
+    // postgres-exporter → 9187
+    rule {
+      source_labels = ["technology"]
+      regex         = "postgres-exporter"
+      target_label  = "__tmp_port"
+      replacement   = "9187"
+    }
+    // mysqld-exporter → 9104
+    rule {
+      source_labels = ["technology"]
+      regex         = "mysqld-exporter"
+      target_label  = "__tmp_port"
+      replacement   = "9104"
+    }
+    // redis-exporter → 9121
+    rule {
+      source_labels = ["technology"]
+      regex         = "redis-exporter"
+      target_label  = "__tmp_port"
+      replacement   = "9121"
+    }
+    // clickhouse native → 9363
+    rule {
+      source_labels = ["technology"]
+      regex         = "clickhouse"
+      target_label  = "__tmp_port"
+      replacement   = "9363"
+    }
+
+    // Build scrape address from network IP and port
+    rule {
+      source_labels = ["__meta_docker_network_ip", "__tmp_port"]
+      separator     = ":"
+      target_label  = "__address__"
+    }
+
+    // Normalize technology for metrics (exporter → underlying tech)
+    rule {
+      source_labels = ["technology"]
+      regex         = "postgres-exporter"
+      target_label  = "technology"
+      replacement   = "postgres"
+    }
+    rule {
+      source_labels = ["technology"]
+      regex         = "mysqld-exporter"
+      target_label  = "technology"
+      replacement   = "mariadb"
+    }
+    rule {
+      source_labels = ["technology"]
+      regex         = "redis-exporter"
+      target_label  = "technology"
+      replacement   = "redis"
+    }
+
+    // Set service_name to monitored service (remove -exporter suffix)
+    rule {
+      source_labels = ["service_name"]
+      regex         = "(.+)-exporter"
+      target_label  = "service_name"
+      replacement   = "$1"
+    }
+
+    // Add source label
+    rule {
+      target_label = "source"
+      replacement  = "scrape"
+    }
+
+    // Set job label for Grafana dashboard compatibility
+    rule {
+      source_labels = ["service_namespace", "technology"]
+      separator     = "/"
+      target_label  = "job"
+    }
+  }
+
+  export "output" {
+    value = discovery.relabel.exporters.output
+  }
+}

@@ -28,13 +28,13 @@ Observability stack using OTEL-compliant practices with Grafana, Loki, Tempo, an
 
 ## Components
 
-| Service | Hostname | Technology | Role | Port |
-|---------|----------|------------|------|------|
-| Grafana | `observability-grafana` | grafana | Dashboard & visualization | 3000 |
-| Alloy | `observability-alloy` | alloy | Telemetry collector | 12345, 4317, 4318 |
-| Prometheus | `observability-prometheus` | prometheus | Metrics storage | 9090 |
-| Loki | `observability-loki` | loki | Log aggregation | 3100 |
-| Tempo | `observability-tempo` | tempo | Distributed tracing | 3200, 4317, 4318 |
+| Service | Hostname | Technology | Port |
+|---------|----------|------------|------|
+| Grafana | `observability-dashboard` | grafana | 3000 |
+| Alloy | `observability-collector` | alloy | 12345, 4317, 4318 |
+| Prometheus | `observability-metrics-store` | prometheus | 9090 |
+| Loki | `observability-log-store` | loki | 3100 |
+| Tempo | `observability-trace-store` | tempo | 3200, 4317, 4318 |
 
 ---
 
@@ -43,7 +43,7 @@ Observability stack using OTEL-compliant practices with Grafana, Loki, Tempo, an
 ### Netdata
 Lightweight real-time monitoring running as a Docker container in the infra stack.
 
-**Hostname:** `infra-netdata`
+**Hostname:** `infra-monitoring`
 
 **Access:**
 - Via nginx proxy: `https://netdata.home` (recommended)
@@ -60,9 +60,9 @@ Lightweight real-time monitoring running as a Docker container in the infra stac
 Unified telemetry collector handling logs, metrics, and traces.
 
 **Endpoints:**
-- Health UI: `http://observability-alloy:12345`
-- OTLP gRPC: `observability-alloy:4317`
-- OTLP HTTP: `observability-alloy:4318`
+- Health UI: `http://observability-collector:12345`
+- OTLP gRPC: `observability-collector:4317`
+- OTLP HTTP: `observability-collector:4318`
 
 **Pipelines:**
 
@@ -96,7 +96,6 @@ Labels extracted from Docker containers and forwarded to observability backends.
 | `service_instance_id` | Container ID | Unique instance identifier |
 | `service_version` | `com.giocaizzi.version` | Service version |
 | `host_name` | Hostname | Container/host name |
-| `role` | `com.giocaizzi.role` | Service role (`database`, `cache`, `proxy`, `backend`...) |
 
 ---
 
@@ -109,22 +108,22 @@ Prometheus scrapes metrics from internal services via Alloy.
 **Observability Stack:**
 
 | Target | Endpoint | Metrics |
-|--------|----------|---------|
-| Prometheus | `observability-prometheus:9090/metrics` | Self-monitoring |
-| Loki | `observability-loki:3100/metrics` | Log ingestion stats |
-| Tempo | `observability-tempo:3200/metrics` | Trace ingestion stats |
-| Alloy | `observability-alloy:12345/metrics` | Pipeline health |
+|--------|----------|---------||
+| Prometheus | `observability-metrics-store:9090/metrics` | Self-monitoring |
+| Loki | `observability-log-store:3100/metrics` | Log ingestion stats |
+| Tempo | `observability-trace-store:3200/metrics` | Trace ingestion stats |
+| Alloy | `observability-collector:12345/metrics` | Pipeline health |
 
 **Database Exporters:**
 
 | Target | Stack | Endpoint | Metrics |
-|--------|-------|----------|---------|
-| n8n-postgres-exporter | n8n | `:9187/metrics` | PostgreSQL stats |
-| firefly-mysql-exporter | firefly | `:9104/metrics` | MariaDB stats |
-| firefly-postgres-exporter | firefly | `:9187/metrics` | Pico PostgreSQL |
-| langfuse-postgres-exporter | langfuse | `:9187/metrics` | Langfuse PostgreSQL |
-| langfuse-redis-exporter | langfuse | `:9121/metrics` | Redis stats |
-| langfuse-clickhouse | langfuse | `:9363/metrics` | ClickHouse stats |
+|--------|-------|----------|---------||
+| n8n-db-exporter | n8n | `:9187/metrics` | PostgreSQL stats |
+| firefly-db-exporter | firefly | `:9104/metrics` | MariaDB stats |
+| firefly-pico-db-exporter | firefly | `:9187/metrics` | Pico PostgreSQL |
+| langfuse-db-exporter | langfuse | `:9187/metrics` | Langfuse PostgreSQL |
+| langfuse-cache-exporter | langfuse | `:9121/metrics` | Redis stats |
+| langfuse-analytics | langfuse | `:9363/metrics` | ClickHouse stats |
 
 Exporters use entrypoint scripts to inject credentials from Docker Swarm secrets.
 
@@ -136,7 +135,7 @@ Exporters use entrypoint scripts to inject credentials from Docker Swarm secrets
 
 Horizontally-scalable log aggregation with label-based indexing.
 
-**Endpoint:** `http://observability-loki:3100`
+**Endpoint:** `http://observability-log-store:3100`
 
 **Log Sources:**
 - Docker container logs (via Alloy `loki.source.docker`)
@@ -166,9 +165,9 @@ Horizontally-scalable log aggregation with label-based indexing.
 Distributed tracing backend for OTLP-compatible traces.
 
 **Endpoints:**
-- Query API: `http://observability-tempo:3200`
-- OTLP gRPC: `observability-tempo:4317`
-- OTLP HTTP: `observability-tempo:4318`
+- Query API: `http://observability-trace-store:3200`
+- OTLP gRPC: `observability-trace-store:4317`
+- OTLP HTTP: `observability-trace-store:4318`
 
 **Instrumented Services:**
 - Langfuse (auto-instrumented)
@@ -209,9 +208,9 @@ Shared dashboards (PostgreSQL, Redis) use both variables for multi-instance supp
 ### Data Sources (Pre-configured)
 | Name | Type | URL |
 |------|------|-----|
-| Prometheus | prometheus | `http://observability-prometheus:9090` |
-| Loki | loki | `http://observability-loki:3100` |
-| Tempo | tempo | `http://observability-tempo:3200` |
+| Prometheus | prometheus | `http://observability-metrics-store:9090` |
+| Loki | loki | `http://observability-log-store:3100` |
+| Tempo | tempo | `http://observability-trace-store:3200` |
 
 ---
 
@@ -246,8 +245,8 @@ Alert rules are provisioned via `grafana/provisioning/alerting/rules.yaml`.
 
 **Traces not appearing in Tempo:**
 1. Verify OTLP endpoint configuration in application
-2. Check Tempo is receiving data: `curl http://observability-tempo:3200/ready`
-3. Check Alloy OTLP receiver: `curl http://observability-alloy:12345/metrics`
+2. Check Tempo is receiving data: `curl http://observability-trace-store:3200/ready`
+3. Check Alloy OTLP receiver: `curl http://observability-collector:12345/metrics`
 
 **High memory usage:**
 - Reduce Loki retention period

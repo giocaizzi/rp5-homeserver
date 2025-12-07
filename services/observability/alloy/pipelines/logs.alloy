@@ -1,0 +1,108 @@
+// =============================================================================
+// LOGS PIPELINE
+// =============================================================================
+// Collects logs from Docker containers via the Docker socket, applies
+// OTEL-aligned labels, and ships to Loki.
+//
+// Data Flow:
+//   Docker Discovery → Label Extraction → Log Collection → Processing → Loki
+//
+// Label Extraction:
+//   Uses shared docker_labels module for consistent labeling across pipelines.
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// LOG TARGETS FROM DOCKER DISCOVERY
+// -----------------------------------------------------------------------------
+// Uses shared discovery from config.alloy, applies label extraction module
+
+discovery.relabel "logs" {
+  targets = modules.docker_labels.output
+
+  // Drop containers without namespace (external/unmanaged)
+  rule {
+    source_labels = ["service_namespace"]
+    regex         = "external"
+    action        = "drop"
+  }
+
+  // Keep only our labeled containers
+  rule {
+    source_labels = ["__meta_docker_container_label_com_giocaizzi_namespace"]
+    regex         = ".+"
+    action        = "keep"
+  }
+}
+
+// -----------------------------------------------------------------------------
+// DOCKER LOG COLLECTION
+// -----------------------------------------------------------------------------
+// Reads logs from container log files via Docker socket
+
+loki.source.docker "logs" {
+  host             = "unix:///var/run/docker.sock"
+  targets          = discovery.relabel.logs.output
+  forward_to       = [loki.process.docker.receiver]
+  refresh_interval = "5s"
+  relabel_rules    = modules.docker_labels.rules
+}
+
+// -----------------------------------------------------------------------------
+// LOG PROCESSING
+// -----------------------------------------------------------------------------
+// Applies standard labels, extracts structured fields, formats for Loki
+
+loki.process "docker" {
+  forward_to = [loki.write.default.receiver]
+
+  // Add source label
+  stage.static_labels {
+    values = {
+      source = "docker",
+    }
+  }
+
+  // Promote existing labels (from relabel_rules)
+  stage.label_keep {
+    values = [
+      "service_name",
+      "service_namespace",
+      "deployment_environment_name",
+      "tier",
+      "component",
+      "technology",
+      "host_name",
+      "source",
+    ]
+  }
+
+  // Try to parse JSON logs and extract level
+  stage.json {
+    expressions = {
+      level   = "level",
+      message = "msg",
+    }
+  }
+
+  // Normalize log levels
+  stage.template {
+    source   = "level"
+    template = "{{ ToLower .Value }}"
+  }
+
+  // Extract level as label when present
+  stage.labels {
+    values = {
+      level = "",
+    }
+  }
+
+  // Drop high-cardinality Docker metadata
+  stage.label_drop {
+    values = [
+      "filename",
+      "service_instance_id",
+      "service_version",
+    ]
+  }
+}
