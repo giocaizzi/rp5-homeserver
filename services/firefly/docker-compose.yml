@@ -187,18 +187,15 @@ services:
       - /bin/sh
       - -c
       - |
-        DB_PASS=$$(cat /run/secrets/db_password)
-        export DATA_SOURCE_NAME="firefly:$${DB_PASS}@(firefly-db:3306)/firefly"
-        exec /bin/mysqld_exporter
+        export MYSQLD_EXPORTER_PASSWORD=$$(cat /run/secrets/db_password)
+        exec /bin/mysqld_exporter \
+          --mysqld.address=firefly-db:3306 \
+          --mysqld.username=firefly
     networks:
       - firefly_network
       - observability_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9104/metrics"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+    # No healthcheck - scratch image has no shell/utilities
+    # Prometheus scrape failures serve as health indicator
     labels:
       <<: *labels-base
       com.giocaizzi.service: "db-exporter"
@@ -357,7 +354,7 @@ services:
       - firefly_network
       - public_network
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 80"]
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 80"]
       interval: 30s
       timeout: 10s
       retries: 5
