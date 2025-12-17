@@ -150,11 +150,16 @@ fix_remote_permissions() {
     }
 }
 
-# Read and display current version
+# Read and display current version with banner
 display_version_info() {
     if [ -f "$LOCAL_INFRA_PATH/VERSION" ]; then
         local version=$(cat "$LOCAL_INFRA_PATH/VERSION")
-        log "Current infra version: $version"
+        echo
+        echo -e "${GREEN}╔════════════════════════════════════════╗${NC}"
+        echo -e "${GREEN}║${NC}     ${BLUE}🚀 rp5-homeserver infra${NC}             ${GREEN}║${NC}"
+        echo -e "${GREEN}║${NC}        ${YELLOW}Version: ${version}${NC}               ${GREEN}║${NC}"
+        echo -e "${GREEN}╚════════════════════════════════════════╝${NC}"
+        echo
         echo "$version"
     fi
 }

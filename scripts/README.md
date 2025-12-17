@@ -45,6 +45,51 @@ PI_SSH_USER=pi PI_INFRA_PATH=/opt/homeserver/infra ./sync_infra.sh --pull
 7. Deploys the stack using `docker stack deploy`
 8. Shows final stack status and services
 
+---
+
+### create_secrets.sh
+
+Creates Docker Swarm external secrets for a specified service stack. Used for services deployed via Portainer Remote Stacks.
+
+**Required Environment Variables:**
+- `PI_SSH_USER` - SSH username for the Pi
+
+**Optional Environment Variables:**
+- `PI_HOST` - Pi hostname or IP (default: `pi.local`)
+
+**Arguments:**
+- `<stack>` - Stack name (e.g., `n8n`, `firefly`, `langfuse`, `observability`)
+
+**Usage:**
+```bash
+# Create secrets for n8n stack
+PI_SSH_USER=pi ./create_secrets.sh n8n
+
+# Dry run - show what would be created
+PI_SSH_USER=pi ./create_secrets.sh firefly --dry-run
+
+# Force recreate existing secrets
+PI_SSH_USER=pi ./create_secrets.sh langfuse --force
+
+# Show help
+./create_secrets.sh --help
+```
+
+**What it does:**
+1. Parses external secrets from the stack's `docker-compose.yml`
+2. Maps secret names to local files in `services/<stack>/secrets/`
+3. Creates Docker Swarm secrets on the Pi via SSH
+4. Follows naming convention: `<stack>_<secret_name>`
+
+**Secret naming convention:**
+| Stack | Local File | Swarm Secret Name |
+|-------|------------|-------------------|
+| n8n | `secrets/postgres_password.txt` | `n8n_postgres_password` |
+| firefly | `secrets/app_key.txt` | `firefly_app_key` |
+| langfuse | `secrets/salt.txt` | `langfuse_salt` |
+
+---
+
 ## Adding New Scripts
 
 When adding new scripts to this directory:
