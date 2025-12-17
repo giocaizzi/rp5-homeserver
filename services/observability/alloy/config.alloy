@@ -57,7 +57,7 @@ modules.docker_labels "docker_labels" {
 }
 
 modules.exporter_targets "exporter_targets" {
-  targets = modules.docker_labels.output
+  targets = modules.docker_labels.docker_labels.output
 }
 
 // =============================================================================
