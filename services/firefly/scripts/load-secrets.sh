@@ -1,15 +1,14 @@
-#!/usr/bin/with-contenv sh
-# Load Docker secrets as s6 environment variables
-# This ensures PHP-FPM inherits them
+#!/bin/sh
+# Write Docker secrets to .env file for Laravel
+# This script runs early in the container startup
 
-if [ -f /run/secrets/app_key ]; then
-    printf "%s" "$(cat /run/secrets/app_key)" > /var/run/s6/container_environment/APP_KEY
-fi
+# Create .env file with secrets
+cat > /var/www/html/.env << EOF
+APP_KEY=$(cat /run/secrets/app_key)
+DB_PASSWORD=$(cat /run/secrets/db_password)
+STATIC_CRON_TOKEN=$(cat /run/secrets/static_cron_token)
+EOF
 
-if [ -f /run/secrets/db_password ]; then
-    printf "%s" "$(cat /run/secrets/db_password)" > /var/run/s6/container_environment/DB_PASSWORD
-fi
-
-if [ -f /run/secrets/static_cron_token ]; then
-    printf "%s" "$(cat /run/secrets/static_cron_token)" > /var/run/s6/container_environment/STATIC_CRON_TOKEN
-fi
+# Set proper ownership
+chown www-data:www-data /var/www/html/.env
+chmod 600 /var/www/html/.env
