@@ -6,17 +6,20 @@
 //
 // Architecture:
 //   config.alloy (this file)
-//   ├── modules/          → Reusable label extraction components
-//   │   └── labels.alloy
-//   └── pipelines/        → Data collection pipeline modules
-//       ├── otel.alloy    → OTLP receivers + processors + exporters
-//       ├── logs.alloy    → Docker log collection
-//       └── metrics.alloy → Prometheus scraping
+//   ├── modules/               → Reusable components (one per file)
+//   │   ├── docker_labels.alloy    → Docker → OTEL label extraction
+//   │   ├── exporter_targets.alloy → Filter exporters for scraping
+//   │   └── nginx_logs.alloy       → Nginx log parsing
+//   └── pipelines/             → Data collection pipelines
+//       ├── logs.alloy         → Docker log collection → Loki
+//       ├── metrics.alloy      → Prometheus scraping → Prometheus
+//       └── otel.alloy         → OTLP receivers → backends
 //
 // Data Flow:
-//   OTLP → otel pipeline → backends
-//   Docker → logs pipeline → Loki
-//   Exporters → metrics pipeline → Prometheus
+//   Docker Discovery ─┬─→ docker_labels ─┬─→ logs pipeline ─────→ Loki
+//                     │                  └─→ exporter_targets ─→ metrics pipeline → Prometheus
+//                     └─────────────────────→ nginx_logs ───────→ Loki
+//   OTLP ───────────────────────────────────→ otel pipeline ────→ backends
 // =============================================================================
 
 // =============================================================================
@@ -32,18 +35,15 @@ import.file "pipelines" {
 }
 
 // =============================================================================
-// SHARED DOCKER DISCOVERY
+// SHARED DISCOVERY
 // =============================================================================
-// Single Docker discovery instance shared by logs and metrics pipelines.
+// Single Docker discovery instance shared by all pipelines.
 // Reduces Docker API calls and ensures consistent target view.
 
 discovery.docker "containers" {
   host                = "unix:///var/run/docker.sock"
   refresh_interval    = "30s"
-  // Create targets for ALL networks, not just the first one.
-  // Required because exporters are on multiple networks (infra + observability),
-  // and we filter to rp5_observability in exporter_targets module.
-  match_first_network = false
+  match_first_network = false  // Required for multi-network exporters
 
   filter {
     name   = "status"
@@ -52,26 +52,10 @@ discovery.docker "containers" {
 }
 
 // =============================================================================
-// MODULE INSTANTIATION
-// =============================================================================
-// Instantiate label extraction modules with shared discovery targets
-
-modules.docker_labels "docker_labels" {
-  targets = discovery.docker.containers.targets
-}
-
-modules.exporter_targets "exporter_targets" {
-  targets = modules.docker_labels.docker_labels.output
-}
-
-// =============================================================================
 // OUTPUT ENDPOINTS
 // =============================================================================
-// Backend write endpoints used by all pipelines
+// Backend write endpoints used by all pipelines.
 
-// -----------------------------------------------------------------------------
-// Prometheus Remote Write
-// -----------------------------------------------------------------------------
 prometheus.remote_write "default" {
   endpoint {
     url = "http://observability-metrics-store:9090/api/v1/write"
@@ -89,9 +73,6 @@ prometheus.remote_write "default" {
   }
 }
 
-// -----------------------------------------------------------------------------
-// Loki Write
-// -----------------------------------------------------------------------------
 loki.write "default" {
   endpoint {
     url = "http://observability-log-store:3100/loki/api/v1/push"
@@ -99,31 +80,47 @@ loki.write "default" {
 }
 
 // =============================================================================
-// PIPELINE INSTANTIATION
+// MODULE INSTANTIATION
 // =============================================================================
-// Instantiate pipeline modules with shared resources
+// Instantiate reusable modules with shared resources.
 
-// -----------------------------------------------------------------------------
-// Logs Pipeline - Docker log collection
-// -----------------------------------------------------------------------------
-pipelines.docker_logs "default" {
-  docker_labels_output = modules.docker_labels.docker_labels.output
-  docker_labels_rules  = modules.docker_labels.docker_labels.rules
-  loki_receiver        = [loki.write.default.receiver]
+// Label extraction from Docker metadata
+modules.docker_labels "default" {
+  targets = discovery.docker.containers.targets
 }
 
-// -----------------------------------------------------------------------------
-// Metrics Pipeline - Prometheus scraping
-// -----------------------------------------------------------------------------
+// Filter and prepare exporter targets for scraping
+modules.exporter_targets "default" {
+  targets = modules.docker_labels.default.output
+}
+
+// Nginx log parsing (structured access logs)
+modules.nginx_logs "default" {
+  forward_to = [loki.write.default.receiver]
+}
+
+// =============================================================================
+// PIPELINE INSTANTIATION
+// =============================================================================
+// Instantiate data collection pipelines with modules and outputs.
+
+// Logs: Docker → preprocessing → Loki (with nginx routing)
+pipelines.docker_logs "default" {
+  docker_labels_output = modules.docker_labels.default.output
+  docker_labels_rules  = modules.docker_labels.default.rules
+  loki_receiver        = [loki.write.default.receiver]
+  nginx_logs_receiver  = [modules.nginx_logs.default.receiver]
+}
+
+// Metrics: Exporters → Prometheus scraping → Prometheus
 pipelines.prometheus_scrape "default" {
-  exporter_targets_output = modules.exporter_targets.exporter_targets.output
+  exporter_targets_output = modules.exporter_targets.default.output
   prometheus_receiver     = [prometheus.remote_write.default.receiver]
 }
 
-// -----------------------------------------------------------------------------
-// OTEL Pipeline - OTLP receivers
-// -----------------------------------------------------------------------------
+// OTEL: OTLP receivers → backends
 pipelines.otlp_receivers "default" {
   prometheus_receiver = [prometheus.remote_write.default.receiver]
   loki_receiver       = [loki.write.default.receiver]
 }
+

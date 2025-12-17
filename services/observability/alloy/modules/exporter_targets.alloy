@@ -1,0 +1,156 @@
+// =============================================================================
+// EXPORTER TARGETS MODULE
+// =============================================================================
+// Filters Docker containers to only exporters and prepares them for scraping.
+// Uses technology label to identify exporters and map to correct ports.
+//
+// Supported Exporters:
+//   - postgres-exporter → port 9187 → technology: postgres
+//   - mysqld-exporter   → port 9104 → technology: mariadb
+//   - redis-exporter    → port 9121 → technology: redis
+//   - nginx-exporter    → port 9113 → technology: nginx
+//   - clickhouse        → port 9363 → technology: clickhouse
+//
+// Arguments:
+//   targets - Discovery targets with Docker metadata (from docker_labels)
+//
+// Exports:
+//   output - Filtered targets ready for prometheus.scrape
+// =============================================================================
+
+declare "exporter_targets" {
+  argument "targets" {
+    optional = false
+    comment  = "Relabeled targets from docker_labels module"
+  }
+
+  discovery.relabel "exporters" {
+    targets = argument.targets.value
+
+    // -------------------------------------------------------------------------
+    // FILTER: Keep only exporter technologies
+    // -------------------------------------------------------------------------
+    rule {
+      source_labels = ["technology"]
+      regex         = "(postgres-exporter|mysqld-exporter|redis-exporter|nginx-exporter|clickhouse)"
+      action        = "keep"
+    }
+
+    // -------------------------------------------------------------------------
+    // FILTER: Keep only targets on observability network
+    // -------------------------------------------------------------------------
+    // When containers are on multiple networks, Docker discovery creates one
+    // target per network. Filter to rp5_observability for Alloy to reach them.
+    rule {
+      source_labels = ["tmp_network_name"]
+      regex         = "rp5_observability"
+      action        = "keep"
+    }
+
+    // -------------------------------------------------------------------------
+    // PORT MAPPING: Technology → Metrics port
+    // -------------------------------------------------------------------------
+    rule {
+      source_labels = ["technology"]
+      regex         = "postgres-exporter"
+      target_label  = "__tmp_port"
+      replacement   = "9187"
+    }
+    rule {
+      source_labels = ["technology"]
+      regex         = "mysqld-exporter"
+      target_label  = "__tmp_port"
+      replacement   = "9104"
+    }
+    rule {
+      source_labels = ["technology"]
+      regex         = "redis-exporter"
+      target_label  = "__tmp_port"
+      replacement   = "9121"
+    }
+    rule {
+      source_labels = ["technology"]
+      regex         = "nginx-exporter"
+      target_label  = "__tmp_port"
+      replacement   = "9113"
+    }
+    rule {
+      source_labels = ["technology"]
+      regex         = "clickhouse"
+      target_label  = "__tmp_port"
+      replacement   = "9363"
+    }
+
+    // -------------------------------------------------------------------------
+    // BUILD SCRAPE ADDRESS
+    // -------------------------------------------------------------------------
+    rule {
+      source_labels = ["tmp_network_ip", "__tmp_port"]
+      separator     = ":"
+      target_label  = "__address__"
+    }
+
+    // -------------------------------------------------------------------------
+    // NORMALIZE TECHNOLOGY: Exporter → underlying technology
+    // -------------------------------------------------------------------------
+    rule {
+      source_labels = ["technology"]
+      regex         = "postgres-exporter"
+      target_label  = "technology"
+      replacement   = "postgres"
+    }
+    rule {
+      source_labels = ["technology"]
+      regex         = "mysqld-exporter"
+      target_label  = "technology"
+      replacement   = "mariadb"
+    }
+    rule {
+      source_labels = ["technology"]
+      regex         = "nginx-exporter"
+      target_label  = "technology"
+      replacement   = "nginx"
+    }
+    rule {
+      source_labels = ["technology"]
+      regex         = "redis-exporter"
+      target_label  = "technology"
+      replacement   = "redis"
+    }
+
+    // -------------------------------------------------------------------------
+    // NORMALIZE SERVICE_NAME: Remove -exporter suffix
+    // -------------------------------------------------------------------------
+    rule {
+      source_labels = ["service_name"]
+      regex         = "(.+)-exporter"
+      target_label  = "service_name"
+      replacement   = "$1"
+    }
+
+    // -------------------------------------------------------------------------
+    // ADD METADATA LABELS
+    // -------------------------------------------------------------------------
+    rule {
+      target_label = "source"
+      replacement  = "scrape"
+    }
+    rule {
+      source_labels = ["service_namespace", "technology"]
+      separator     = "/"
+      target_label  = "job"
+    }
+
+    // -------------------------------------------------------------------------
+    // CLEANUP: Remove temporary labels
+    // -------------------------------------------------------------------------
+    rule {
+      regex  = "tmp_.*"
+      action = "labeldrop"
+    }
+  }
+
+  export "output" {
+    value = discovery.relabel.exporters.output
+  }
+}
