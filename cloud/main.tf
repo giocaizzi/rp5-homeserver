@@ -98,7 +98,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
     ingress = [
       {
         hostname = "n8n.${var.zone_name}"
-        service  = "https://nginx:443"
+        service  = "https://infra-proxy:443"
         origin_request = {
           no_tls_verify      = true
           http_host_header   = "n8n.${var.zone_name}"
@@ -107,7 +107,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
       },
       {
         hostname = "portainer.${var.zone_name}"
-        service  = "https://nginx:443"
+        service  = "https://infra-proxy:443"
         origin_request = {
           no_tls_verify      = true
           http_host_header   = "portainer.${var.zone_name}"
@@ -116,7 +116,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
       },
       {
         hostname = "backrest.${var.zone_name}"
-        service  = "https://nginx:443"
+        service  = "https://infra-proxy:443"
         origin_request = {
           no_tls_verify      = true
           http_host_header   = "backrest.${var.zone_name}"
@@ -125,7 +125,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
       },
       {
         hostname = "firefly.${var.zone_name}"
-        service  = "https://nginx:443"
+        service  = "https://infra-proxy:443"
         origin_request = {
           no_tls_verify      = true
           http_host_header   = "firefly.${var.zone_name}"
@@ -134,7 +134,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
       },
       {
         hostname = "homepage.${var.zone_name}"
-        service  = "https://nginx:443"
+        service  = "https://infra-proxy:443"
         origin_request = {
           no_tls_verify      = true
           http_host_header   = "homepage.${var.zone_name}"
