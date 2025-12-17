@@ -1,31 +1,25 @@
 // =============================================================================
-// REUSABLE LABEL MODULES
+// DOCKER LABELS MODULE
 // =============================================================================
-// Provides reusable components for extracting and applying OTEL-aligned labels
-// from Docker container metadata. Used by both logs and metrics pipelines.
+// Extracts OTEL-aligned service labels from Docker container metadata.
+// Used by both logs and metrics pipelines for consistent labeling.
 //
 // Label Schema (OTEL Semconv → Storage Label):
-//   service.name              → service_name
-//   service.namespace         → service_namespace
+//   service.name                → service_name
+//   service.namespace           → service_namespace
 //   deployment.environment.name → deployment_environment_name
 //
 // Custom Labels:
-//   tier, component, technology, source
-// =============================================================================
-
-// -----------------------------------------------------------------------------
-// docker_labels: Extract service labels from Docker container metadata
-// -----------------------------------------------------------------------------
-// Transforms __meta_docker_* labels into OTEL-aligned service labels.
-// Uses fallback chain: custom labels > swarm labels > compose labels > defaults
+//   tier, component, technology, host_name
 //
 // Arguments:
 //   targets - Discovery targets with __meta_docker_* labels
 //
 // Exports:
 //   output - Relabeled targets with service_* labels
-//   rules  - The configured relabeling rules
-// -----------------------------------------------------------------------------
+//   rules  - The configured relabeling rules (for loki.source.docker)
+// =============================================================================
+
 declare "docker_labels" {
   argument "targets" {
     optional = false
@@ -167,145 +161,5 @@ declare "docker_labels" {
 
   export "rules" {
     value = discovery.relabel.labels.rules
-  }
-}
-
-// -----------------------------------------------------------------------------
-// exporter_targets: Filter and prepare exporter targets for scraping
-// -----------------------------------------------------------------------------
-// Filters discovered containers to only exporters and sets scrape address.
-// Uses technology label to identify exporters and map to correct ports.
-//
-// Arguments:
-//   targets - Discovery targets with Docker metadata (already relabeled)
-//
-// Exports:
-//   output - Filtered targets ready for prometheus.scrape
-// -----------------------------------------------------------------------------
-declare "exporter_targets" {
-  argument "targets" {
-    optional = false
-    comment  = "Relabeled targets from docker_labels"
-  }
-
-  discovery.relabel "exporters" {
-    targets = argument.targets.value
-
-    // Keep only exporter technologies
-    rule {
-      source_labels = ["technology"]
-      regex         = "(postgres-exporter|mysqld-exporter|redis-exporter|nginx-exporter|clickhouse)"
-      action        = "keep"
-    }
-
-    // Keep only targets on the observability network
-    // When containers are on multiple networks, Docker discovery creates one target per network.
-    // We must filter to only the rp5_observability network for Alloy to reach them.
-    rule {
-      source_labels = ["tmp_network_name"]
-      regex         = "rp5_observability"
-      action        = "keep"
-    }
-
-    // Map technology to metrics port
-    // postgres-exporter → 9187
-    rule {
-      source_labels = ["technology"]
-      regex         = "postgres-exporter"
-      target_label  = "__tmp_port"
-      replacement   = "9187"
-    }
-    // mysqld-exporter → 9104
-    rule {
-      source_labels = ["technology"]
-      regex         = "mysqld-exporter"
-      target_label  = "__tmp_port"
-      replacement   = "9104"
-    }
-    // redis-exporter → 9121
-    rule {
-      source_labels = ["technology"]
-      regex         = "redis-exporter"
-      target_label  = "__tmp_port"
-      replacement   = "9121"
-    }
-    // nginx-exporter → 9113
-    rule {
-      source_labels = ["technology"]
-      regex         = "nginx-exporter"
-      target_label  = "__tmp_port"
-      replacement   = "9113"
-    }
-    // clickhouse native → 9363
-    rule {
-      source_labels = ["technology"]
-      regex         = "clickhouse"
-      target_label  = "__tmp_port"
-      replacement   = "9363"
-    }
-
-    // Build scrape address from network IP and port
-    rule {
-      source_labels = ["tmp_network_ip", "__tmp_port"]
-      separator     = ":"
-      target_label  = "__address__"
-    }
-
-    // Normalize technology for metrics (exporter → underlying tech)
-    rule {
-      source_labels = ["technology"]
-      regex         = "postgres-exporter"
-      target_label  = "technology"
-      replacement   = "postgres"
-    }
-    rule {
-      source_labels = ["technology"]
-      regex         = "mysqld-exporter"
-      target_label  = "technology"
-      replacement   = "mariadb"
-    }
-    rule {
-      source_labels = ["technology"]
-      regex         = "nginx-exporter"
-      target_label  = "technology"
-      replacement   = "nginx"
-    }
-    rule {
-      source_labels = ["technology"]
-      regex         = "redis-exporter"
-      target_label  = "technology"
-      replacement   = "redis"
-    }
-
-    // Set service_name to monitored service (remove -exporter suffix)
-    rule {
-      source_labels = ["service_name"]
-      regex         = "(.+)-exporter"
-      target_label  = "service_name"
-      replacement   = "$1"
-    }
-
-    // Add source label
-    rule {
-      target_label = "source"
-      replacement  = "scrape"
-    }
-
-    // Set job label for Grafana dashboard compatibility
-    rule {
-      source_labels = ["service_namespace", "technology"]
-      separator     = "/"
-      target_label  = "job"
-    }
-
-    // Clean up temporary labels (don't send to metrics)
-    rule {
-      regex  = "tmp_.*"
-      action = "labeldrop"
-    }
-  }
-
-  export "output" {
-    value = discovery.relabel.exporters.output
   }
 }
