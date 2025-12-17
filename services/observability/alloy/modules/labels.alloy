@@ -145,6 +145,20 @@ declare "docker_labels" {
       regex         = "^/?(.+)$"
       target_label  = "host_name"
     }
+
+    // -------------------------------------------------------------------------
+    // PRESERVE NETWORK METADATA FOR DOWNSTREAM MODULES
+    // -------------------------------------------------------------------------
+    // discovery.relabel drops __meta_* labels by default after processing.
+    // Preserve network info needed by exporter_targets for address construction.
+    rule {
+      source_labels = ["__meta_docker_network_name"]
+      target_label  = "__meta_docker_network_name"
+    }
+    rule {
+      source_labels = ["__meta_docker_network_ip"]
+      target_label  = "__meta_docker_network_ip"
+    }
   }
 
   export "output" {
