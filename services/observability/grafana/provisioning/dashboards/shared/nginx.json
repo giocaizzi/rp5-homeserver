@@ -854,6 +854,10 @@
           "text": "infra",
           "value": "infra"
         },
+        "datasource": {
+          "type": "loki",
+          "uid": "${datasource_loki}"
+        },
         "definition": "label_values({technology=\"nginx\"}, service_namespace)",
         "hide": 0,
         "includeAll": false,
