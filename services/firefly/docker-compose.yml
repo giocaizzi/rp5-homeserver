@@ -98,14 +98,10 @@ services:
       - app_key
       - db_password
       - static_cron_token
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        export APP_KEY=$$(cat /run/secrets/app_key)
-        export DB_PASSWORD=$$(cat /run/secrets/db_password)
-        export STATIC_CRON_TOKEN=$$(cat /run/secrets/static_cron_token)
-        exec docker-php-serversideup-entrypoint /init
+    configs:
+      - source: load_secrets
+        target: /etc/entrypoint.d/00-load-secrets.sh
+        mode: 0555
     volumes:
       - firefly_upload:/var/www/html/storage/upload
     networks:
@@ -465,6 +461,8 @@ configs:
     file: ./mariadb/mariadb.cnf
   postgres_config:
     file: ./postgres/postgresql.conf
+  load_secrets:
+    file: ./scripts/load-secrets.sh
 
 secrets:
   app_key:
