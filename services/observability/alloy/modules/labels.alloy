@@ -184,6 +184,15 @@ declare "exporter_targets" {
       action        = "keep"
     }
 
+    // Keep only targets on the observability network
+    // When containers are on multiple networks, Docker discovery creates one target per network.
+    // We must filter to only the rp5_observability network for Alloy to reach them.
+    rule {
+      source_labels = ["__meta_docker_network_name"]
+      regex         = "rp5_observability"
+      action        = "keep"
+    }
+
     // Map technology to metrics port
     // postgres-exporter → 9187
     rule {
