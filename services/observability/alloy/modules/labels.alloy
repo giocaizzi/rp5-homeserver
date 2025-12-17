@@ -149,15 +149,15 @@ declare "docker_labels" {
     // -------------------------------------------------------------------------
     // PRESERVE NETWORK METADATA FOR DOWNSTREAM MODULES
     // -------------------------------------------------------------------------
-    // discovery.relabel drops __meta_* labels by default after processing.
-    // Preserve network info needed by exporter_targets for address construction.
+    // discovery.relabel drops all labels prefixed with __ after processing.
+    // Copy network info to tmp_ prefixed labels for exporter_targets module.
     rule {
       source_labels = ["__meta_docker_network_name"]
-      target_label  = "__meta_docker_network_name"
+      target_label  = "tmp_network_name"
     }
     rule {
       source_labels = ["__meta_docker_network_ip"]
-      target_label  = "__meta_docker_network_ip"
+      target_label  = "tmp_network_ip"
     }
   }
 
@@ -194,7 +194,7 @@ declare "exporter_targets" {
     // Keep only exporter technologies
     rule {
       source_labels = ["technology"]
-      regex         = "(postgres-exporter|mysqld-exporter|redis-exporter|clickhouse)"
+      regex         = "(postgres-exporter|mysqld-exporter|redis-exporter|nginx-exporter|clickhouse)"
       action        = "keep"
     }
 
@@ -202,7 +202,7 @@ declare "exporter_targets" {
     // When containers are on multiple networks, Docker discovery creates one target per network.
     // We must filter to only the rp5_observability network for Alloy to reach them.
     rule {
-      source_labels = ["__meta_docker_network_name"]
+      source_labels = ["tmp_network_name"]
       regex         = "rp5_observability"
       action        = "keep"
     }
@@ -229,6 +229,13 @@ declare "exporter_targets" {
       target_label  = "__tmp_port"
       replacement   = "9121"
     }
+    // nginx-exporter → 9113
+    rule {
+      source_labels = ["technology"]
+      regex         = "nginx-exporter"
+      target_label  = "__tmp_port"
+      replacement   = "9113"
+    }
     // clickhouse native → 9363
     rule {
       source_labels = ["technology"]
@@ -239,7 +246,7 @@ declare "exporter_targets" {
 
     // Build scrape address from network IP and port
     rule {
-      source_labels = ["__meta_docker_network_ip", "__tmp_port"]
+      source_labels = ["tmp_network_ip", "__tmp_port"]
       separator     = ":"
       target_label  = "__address__"
     }
@@ -256,6 +263,12 @@ declare "exporter_targets" {
       regex         = "mysqld-exporter"
       target_label  = "technology"
       replacement   = "mariadb"
+    }
+    rule {
+      source_labels = ["technology"]
+      regex         = "nginx-exporter"
+      target_label  = "technology"
+      replacement   = "nginx"
     }
     rule {
       source_labels = ["technology"]
@@ -283,6 +296,12 @@ declare "exporter_targets" {
       source_labels = ["service_namespace", "technology"]
       separator     = "/"
       target_label  = "job"
+    }
+
+    // Clean up temporary labels (don't send to metrics)
+    rule {
+      regex  = "tmp_.*"
+      action = "labeldrop"
     }
   }
 

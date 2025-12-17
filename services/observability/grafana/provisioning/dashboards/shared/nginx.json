@@ -40,7 +40,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "# 🟢 Nginx Reverse Proxy Monitoring\n\nHTTP request metrics, status codes, and traffic patterns extracted from structured JSON access logs. Log-based monitoring provides rich request-level details without requiring additional exporters.",
+        "content": "# 🟢 Nginx Reverse Proxy Monitoring\n\nConnection metrics, request rates, and performance statistics from nginx-prometheus-exporter. Logs panel provides access request details.",
         "mode": "markdown"
       },
       "pluginVersion": "10.0.0",
@@ -49,130 +49,96 @@
     },
     {
       "datasource": {
-        "type": "loki",
-        "uid": "${datasource_loki}"
+        "type": "prometheus",
+        "uid": "${datasource_prometheus}"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "mode": "thresholds"
           },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
+          "mappings": [
+            {
+              "options": {
+                "1": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "UP"
+                }
+              },
+              "type": "value"
             },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "DOWN"
+                }
+              },
+              "type": "special"
             }
-          },
-          "mappings": [],
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "red",
                 "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
               }
             ]
           },
-          "unit": "reqps"
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 4,
+        "w": 4,
         "x": 0,
         "y": 3
       },
       "id": 1,
       "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "textMode": "value"
       },
+      "pluginVersion": "10.0.0",
       "targets": [
         {
           "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\"(GET|POST|PUT|DELETE|PATCH)\" [5m])) by (service_name)",
-          "legendFormat": "Total Requests",
+          "expr": "nginx_up{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}",
           "refId": "A"
         }
       ],
-      "title": "Request Rate",
-      "type": "timeseries"
+      "title": "Status",
+      "type": "stat"
     },
     {
       "datasource": {
-        "type": "loki",
-        "uid": "${datasource_loki}"
+        "type": "prometheus",
+        "uid": "${datasource_prometheus}"
       },
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "mode": "thresholds"
           },
           "mappings": [],
           "thresholds": {
@@ -181,138 +147,58 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 500
               }
             ]
           },
-          "unit": "reqps"
+          "unit": "none"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": "2xx"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": "3xx"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": "4xx"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "yellow",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byRegexp",
-              "options": "5xx"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
+        "h": 4,
+        "w": 4,
+        "x": 4,
         "y": 3
       },
       "id": 2,
       "options": {
-        "legend": {
-          "calcs": ["sum"],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
         },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
+        "textMode": "auto"
       },
+      "pluginVersion": "10.0.0",
       "targets": [
         {
           "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (2[0-9]{2}) \" [5m]))",
-          "legendFormat": "2xx Success",
+          "expr": "nginx_connections_active{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}",
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
-          },
-          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (3[0-9]{2}) \" [5m]))",
-          "legendFormat": "3xx Redirect",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
-          },
-          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (4[0-9]{2}) \" [5m]))",
-          "legendFormat": "4xx Client Error",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
-          },
-          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (5[0-9]{2}) \" [5m]))",
-          "legendFormat": "5xx Server Error",
-          "refId": "D"
         }
       ],
-      "title": "HTTP Status Codes",
-      "type": "timeseries"
+      "title": "Active Connections",
+      "type": "stat"
     },
     {
       "datasource": {
-        "type": "loki",
-        "uid": "${datasource_loki}"
+        "type": "prometheus",
+        "uid": "${datasource_prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -335,9 +221,9 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 11
+        "w": 4,
+        "x": 8,
+        "y": 3
       },
       "id": 3,
       "options": {
@@ -356,20 +242,20 @@
       "targets": [
         {
           "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} [5m]))",
+          "expr": "rate(nginx_http_requests_total{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}[5m])",
           "refId": "A"
         }
       ],
-      "title": "Total Request Rate",
+      "title": "Request Rate",
       "type": "stat"
     },
     {
       "datasource": {
-        "type": "loki",
-        "uid": "${datasource_loki}"
+        "type": "prometheus",
+        "uid": "${datasource_prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -383,22 +269,18 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
               }
             ]
           },
-          "unit": "reqps"
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 11
+        "w": 4,
+        "x": 12,
+        "y": 3
       },
       "id": 4,
       "options": {
@@ -417,20 +299,20 @@
       "targets": [
         {
           "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (4[0-9]{2}) \" [5m]))",
+          "expr": "nginx_connections_reading{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}",
           "refId": "A"
         }
       ],
-      "title": "4xx Error Rate",
+      "title": "Reading",
       "type": "stat"
     },
     {
       "datasource": {
-        "type": "loki",
-        "uid": "${datasource_loki}"
+        "type": "prometheus",
+        "uid": "${datasource_prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -444,22 +326,18 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 0.1
               }
             ]
           },
-          "unit": "reqps"
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 11
+        "w": 4,
+        "x": 16,
+        "y": 3
       },
       "id": 5,
       "options": {
@@ -478,20 +356,20 @@
       "targets": [
         {
           "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (5[0-9]{2}) \" [5m]))",
+          "expr": "nginx_connections_writing{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}",
           "refId": "A"
         }
       ],
-      "title": "5xx Error Rate",
+      "title": "Writing",
       "type": "stat"
     },
     {
       "datasource": {
-        "type": "loki",
-        "uid": "${datasource_loki}"
+        "type": "prometheus",
+        "uid": "${datasource_prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -505,26 +383,18 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 95
-              },
-              {
-                "color": "red",
-                "value": 99
               }
             ]
           },
-          "unit": "percent"
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 11
+        "w": 4,
+        "x": 20,
+        "y": 3
       },
       "id": 6,
       "options": {
@@ -543,20 +413,134 @@
       "targets": [
         {
           "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
           },
-          "expr": "(sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"\\\" (2[0-9]{2}) \" [5m])) / sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} [5m]))) * 100",
+          "expr": "nginx_connections_waiting{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}",
           "refId": "A"
         }
       ],
-      "title": "Success Rate %",
+      "title": "Waiting",
       "type": "stat"
     },
     {
       "datasource": {
-        "type": "loki",
-        "uid": "${datasource_loki}"
+        "type": "prometheus",
+        "uid": "${datasource_prometheus}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 7
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
+          },
+          "expr": "nginx_connections_active{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}",
+          "legendFormat": "Active",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
+          },
+          "expr": "nginx_connections_reading{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}",
+          "legendFormat": "Reading",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
+          },
+          "expr": "nginx_connections_writing{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}",
+          "legendFormat": "Writing",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
+          },
+          "expr": "nginx_connections_waiting{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}",
+          "legendFormat": "Waiting",
+          "refId": "D"
+        }
+      ],
+      "title": "Connections",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource_prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -610,13 +594,13 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 15
+        "x": 12,
+        "y": 7
       },
-      "id": 7,
+      "id": 8,
       "options": {
         "legend": {
-          "calcs": ["sum"],
+          "calcs": ["mean", "max"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -629,48 +613,21 @@
       "targets": [
         {
           "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"GET\" [5m]))",
-          "legendFormat": "GET",
+          "expr": "rate(nginx_http_requests_total{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}[5m])",
+          "legendFormat": "Requests/s",
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
-          },
-          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"POST\" [5m]))",
-          "legendFormat": "POST",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
-          },
-          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"PUT\" [5m]))",
-          "legendFormat": "PUT",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
-          },
-          "expr": "sum(rate({service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"DELETE\" [5m]))",
-          "legendFormat": "DELETE",
-          "refId": "D"
         }
       ],
-      "title": "Requests by HTTP Method",
+      "title": "Request Rate",
       "type": "timeseries"
     },
     {
       "datasource": {
-        "type": "loki",
-        "uid": "${datasource_loki}"
+        "type": "prometheus",
+        "uid": "${datasource_prometheus}"
       },
       "fieldConfig": {
         "defaults": {
@@ -717,20 +674,20 @@
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
+        "x": 0,
         "y": 15
       },
-      "id": 8,
+      "id": 9,
       "options": {
         "legend": {
-          "calcs": ["mean"],
+          "calcs": ["mean", "max"],
           "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
@@ -743,16 +700,101 @@
       "targets": [
         {
           "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(sum_over_time({service_namespace=\"$service_namespace\", technology=\"nginx\"} | json | bytes_sent != \"\" | unwrap bytes_sent | __error__=\"\" [5m])) by (service_name)",
-          "legendFormat": "Bytes Sent",
+          "expr": "rate(nginx_connections_accepted{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}[5m])",
+          "legendFormat": "Accepted",
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
+          },
+          "expr": "rate(nginx_connections_handled{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}[5m])",
+          "legendFormat": "Handled",
+          "refId": "B"
         }
       ],
-      "title": "Bandwidth",
+      "title": "Connection Rate",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource_prometheus}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
+          },
+          "expr": "nginx_connections_accepted{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}",
+          "legendFormat": "Total Accepted",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
+          },
+          "expr": "nginx_connections_handled{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}",
+          "legendFormat": "Total Handled",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${datasource_prometheus}"
+          },
+          "expr": "nginx_http_requests_total{service_namespace=\"$service_namespace\", service_name=~\"$service_name\"}",
+          "legendFormat": "Total Requests",
+          "refId": "C"
+        }
+      ],
+      "title": "Totals (since start)",
+      "type": "stat"
     },
     {
       "datasource": {
@@ -760,12 +802,12 @@
         "uid": "${datasource_loki}"
       },
       "gridPos": {
-        "h": 8,
+        "h": 10,
         "w": 24,
         "x": 0,
         "y": 23
       },
-      "id": 9,
+      "id": 11,
       "options": {
         "dedupStrategy": "none",
         "enableLogDetails": true,
@@ -788,41 +830,6 @@
       ],
       "title": "Access Logs",
       "type": "logs"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "${datasource_loki}"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 31
-      },
-      "id": 10,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": false,
-        "showCommonLabels": false,
-        "showLabels": false,
-        "showTime": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": false
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "loki",
-            "uid": "${datasource_loki}"
-          },
-          "expr": "{service_namespace=\"$service_namespace\", technology=\"nginx\"} |~ \"(error|warn)\"",
-          "refId": "A"
-        }
-      ],
-      "title": "Error Logs",
-      "type": "logs"
     }
   ],
   "refresh": "10s",
@@ -831,6 +838,23 @@
   "tags": ["nginx", "proxy", "infra"],
   "templating": {
     "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "Prometheus",
+          "value": "prometheus"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "datasource_prometheus",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "type": "datasource"
+      },
       {
         "current": {
           "selected": false,
@@ -855,20 +879,44 @@
           "value": "infra"
         },
         "datasource": {
-          "type": "loki",
-          "uid": "${datasource_loki}"
+          "type": "prometheus",
+          "uid": "${datasource_prometheus}"
         },
-        "definition": "label_values({technology=\"nginx\"}, service_namespace)",
+        "definition": "label_values(nginx_up, service_namespace)",
         "hide": 0,
         "includeAll": false,
         "multi": false,
         "name": "service_namespace",
         "options": [],
         "query": {
-          "label": "service_namespace",
-          "refId": "LokiVariableQueryEditor-VariableQuery",
-          "stream": "{technology=\"nginx\"}",
-          "type": 1
+          "query": "label_values(nginx_up, service_namespace)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "proxy",
+          "value": "proxy"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource_prometheus}"
+        },
+        "definition": "label_values(nginx_up{service_namespace=\"$service_namespace\"}, service_name)",
+        "hide": 0,
+        "includeAll": true,
+        "multi": false,
+        "name": "service_name",
+        "options": [],
+        "query": {
+          "query": "label_values(nginx_up{service_namespace=\"$service_namespace\"}, service_name)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,
         "regex": "",
