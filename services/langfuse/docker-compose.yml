@@ -172,8 +172,8 @@ services:
       test: ["CMD", "mc", "ready", "local"]
       interval: 30s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 3
+      start_period: 10s
     labels:
       <<: *labels-base
       com.giocaizzi.service: "storage"
@@ -199,9 +199,14 @@ services:
     environment:
       CLICKHOUSE_DB: "default"
       CLICKHOUSE_USER: "clickhouse"
-      CLICKHOUSE_PASSWORD_FILE: "/run/secrets/langfuse_clickhouse_password"
     secrets:
       - langfuse_clickhouse_password
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        export CLICKHOUSE_PASSWORD=$$(cat /run/secrets/langfuse_clickhouse_password)
+        exec /entrypoint.sh
     expose:
       - "8123"  # HTTP interface
       - "9000"  # Native protocol
@@ -223,8 +228,8 @@ services:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 180s
+      retries: 3
+      start_period: 30s
     labels:
       <<: *labels-base
       com.giocaizzi.service: "analytics"
@@ -269,8 +274,8 @@ services:
       test: ["CMD-SHELL", "pg_isready -U langfuse -d langfuse"]
       interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 30s
+      retries: 3
+      start_period: 10s
     labels:
       <<: *labels-base
       com.giocaizzi.service: "db"
@@ -334,7 +339,7 @@ services:
   # Redis Exporter - Metrics for Prometheus/Alloy
   # ========================================
   cache-exporter:
-    image: oliver006/redis_exporter:latest
+    image: oliver006/redis_exporter:alpine
     hostname: langfuse-cache-exporter
     expose:
       - "9121"
@@ -521,7 +526,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 30s
     labels:
       <<: *labels-base
       com.giocaizzi.service: "app"
