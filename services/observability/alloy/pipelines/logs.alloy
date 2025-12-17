@@ -120,14 +120,15 @@ declare "docker_logs" {
   // NGINX LOG PROCESSING
   // ---------------------------------------------------------------------------
   // Routes nginx logs to dedicated nginx_logs module for structured parsing
+  // Drops non-nginx logs; keeps only technology="nginx" for forwarding
 
   loki.process "nginx" {
     forward_to = argument.nginx_logs_receiver.value
 
-    // Only process nginx logs
+    // Drop non-nginx logs (only nginx logs pass through to nginx_logs module)
     stage.match {
-      selector = "{technology=\"nginx\"}"
-      action   = "keep"
+      selector = "{technology!=\"nginx\"}"
+      action   = "drop"
     }
   }
 
