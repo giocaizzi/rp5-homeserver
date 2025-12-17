@@ -94,20 +94,15 @@ services:
       # Feature flags
       - DISABLE_FRAME_HEADER=false
       - DISABLE_CSP_HEADER=false
+      
+      # Secrets via _FILE suffix
+      - APP_KEY_FILE=/run/secrets/app_key
+      - DB_PASSWORD_FILE=/run/secrets/db_password
+      - STATIC_CRON_TOKEN_FILE=/run/secrets/static_cron_token
     secrets:
       - app_key
       - db_password
       - static_cron_token
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        # Read secrets and set environment variables
-        export APP_KEY=$$(cat /run/secrets/app_key)
-        export DB_PASSWORD=$$(cat /run/secrets/db_password)
-        export STATIC_CRON_TOKEN=$$(cat /run/secrets/static_cron_token)
-        # Execute original entrypoint
-        exec docker-php-serversideup-entrypoint /init
     volumes:
       - firefly_upload:/var/www/html/storage/upload
     networks:
