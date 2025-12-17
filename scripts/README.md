@@ -90,6 +90,47 @@ PI_SSH_USER=pi ./create_secrets.sh langfuse --force
 
 ---
 
+### kill_stuck_processes.sh
+
+Diagnoses and kills stuck Docker/Portainer processes on the Raspberry Pi. Targets common stuck operations like `compose-unpacker swarm-undeploy` and `docker stack rm --detach=false`.
+
+**Required Environment Variables:**
+- `PI_SSH_USER` - SSH username for the Pi
+
+**Optional Environment Variables:**
+- `PI_HOST` - Pi hostname or IP (default: `pi.local`)
+- `CPU_THRESHOLD` - Minimum CPU% to consider stuck (default: `10`)
+- `RUNTIME_THRESHOLD` - Minimum runtime in seconds (default: `300`)
+
+**Usage:**
+```bash
+# Diagnose only (dry run)
+PI_SSH_USER=pi ./kill_stuck_processes.sh --dry-run
+
+# Interactive mode (prompts before killing)
+PI_SSH_USER=pi ./kill_stuck_processes.sh
+
+# Kill without confirmation
+PI_SSH_USER=pi ./kill_stuck_processes.sh --force
+
+# Lower thresholds for detection
+CPU_THRESHOLD=5 RUNTIME_THRESHOLD=120 PI_SSH_USER=pi ./kill_stuck_processes.sh
+```
+
+**What it does:**
+1. Scans for processes matching stuck patterns (compose-unpacker, docker stack rm, etc.)
+2. Filters by CPU usage and runtime thresholds
+3. Displays stuck processes with details
+4. Optionally kills them (with confirmation or --force)
+5. Shows current system status after cleanup
+
+**Detected patterns:**
+- `compose-unpacker swarm-undeploy` - Portainer stack removal
+- `docker stack rm --detach=false` - Blocking stack removal
+- `docker service update` - Stuck service updates
+
+---
+
 ## Adding New Scripts
 
 When adding new scripts to this directory:
