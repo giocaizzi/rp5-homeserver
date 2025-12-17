@@ -37,6 +37,8 @@ declare "prometheus_scrape" {
       {"__address__" = "observability-log-store:3100", "service_name" = "log-store", "service_namespace" = "observability", "technology" = "loki", "component" = "data", "tier" = "core"},
       // Tempo
       {"__address__" = "observability-trace-store:3200", "service_name" = "trace-store", "service_namespace" = "observability", "technology" = "tempo", "component" = "data", "tier" = "core"},
+      // Nginx proxy exporter (static until dynamic discovery is fixed)
+      {"__address__" = "infra-proxy-exporter:9113", "service_name" = "proxy", "service_namespace" = "infra", "technology" = "nginx", "component" = "gateway", "tier" = "core"},
     ]
 
     forward_to      = [prometheus.relabel.add_defaults.receiver]
