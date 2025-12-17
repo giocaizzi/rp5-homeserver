@@ -31,36 +31,33 @@ x-security-base: &security-base
   security_opt:
     - no-new-privileges:true
 
-# Shared Langfuse environment variables
+# Shared Langfuse environment variables (non-secret)
 x-langfuse-env: &langfuse-env
-  # Database
-  DATABASE_URL: "postgresql://langfuse:langfuse@langfuse-db:5432/langfuse"
+  # Database (password injected via entrypoint)
+  DATABASE_HOST: "langfuse-db"
+  DATABASE_PORT: "5432"
+  DATABASE_NAME: "langfuse"
+  DATABASE_USERNAME: "langfuse"
   # ClickHouse
-  CLICKHOUSE_MIGRATION_URL: "clickhouse://langfuse-clickhouse:9000"
-  CLICKHOUSE_URL: "http://langfuse-clickhouse:8123"
+  CLICKHOUSE_MIGRATION_URL: "clickhouse://langfuse-analytics:9000"
+  CLICKHOUSE_URL: "http://langfuse-analytics:8123"
   CLICKHOUSE_USER: "clickhouse"
-  CLICKHOUSE_PASSWORD: "clickhouse"
   CLICKHOUSE_CLUSTER_ENABLED: "false"
-  # S3 (MinIO)
+  # S3 (MinIO) - credentials injected via entrypoint
   LANGFUSE_S3_EVENT_UPLOAD_BUCKET: "langfuse"
   LANGFUSE_S3_EVENT_UPLOAD_REGION: "auto"
-  LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: "minio"
-  LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: "miniosecret"
-  LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: "http://langfuse-minio:9000"
+  LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: "http://langfuse-storage:9000"
   LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
   LANGFUSE_S3_EVENT_UPLOAD_PREFIX: "events/"
   LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: "langfuse"
   LANGFUSE_S3_MEDIA_UPLOAD_REGION: "auto"
-  LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: "minio"
-  LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: "miniosecret"
-  LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: "http://langfuse-minio:9000"
+  LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: "http://langfuse-storage:9000"
   LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: "true"
   LANGFUSE_S3_MEDIA_UPLOAD_PREFIX: "media/"
   LANGFUSE_S3_BATCH_EXPORT_ENABLED: "false"
-  # Redis
-  REDIS_HOST: "langfuse-redis"
+  # Redis (password injected via entrypoint)
+  REDIS_HOST: "langfuse-cache"
   REDIS_PORT: "6379"
-  REDIS_AUTH: "langfuseredis"
   REDIS_TLS_ENABLED: "false"
   # General
   TELEMETRY_ENABLED: "false"
@@ -115,6 +112,7 @@ configs:
 # Secrets (external - create on Pi before deployment)
 # =============================================================================
 secrets:
+  # Langfuse app secrets
   langfuse_salt:
     external: true
     name: langfuse_salt
@@ -133,6 +131,19 @@ secrets:
   langfuse_secret_key:
     external: true
     name: langfuse_secret_key
+  # Internal service secrets
+  langfuse_postgres_password:
+    external: true
+    name: langfuse_postgres_password
+  langfuse_clickhouse_password:
+    external: true
+    name: langfuse_clickhouse_password
+  langfuse_minio_password:
+    external: true
+    name: langfuse_minio_password
+  langfuse_redis_password:
+    external: true
+    name: langfuse_redis_password
 
 # =============================================================================
 # Services
@@ -141,14 +152,15 @@ services:
   # ========================================
   # MinIO - S3-compatible object storage
   # ========================================
-  minio:
+  storage:
     image: minio/minio:latest
-    hostname: langfuse-minio
+    hostname: langfuse-storage
     entrypoint: sh
-    command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" --console-address ":9001" /data'
+    command: -c 'mkdir -p /data/langfuse && export MINIO_ROOT_PASSWORD=$$(cat /run/secrets/langfuse_minio_password) && minio server --address ":9000" --console-address ":9001" /data'
     environment:
       MINIO_ROOT_USER: "minio"
-      MINIO_ROOT_PASSWORD: "miniosecret"
+    secrets:
+      - langfuse_minio_password
     expose:
       - "9000"  # S3 API
       - "9001"  # Console
@@ -166,7 +178,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "storage"
       com.giocaizzi.component: "data"
-      com.giocaizzi.role: "object-storage"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "minio"
     <<: *security-base
@@ -181,14 +192,16 @@ services:
   # ========================================
   # ClickHouse - OLAP database
   # ========================================
-  clickhouse:
+  analytics:
     image: clickhouse/clickhouse-server:latest
-    hostname: langfuse-clickhouse
+    hostname: langfuse-analytics
     user: "101:101"
     environment:
       CLICKHOUSE_DB: "default"
       CLICKHOUSE_USER: "clickhouse"
-      CLICKHOUSE_PASSWORD: "clickhouse"
+      CLICKHOUSE_PASSWORD_FILE: "/run/secrets/langfuse_clickhouse_password"
+    secrets:
+      - langfuse_clickhouse_password
     expose:
       - "8123"  # HTTP interface
       - "9000"  # Native protocol
@@ -216,7 +229,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "analytics"
       com.giocaizzi.component: "data"
-      com.giocaizzi.role: "analytics"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "clickhouse"
     <<: *security-base
@@ -231,16 +243,18 @@ services:
   # ========================================
   # PostgreSQL - Primary database
   # ========================================
-  langfuse-db:
+  db:
     image: postgres:16-alpine
     hostname: langfuse-db
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     environment:
       POSTGRES_DB: "langfuse"
       POSTGRES_USER: "langfuse"
-      POSTGRES_PASSWORD: "langfuse"
+      POSTGRES_PASSWORD_FILE: "/run/secrets/langfuse_postgres_password"
       TZ: "Europe/Rome"
       PGTZ: "Europe/Rome"
+    secrets:
+      - langfuse_postgres_password
     expose:
       - "5432"
     volumes:
@@ -261,7 +275,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "db"
       com.giocaizzi.component: "data"
-      com.giocaizzi.role: "database"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "postgres"
     <<: *security-base
@@ -276,20 +289,28 @@ services:
   # ========================================
   # Redis - Cache and queues
   # ========================================
-  langfuse-redis:
+  cache:
     image: redis:7-alpine
-    hostname: langfuse-redis
-    command: redis-server /etc/redis/redis.conf
+    hostname: langfuse-cache
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        REDIS_PASS=$$(cat /run/secrets/langfuse_redis_password)
+        sed "s/REDIS_PASSWORD_PLACEHOLDER/$$REDIS_PASS/" /etc/redis/redis.conf.template > /tmp/redis.conf
+        exec redis-server /tmp/redis.conf
     expose:
       - "6379"
+    secrets:
+      - langfuse_redis_password
     configs:
       - source: redis_config
-        target: /etc/redis/redis.conf
+        target: /etc/redis/redis.conf.template
         mode: 0444
     networks:
       - langfuse_network
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "langfuseredis", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a $$(cat /run/secrets/langfuse_redis_password) ping"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -298,7 +319,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "cache"
       com.giocaizzi.component: "data"
-      com.giocaizzi.role: "cache"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "redis"
     <<: *security-base
@@ -313,14 +333,21 @@ services:
   # ========================================
   # Redis Exporter - Metrics for Prometheus/Alloy
   # ========================================
-  redis-exporter:
+  cache-exporter:
     image: oliver006/redis_exporter:latest
-    hostname: langfuse-redis-exporter
+    hostname: langfuse-cache-exporter
     expose:
       - "9121"
     environment:
-      - REDIS_ADDR=redis://langfuse-redis:6379
-      - REDIS_PASSWORD=langfuseredis
+      - REDIS_ADDR=redis://langfuse-cache:6379
+    secrets:
+      - langfuse_redis_password
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export REDIS_PASSWORD=$$(cat /run/secrets/langfuse_redis_password)
+        exec /redis_exporter
     networks:
       - langfuse_network
       - observability_network
@@ -332,9 +359,8 @@ services:
       start_period: 10s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "redis-exporter"
+      com.giocaizzi.service: "cache-exporter"
       com.giocaizzi.component: "worker"
-      com.giocaizzi.role: "exporter"
       com.giocaizzi.tier: "extra"
       com.giocaizzi.technology: "redis-exporter"
     <<: *security-base
@@ -349,15 +375,22 @@ services:
   # ========================================
   # PostgreSQL Exporter - Metrics for Prometheus/Alloy
   # ========================================
-  postgres-exporter:
+  db-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter:latest
-    hostname: langfuse-postgres-exporter
+    hostname: langfuse-db-exporter
     expose:
       - "9187"
     environment:
       - DATA_SOURCE_URI=langfuse-db:5432/langfuse?sslmode=disable
       - DATA_SOURCE_USER=langfuse
-      - DATA_SOURCE_PASS=langfuse
+    secrets:
+      - langfuse_postgres_password
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export DATA_SOURCE_PASS=$$(cat /run/secrets/langfuse_postgres_password)
+        exec /bin/postgres_exporter
     networks:
       - langfuse_network
       - observability_network
@@ -369,9 +402,8 @@ services:
       start_period: 10s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "postgres-exporter"
+      com.giocaizzi.service: "db-exporter"
       com.giocaizzi.component: "worker"
-      com.giocaizzi.role: "exporter"
       com.giocaizzi.tier: "extra"
       com.giocaizzi.technology: "postgres-exporter"
     <<: *security-base
@@ -386,7 +418,7 @@ services:
   # ========================================
   # Langfuse Worker - Async event processing
   # ========================================
-  langfuse-worker:
+  worker:
     image: langfuse/langfuse-worker:latest
     hostname: langfuse-worker
     environment:
@@ -395,12 +427,23 @@ services:
     secrets:
       - langfuse_salt
       - langfuse_encryption_key
+      - langfuse_postgres_password
+      - langfuse_clickhouse_password
+      - langfuse_minio_password
+      - langfuse_redis_password
     entrypoint:
       - /bin/sh
       - -c
       - |
         export SALT=$$(cat /run/secrets/langfuse_salt)
         export ENCRYPTION_KEY=$$(cat /run/secrets/langfuse_encryption_key)
+        export DATABASE_URL="postgresql://langfuse:$$(cat /run/secrets/langfuse_postgres_password)@langfuse-db:5432/langfuse"
+        export CLICKHOUSE_PASSWORD=$$(cat /run/secrets/langfuse_clickhouse_password)
+        export LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID="minio"
+        export LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password)
+        export LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID="minio"
+        export LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password)
+        export REDIS_AUTH=$$(cat /run/secrets/langfuse_redis_password)
         exec dumb-init -- ./worker/entrypoint.sh node worker/dist/index.js
     expose:
       - "3030"
@@ -410,9 +453,8 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "worker"
       com.giocaizzi.component: "worker"
-      com.giocaizzi.role: "processor"
       com.giocaizzi.tier: "core"
-      com.giocaizzi.technology: "langfuse-worker"
+      com.giocaizzi.technology: "langfuse"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -425,7 +467,7 @@ services:
   # ========================================
   # Langfuse Web - Main application
   # ========================================
-  langfuse:
+  app:
     image: langfuse/langfuse:latest
     hostname: langfuse-app
     environment:
@@ -447,6 +489,10 @@ services:
       - langfuse_admin_password
       - langfuse_public_key
       - langfuse_secret_key
+      - langfuse_postgres_password
+      - langfuse_clickhouse_password
+      - langfuse_minio_password
+      - langfuse_redis_password
     entrypoint:
       - /bin/sh
       - -c
@@ -457,6 +503,13 @@ services:
         export LANGFUSE_INIT_USER_PASSWORD=$$(cat /run/secrets/langfuse_admin_password)
         export LANGFUSE_INIT_PROJECT_PUBLIC_KEY=$$(cat /run/secrets/langfuse_public_key)
         export LANGFUSE_INIT_PROJECT_SECRET_KEY=$$(cat /run/secrets/langfuse_secret_key)
+        export DATABASE_URL="postgresql://langfuse:$$(cat /run/secrets/langfuse_postgres_password)@langfuse-db:5432/langfuse"
+        export CLICKHOUSE_PASSWORD=$$(cat /run/secrets/langfuse_clickhouse_password)
+        export LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID="minio"
+        export LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password)
+        export LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID="minio"
+        export LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password)
+        export REDIS_AUTH=$$(cat /run/secrets/langfuse_redis_password)
         exec dumb-init -- ./web/entrypoint.sh node ./web/server.js --keepAliveTimeout 110000
     expose:
       - "3000"
@@ -473,7 +526,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "app"
       com.giocaizzi.component: "app"
-      com.giocaizzi.role: "web"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "langfuse"
     <<: *security-base

@@ -46,7 +46,7 @@ networks:
 # =============================================================================
 services:
 
-  ntfy:
+  app:
     image: binwiederhier/ntfy:latest
     hostname: ntfy-app
     command: serve
@@ -72,9 +72,8 @@ services:
       start_period: 40s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "notifications"
+      com.giocaizzi.service: "app"
       com.giocaizzi.component: "app"
-      com.giocaizzi.role: "notification"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "ntfy"
     <<: *security-base

@@ -22,8 +22,8 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 
 **Architecture:**
 - Single-node Docker Swarm.
-- `infra/` — manually deployed via SSH (`rsync` + `docker stack deploy`).
-- `services/` — deployed via Portainer Remote Stacks (git-based).
+- `infra/` — manually deployed manually via SSH (`rsync` + `docker stack deploy`) - this is the only always-on stack.
+- `services/` — deployed via Portainer Remote Stacks (git-based). These services might not always be running.
 
 **Workflow:**
 - Edit locally on macOS → sync/push → deploy.
@@ -114,9 +114,8 @@ service-name:
     start_period: 30s                   # adjust per service startup time
   labels:
     <<: *labels-base
-    com.giocaizzi.service: "<service-name>"
+    com.giocaizzi.service: "<service>"      # matches compose service key
     com.giocaizzi.component: "<component>"  # app | data | worker | gateway
-    com.giocaizzi.role: "<role>"            # functional role (database, proxy, backend, scheduler...)
     com.giocaizzi.tier: "<tier>"            # core | extra
     com.giocaizzi.technology: "<tech>"      # image/tool name (postgres, redis, nginx...)
   <<: *security-base
@@ -138,9 +137,13 @@ service-name:
 
 | Element | Pattern | Example |
 |---------|---------|--------|
-| Secret | `<stack>_<name>` | `n8n_postgres_password` |
-| Network | `rp5_<stack>` | `rp5_n8n` |
-| Hostname | `<stack>-<service>` | `n8n-db` |
+| Service key | `<function>` | `db`, `app`, `db-exporter` |
+| Hostname | `<stack>-<service>` | `n8n-db`, `infra-proxy` |
+| Network | `<stack>_network` | `n8n_network` |
+| Volume | `<purpose>_data` | `postgres_data` |
+| Secret | `<name>` | `postgres_password` |
+
+See [Naming & Labeling Standards](../docs/naming_labels.md) for complete reference.
 
 ---
 

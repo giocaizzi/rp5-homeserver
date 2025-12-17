@@ -50,11 +50,9 @@ networks:
 # Services
 # =============================================================================
 services:
-  firefly:
+  app:
     image: fireflyiii/core:latest
     hostname: firefly-app
-    depends_on:
-    - db
     expose:
       - "8080"
     environment:
@@ -125,7 +123,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "app"
       com.giocaizzi.component: "app"
-      com.giocaizzi.role: "backend"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "firefly"
     <<: *security-base
@@ -167,7 +164,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "db"
       com.giocaizzi.component: "data"
-      com.giocaizzi.role: "database"
       com.giocaizzi.tier: "core"
       com.giocaizzi.technology: "mariadb"
     <<: *security-base
@@ -180,9 +176,9 @@ services:
       <<: *logging-base
 
   # MySQL/MariaDB Exporter - Metrics for Prometheus/Alloy
-  mysql-exporter:
+  db-exporter:
     image: prom/mysqld-exporter:latest
-    hostname: firefly-mysql-exporter
+    hostname: firefly-db-exporter
     expose:
       - "9104"
     secrets:
@@ -205,9 +201,8 @@ services:
       start_period: 10s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "mysql-exporter"
+      com.giocaizzi.service: "db-exporter"
       com.giocaizzi.component: "worker"
-      com.giocaizzi.role: "exporter"
       com.giocaizzi.tier: "extra"
       com.giocaizzi.technology: "mysqld-exporter"
     <<: *security-base
@@ -222,8 +217,6 @@ services:
   importer:
     image: fireflyiii/data-importer:latest
     hostname: firefly-importer
-    depends_on:
-      - firefly
     expose:
       - "8080"
     environment:
@@ -284,7 +277,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "importer"
       com.giocaizzi.component: "worker"
-      com.giocaizzi.role: "importer"
       com.giocaizzi.tier: "extra"
       com.giocaizzi.technology: "firefly-importer"
     <<: *security-base
@@ -296,12 +288,9 @@ services:
     logging:
       <<: *logging-base
 
-  cron:
+  scheduler:
     image: alpine
-    hostname: firefly-cron
-    depends_on:
-      - firefly
-      - importer
+    hostname: firefly-scheduler
     environment:
       - TZ=Europe/Rome
     secrets:
@@ -317,7 +306,7 @@ services:
       echo 'Firefly is ready, setting up cron jobs...' &&
       AUTO_IMPORT_SECRET=\$$(cat /run/secrets/auto_import_secret) &&
       FIREFLY_ACCESS_TOKEN=\$$(cat /run/secrets/firefly_access_token) &&
-      echo '0 6 * * * docker exec \$$(docker ps --filter \"label=com.docker.swarm.service.name=firefly_firefly\" --format \"{{.Names}}\") php artisan firefly-iii:cron' > /tmp/crontab &&
+      echo '0 6 * * * docker exec \$$(docker ps --filter "label=com.docker.swarm.service.name=firefly_app" --format "{{.Names}}") php artisan firefly-iii:cron' > /tmp/crontab &&
       echo '0 6 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer '$$FIREFLY_ACCESS_TOKEN'\" http://firefly-importer:8080/autoimport?directory=/var/www/html/import\\&secret='$$AUTO_IMPORT_SECRET >> /tmp/crontab &&
       crontab /tmp/crontab &&
       rm /tmp/crontab &&
@@ -330,7 +319,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "scheduler"
       com.giocaizzi.component: "worker"
-      com.giocaizzi.role: "scheduler"
       com.giocaizzi.tier: "extra"
       com.giocaizzi.technology: "alpine"
     <<: *security-base
@@ -345,9 +333,6 @@ services:
   pico:
     image: cioraneanu/firefly-pico:latest
     hostname: firefly-pico
-    depends_on:
-      - pico-db
-      - firefly
     expose:
       - "80"
     environment:
@@ -372,7 +357,7 @@ services:
       - firefly_network
       - public_network
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 3000"]
+      test: ["CMD-SHELL", "nc -z localhost 80"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -381,7 +366,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "pico"
       com.giocaizzi.component: "app"
-      com.giocaizzi.role: "frontend"
       com.giocaizzi.tier: "extra"
       com.giocaizzi.technology: "firefly-pico"
     <<: *security-base
@@ -421,7 +405,6 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "pico-db"
       com.giocaizzi.component: "data"
-      com.giocaizzi.role: "database"
       com.giocaizzi.tier: "extra"
       com.giocaizzi.technology: "postgres"
     <<: *security-base
@@ -434,9 +417,9 @@ services:
       <<: *logging-base
 
   # PostgreSQL Exporter for Pico DB - Metrics for Prometheus/Alloy
-  pico-postgres-exporter:
+  pico-db-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter:latest
-    hostname: firefly-postgres-exporter
+    hostname: firefly-pico-db-exporter
     expose:
       - "9187"
     environment:
@@ -461,9 +444,8 @@ services:
       start_period: 10s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "postgres-exporter"
+      com.giocaizzi.service: "pico-db-exporter"
       com.giocaizzi.component: "worker"
-      com.giocaizzi.role: "exporter"
       com.giocaizzi.tier: "extra"
       com.giocaizzi.technology: "postgres-exporter"
     <<: *security-base

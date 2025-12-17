@@ -50,7 +50,7 @@ iOS support via upstream forwarding to ntfy.sh for APNS.
 
 ```bash
 ssh pi@pi.local
-docker exec -it $(docker ps -qf name=ntfy_ntfy) /bin/sh
+docker exec -it $(docker ps -qf name=ntfy_app) /bin/sh
 
 # Inside container
 ntfy user add --role=admin admin

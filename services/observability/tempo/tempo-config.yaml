@@ -1,13 +1,28 @@
+# =============================================================================
+# Tempo Configuration
+# =============================================================================
+# Distributed tracing backend. Receives traces ONLY from Alloy (OTLP).
+# All trace ingestion flows through Alloy for consistent processing.
+#
+# Trace Flow:
+#   Applications → Alloy (OTLP 4317/4318) → Tempo (OTLP 4317)
+#
+# Do NOT send traces directly to Tempo - use Alloy endpoint instead.
+# =============================================================================
+
 server:
   http_listen_port: 3200
   log_level: info
 
+# Receive traces from Alloy only (internal network)
 distributor:
   receivers:
     otlp:
       protocols:
-        http:
-          endpoint: 0.0.0.0:4318
+        # Disable HTTP receiver to enforce gRPC-only ingestion
+        # via Alloy.
+        # http:
+        #   endpoint: 0.0.0.0:4318
         grpc:
           endpoint: 0.0.0.0:4317
 
@@ -26,24 +41,26 @@ compactor:
   compaction:
     block_retention: 720h # 30 days
 
-metrics_generator:
-  registry:
-    external_labels:
-      source: tempo
-  storage:
-    path: /var/tempo/generator/wal
-    remote_write:
-      - url: http://prometheus:9090/api/v1/write
-        send_exemplars: true
-  processor:
-    local_blocks:
-      flush_to_storage: true
-      max_block_duration: 1m
-      max_block_bytes: 500000000
-      complete_block_timeout: 1h
-      filter_server_spans: true
+# Metrics generator disabled - Alloy scrapes Tempo's /metrics endpoint
+# to avoid duplicate metrics and maintain single source of truth.
+# metrics_generator:
+#   registry:
+#     external_labels:
+#       source: tempo
+#   storage:
+#     path: /var/tempo/generator/wal
+#     remote_write:
+#       - url: http://observability-metrics-store:9090/api/v1/write
+#         send_exemplars: true
+#   processor:
+#     local_blocks:
+#       flush_to_storage: true
+#       max_block_duration: 1m
+#       max_block_bytes: 500000000
+#       complete_block_timeout: 1h
+#       filter_server_spans: true
 
-overrides:
-  defaults:
-    metrics_generator:
-      processors: [service-graphs, span-metrics, local-blocks]
+# overrides:
+#   defaults:
+#     metrics_generator:
+#       processors: [service-graphs, span-metrics, local-blocks]

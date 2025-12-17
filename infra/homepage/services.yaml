@@ -5,10 +5,10 @@
             href: https://portainer.{{HOMEPAGE_FILE_DOMAIN}}
             description: Docker container management
             icon: portainer.png
-            ping: http://portainer:9000/api/status
+            ping: http://management:9000/api/status
             widget:
                 type: portainer
-                url: http://portainer:9000
+                url: http://management:9000
                 env: 3
                 key: "{{HOMEPAGE_FILE_PORTAINER_API_KEY}}"
 
@@ -16,19 +16,19 @@
             href: https://netdata.home
             description: Real-time system monitoring
             icon: netdata.png
-            ping: http://netdata:19999/api/v1/info
+            ping: http://monitoring:19999/api/v1/info
             widget:
                 type: netdata
-                url: http://netdata:19999
+                url: http://monitoring:19999
 
       - Backrest:
             href: https://backrest.{{HOMEPAGE_FILE_DOMAIN}}
             description: Backup management
             icon: backrest.png
-            ping: http://backrest:9898
+            ping: http://backup:9898
             widget:
                 type: backrest
-                url: http://backrest:9898
+                url: http://backup:9898
                 username: "{{HOMEPAGE_VAR_BACKREST_USERNAME}}"
                 password: "{{HOMEPAGE_FILE_BACKREST_PASSWORD}}"
 
@@ -38,10 +38,10 @@
             href: https://adguard.home
             description: DNS server & ad blocker
             icon: adguard-home.png
-            ping: http://adguard:3000
+            ping: http://adguard_dns:3000
             widget:
                 type: adguard
-                url: http://adguard:3000
+                url: http://adguard_dns:3000
                 username: "{{HOMEPAGE_VAR_ADGUARD_USERNAME}}"
                 password: "{{HOMEPAGE_FILE_ADGUARD_PASSWORD}}"
 - Applications:
@@ -49,16 +49,16 @@
             href: https://n8n.{{HOMEPAGE_FILE_DOMAIN}}
             description: Workflow automation
             icon: n8n.png
-            ping: http://n8n:5678
+            ping: http://n8n_app:5678
 
       - ntfy:
             href: https://ntfy.home
             description: Push notification service
             icon: ntfy.png
-            ping: http://ntfy:80/v1/health
+            ping: http://ntfy_app:80/v1/health
             widget:
                 type: customapi
-                url: http://ntfy:80/v1/stats
+                url: http://ntfy_app:80/v1/stats
                 mappings:
                     - field: messages
                       label: Messages
@@ -71,42 +71,42 @@
             href: https://ollama.home
             description: Local AI models
             icon: ollama.png
-            ping: http://ollama:11434
+            ping: http://ollama_llm:11434
 
 - Finance:
       - Firefly III:
             href: https://firefly.{{HOMEPAGE_FILE_DOMAIN}}
             description: Personal finance manager
             icon: firefly.png
-            ping: http://firefly:8080
+            ping: http://firefly_app:8080
             # Disabled for privacy
             # widget:
             #     type: firefly
-            #     url: http://firefly:8080
+            #     url: http://firefly_app:8080
             #     key: "{{HOMEPAGE_FILE_FIREFLY_API_TOKEN}}"
 
       - Firefly Pico:
             href: https://firefly-pico.home/dashboard
             description: Mobile-friendly Firefly III frontend
             icon: firefly.png
-            ping: http://firefly-pico:80
+            ping: http://firefly_pico:80
 
       - Firefly Importer:
             href: https://firefly-importer.home
             description: Data import for Firefly III
             icon: firefly.png
-            ping: http://firefly-importer:8080
+            ping: http://firefly_importer:8080
 
 - Observability:
       - Grafana:
             href: https://grafana.home
             description: Metrics and logs visualization
             icon: grafana.png
-            ping: http://grafana:3000
+            ping: http://observability_dashboard:3000
             widget:
                 type: grafana
                 version: 2
-                url: http://grafana:3000
+                url: http://observability_dashboard:3000
                 username: admin
                 password: "{{HOMEPAGE_FILE_GRAFANA_ADMIN_PASSWORD}}"
 
@@ -114,4 +114,4 @@
             href: https://langfuse.home
             description: LLM observability and tracing
             icon: https://langfuse.com/langfuse_logo_white.svg
-            ping: http://langfuse:3000/api/public/health
+            ping: http://langfuse_app:3000/api/public/health

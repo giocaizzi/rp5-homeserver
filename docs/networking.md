@@ -45,9 +45,29 @@ flowchart LR
 |---------|------|---------|
 | `rp5_public` | External overlay | nginx → proxied services |
 | `rp5_infra` | External overlay | Infrastructure services |
+| `rp5_observability` | External overlay | Alloy → service exporters |
 | `rp5_<stack>` | Stack overlay | Private per-stack communication |
 
 Services join `rp5_public` only if nginx-proxied. Databases stay on private stack networks.
+
+### Network Deployment Order
+
+External networks must exist before stacks that reference them. **Deploy in this order:**
+
+1. **Create external networks** (one-time setup):
+   ```bash
+   docker network create --driver overlay --attachable rp5_public
+   docker network create --driver overlay --attachable rp5_infra
+   docker network create --driver overlay --attachable rp5_observability
+   ```
+
+2. **Deploy infra stack** (creates no external networks, uses `rp5_public` and `rp5_infra`)
+
+3. **Deploy observability stack** (services join `rp5_observability` for metric scraping)
+
+4. **Deploy service stacks** (n8n, firefly, langfuse, etc.)
+
+> **Note:** `depends_on` is ignored in Docker Swarm. Services start simultaneously and rely on healthchecks + restart policies for eventual consistency.
 
 ## Nginx Routing
 
@@ -55,19 +75,19 @@ nginx reverse-proxies all `.home` domains to internal services via overlay DNS.
 
 | Domain | Service | Port |
 |--------|---------|------|
-| `portainer.home` | `infra_portainer` | 9000 |
-| `netdata.home` | `infra_netdata` | 19999 |
-| `backrest.home` | `infra_backrest` | 9898 |
-| `homepage.home` | `infra_homepage` | 3000 |
-| `n8n.home` | `n8n_n8n` | 5678 |
-| `firefly.home` | `firefly_firefly` | 8080 |
+| `portainer.home` | `infra_management` | 9000 |
+| `netdata.home` | `infra_monitoring` | 19999 |
+| `backrest.home` | `infra_backup` | 9898 |
+| `homepage.home` | `infra_dashboard` | 3000 |
+| `n8n.home` | `n8n_app` | 5678 |
+| `firefly.home` | `firefly_app` | 8080 |
 | `firefly-importer.home` | `firefly_importer` | 8080 |
 | `firefly-pico.home` | `firefly_pico` | 80 |
-| `adguard.home` | `adguard_adguard` | 3000 |
-| `ollama.home` | `ollama_ollama` | 11434 |
-| `grafana.home` | `observability_grafana` | 3000 |
-| `langfuse.home` | `langfuse_langfuse` | 3000 |
-| `ntfy.home` | `ntfy_ntfy` | 80 |
+| `adguard.home` | `adguard_dns` | 3000 |
+| `ollama.home` | `ollama_llm` | 11434 |
+| `grafana.home` | `observability_dashboard` | 3000 |
+| `langfuse.home` | `langfuse_app` | 3000 |
+| `ntfy.home` | `ntfy_app` | 80 |
 
 **DNS Format**: `<stack>_<service>` (Swarm cross-stack resolution).
 
@@ -131,8 +151,8 @@ nslookup portainer.home
 docker ps --format 'table {{.Names}}\t{{.Ports}}'
 
 # Test connectivity from nginx
-docker exec $(docker ps -q -f name=infra_nginx) nc -zv n8n_n8n 5678
+docker exec $(docker ps -q -f name=infra_proxy) nc -zv n8n_app 5678
 
 # DNS resolution inside Swarm
-docker exec $(docker ps -q -f name=infra_nginx) nslookup firefly_firefly
+docker exec $(docker ps -q -f name=infra_proxy) nslookup firefly_app
 ```
