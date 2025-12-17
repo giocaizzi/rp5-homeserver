@@ -205,8 +205,8 @@ services:
       - /bin/bash
       - -c
       - |
-        export CLICKHOUSE_PASSWORD=$$(cat /run/secrets/langfuse_clickhouse_password)
-        exec /entrypoint.sh
+        export CLICKHOUSE_PASSWORD="$$(cat /run/secrets/langfuse_clickhouse_password)"
+        exec env CLICKHOUSE_PASSWORD="$$CLICKHOUSE_PASSWORD" /entrypoint.sh
     expose:
       - "8123"  # HTTP interface
       - "9000"  # Native protocol
