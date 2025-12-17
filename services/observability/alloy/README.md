@@ -5,36 +5,42 @@ Centralized OpenTelemetry collector for logs, traces, and metrics.
 ## Architecture
 
 ```
+alloy/
+├── config.alloy           # Entry point - imports, shared discovery, outputs
+├── modules/
+│   └── labels.alloy       # Reusable label extraction (declare blocks)
+└── pipelines/
+    ├── otel.alloy         # OTLP receivers → processors → exporters
+    ├── logs.alloy         # Docker log collection → Loki
+    └── metrics.alloy      # Prometheus scraping → remote_write
+```
+
+### Data Flow
+
+```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                              ALLOY PIPELINES                                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
-│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐                    │
-│  │   Docker    │     │    OTLP     │     │  Prometheus │                    │
-│  │   Logs      │     │  Receiver   │     │   Scrape    │                    │
-│  │             │     │             │     │  (modules)  │                    │
-│  └──────┬──────┘     └──────┬──────┘     └──────┬──────┘                    │
-│         │                   │                   │                            │
-│         ▼                   ▼                   ▼                            │
-│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐                    │
-│  │  Relabel    │     │   Batch     │     │  Relabel    │                    │
-│  │  + Process  │     │ + Attributes│     │  (module)   │                    │
-│  └──────┬──────┘     └──────┬──────┘     └──────┬──────┘                    │
-│         │                   │                   │                            │
-│         │            ┌──────┴──────┐            │                            │
-│         │            ▼      ▼      ▼            │                            │
-│         │         Logs  Metrics Traces          │                            │
-│         │            │      │      │            │                            │
-│         ▼            ▼      ▼      ▼            ▼                            │
-│      ┌──────┐     ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐                       │
-│      │ Loki │     │ Loki │ │Prom  │ │Tempo │ │Prom  │                       │
-│      │Write │     │Export│ │Export│ │OTLP  │ │Write │                       │
-│      └──────┘     └──────┘ └──────┘ └──────┘ └──────┘                       │
+│  pipelines/otel.alloy        pipelines/logs.alloy    pipelines/metrics.alloy│
+│  ┌─────────────────┐        ┌─────────────────┐     ┌─────────────────┐     │
+│  │  OTLP Receiver  │        │  Docker Logs    │     │  Prometheus     │     │
+│  │  HTTP/gRPC      │        │  via Socket     │     │  Scrape         │     │
+│  └────────┬────────┘        └────────┬────────┘     └────────┬────────┘     │
+│           │                          │                       │              │
+│           ▼                          ▼                       ▼              │
+│  ┌─────────────────┐        ┌─────────────────┐     ┌─────────────────┐     │
+│  │  Batch + Attrs  │        │  modules/labels │     │  modules/labels │     │
+│  │  Processors     │        │  + Processing   │     │  + Relabel      │     │
+│  └────────┬────────┘        └────────┬────────┘     └────────┬────────┘     │
+│           │                          │                       │              │
+│     ┌─────┼─────┐                    │                       │              │
+│     ▼     ▼     ▼                    ▼                       ▼              │
+│   Prom  Loki  Tempo               Loki                    Prom             │
 │                                                                              │
 │  ═══════════════════════════════════════════════════════════════════════    │
-│                           outputs.alloy                                      │
+│                   config.alloy (outputs + shared discovery)                  │
 │  ═══════════════════════════════════════════════════════════════════════    │
-│                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -42,9 +48,35 @@ Centralized OpenTelemetry collector for logs, traces, and metrics.
 
 | Pipeline | Source Label | Description |
 |----------|--------------|-------------|
-| Docker | `source=docker` | Container log scraping via Docker socket |
 | OTEL | `source=otel` | Apps sending OTLP traces/metrics/logs |
+| Docker | `source=docker` | Container log scraping via Docker socket |
 | Scrape | `source=scrape` | Prometheus metric scraping |
+
+## Modular Design
+
+### config.alloy (Entry Point)
+
+- Imports modules and pipelines via `import.file`
+- Shared `discovery.docker` instance (reduces Docker API calls)
+- Module instantiation with shared discovery
+- Output endpoints (`prometheus.remote_write`, `loki.write`)
+
+### modules/labels.alloy (Reusable Components)
+
+Contains `declare` blocks for consistent label extraction:
+
+| Module | Purpose |
+|--------|---------|
+| `docker_labels` | Extract OTEL-aligned labels from Docker metadata |
+| `exporter_targets` | Filter and prepare exporter targets for scraping |
+
+### pipelines/ (Data Pipelines)
+
+| File | Data Flow |
+|------|-----------|
+| `otel.alloy` | OTLP receivers → batch → attributes → backends |
+| `logs.alloy` | Docker discovery → log collection → processing → Loki |
+| `metrics.alloy` | Static + dynamic targets → scrape → Prometheus |
 
 ## Label Schema
 
@@ -52,40 +84,38 @@ Labels are normalized to underscore format for Prometheus/Loki compatibility whi
 
 ### Indexed Labels (Low Cardinality)
 
-Used for filtering in Loki/Prometheus queries. All pipelines output these consistently.
-
-Label names follow OTEL semantic convention conversion: dots become underscores.
-
 | Storage Label | OTEL Semconv | Docker Label | Default | Description |
 |---------------|--------------|--------------|---------|-------------|
-| `service_name` | `service.name` | `com.giocaizzi.service` | `unknown_service` | Logical service name |
+| `service_name` | `service.name` | `com.giocaizzi.service` | container name | Logical service name |
 | `service_namespace` | `service.namespace` | `com.giocaizzi.namespace` | `external` | Stack/project grouping |
-| `deployment_environment_name` | `deployment.environment.name` | `com.giocaizzi.env` | `production` | Environment (prod/staging/dev) |
-| `technology` | (custom) | `com.giocaizzi.technology` | — | Implementation technology (postgres, redis, nginx, etc.) |
+| `deployment_environment_name` | `deployment.environment.name` | `com.giocaizzi.env` | `production` | Environment |
+| `technology` | (custom) | `com.giocaizzi.technology` | — | Implementation technology |
 | `tier` | (custom) | `com.giocaizzi.tier` | `core` | core/extra |
-| `component` | (custom) | `com.giocaizzi.component` | — | app/data/worker/gateway |
+| `component` | (custom) | `com.giocaizzi.component` | `app` | app/data/worker/gateway |
 | `source` | (custom) | (auto) | — | docker/otel/scrape |
-| `level` | (auto/extracted) | (extracted) | `info` | Log severity (logs only) |
+| `level` | (auto/extracted) | (extracted) | — | Log severity (logs only) |
 
 ### Metadata Labels (High Cardinality)
 
 Stored as structured metadata in Loki. Not indexed, but searchable.
 
-| Storage Label | OTEL Semconv | Docker Label | Description |
-|---------------|--------------|--------------|-------------|
-| `service_instance_id` | `service.instance.id` | (container ID) | Unique instance identifier |
-| `service_version` | `service.version` | `com.giocaizzi.version` | Service version |
-| `host_name` | `host.name` | (hostname) | Container/host name |
-| `role` | (custom) | `com.giocaizzi.role` | Specific function (backend, database, proxy, etc.) |
+| Storage Label | OTEL Semconv | Docker Label |
+|---------------|--------------|--------------|
+| `service_instance_id` | `service.instance.id` | container ID |
+| `service_version` | `service.version` | `com.giocaizzi.version` |
+| `host_name` | `host.name` | hostname |
 
-### Cardinality Strategy
+### Label Extraction Fallback Chain
 
-**Why split labels?**
-- Loki indexes labels for fast filtering. High-cardinality labels (like instance IDs) explode index size.
-- Low-cardinality indexed labels enable efficient queries: `{service_namespace="firefly", component="data"}`
-- High-cardinality data stored as structured metadata, searchable but not indexed.
+The `docker_labels` module applies fallbacks:
 
-**Query examples:**
+```
+service_namespace: custom label > swarm stack > compose project > "external"
+service_name:      custom label > swarm service > compose service > container name
+```
+
+### Query Examples
+
 ```logql
 # All logs from firefly stack
 {service_namespace="firefly"}
@@ -96,116 +126,58 @@ Stored as structured metadata in Loki. Not indexed, but searchable.
 # All PostgreSQL databases across stacks
 {technology="postgres"}
 
-# Filter by environment
-{deployment_environment_name="production"}
-
 # Filter by instance (uses structured metadata)
 {service_namespace="firefly"} | service_instance_id="abc123def456"
 ```
 
-### Tier Values
+## Metrics Scraping Strategy
 
-| Value | Description |
-|-------|-------------|
-| `core` | Essential services for stack functionality |
-| `extra` | Optional/auxiliary services |
+### Static Targets (observability stack)
 
-### Component Values
+Observability components use static targets in `metrics.alloy`:
+- Alloy (127.0.0.1:12345)
+- Prometheus (observability-metrics-store:9090)
+- Loki (observability-log-store:3100)
+- Tempo (observability-trace-store:3200)
 
-| Value | Description |
-|-------|-------------|
-| `app` | Application servers, APIs, web UIs, backends |
-| `data` | Databases, caches, object storage (postgres, redis, minio) |
-| `worker` | Background processors, schedulers |
-| `gateway` | Reverse proxies, load balancers, tunnels, DNS |
+### Dynamic Discovery (service exporters)
 
-### Role Values (Free-form)
+Service exporters use Docker discovery via `exporter_targets` module:
 
-Specific function within the component. Examples:
-- `backend`, `frontend`, `web`, `api`
-- `database`, `analytics`
-- `proxy`, `tunnel`
-- `metrics`, `logs`, `traces`, `collector`
-- `scheduler`, `importer`, `processor`
-- `dns`, `dashboard`, `management`
+| Technology | Port | Normalized To |
+|------------|------|---------------|
+| postgres-exporter | 9187 | `postgres` |
+| mysqld-exporter | 9104 | `mariadb` |
+| redis-exporter | 9121 | `redis` |
+| clickhouse | 9363 | `clickhouse` |
 
-### Technology Values
+Benefits:
+- **No scrape errors** when services aren't deployed
+- **Automatic discovery** - new exporters scraped when deployed
+- **Consistent labels** via shared module
 
-Implementation technology of the service. Used to identify all services using the same tech stack.
+## OTEL Integration
 
-| Category | Values |
-|----------|--------|
-| Databases | `postgres`, `mariadb`, `mysql`, `clickhouse`, `sqlite` |
-| Caches | `redis`, `valkey`, `memcached` |
-| Web/Proxy | `nginx`, `caddy`, `traefik` |
-| Observability | `grafana`, `prometheus`, `loki`, `tempo`, `alloy`, `netdata` |
-| Applications | `firefly`, `n8n`, `langfuse`, `portainer`, `homepage`, `ntfy`, `ollama`, `adguard` |
-| Utilities | `cloudflared`, `backrest` |
+### Endpoints
 
-## OTEL Attribute Handling
+| Protocol | Port | Description |
+|----------|------|-------------|
+| OTLP gRPC | 4317 | Binary protocol |
+| OTLP HTTP | 4318 | JSON/Protobuf over HTTP |
 
-### Incoming OTLP Data
+### Incoming Data Requirements
 
-Apps sending OTLP telemetry should use standard OTEL semantic conventions:
-- `service.name`, `service.namespace`, `service.version`, `service.instance.id`
+Apps sending OTLP should use standard OTEL semantic conventions:
+- `service.name`, `service.namespace`, `service.version`
 - `deployment.environment.name`
-- `host.name`
 
-The attributes processor:
-1. Sets defaults for missing required attributes
-2. Sets `loki.resource.labels` hint to control which attributes become Loki labels
-3. Exporters auto-convert dots to underscores (e.g., `deployment.environment.name` → `deployment_environment_name`)
+The attributes processor adds defaults for missing required attributes.
 
-### Docker Container Discovery
+### Example App Configuration
 
-Docker labels are mapped via relabeling rules:
-1. Fallback chain: custom labels > swarm labels > compose labels > container metadata
-2. Defaults applied for required labels
-3. Same underscore naming as OTEL pipeline
-
-## File Structure
-
-| File | Purpose |
-|------|---------|
-| `modules.alloy` | Reusable custom components (`scrape_with_labels`, `scrape_observability`) |
-| `outputs.alloy` | Loki + Prometheus remote write endpoints |
-| `otel-receivers.alloy` | OTLP HTTP/gRPC receivers |
-| `otel-processors.alloy` | Batch + transform processors (OTEL → underscore labels) |
-| `otel-exporters.alloy` | Exporters to Loki, Prometheus, Tempo |
-| `docker-logs.alloy` | Docker discovery, relabeling, log processing |
-| `prometheus-scrape.alloy` | Prometheus metric scraping using custom components |
-
-## Custom Components
-
-Defined in `modules.alloy` using Alloy's `declare` block for code reuse.
-
-### `scrape_with_labels`
-
-Generic scraper with OTEL-aligned labels. Accepts service metadata and forwards to `prometheus.remote_write.default`.
-
-```alloy
-scrape_with_labels "service_name" {
-  address           = "host:port"
-  service_namespace = "stack_name"
-  service_name      = "service"
-  tier              = "core"       // optional, default: "core"
-  component         = "data"       // optional, default: "data"
-  role              = "database"
-  technology        = "postgres"
-  scrape_interval   = "30s"        // optional, default: "30s"
-  scrape_timeout    = "10s"        // optional, default: "10s"
-}
-```
-
-### `scrape_observability`
-
-Specialized scraper for observability stack services. Pre-sets `service_namespace=observability`, `tier=core`, `component=observability`.
-
-```alloy
-scrape_observability "service_name" {
-  address         = "host:port"
-  service_name    = "traces"     // traces, metrics, logs, collector
-  technology      = "tempo"
-  scrape_interval = "15s"        // optional, default: "15s"
-}
+```yaml
+environment:
+  - OTEL_SERVICE_NAME=my-service
+  - OTEL_RESOURCE_ATTRIBUTES=deployment.environment.name=production,service.namespace=mystack
+  - OTEL_EXPORTER_OTLP_ENDPOINT=http://observability-collector:4318
 ```

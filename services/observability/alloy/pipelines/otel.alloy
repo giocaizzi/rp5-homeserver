@@ -1,0 +1,145 @@
+// =============================================================================
+// OTEL PIPELINE
+// =============================================================================
+// Receives telemetry via OTLP (HTTP/gRPC), processes with batching and
+// attribute injection, then exports to appropriate backends.
+//
+// Data Flow:
+//   OTLP Receivers → Batch Processor → Attribute Processor → Backend Exporters
+//
+// Backends:
+//   Metrics → Prometheus remote_write (mimir/prometheus)
+//   Logs    → Loki
+//   Traces  → Tempo
+// =============================================================================
+
+// -----------------------------------------------------------------------------
+// OTLP RECEIVERS
+// -----------------------------------------------------------------------------
+// HTTP: port 4318, gRPC: port 4317
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.default.input]
+    logs    = [otelcol.processor.batch.default.input]
+    traces  = [otelcol.processor.batch.default.input]
+  }
+}
+
+// -----------------------------------------------------------------------------
+// BATCH PROCESSOR
+// -----------------------------------------------------------------------------
+// Batches telemetry data before export for efficiency
+
+otelcol.processor.batch "default" {
+  timeout         = "5s"
+  send_batch_size = 100
+
+  output {
+    metrics = [otelcol.processor.attributes.default.input]
+    logs    = [otelcol.processor.attributes.default.input]
+    traces  = [otelcol.processor.attributes.default.input]
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ATTRIBUTES PROCESSOR
+// -----------------------------------------------------------------------------
+// Injects standard attributes into all telemetry
+
+otelcol.processor.attributes "default" {
+  // Default namespace for external apps
+  action {
+    key    = "service.namespace"
+    value  = "external"
+    action = "insert"
+  }
+
+  // Default environment
+  action {
+    key    = "deployment.environment.name"
+    value  = "production"
+    action = "insert"
+  }
+
+  // Source identifier
+  action {
+    key    = "source"
+    value  = "otel"
+    action = "insert"
+  }
+
+  // Default tier
+  action {
+    key    = "tier"
+    value  = "core"
+    action = "insert"
+  }
+
+  // Loki label hints - controls which attributes become indexed labels
+  action {
+    key    = "loki.resource.labels"
+    value  = "service.name, service.namespace, deployment.environment.name, tier, component, source"
+    action = "insert"
+  }
+
+  output {
+    metrics = [otelcol.exporter.prometheus.default.input]
+    logs    = [otelcol.exporter.loki.default.input]
+    traces  = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+// -----------------------------------------------------------------------------
+// PROMETHEUS EXPORTER (Metrics)
+// -----------------------------------------------------------------------------
+// Exposes OTEL metrics on :8889 for Prometheus scrape
+// Note: This is for metrics received via OTLP, not scraped metrics
+
+otelcol.exporter.prometheus "default" {
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+// -----------------------------------------------------------------------------
+// LOKI EXPORTER (Logs)
+// -----------------------------------------------------------------------------
+// Forwards OTEL logs to Loki
+
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.default.receiver]
+}
+
+// -----------------------------------------------------------------------------
+// TEMPO EXPORTER (Traces)
+// -----------------------------------------------------------------------------
+// Forwards traces to Tempo via OTLP gRPC
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "observability-trace-store:4317"
+    tls {
+      insecure             = true
+      insecure_skip_verify = true
+    }
+  }
+
+  retry_on_failure {
+    enabled          = true
+    initial_interval = "5s"
+    max_interval     = "30s"
+    max_elapsed_time = "5m"
+  }
+
+  sending_queue {
+    enabled       = true
+    num_consumers = 2
+    queue_size    = 500
+  }
+}

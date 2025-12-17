@@ -65,6 +65,7 @@ flowchart TB
 | [Backup](./backup.md) | Backrest setup, restore procedures |
 | [GitOps](./gitops.md) | Portainer webhooks, automated deployment |
 | [Monitoring](./monitoring.md) | Observability stack (Grafana, Loki, Tempo, Prometheus) |
+| [Naming and Labels](./naming_labels.md) | Docker label schema for service identification |
 
 ## Services
 

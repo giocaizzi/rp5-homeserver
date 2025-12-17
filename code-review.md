@@ -2,7 +2,7 @@
 
 Comprehensive audit findings for the RP5 Home Server project.
 
-**Last Review:** 2025-11-30  
+**Last Review:** 2025-12-07  
 **Reviewer:** Automated Audit  
 **Version:** 1.6.2
 
@@ -12,52 +12,11 @@ Comprehensive audit findings for the RP5 Home Server project.
 
 | Category | 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low |
 |----------|-------------|---------|-----------|--------|
-| Security | 1 | 5 | 4 | 0 |
-| Standards | 0 | 0 | 4 | 3 |
-| Documentation | 0 | 0 | 3 | 2 |
+| Security | 0 | 4 | 3 | 0 |
+| Standards | 0 | 0 | 3 | 3 |
+| Documentation | 0 | 0 | 2 | 2 |
 | Architecture | 0 | 0 | 3 | 2 |
-| **Total** | **1** | **5** | **14** | **7** |
-
----
-
-## 🔴 Critical Issues
-
-### CR-001: Hardcoded Credentials in Langfuse Stack
-
-| Field | Value |
-|-------|-------|
-| **Status** | 🔴 Open |
-| **File** | `services/langfuse/docker-compose.yml` |
-| **Priority** | P0 - Immediate |
-| **Assigned** | — |
-
-**Description:**  
-Multiple passwords hardcoded in plaintext within docker-compose and config files.
-
-**Affected Lines:**
-
-| Line | Variable | Value |
-|------|----------|-------|
-| 42 | `CLICKHOUSE_PASSWORD` | `"clickhouse"` |
-| 63 | `REDIS_AUTH` | `"langfuseredis"` |
-| 145-146 | `MINIO_ROOT_USER/PASSWORD` | `"minio"` / `"miniosecret"` |
-| 186 | `CLICKHOUSE_PASSWORD` | `"clickhouse"` |
-| 234 | `POSTGRES_PASSWORD` | `"langfuse"` |
-
-**Also in config files:**
-- `services/langfuse/redis/redis.conf:11` — `requirepass langfuseredis`
-- `services/langfuse/clickhouse/users.xml:14` — `<password>clickhouse</password>`
-
-**Remediation:**  
-Convert to external Swarm secrets following n8n/firefly patterns. Create secrets:
-- `langfuse_postgres_password`
-- `langfuse_redis_password`
-- `langfuse_clickhouse_password`
-- `langfuse_minio_root_password`
-
-**References:**  
-- Pattern: `services/n8n/docker-compose.yml` (secrets section)
-- Standard: `.github/copilot-instructions.md` (secrets handling)
+| **Total** | **0** | **4** | **11** | **7** |
 
 ---
 
@@ -245,28 +204,6 @@ Update links to `docs/networking.md#dns-resolution` or create `docs/dns.md`.
 
 ---
 
-### CR-010: Pico Healthcheck Wrong Port
-
-| Field | Value |
-|-------|-------|
-| **Status** | 🟡 Open |
-| **File** | `services/firefly/docker-compose.yml` |
-| **Line** | ~335 |
-| **Priority** | P2 |
-
-**Current:**
-```yaml
-expose:
-  - "80"
-healthcheck:
-  test: ["CMD-SHELL", "nc -z localhost 3000"]  # Wrong port
-```
-
-**Remediation:**  
-Change to `nc -z localhost 80` or actual app port.
-
----
-
 ### CR-011: Inconsistent Secret Naming in Infra Stack
 
 | Field | Value |
@@ -284,28 +221,6 @@ Change to `nc -z localhost 80` or actual app port.
 - `gcp_service_account` → `infra_gcp_service_account`
 - `portainer_api_key` → `infra_portainer_api_key`
 - `domain` → `infra_domain`
-
----
-
-### CR-012: nginx Healthcheck Tests Config Not Service
-
-| Field | Value |
-|-------|-------|
-| **Status** | 🟡 Open |
-| **File** | `infra/docker-compose.yml` |
-| **Lines** | 67-72 |
-| **Priority** | P2 |
-
-**Current:**
-```yaml
-healthcheck:
-  test: ["CMD", "nginx", "-t"]  # Only validates config syntax
-```
-
-**Remediation:**
-```yaml
-test: ["CMD-SHELL", "curl -sf http://localhost:80/health || exit 1"]
-```
 
 ---
 
@@ -705,6 +620,6 @@ key: "{{HOMEPAGE_FILE_PORTAINER_API_KEY}}"
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2025-12-07 | 1.2 | Removed resolved issues: CR-001 (Langfuse credentials), CR-010 (Pico healthcheck), CR-012 (nginx healthcheck) |
 | 2025-12-04 | 1.1 | Added architecture findings: configs analysis, declarative config patterns, private configs concept |
 | 2025-11-30 | 1.0 | Initial comprehensive audit |
-

@@ -19,17 +19,19 @@
 | Container | Image | Purpose |
 |-----------|-------|---------|
 | langfuse-db | `postgres:16-alpine` | Main database |
-| langfuse-redis | `redis:7-alpine` | Cache & queues |
-| langfuse-clickhouse | `clickhouse/clickhouse-server` | Analytics OLAP |
-| langfuse-minio | `minio/minio` | Object storage |
+| langfuse-cache | `redis:7-alpine` | Cache & queues |
+| langfuse-analytics | `clickhouse/clickhouse-server` | Analytics OLAP |
+| langfuse-storage | `minio/minio` | Object storage |
 | langfuse-app | `langfuse/langfuse` | Web application |
-| langfuse-worker | `langfuse/langfuse` | Event processor |
+| langfuse-worker | `langfuse/langfuse-worker` | Event processor |
 
 ---
 
 ## 🔐 Secrets
 
 Create all before deployment:
+
+### Application Secrets
 
 | Secret | Generate |
 |--------|----------|
@@ -39,6 +41,15 @@ Create all before deployment:
 | `langfuse_admin_password` | `echo -n "your-password" \| docker secret create langfuse_admin_password -` |
 | `langfuse_public_key` | `echo "pk-lf-$(openssl rand -hex 16)" \| docker secret create langfuse_public_key -` |
 | `langfuse_secret_key` | `echo "sk-lf-$(openssl rand -hex 16)" \| docker secret create langfuse_secret_key -` |
+
+### Internal Service Secrets
+
+| Secret | Generate |
+|--------|----------|
+| `langfuse_postgres_password` | `openssl rand -base64 24 \| docker secret create langfuse_postgres_password -` |
+| `langfuse_clickhouse_password` | `openssl rand -base64 24 \| docker secret create langfuse_clickhouse_password -` |
+| `langfuse_minio_password` | `openssl rand -base64 24 \| docker secret create langfuse_minio_password -` |
+| `langfuse_redis_password` | `openssl rand -base64 24 \| docker secret create langfuse_redis_password -` |
 
 ---
 
