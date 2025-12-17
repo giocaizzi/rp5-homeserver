@@ -145,6 +145,20 @@ declare "docker_labels" {
       regex         = "^/?(.+)$"
       target_label  = "host_name"
     }
+
+    // -------------------------------------------------------------------------
+    // PRESERVE NETWORK METADATA FOR DOWNSTREAM MODULES
+    // -------------------------------------------------------------------------
+    // discovery.relabel drops __meta_* labels by default after processing.
+    // Preserve network info needed by exporter_targets for address construction.
+    rule {
+      source_labels = ["__meta_docker_network_name"]
+      target_label  = "__meta_docker_network_name"
+    }
+    rule {
+      source_labels = ["__meta_docker_network_ip"]
+      target_label  = "__meta_docker_network_ip"
+    }
   }
 
   export "output" {
@@ -181,6 +195,15 @@ declare "exporter_targets" {
     rule {
       source_labels = ["technology"]
       regex         = "(postgres-exporter|mysqld-exporter|redis-exporter|clickhouse)"
+      action        = "keep"
+    }
+
+    // Keep only targets on the observability network
+    // When containers are on multiple networks, Docker discovery creates one target per network.
+    // We must filter to only the rp5_observability network for Alloy to reach them.
+    rule {
+      source_labels = ["__meta_docker_network_name"]
+      regex         = "rp5_observability"
       action        = "keep"
     }
 
