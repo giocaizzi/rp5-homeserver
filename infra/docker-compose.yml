@@ -41,6 +41,11 @@ networks:
     external: true
     name: rp5_infra
 
+  # Observability network - for metrics collection
+  observability_network:
+    external: true
+    name: rp5_observability
+
 # =============================================================================
 # Services
 # =============================================================================
@@ -83,6 +88,40 @@ services:
       resources:
         limits:
           memory: 128M
+    logging:
+      <<: *logging-base
+
+  # Nginx Prometheus Exporter
+  proxy-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    hostname: infra-proxy-exporter
+    command:
+      - --nginx.scrape-uri=http://infra-proxy:80/stub_status
+    expose:
+      - "9113"
+    networks:
+      - infra_network
+      - observability_network
+    depends_on:
+      - proxy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9113/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "proxy-exporter"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "nginx-exporter"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 64M
     logging:
       <<: *logging-base
 
