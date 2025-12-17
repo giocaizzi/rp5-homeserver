@@ -6,11 +6,13 @@
 //
 // Data Flow:
 //   Docker Discovery → Label Extraction → Log Collection → Processing → Loki
+//   (nginx logs routed to dedicated nginx_logs module for structured parsing)
 //
 // Arguments:
 //   docker_labels_output - Targets from docker_labels module
 //   docker_labels_rules  - Relabel rules from docker_labels module
 //   loki_receiver        - Loki write endpoint receiver
+//   nginx_logs_receiver  - Receiver from nginx_logs module for nginx-specific parsing
 // =============================================================================
 
 declare "docker_logs" {
@@ -27,6 +29,10 @@ declare "docker_logs" {
 
   argument "loki_receiver" {
     comment = "Loki write endpoint receiver"
+  }
+
+  argument "nginx_logs_receiver" {
+    comment = "Receiver from nginx_logs module for nginx-specific parsing"
   }
 
   // ---------------------------------------------------------------------------
@@ -56,22 +62,25 @@ declare "docker_logs" {
   // DOCKER LOG COLLECTION
   // ---------------------------------------------------------------------------
   // Reads logs from container log files via Docker socket
+  // Routes to pre-processor for Docker parsing and label extraction
 
   loki.source.docker "logs" {
     host             = "unix:///var/run/docker.sock"
     targets          = discovery.relabel.logs.output
-    forward_to       = [loki.process.docker.receiver]
+    forward_to       = [loki.process.preprocess.receiver]
     refresh_interval = "5s"
     relabel_rules    = argument.docker_labels_rules.value
   }
 
   // ---------------------------------------------------------------------------
-  // LOG PROCESSING
+  // LOG PREPROCESSING
   // ---------------------------------------------------------------------------
-  // Applies standard labels, extracts structured fields, formats for Loki
+  // Common Docker log parsing and label extraction for all containers.
+  // Routes to technology-specific processors after preprocessing.
 
-  loki.process "docker" {
-    forward_to = argument.loki_receiver.value
+  loki.process "preprocess" {
+    // Fan out to both processors - each will filter by technology
+    forward_to = [loki.process.nginx.receiver, loki.process.generic.receiver]
 
     // Docker-specific log parsing
     stage.docker {}
@@ -95,6 +104,45 @@ declare "docker_logs" {
         "host_name",
         "source",
       ]
+    }
+
+    // Drop high-cardinality Docker metadata
+    stage.label_drop {
+      values = [
+        "filename",
+        "service_instance_id",
+        "service_version",
+      ]
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // NGINX LOG PROCESSING
+  // ---------------------------------------------------------------------------
+  // Routes nginx logs to dedicated nginx_logs module for structured parsing
+
+  loki.process "nginx" {
+    forward_to = argument.nginx_logs_receiver.value
+
+    // Only process nginx logs
+    stage.match {
+      selector = "{technology=\"nginx\"}"
+      action   = "keep"
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // GENERIC LOG PROCESSING
+  // ---------------------------------------------------------------------------
+  // Processes all non-nginx containers with generic level extraction
+
+  loki.process "generic" {
+    forward_to = argument.loki_receiver.value
+
+    // Drop nginx logs (handled by nginx processor)
+    stage.match {
+      selector = "{technology=\"nginx\"}"
+      action   = "drop"
     }
 
     // Extract log level from common patterns
@@ -133,15 +181,6 @@ declare "docker_logs" {
       values = {
         level = "",
       }
-    }
-
-    // Drop high-cardinality Docker metadata
-    stage.label_drop {
-      values = [
-        "filename",
-        "service_instance_id",
-        "service_version",
-      ]
     }
   }
 }

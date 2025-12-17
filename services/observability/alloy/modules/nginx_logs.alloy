@@ -1,0 +1,91 @@
+// =============================================================================
+// NGINX LOG PROCESSING MODULE
+// =============================================================================
+// Parses nginx access logs and extracts structured fields for observability.
+// Uses structured metadata for high-cardinality fields (path, client_ip).
+//
+// Expected log format (custom combined):
+//   $remote_addr - $remote_user [$time_local] "$request"
+//   $status $body_bytes_sent "$http_referer"
+//   "$http_user_agent" "$http_x_forwarded_for"
+//   $server_name $request_time
+//
+// Example:
+//   192.168.1.10 - - [17/Dec/2025:10:30:45 +0000] "GET /api/health HTTP/1.1"
+//   200 45 "-" "curl/7.88.1" "-" grafana.home 0.002
+//
+// Extracted Labels (low cardinality):
+//   - vhost: Virtual host (server_name)
+//   - status: HTTP status code
+//   - method: HTTP method
+//   - level: Log level (info/warn/error based on status)
+//
+// Structured Metadata (high cardinality):
+//   - path: Request URI path
+//   - client_ip: Remote address
+//   - request_time: Request duration in seconds
+//
+// Arguments:
+//   forward_to - Receiver to send processed logs
+//
+// Exports:
+//   receiver - Receiver for nginx log entries
+// =============================================================================
+
+declare "nginx_logs" {
+  // ---------------------------------------------------------------------------
+  // ARGUMENTS
+  // ---------------------------------------------------------------------------
+  argument "forward_to" {
+    comment = "Receiver for processed logs (e.g., loki.write)"
+  }
+
+  // ---------------------------------------------------------------------------
+  // NGINX LOG PROCESSING
+  // ---------------------------------------------------------------------------
+  loki.process "nginx" {
+    forward_to = argument.forward_to.value
+
+    // Parse nginx access log format (combined + server_name + request_time)
+    // Regex captures: remote_addr, remote_user, time_local, method, path,
+    // http_version, status, body_bytes, referer, user_agent, forwarded_for,
+    // vhost, request_time
+    stage.regex {
+      expression = "^(?P<client_ip>[\\d.]+) - (?P<remote_user>\\S+) \\[(?P<time_local>[^\\]]+)\\] \"(?P<method>\\w+) (?P<path>\\S+) (?P<http_version>[^\"]+)\" (?P<status>\\d+) (?P<body_bytes>\\d+) \"(?P<referer>[^\"]*)\" \"(?P<user_agent>[^\"]*)\" \"(?P<forwarded_for>[^\"]*)\" (?P<vhost>\\S+) (?P<request_time>[\\d.]+)$"
+    }
+
+    // Map HTTP status code to log level
+    // 5xx → error, 4xx → warn, 2xx/3xx → info
+    stage.template {
+      source   = "level"
+      template = "{{ if ge (atoi .status) 500 }}error{{ else if ge (atoi .status) 400 }}warn{{ else }}info{{ end }}"
+    }
+
+    // Add low-cardinality labels for filtering and grouping
+    stage.labels {
+      values = {
+        level  = "",
+        vhost  = "",
+        status = "",
+        method = "",
+      }
+    }
+
+    // Add high-cardinality fields as structured metadata (Loki 3.0+)
+    // These are queryable but don't increase label cardinality
+    stage.structured_metadata {
+      values = {
+        client_ip    = "",
+        path         = "",
+        request_time = "",
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // EXPORTS
+  // ---------------------------------------------------------------------------
+  export "receiver" {
+    value = loki.process.nginx.receiver
+  }
+}
