@@ -8,7 +8,7 @@
 //   config.alloy (this file)
 //   ├── modules/          → Reusable label extraction components
 //   │   └── labels.alloy
-//   └── pipelines/        → Data collection pipelines
+//   └── pipelines/        → Data collection pipeline modules
 //       ├── otel.alloy    → OTLP receivers + processors + exporters
 //       ├── logs.alloy    → Docker log collection
 //       └── metrics.alloy → Prometheus scraping
@@ -57,7 +57,7 @@ modules.docker_labels "docker_labels" {
 }
 
 modules.exporter_targets "exporter_targets" {
-  targets = modules.docker_labels.output
+  targets = modules.docker_labels.docker_labels.output
 }
 
 // =============================================================================
@@ -96,4 +96,34 @@ loki.write "default" {
       capacity = 10000
     }
   }
+}
+
+// =============================================================================
+// PIPELINE INSTANTIATION
+// =============================================================================
+// Instantiate pipeline modules with shared resources
+
+// -----------------------------------------------------------------------------
+// Logs Pipeline - Docker log collection
+// -----------------------------------------------------------------------------
+pipelines.docker_logs "default" {
+  docker_labels_output = modules.docker_labels.docker_labels.output
+  docker_labels_rules  = modules.docker_labels.docker_labels.rules
+  loki_receiver        = [loki.write.default.receiver]
+}
+
+// -----------------------------------------------------------------------------
+// Metrics Pipeline - Prometheus scraping
+// -----------------------------------------------------------------------------
+pipelines.prometheus_scrape "default" {
+  exporter_targets_output = modules.exporter_targets.exporter_targets.output
+  prometheus_receiver     = [prometheus.remote_write.default.receiver]
+}
+
+// -----------------------------------------------------------------------------
+// OTEL Pipeline - OTLP receivers
+// -----------------------------------------------------------------------------
+pipelines.otlp_receivers "default" {
+  prometheus_receiver = [prometheus.remote_write.default.receiver]
+  loki_receiver       = [loki.write.default.receiver]
 }
