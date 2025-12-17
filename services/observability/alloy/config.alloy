@@ -38,8 +38,12 @@ import.file "pipelines" {
 // Reduces Docker API calls and ensures consistent target view.
 
 discovery.docker "containers" {
-  host             = "unix:///var/run/docker.sock"
-  refresh_interval = "30s"
+  host                = "unix:///var/run/docker.sock"
+  refresh_interval    = "30s"
+  // Create targets for ALL networks, not just the first one.
+  // Required because exporters are on multiple networks (infra + observability),
+  // and we filter to rp5_observability in exporter_targets module.
+  match_first_network = false
 
   filter {
     name   = "status"
