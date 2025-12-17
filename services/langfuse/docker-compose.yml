@@ -302,7 +302,7 @@ services:
       - -c
       - |
         REDIS_PASS=$$(cat /run/secrets/langfuse_redis_password)
-        sed "s/REDIS_PASSWORD_PLACEHOLDER/$$REDIS_PASS/" /etc/redis/redis.conf.template > /tmp/redis.conf
+        sed "s|REDIS_PASSWORD_PLACEHOLDER|$$REDIS_PASS|" /etc/redis/redis.conf.template > /tmp/redis.conf
         exec redis-server /tmp/redis.conf
     expose:
       - "6379"
