@@ -73,16 +73,11 @@ services:
       - DB_PORT=3306
       - DB_DATABASE=firefly
       - DB_USERNAME=firefly
-      - DB_PASSWORD_FILE=/run/secrets/db_password
       
       # Security & Trust
       - TRUSTED_PROXIES=**
-      - APP_KEY_FILE=/run/secrets/app_key
       - APP_LOG_LEVEL=notice
       - AUDIT_LOG_LEVEL=emergency
-      
-      # Cron token
-      - STATIC_CRON_TOKEN_FILE=/run/secrets/static_cron_token
       
       # Mail configuration (optional)
       - MAIL_MAILER=log
@@ -103,6 +98,14 @@ services:
       - app_key
       - db_password
       - static_cron_token
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export APP_KEY=$$(cat /run/secrets/app_key)
+        export DB_PASSWORD=$$(cat /run/secrets/db_password)
+        export STATIC_CRON_TOKEN=$$(cat /run/secrets/static_cron_token)
+        exec docker-php-serversideup-entrypoint /init
     volumes:
       - firefly_upload:/var/www/html/storage/upload
     networks:
