@@ -1,79 +1,94 @@
 // =============================================================================
-// METRICS PIPELINE
+// METRICS PIPELINE MODULE
 // =============================================================================
 // Scrapes Prometheus metrics from:
 //   1. Observability stack components (static targets)
 //   2. Database exporters (dynamic Docker discovery)
 //
-// All metrics are sent to Prometheus remote_write endpoint.
+// Arguments:
+//   exporter_targets_output - Targets from exporter_targets module
+//   prometheus_receiver     - Prometheus remote_write endpoint receiver
 // =============================================================================
 
-// -----------------------------------------------------------------------------
-// STATIC TARGETS: Observability Stack
-// -----------------------------------------------------------------------------
-// Core monitoring components with fixed endpoints
-
-prometheus.scrape "observability" {
-  targets = [
-    // Alloy self-monitoring
-    {"__address__" = "127.0.0.1:12345", "service_name" = "collector", "service_namespace" = "observability", "technology" = "alloy", "component" = "worker", "tier" = "core"},
-    // Prometheus
-    {"__address__" = "observability-metrics-store:9090", "service_name" = "metrics-store", "service_namespace" = "observability", "technology" = "prometheus", "component" = "data", "tier" = "core"},
-    // Loki
-    {"__address__" = "observability-log-store:3100", "service_name" = "log-store", "service_namespace" = "observability", "technology" = "loki", "component" = "data", "tier" = "core"},
-    // Tempo
-    {"__address__" = "observability-trace-store:3200", "service_name" = "trace-store", "service_namespace" = "observability", "technology" = "tempo", "component" = "data", "tier" = "core"},
-  ]
-
-  forward_to      = [prometheus.relabel.add_defaults.receiver]
-  scrape_interval = "15s"
-  job_name        = "observability"
-}
-
-// -----------------------------------------------------------------------------
-// DYNAMIC TARGETS: Database Exporters
-// -----------------------------------------------------------------------------
-// Uses shared discovery + exporter_targets module for filtering
-
-prometheus.scrape "exporters" {
-  targets         = modules.exporter_targets.output
-  forward_to      = [prometheus.relabel.add_defaults.receiver]
-  scrape_interval = "30s"
-}
-
-// -----------------------------------------------------------------------------
-// ADD DEFAULT LABELS
-// -----------------------------------------------------------------------------
-// Ensures all scraped metrics have standard labels
-
-prometheus.relabel "add_defaults" {
-  forward_to = [prometheus.remote_write.default.receiver]
-
-  // Add deployment environment
-  rule {
-    target_label = "deployment_environment_name"
-    replacement  = "production"
+declare "prometheus_scrape" {
+  // ---------------------------------------------------------------------------
+  // ARGUMENTS
+  // ---------------------------------------------------------------------------
+  argument "exporter_targets_output" {
+    comment = "Targets from exporter_targets module"
   }
 
-  // Add source label
-  rule {
-    target_label = "source"
-    replacement  = "scrape"
+  argument "prometheus_receiver" {
+    comment = "Prometheus remote_write endpoint receiver"
   }
 
-  // Ensure tier has default
-  rule {
-    source_labels = ["tier"]
-    regex         = "^$"
-    target_label  = "tier"
-    replacement   = "core"
+  // ---------------------------------------------------------------------------
+  // STATIC TARGETS: Observability Stack
+  // ---------------------------------------------------------------------------
+  // Core monitoring components with fixed endpoints
+
+  prometheus.scrape "observability" {
+    targets = [
+      // Alloy self-monitoring
+      {"__address__" = "127.0.0.1:12345", "service_name" = "collector", "service_namespace" = "observability", "technology" = "alloy", "component" = "worker", "tier" = "core"},
+      // Prometheus
+      {"__address__" = "observability-metrics-store:9090", "service_name" = "metrics-store", "service_namespace" = "observability", "technology" = "prometheus", "component" = "data", "tier" = "core"},
+      // Loki
+      {"__address__" = "observability-log-store:3100", "service_name" = "log-store", "service_namespace" = "observability", "technology" = "loki", "component" = "data", "tier" = "core"},
+      // Tempo
+      {"__address__" = "observability-trace-store:3200", "service_name" = "trace-store", "service_namespace" = "observability", "technology" = "tempo", "component" = "data", "tier" = "core"},
+    ]
+
+    forward_to      = [prometheus.relabel.add_defaults.receiver]
+    scrape_interval = "15s"
+    job_name        = "observability"
   }
 
-  // Ensure component has default
-  rule {
-    source_labels = ["component"]
-    regex         = "^$"
-    target_label  = "component"
-    replacement   = "app"
+  // ---------------------------------------------------------------------------
+  // DYNAMIC TARGETS: Database Exporters
+  // ---------------------------------------------------------------------------
+  // Uses shared discovery + exporter_targets module for filtering
+
+  prometheus.scrape "exporters" {
+    targets         = argument.exporter_targets_output.value
+    forward_to      = [prometheus.relabel.add_defaults.receiver]
+    scrape_interval = "30s"
+  }
+
+  // ---------------------------------------------------------------------------
+  // ADD DEFAULT LABELS
+  // ---------------------------------------------------------------------------
+  // Ensures all scraped metrics have standard labels
+
+  prometheus.relabel "add_defaults" {
+    forward_to = argument.prometheus_receiver.value
+
+    // Add deployment environment
+    rule {
+      target_label = "deployment_environment_name"
+      replacement  = "production"
+    }
+
+    // Add source label
+    rule {
+      target_label = "source"
+      replacement  = "scrape"
+    }
+
+    // Ensure tier has default
+    rule {
+      source_labels = ["tier"]
+      regex         = "^$"
+      target_label  = "tier"
+      replacement   = "core"
+    }
+
+    // Ensure component has default
+    rule {
+      source_labels = ["component"]
+      regex         = "^$"
+      target_label  = "component"
+      replacement   = "app"
+    }
   }
 }

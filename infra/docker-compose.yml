@@ -66,7 +66,7 @@ services:
       - public_network
       - infra_network
     healthcheck:
-      test: ["CMD-SHELL", "nc -z localhost 80 && nc -z localhost 443"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:80/healthz"]
       interval: 30s
       timeout: 10s
       retries: 3
