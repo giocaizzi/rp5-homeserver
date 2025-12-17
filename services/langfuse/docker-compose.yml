@@ -199,9 +199,14 @@ services:
     environment:
       CLICKHOUSE_DB: "default"
       CLICKHOUSE_USER: "clickhouse"
-      CLICKHOUSE_PASSWORD_FILE: "/run/secrets/langfuse_clickhouse_password"
     secrets:
       - langfuse_clickhouse_password
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        export CLICKHOUSE_PASSWORD=$$(cat /run/secrets/langfuse_clickhouse_password)
+        exec /entrypoint.sh
     expose:
       - "8123"  # HTTP interface
       - "9000"  # Native protocol
