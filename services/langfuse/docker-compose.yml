@@ -502,19 +502,19 @@ services:
       - /bin/sh
       - -c
       - |
-        export SALT=$$(cat /run/secrets/langfuse_salt)
-        export ENCRYPTION_KEY=$$(cat /run/secrets/langfuse_encryption_key)
-        export NEXTAUTH_SECRET=$$(cat /run/secrets/langfuse_nextauth_secret)
-        export LANGFUSE_INIT_USER_PASSWORD=$$(cat /run/secrets/langfuse_admin_password)
-        export LANGFUSE_INIT_PROJECT_PUBLIC_KEY=$$(cat /run/secrets/langfuse_public_key)
-        export LANGFUSE_INIT_PROJECT_SECRET_KEY=$$(cat /run/secrets/langfuse_secret_key)
-        export DATABASE_URL="postgresql://langfuse:$$(cat /run/secrets/langfuse_postgres_password)@langfuse-db:5432/langfuse"
-        export CLICKHOUSE_PASSWORD=$$(cat /run/secrets/langfuse_clickhouse_password)
-        export LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID="minio"
-        export LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password)
-        export LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID="minio"
-        export LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password)
-        export REDIS_AUTH=$$(cat /run/secrets/langfuse_redis_password)
+        SALT=$$(cat /run/secrets/langfuse_salt) \
+        ENCRYPTION_KEY=$$(cat /run/secrets/langfuse_encryption_key) \
+        NEXTAUTH_SECRET=$$(cat /run/secrets/langfuse_nextauth_secret) \
+        LANGFUSE_INIT_USER_PASSWORD=$$(cat /run/secrets/langfuse_admin_password) \
+        LANGFUSE_INIT_PROJECT_PUBLIC_KEY=$$(cat /run/secrets/langfuse_public_key) \
+        LANGFUSE_INIT_PROJECT_SECRET_KEY=$$(cat /run/secrets/langfuse_secret_key) \
+        DATABASE_URL="postgresql://langfuse:$$(cat /run/secrets/langfuse_postgres_password)@langfuse-db:5432/langfuse" \
+        CLICKHOUSE_PASSWORD=$$(cat /run/secrets/langfuse_clickhouse_password) \
+        LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID="minio" \
+        LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password) \
+        LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID="minio" \
+        LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password) \
+        REDIS_AUTH=$$(cat /run/secrets/langfuse_redis_password) \
         exec dumb-init -- ./web/entrypoint.sh node ./web/server.js --keepAliveTimeout 110000
     expose:
       - "3000"
