@@ -17,7 +17,7 @@
 // Uses shared discovery from config.alloy, applies label extraction module
 
 discovery.relabel "logs" {
-  targets = modules.docker_labels.output
+  targets = modules.docker_labels.docker_labels.output
 
   // Drop containers without namespace (external/unmanaged)
   rule {
@@ -44,7 +44,7 @@ loki.source.docker "logs" {
   targets          = discovery.relabel.logs.output
   forward_to       = [loki.process.docker.receiver]
   refresh_interval = "5s"
-  relabel_rules    = modules.docker_labels.rules
+  relabel_rules    = modules.docker_labels.docker_labels.rules
 }
 
 // -----------------------------------------------------------------------------

@@ -36,7 +36,7 @@ prometheus.scrape "observability" {
 // Uses shared discovery + exporter_targets module for filtering
 
 prometheus.scrape "exporters" {
-  targets         = modules.exporter_targets.output
+  targets         = modules.exporter_targets.exporter_targets.output
   forward_to      = [prometheus.relabel.add_defaults.receiver]
   scrape_interval = "30s"
 }
