@@ -41,26 +41,35 @@ compactor:
   compaction:
     block_retention: 720h # 30 days
 
-# Metrics generator disabled - Alloy scrapes Tempo's /metrics endpoint
-# to avoid duplicate metrics and maintain single source of truth.
-# metrics_generator:
-#   registry:
-#     external_labels:
-#       source: tempo
-#   storage:
-#     path: /var/tempo/generator/wal
-#     remote_write:
-#       - url: http://observability-metrics-store:9090/api/v1/write
-#         send_exemplars: true
-#   processor:
-#     local_blocks:
-#       flush_to_storage: true
-#       max_block_duration: 1m
-#       max_block_bytes: 500000000
-#       complete_block_timeout: 1h
-#       filter_server_spans: true
+# Metrics generator for TraceQL metrics queries (rate(), histogram)
+# Required for queries using aggregations over traces.
+# Generates metrics from spans and stores them in Prometheus.
+metrics_generator:
+  registry:
+    external_labels:
+      source: tempo
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: http://observability-metrics-store:9090/api/v1/write
+        send_exemplars: true
+  # Single-instance deployment - no ring configuration needed
+  # The generator runs embedded in the Tempo monolith
+  traces_storage:
+    path: /var/tempo/generator/traces
+  processor:
+    # Enable local-blocks processor for TraceQL metrics
+    # Required for rate(), count_over_time(), histogram_over_time()
+    local_blocks:
+      flush_to_storage: true
+      max_block_duration: 1m
+      max_block_bytes: 500000000
+      complete_block_timeout: 1h
+      filter_server_spans: true
 
-# overrides:
-#   defaults:
-#     metrics_generator:
-#       processors: [service-graphs, span-metrics, local-blocks]
+overrides:
+  defaults:
+    metrics_generator:
+      # Enable processors: service-graphs, span-metrics, local-blocks
+      # local-blocks is required for TraceQL metrics queries
+      processors: [service-graphs, span-metrics, local-blocks]
