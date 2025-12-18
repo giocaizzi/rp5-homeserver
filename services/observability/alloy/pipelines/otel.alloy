@@ -100,9 +100,17 @@ declare "otlp_receivers" {
     }
 
     // Loki label hints - controls which attributes become indexed labels
+    // loki.resource.labels: promotes RESOURCE attributes (sent by app)
     action {
       key    = "loki.resource.labels"
-      value  = "service.name, service.namespace, deployment.environment.name, tier, component, source"
+      value  = "service.name, service.namespace, deployment.environment.name, component"
+      action = "insert"
+    }
+
+    // loki.attribute.labels: promotes LOG RECORD attributes (inserted above)
+    action {
+      key    = "loki.attribute.labels"
+      value  = "source, tier"
       action = "insert"
     }
 
