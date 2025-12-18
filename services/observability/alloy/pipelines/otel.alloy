@@ -2,10 +2,10 @@
 // OTEL PIPELINE MODULE
 // =============================================================================
 // Receives telemetry via OTLP (HTTP/gRPC), processes with batching and
-// attribute injection, then exports to appropriate backends.
+// resource attribute injection, then exports to appropriate backends.
 //
 // Data Flow:
-//   OTLP Receivers → Batch Processor → Attribute Processor → Backend Exporters
+//   OTLP Receivers → Batch Processor → Resource Processor → Backend Exporters
 //
 // Arguments:
 //   prometheus_receiver - Prometheus remote_write endpoint receiver
@@ -59,18 +59,18 @@ declare "otlp_receivers" {
     send_batch_size = 100
 
     output {
-      metrics = [otelcol.processor.attributes.default.input]
-      logs    = [otelcol.processor.attributes.default.input]
-      traces  = [otelcol.processor.attributes.default.input]
+      metrics = [otelcol.processor.resource.default.input]
+      logs    = [otelcol.processor.resource.default.input]
+      traces  = [otelcol.processor.resource.default.input]
     }
   }
 
   // ---------------------------------------------------------------------------
-  // ATTRIBUTES PROCESSOR
+  // RESOURCE PROCESSOR
   // ---------------------------------------------------------------------------
-  // Injects standard attributes into all telemetry
+  // Injects standard resource attributes into all telemetry
 
-  otelcol.processor.attributes "default" {
+  otelcol.processor.resource "default" {
     // Default namespace for external apps
     action {
       key    = "service.namespace"
