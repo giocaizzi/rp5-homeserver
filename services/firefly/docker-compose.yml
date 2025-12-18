@@ -100,7 +100,7 @@ services:
       - static_cron_token
     configs:
       - source: load_secrets
-        target: /etc/entrypoint.d/00-load-secrets.sh
+        target: /etc/cont-init.d/00-load-secrets.sh
         mode: 0555
     volumes:
       - firefly_upload:/var/www/html/storage/upload
