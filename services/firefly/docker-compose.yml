@@ -73,11 +73,14 @@ services:
       - DB_PORT=3306
       - DB_DATABASE=firefly
       - DB_USERNAME=firefly
+      - DB_PASSWORD_FILE=/run/secrets/db_password
       
       # Security & Trust
       - TRUSTED_PROXIES=**
       - APP_LOG_LEVEL=notice
       - AUDIT_LOG_LEVEL=emergency
+      - APP_KEY_FILE=/run/secrets/app_key
+      - STATIC_CRON_TOKEN_FILE=/run/secrets/static_cron_token
       
       # Mail configuration (optional)
       - MAIL_MAILER=log
@@ -100,7 +103,7 @@ services:
       - static_cron_token
     configs:
       - source: load_secrets
-        target: /etc/cont-init.d/00-load-secrets.sh
+        target: /etc/cont-init.d/00-load-secrets
         mode: 0555
     volumes:
       - firefly_upload:/var/www/html/storage/upload

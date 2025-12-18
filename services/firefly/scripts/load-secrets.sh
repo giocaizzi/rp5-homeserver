@@ -1,15 +1,15 @@
-#!/usr/bin/with-contenv sh
-# Load Docker secrets as s6 environment variables
-# This ensures PHP-FPM inherits them
+#!/command/with-contenv sh
+# Load Docker secrets as environment variables for Firefly III
+# Reads _FILE variables and exports the actual secret values
 
-if [ -f /run/secrets/app_key ]; then
-    printf "%s" "$(cat /run/secrets/app_key)" > /var/run/s6/basedir/env/APP_KEY
+if [ -n "$APP_KEY_FILE" ] && [ -f "$APP_KEY_FILE" ]; then
+    export APP_KEY="$(cat "$APP_KEY_FILE")"
 fi
 
-if [ -f /run/secrets/db_password ]; then
-    printf "%s" "$(cat /run/secrets/db_password)" > /var/run/s6/basedir/env/DB_PASSWORD
+if [ -n "$DB_PASSWORD_FILE" ] && [ -f "$DB_PASSWORD_FILE" ]; then
+    export DB_PASSWORD="$(cat "$DB_PASSWORD_FILE")"
 fi
 
-if [ -f /run/secrets/static_cron_token ]; then
-    printf "%s" "$(cat /run/secrets/static_cron_token)" > /var/run/s6/basedir/env/STATIC_CRON_TOKEN
+if [ -n "$STATIC_CRON_TOKEN_FILE" ] && [ -f "$STATIC_CRON_TOKEN_FILE" ]; then
+    export STATIC_CRON_TOKEN="$(cat "$STATIC_CRON_TOKEN_FILE")"
 fi
