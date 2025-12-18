@@ -41,6 +41,11 @@ compactor:
   compaction:
     block_retention: 720h # 30 days
 
+# Single-node memberlist config - prevents "empty ring" errors
+memberlist:
+  abort_if_cluster_join_fails: false
+  join_members: []
+
 # Metrics generator disabled - Alloy scrapes Tempo's /metrics endpoint
 # to avoid duplicate metrics and maintain single source of truth.
 # metrics_generator:
