@@ -41,6 +41,11 @@ compactor:
   compaction:
     block_retention: 720h # 30 days
 
+# Single-node memberlist config - prevents "empty ring" errors
+memberlist:
+  abort_if_cluster_join_fails: false
+  join_members: []
+
 # Metrics generator for TraceQL metrics queries (rate(), histogram)
 # Required for queries using aggregations over traces.
 # Generates metrics from spans and stores them in Prometheus.
