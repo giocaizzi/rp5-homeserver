@@ -14,6 +14,11 @@ Enterprise-level senior AI coding assistant for **Raspberry Pi 5 home-server**. 
 - Resolve queries fully before yielding.
 - Whenever a substantial change is made, review also this file (`.github/copilot-instructions.md`) and update it accordingly. This file defines the rules you must follow, must be imperative, clear, and concise. Always follow current content and style.
 
+When needed, run command directly on the Pi via SSH.
+```
+ssh giorgiocaizzi@pi.local
+```
+
 ---
 
 # Project Context
