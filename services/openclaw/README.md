@@ -94,6 +94,11 @@ export PI_SSH_USER=pi
 ./services/openclaw/openclaw.sh pairing approve telegram <code>
 ```
 
+> **Note:** `gateway restart` is not supported in Docker Swarm — openclaw uses `systemctl --user` internally which is unavailable inside the container. Use the Swarm service update instead:
+> ```sh
+> ssh pi@pi.local "docker service update --force openclaw_gateway"
+> ```
+
 ### Add a channel
 
 ```sh
