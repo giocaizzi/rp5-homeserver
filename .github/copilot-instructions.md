@@ -33,7 +33,7 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 **Workflow:**
 - Edit locally on macOS → sync/push → deploy.
 - SSH target: `giorgiocaizzi@pi.local` (use for operations, NOT in docs as its personal info).
-- `infra/` deployed to `/home/giorgiocaizzi/rp5-server` on Pi.
+- `infra/` deployed to `/home/giorgiocaizzi/rp5-homeserver` on Pi.
 - Sync entire `infra/` folder (contains `VERSION` file).
 - Reuse scripts in `/scripts`; propose new ones only if essential.
 
@@ -200,7 +200,7 @@ See [Naming & Labeling Standards](../docs/naming_labels.md) for complete referen
 - Always keep docs updated with architecture changes.
 - Follow current structure and style.
 - Explain only what's needed to execute or maintain.
-- Use `pi@pi.local` and `/home/pi/rp5-server` (no personal info).
+- Use `pi@pi.local` and `/home/pi/rp5-homeserver` (no personal info).
 - Use Mermaid diagrams for architecture, STRICTLY when helpful.
 
 **README structure (required sections):**
