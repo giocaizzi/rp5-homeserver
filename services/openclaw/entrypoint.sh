@@ -7,8 +7,9 @@ set -eu
 export OPENCLAW_GATEWAY_TOKEN
 OPENCLAW_GATEWAY_TOKEN=$(cat /run/secrets/gateway_token)
 
-export ANTHROPIC_API_KEY
-ANTHROPIC_API_KEY=$(cat /run/secrets/anthropic_api_key)
+# Disabled: Using Claude for Code token auth instead of API key
+# export ANTHROPIC_API_KEY
+# ANTHROPIC_API_KEY=$(cat /run/secrets/anthropic_api_key)
 
 if [ -f /run/secrets/telegram_bot_token ]; then
   export TELEGRAM_BOT_TOKEN
