@@ -7,10 +7,16 @@ WhatsApp, etc.) and serves the Control UI at `openclaw.home`.
 
 ## 🚀 Quick Start
 
-**1. Create the gateway token secret:**
+**1. Generate and store the gateway token:**
 
 ```sh
-echo -n "$(openssl rand -hex 32)" | docker secret create openclaw_gateway_token -
+openssl rand -hex 32 > services/openclaw/secrets/gateway_token.txt
+```
+
+**2. Create the Swarm secret on the Pi:**
+
+```sh
+ssh pi@pi.local "docker secret create openclaw_gateway_token -" < services/openclaw/secrets/gateway_token.txt
 ```
 
 **2. Deploy via Portainer** (Remote Stack → this repo → `services/openclaw`).
@@ -29,10 +35,7 @@ When prompted:
 
 **4. Open Control UI:** `https://openclaw.home`
 
-Paste the token when prompted (Settings → token). To retrieve the token:
-```sh
-ssh pi@pi.local 'docker exec $(docker ps -q -f name=openclaw_gateway | head -1) cat /run/secrets/gateway_token'
-```
+Paste the token when prompted (Settings → token). It's stored locally at `services/openclaw/secrets/gateway_token.txt`.
 
 ---
 
@@ -55,9 +58,9 @@ ssh pi@pi.local 'docker exec $(docker ps -q -f name=openclaw_gateway | head -1) 
 
 ## 🔐 Secrets
 
-| Secret                    | Description                  | Generate                          |
-|---------------------------|------------------------------|-----------------------------------|
-| `openclaw_gateway_token`  | Gateway auth token (hex-32)  | `openssl rand -hex 32`            |
+| Secret                    | Description                  | 
+|---------------------------|------------------------------|
+| `openclaw_gateway_token`  | Gateway auth token (hex-32)  |
 
 ---
 
