@@ -175,9 +175,13 @@ See [Naming & Labeling Standards](../docs/naming_labels.md) for complete referen
 | Mount Type | `infra/` | `services/` |
 |------------|----------|-------------|
 | **Secrets** | File-based (`file:`) | External (pre-create on Pi) |
-| **Configs** | File-based (`file:`) | File-based (`file:`) — repo-relative |
-| **Volumes** | Named volumes | Named volumes only |
-| **Bind mounts** | Relative (`./path`) | Relative (`./path`) — repo-relative |
+| **Configs** | File-based (`file:`) | File-based (`file:`) — repo-relative (static only) |
+| **Volumes** | Named volumes | Named volumes for data + runtime-modified configs |
+| **Bind mounts** | Relative (`./path`) | Relative (`./path`) — repo-relative (static only) |
+
+**Config mount decision:**
+- Static configs (nginx, ntfy): Bind mount from repo
+- Runtime-modified configs (openclaw): Named volume, edit via SSH
 
 - Commands: explicit, deterministic, minimal.
 - Version tracked in `infra/VERSION`.
