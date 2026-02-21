@@ -58,9 +58,11 @@ Paste the token when prompted (Settings → token). It's stored locally at `serv
 
 ## 🔐 Secrets
 
-| Secret                    | Description                  | 
-|---------------------------|------------------------------|
-| `openclaw_gateway_token`  | Gateway auth token (hex-32)  |
+| Secret                        | Description                       | Generate |
+|-------------------------------|-----------------------------------|---------|
+| `openclaw_gateway_token`      | Gateway auth token (hex-32)       | `openssl rand -hex 32` |
+| `openclaw_anthropic_api_key`  | Anthropic API key (`sk-ant-...`)  | [console.anthropic.com](https://console.anthropic.com) |
+| `openclaw_telegram_bot_token` | Telegram bot token                | `@BotFather` → `/newbot` |
 
 ---
 
