@@ -53,6 +53,12 @@ secrets:
   gateway_token:
     external: true
     name: openclaw_gateway_token
+  anthropic_api_key:
+    external: true
+    name: openclaw_anthropic_api_key
+  telegram_bot_token:
+    external: true
+    name: openclaw_telegram_bot_token
 
 # =============================================================================
 # Services
@@ -69,6 +75,8 @@ services:
       - TERM=xterm-256color
     secrets:
       - gateway_token
+      - anthropic_api_key
+      - telegram_bot_token
     volumes:
       - config_data:/home/node/.openclaw
       - workspace_data:/home/node/.openclaw/workspace

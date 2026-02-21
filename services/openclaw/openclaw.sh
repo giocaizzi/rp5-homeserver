@@ -28,6 +28,6 @@ fi
 REMOTE_ARGS=$(printf '%q ' "$@")
 
 ssh -t "${PI_SSH_USER}@${PI_HOST}" \
-  "docker exec \$(docker ps -q -f name=openclaw_gateway | head -1) \
+  "docker exec -it \$(docker ps -q -f name=openclaw_gateway | head -1) \
    sh -c 'OPENCLAW_GATEWAY_TOKEN=\$(cat /run/secrets/gateway_token) \
           exec node /app/dist/index.js \$@' -- ${REMOTE_ARGS}"
