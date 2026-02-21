@@ -81,7 +81,6 @@ services:
       - config_data:/home/node/.openclaw
       - workspace_data:/home/node/.openclaw/workspace
       - ./entrypoint.sh:/entrypoint.sh:ro
-    user: "1000:1000"
     entrypoint: ["/entrypoint.sh"]
     networks:
       - openclaw_network
