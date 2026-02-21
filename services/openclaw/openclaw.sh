@@ -33,4 +33,5 @@ ssh -t "${PI_SSH_USER}@${PI_HOST}" \
    sh -c 'export OPENCLAW_GATEWAY_TOKEN=\$(cat /run/secrets/gateway_token); \
           export ANTHROPIC_API_KEY=\$(cat /run/secrets/anthropic_api_key 2>/dev/null); \
           export TELEGRAM_BOT_TOKEN=\$(cat /run/secrets/telegram_bot_token 2>/dev/null); \
+          export OPENCLAW_GATEWAY_URL=ws://127.0.0.1:18789; \
           exec node /app/dist/index.js \"\$@\"' sh ${REMOTE_ARGS}"
