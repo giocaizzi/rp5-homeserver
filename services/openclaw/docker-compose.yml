@@ -59,6 +59,12 @@ secrets:
   telegram_bot_token:
     external: true
     name: openclaw_telegram_bot_token
+  notion_api_key:
+    external: true
+    name: openclaw_notion_api_key
+  brave_api_key:
+    external: true
+    name: openclaw_brave_api_key
 
 # =============================================================================
 # Services
@@ -77,6 +83,8 @@ services:
       - gateway_token
       - anthropic_api_key
       - telegram_bot_token
+      - notion_api_key
+      - brave_api_key
     volumes:
       - config_data:/home/node/.openclaw
       - workspace_data:/home/node/.openclaw/workspace

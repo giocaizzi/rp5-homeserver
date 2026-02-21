@@ -62,8 +62,13 @@ Paste the token when prompted (Settings → token). It's stored locally at `serv
 |-------------------------------|-----------------------------------|---------|
 | `openclaw_gateway_token`      | Gateway auth token (hex-32)       | `openssl rand -hex 32` |
 | `openclaw_anthropic_api_key`  | Anthropic API key (`sk-ant-...`)  | [console.anthropic.com](https://console.anthropic.com) |
-| `openclaw_telegram_bot_token` | Telegram bot token                | `@BotFather` → `/newbot` |
+| `openclaw_telegram_bot_token` | Telegram bot token                | `@BotFather` → `/newbot` || `openclaw_notion_api_key`     | Notion integration API key        | [notion.so/my-integrations](https://www.notion.so/my-integrations) |
+| `openclaw_brave_api_key`      | Brave Search API key              | [api.search.brave.com](https://api.search.brave.com/app/keys) |
 
+```sh
+ssh pi@pi.local "docker secret create openclaw_notion_api_key -" < services/openclaw/secrets/notion_api_key.txt
+ssh pi@pi.local "docker secret create openclaw_brave_api_key -" < services/openclaw/secrets/brave_api_key.txt
+```
 ---
 
 ## ⚙️ Configuration
