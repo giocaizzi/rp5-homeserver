@@ -73,6 +73,12 @@
             icon: ollama.png
             ping: http://ollama_llm:11434
 
+      - OpenClaw:
+            href: https://openclaw.home
+            description: Personal AI assistant
+                  icon: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxt1l_gNERueMEr2kTmbkbCe0mSzSjBgbIRQ&s
+            ping: http://openclaw-gateway:18789
+
 - Finance:
       - Firefly III:
             href: https://firefly.{{HOMEPAGE_FILE_DOMAIN}}
