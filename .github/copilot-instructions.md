@@ -43,6 +43,7 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 
 - Minimal Swarm config: avoid unnecessary stacks, networks, wrappers, CRON containers.
 - Never embed secrets in YAML—use Swarm secrets or `.env` files (gitignored).
+- OpenClaw exception: prefer OpenClaw CLI-managed auth (gateway/config/auth profiles/channel tokens) persisted in `config_data` over custom entrypoint secret-export wrappers.
 - Use configs only for non-secret, user-level configuration.
 - ARM64 compatibility and optimization required for all images.
 ---
