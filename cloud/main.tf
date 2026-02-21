@@ -90,6 +90,16 @@ resource "cloudflare_dns_record" "homepage" {
   proxied = true
 }
 
+# Creates the CNAME record that routes openclaw.${var.zone_name} to the tunnel.
+resource "cloudflare_dns_record" "openclaw" {
+  zone_id = var.zone_id
+  name    = "openclaw"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
 # Configures tunnel with a published application for clientless access.
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
@@ -139,6 +149,15 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
           no_tls_verify      = true
           http_host_header   = "homepage.${var.zone_name}"
           origin_server_name = "homepage.${var.zone_name}"
+        }
+      },
+      {
+        hostname = "openclaw.${var.zone_name}"
+        service  = "https://infra-proxy:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "openclaw.${var.zone_name}"
+          origin_server_name = "openclaw.${var.zone_name}"
         }
       },
       {
@@ -194,6 +213,15 @@ resource "cloudflare_zero_trust_access_policy" "homepage_users" {
   ]
 }
 
+resource "cloudflare_zero_trust_access_policy" "openclaw_users" {
+  account_id = var.cloudflare_account_id
+  name       = "openclaw-users"
+  decision   = "allow"
+  include = [
+    for email in var.openclaw_users : { email = { email = email } }
+  ]
+}
+
 # ============================================================================
 # Webhook Service Token and Bypass Policy for GitOps
 # ============================================================================
@@ -209,7 +237,7 @@ resource "cloudflare_zero_trust_access_policy" "webhook_bypass" {
   account_id = var.cloudflare_account_id
   name       = "webhook-bypass"
   decision   = "bypass"
-  
+
   include = [
     {
       service_token = {
@@ -240,13 +268,13 @@ resource "cloudflare_zero_trust_access_application" "portainer_policy" {
   name             = "portainer.${var.zone_name}"
   domain           = "portainer.${var.zone_name}"
   session_duration = "24h"
-  
+
   # Enable CORS for webhook requests
   cors_headers = {
     allowed_methods   = ["GET", "POST", "OPTIONS"]
-    allowed_origins   = ["*"]  # GitHub webhook origins vary
+    allowed_origins   = ["*"] # GitHub webhook origins vary
     allow_credentials = false
-    max_age          = 3600
+    max_age           = 3600
   }
 
   policies = [
@@ -302,13 +330,26 @@ resource "cloudflare_zero_trust_access_application" "homepage_policy" {
   ]
 }
 
+resource "cloudflare_zero_trust_access_application" "openclaw_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "openclaw.${var.zone_name}"
+  domain     = "openclaw.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.openclaw_users.id
+      precedence = 1
+    }
+  ]
+}
+
 # ============================================================================
 # GCP Resources
 # ============================================================================
 
 provider "google" {
-  project     = var.gcp_project_id
-  region      = var.gcp_region
+  project = var.gcp_project_id
+  region  = var.gcp_region
 }
 
 # GCS bucket for backups - Archive storage class for cost-effective storage

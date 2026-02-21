@@ -33,6 +33,11 @@ output "firefly_url" {
   value       = "https://firefly.${var.zone_name}"
 }
 
+output "openclaw_url" {
+  description = "The public URL for OpenClaw"
+  value       = "https://openclaw.${var.zone_name}"
+}
+
 # ============================================================================
 # GCP Outputs
 # ============================================================================
