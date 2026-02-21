@@ -53,9 +53,9 @@ secrets:
   gateway_token:
     external: true
     name: openclaw_gateway_token
-  anthropic_api_key:
-    external: true
-    name: openclaw_anthropic_api_key
+  # anthropic_api_key:  # Disabled: Using Claude for Code token auth
+  #   external: true
+  #   name: openclaw_anthropic_api_key
   telegram_bot_token:
     external: true
     name: openclaw_telegram_bot_token
@@ -81,7 +81,7 @@ services:
       - TERM=xterm-256color
     secrets:
       - gateway_token
-      - anthropic_api_key
+      # - anthropic_api_key  # Disabled: Using Claude for Code token auth
       - telegram_bot_token
       - notion_api_key
       - brave_api_key

@@ -1,3 +1,6 @@
 *.env
 *.pem
 *.log
+
+# openclaw config
+**/openclaw.json

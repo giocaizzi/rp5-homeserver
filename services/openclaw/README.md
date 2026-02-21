@@ -73,30 +73,57 @@ ssh pi@pi.local "docker secret create openclaw_brave_api_key -" < services/openc
 
 ## ⚙️ Configuration
 
-Config persists in `config_data` volume at `/home/node/.openclaw/openclaw.json`.
+Config persists in `config_data` volume at `/home/node/.openclaw/openclaw.json`. The CLI actively modifies this file, so it cannot be mounted from repo like static configs.
+
+### Local editing workflow
+
+```bash
+# Download config from Pi
+./openclaw.sh pull-config
+
+# Edit locally
+vim openclaw.json  # or your preferred editor
+
+# Upload to Pi
+./openclaw.sh push-config
+
+# Apply changes (if needed)
+ssh pi@pi.local "docker service update --force openclaw_gateway"
+```
+
+### Remote editing (vim in container)
+
+```bash
+./openclaw.sh edit-config
+```
+
+**Prompt caching:** Add under `agents.defaults.models` to reduce latency & costs:
+```json
+"anthropic/claude-opus-4-6": { "params": { "cacheRetention": "long" } }
+```
+Options: `"none"`, `"short"` (5min), `"long"` (1hr, 2x cost)
 
 ### CLI — `openclaw.sh`
 
-Runs any openclaw command on the Pi gateway container from your local machine:
+Wrapper for executing OpenClaw commands on the remote Pi gateway container.
 
 ```sh
-PI_SSH_USER=pi ./services/openclaw/openclaw.sh <command> [args...]
+./openclaw.sh <command> [args...]
+./openclaw.sh help    # Show all available commands
 ```
 
-Tip: set `PI_SSH_USER` in your shell profile to drop it from every call:
-```sh
-export PI_SSH_USER=pi
-```
+**Special commands:**
+- `edit-config` — Edit `openclaw.json` with vim (auto-installs if needed)
+- `shell` — Drop into container shell
+- `help` — Show usage information
 
-### Common commands
-
+**Examples:**
 ```sh
-./services/openclaw/openclaw.sh doctor
-./services/openclaw/openclaw.sh health
-./services/openclaw/openclaw.sh gateway status
-./services/openclaw/openclaw.sh channels list
-./services/openclaw/openclaw.sh devices list
-./services/openclaw/openclaw.sh pairing approve telegram <code>
+./openclaw.sh edit-config
+./openclaw.sh doctor
+./openclaw.sh channels list
+./openclaw.sh devices list
+./openclaw.sh pairing approve telegram <code>
 ```
 
 > **Note:** `gateway restart` is not supported in Docker Swarm — openclaw uses `systemctl --user` internally which is unavailable inside the container. Use the Swarm service update instead:
@@ -116,6 +143,23 @@ export PI_SSH_USER=pi
 # WhatsApp (interactive QR — TTY allocated automatically)
 ./services/openclaw/openclaw.sh channels login
 ```
+
+### Cost optimization (optional)
+
+Deploy the `router` skill to automatically route queries to cost-appropriate models (Haiku for routine, Sonnet for complex):
+
+```bash
+# Upload router skill
+cat services/openclaw/skills/router.py | ssh pi@pi.local \
+  "docker exec -i \$(docker ps -q -f name=openclaw_gateway) \
+  sh -c 'mkdir -p /home/node/.openclaw/workspace/skills && \
+  cat > /home/node/.openclaw/workspace/skills/router.py'"
+
+# Enable skill
+./openclaw.sh skills enable router --path /home/node/.openclaw/workspace/skills/router.py
+```
+
+Reduces API costs by 80-90% by routing routine tasks to Haiku ($0.30/MTok) instead of Sonnet ($3/MTok).
 
 ---
 
