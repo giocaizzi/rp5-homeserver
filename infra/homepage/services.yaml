@@ -76,7 +76,7 @@
       - OpenClaw:
             href: https://openclaw.home
             description: Personal AI assistant
-                  icon: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxt1l_gNERueMEr2kTmbkbCe0mSzSjBgbIRQ&s
+            icon: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxt1l_gNERueMEr2kTmbkbCe0mSzSjBgbIRQ&s
             ping: http://openclaw-gateway:18789
 
 - Finance:

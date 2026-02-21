@@ -308,12 +308,9 @@ services:
       - adguard_password
       - grafana_admin_password
       - domain
-    configs:
-      - source: version_config
-        target: /app/config/version
-        mode: 0444
     volumes:
       - ./homepage:/app/config  # Local config files
+      - ./VERSION:/app/config/version:ro  # Version file (single source of truth)
       - /var/run/docker.sock:/var/run/docker.sock  # Docker integration (writable)
     networks:
       - infra_network
@@ -379,6 +376,3 @@ secrets:
   ssl_key:
     file: ./secrets/key.pem
 
-configs:
-  version_config:
-    file: ./VERSION
