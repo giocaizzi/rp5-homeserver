@@ -1,7 +1,7 @@
 # 🦞 OpenClaw — Personal AI assistant gateway
 
 OpenClaw gateway deployed as a Swarm service. Connects to messaging channels (Telegram, Discord,
-WhatsApp, etc.) and serves the Control UI at `openclaw.home`.
+WhatsApp, etc.) and serves the Control UI at `openclaw.giocaizzi.xyz`.
 
 ---
 
@@ -38,7 +38,7 @@ PI_SSH_USER=pi ./services/openclaw/openclaw.sh models auth paste-token
 PI_SSH_USER=pi ./services/openclaw/openclaw.sh channels add --channel telegram --token "<bot-token>"
 ```
 
-**5. Open Control UI:** `https://openclaw.home`
+**5. Open Control UI:** `https://openclaw.giocaizzi.xyz`
 
 Use the gateway token configured during onboarding.
 
@@ -168,27 +168,22 @@ Wrapper for executing OpenClaw commands on the remote Pi gateway container.
 ./services/openclaw/openclaw.sh config get tools.web.search.apiKey
 ```
 
-### Cost optimization (optional)
+### Task-specific agents (recommended)
 
-Deploy the `router` skill to automatically route queries based on subscription + pay-as-you-go strategy:
+Use native OpenClaw multi-agent profiles instead of router skills:
 
-**Strategy:**
-- **Complex tasks** (code, plan, analyze) → Sonnet 4.6 (Anthropic subscription) - NO OpenAI fallback
-- **Routine tasks** (email, list, schedule) → Haiku 4.5 (Anthropic subscription), fallback to GPT-5 mini (OpenAI PAYG $0.25/$2 per MTok)
-- **Default** → Haiku 4.5 (Anthropic subscription), fallback to GPT-5 mini (OpenAI PAYG)
+- `main` (default): routine tasks with `anthropic/claude-haiku-4-5`
+- `complex`: complex tasks with `anthropic/claude-sonnet-4-6`
 
-**Why GPT-5 mini?** Cheapest OpenAI model at $0.25/$2 per MTok (vs GPT-4.1 mini fine-tuning at $0.80/$3.20).
+Both agents keep provider fallback chain.
 
-**Deploy:**
+**Use the right agent per task:**
 ```bash
-# Upload router skill
-cat services/openclaw/skills/router.py | ssh pi@pi.local \
-  "docker exec -i \$(docker ps -q -f name=openclaw_gateway) \
-  sh -c 'mkdir -p /home/node/.openclaw/workspace/skills && \
-  cat > /home/node/.openclaw/workspace/skills/router.py'"
+# Routine
+./openclaw.sh agent --agent main -m "Summarize these notes"
 
-# Enable skill
-./openclaw.sh skills enable router --path /home/node/.openclaw/workspace/skills/router.py
+# Complex
+./openclaw.sh agent --agent complex -m "Debug this traceback and propose a fix plan"
 ```
 
 

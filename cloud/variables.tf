@@ -68,6 +68,12 @@ variable "homepage_users" {
   default     = []
 }
 
+variable "openclaw_users" {
+  description = "List of email addresses allowed to access OpenClaw"
+  type        = list(string)
+  default     = []
+}
+
 # ============================================================================
 # GCP Variables
 # ============================================================================

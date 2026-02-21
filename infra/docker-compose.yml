@@ -293,7 +293,7 @@ services:
       - HOMEPAGE_FILE_ADGUARD_PASSWORD=/run/secrets/adguard_password
       - HOMEPAGE_FILE_GRAFANA_ADMIN_PASSWORD=/run/secrets/grafana_admin_password
       - HOMEPAGE_FILE_DOMAIN=/run/secrets/domain
-      - HOMEPAGE_FILE_VERSION=/app/config/version
+      - HOMEPAGE_FILE_VERSION=/run/homepage/version
       # Regular configuration variables
       - HOMEPAGE_VAR_BACKREST_USERNAME=admin
       - HOMEPAGE_VAR_ADGUARD_USERNAME=admin
@@ -310,7 +310,7 @@ services:
       - domain
     volumes:
       - ./homepage:/app/config  # Local config files
-      - ./VERSION:/app/config/version:ro  # Version file (single source of truth)
+      - ./VERSION:/run/homepage/version:ro  # Version file (single source of truth)
       - /var/run/docker.sock:/var/run/docker.sock  # Docker integration (writable)
     networks:
       - infra_network
