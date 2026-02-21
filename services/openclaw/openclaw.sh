@@ -24,10 +24,13 @@ if [[ $# -eq 0 ]]; then
   exit 1
 fi
 
-# Serialize args safely for remote shell execution
+# Serialize args safely for remote shell execution (trim trailing space)
 REMOTE_ARGS=$(printf '%q ' "$@")
+REMOTE_ARGS="${REMOTE_ARGS% }"
 
 ssh -t "${PI_SSH_USER}@${PI_HOST}" \
   "docker exec -it \$(docker ps -q -f name=openclaw_gateway | head -1) \
-   sh -c 'OPENCLAW_GATEWAY_TOKEN=\$(cat /run/secrets/gateway_token) \
-          exec node /app/dist/index.js \$@' -- ${REMOTE_ARGS}"
+   sh -c 'export OPENCLAW_GATEWAY_TOKEN=\$(cat /run/secrets/gateway_token); \
+          export ANTHROPIC_API_KEY=\$(cat /run/secrets/anthropic_api_key 2>/dev/null); \
+          export TELEGRAM_BOT_TOKEN=\$(cat /run/secrets/telegram_bot_token 2>/dev/null); \
+          exec node /app/dist/index.js \"\$@\"' sh ${REMOTE_ARGS}"
