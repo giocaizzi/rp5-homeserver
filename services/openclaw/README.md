@@ -7,21 +7,9 @@ WhatsApp, etc.) and serves the Control UI at `openclaw.home`.
 
 ## 🚀 Quick Start
 
-**1. Generate and store the gateway token:**
+**1. Deploy via Portainer** (Remote Stack → this repo → `services/openclaw`).
 
-```sh
-openssl rand -hex 32 > services/openclaw/secrets/gateway_token.txt
-```
-
-**2. Create the Swarm secret on the Pi:**
-
-```sh
-ssh pi@pi.local "docker secret create openclaw_gateway_token -" < services/openclaw/secrets/gateway_token.txt
-```
-
-**2. Deploy via Portainer** (Remote Stack → this repo → `services/openclaw`).
-
-**3. Run onboarding** (interactive — required before channels work):
+**2. Run onboarding** (interactive — required before channels work):
 
 ```sh
 PI_SSH_USER=pi ./services/openclaw/openclaw.sh onboard
@@ -29,13 +17,30 @@ PI_SSH_USER=pi ./services/openclaw/openclaw.sh onboard
 
 When prompted:
 - Gateway bind: `lan` (already configured)
-- Gateway auth: `token` (already configured)
+- Gateway auth: `token` (set your token in onboarding)
 - Tailscale: `off`
 - Install daemon: `no`
 
-**4. Open Control UI:** `https://openclaw.home`
+**3. Configure provider auth with CLI token flows:**
 
-Paste the token when prompted (Settings → token). It's stored locally at `services/openclaw/secrets/gateway_token.txt`.
+```sh
+# Anthropic (setup token from `claude setup-token`)
+PI_SSH_USER=pi ./services/openclaw/openclaw.sh models auth setup-token
+
+# OpenAI/API token style providers
+PI_SSH_USER=pi ./services/openclaw/openclaw.sh models auth paste-token
+```
+
+**4. Configure channel tokens with CLI:**
+
+```sh
+# Telegram
+PI_SSH_USER=pi ./services/openclaw/openclaw.sh channels add --channel telegram --token "<bot-token>"
+```
+
+**5. Open Control UI:** `https://openclaw.home`
+
+Use the gateway token configured during onboarding.
 
 ---
 
@@ -46,7 +51,7 @@ Paste the token when prompted (Settings → token). It's stored locally at `serv
 | `gateway` | `ghcr.io/openclaw/openclaw:2026.2.19`   | 18789 | Gateway + Control UI |
 
 **Security model:**
-- Runs directly as `node` (uid 1000) — never as root. `entrypoint.sh` only injects the Swarm secret before `exec`.
+- Runs directly as `node` (uid 1000) — never as root.
 - Named volumes are initialised with correct ownership by Docker (image already owns `/home/node` as uid 1000).
 - No host bind mounts, no privileged mode, no Docker socket access.
 - `no-new-privileges` security option enforced.
@@ -58,17 +63,15 @@ Paste the token when prompted (Settings → token). It's stored locally at `serv
 
 ## 🔐 Secrets
 
-| Secret                        | Description                       | Generate |
-|-------------------------------|-----------------------------------|---------|
-| `openclaw_gateway_token`      | Gateway auth token (hex-32)       | `openssl rand -hex 32` |
-| `openclaw_anthropic_api_key`  | Anthropic API key (`sk-ant-...`)  | [console.anthropic.com](https://console.anthropic.com) |
-| `openclaw_telegram_bot_token` | Telegram bot token                | `@BotFather` → `/newbot` || `openclaw_notion_api_key`     | Notion integration API key        | [notion.so/my-integrations](https://www.notion.so/my-integrations) |
-| `openclaw_brave_api_key`      | Brave Search API key              | [api.search.brave.com](https://api.search.brave.com/app/keys) |
+OpenClaw credentials are managed via OpenClaw CLI and persisted in `config_data` volume.
 
-```sh
-ssh pi@pi.local "docker secret create openclaw_notion_api_key -" < services/openclaw/secrets/notion_api_key.txt
-ssh pi@pi.local "docker secret create openclaw_brave_api_key -" < services/openclaw/secrets/brave_api_key.txt
-```
+- Gateway auth token: set during `openclaw onboard` / `openclaw configure`.
+- Model/provider credentials: `openclaw models auth setup-token|paste-token|login`.
+- Channel bot tokens: `openclaw channels add --channel <name> --token <token>`.
+- Other integration API keys (e.g. web search/Notion-style keys): `openclaw config set <path> <value>`.
+
+Avoid passing secrets in command arguments when possible; prefer interactive token prompts.
+Compatibility note: on this deployment (`2026.2.19`), use plain `config set` syntax; `--strict-json` is not supported for `config set`.
 ---
 
 ## ⚙️ Configuration
@@ -144,10 +147,39 @@ Wrapper for executing OpenClaw commands on the remote Pi gateway container.
 ./services/openclaw/openclaw.sh channels login
 ```
 
+### Auth verification
+
+```sh
+# Verify provider auth profiles
+./services/openclaw/openclaw.sh models status --probe
+
+# Verify channel/gateway health
+./services/openclaw/openclaw.sh channels status --probe
+./services/openclaw/openclaw.sh gateway status
+```
+
+### Integration API keys (non-channel)
+
+```sh
+# Example: web search API key path
+./services/openclaw/openclaw.sh config set tools.web.search.apiKey "<api-key>"
+
+# Inspect current value/path
+./services/openclaw/openclaw.sh config get tools.web.search.apiKey
+```
+
 ### Cost optimization (optional)
 
-Deploy the `router` skill to automatically route queries to cost-appropriate models (Haiku 4.5 for routine, Sonnet for complex):
+Deploy the `router` skill to automatically route queries based on subscription + pay-as-you-go strategy:
 
+**Strategy:**
+- **Complex tasks** (code, plan, analyze) → Sonnet 4.6 (Anthropic subscription) - NO OpenAI fallback
+- **Routine tasks** (email, list, schedule) → Haiku 4.5 (Anthropic subscription), fallback to GPT-5 mini (OpenAI PAYG $0.25/$2 per MTok)
+- **Default** → Haiku 4.5 (Anthropic subscription), fallback to GPT-5 mini (OpenAI PAYG)
+
+**Why GPT-5 mini?** Cheapest OpenAI model at $0.25/$2 per MTok (vs GPT-4.1 mini fine-tuning at $0.80/$3.20).
+
+**Deploy:**
 ```bash
 # Upload router skill
 cat services/openclaw/skills/router.py | ssh pi@pi.local \
@@ -159,7 +191,6 @@ cat services/openclaw/skills/router.py | ssh pi@pi.local \
 ./openclaw.sh skills enable router --path /home/node/.openclaw/workspace/skills/router.py
 ```
 
-Reduces API costs by 60-70% by routing routine tasks to Haiku 4.5 ($1/MTok) instead of Sonnet ($3/MTok).
 
 ---
 
