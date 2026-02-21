@@ -1,7 +1,7 @@
 # 🦞 OpenClaw — Personal AI assistant gateway
 
 OpenClaw gateway deployed as a Swarm service. Connects to messaging channels (Telegram, Discord,
-WhatsApp, etc.) and serves the Control UI at `openclaw.home`.
+WhatsApp, etc.) and serves the Control UI at `openclaw.giocaizzi.xyz`.
 
 ---
 
@@ -38,7 +38,7 @@ PI_SSH_USER=pi ./services/openclaw/openclaw.sh models auth paste-token
 PI_SSH_USER=pi ./services/openclaw/openclaw.sh channels add --channel telegram --token "<bot-token>"
 ```
 
-**5. Open Control UI:** `https://openclaw.home`
+**5. Open Control UI:** `https://openclaw.giocaizzi.xyz`
 
 Use the gateway token configured during onboarding.
 
