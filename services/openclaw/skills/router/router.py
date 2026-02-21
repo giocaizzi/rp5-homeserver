@@ -2,7 +2,7 @@
 OpenClaw Model Router Skill
 
 Routes requests to appropriate models based on task complexity:
-- Routine tasks (email, schedule, reminders) → Haiku ($0.30/$1.25 per MTok)
+- Routine tasks (email, schedule, reminders) → Haiku 4.5 ($1/$5 per MTok)
 - Complex tasks (coding, planning, analysis) → Sonnet 4.6 ($3/$15 per MTok)
 
 Reduces API costs by 80-90% compared to using a single frontier model for everything.
@@ -32,19 +32,19 @@ class RouterSkill:
             re.compile(r'\b(explain|understand|reason|think|deduce|infer)\b', re.I): 
                 'anthropic/claude-sonnet-4-6',
             
-            # Routine tasks - use Haiku  
+            # Routine tasks - use Haiku 4.5
             re.compile(r'\b(email|schedule|remind|calendar|appointment|meeting)\b', re.I): 
-                'anthropic/claude-3-haiku-20240307',
+                'anthropic/claude-haiku-4-5',
             
             re.compile(r'\b(list|show|get|fetch|find|search|lookup|check)\b', re.I): 
-                'anthropic/claude-3-haiku-20240307',
+                'anthropic/claude-haiku-4-5',
             
             re.compile(r'\b(summarize|summary|tldr|brief|quick)\b', re.I): 
-                'anthropic/claude-3-haiku-20240307',
+                'anthropic/claude-haiku-4-5',
         }
         
         # Default fallback model (cheapest)
-        self.default_model = 'anthropic/claude-3-haiku-20240307'
+        self.default_model = 'anthropic/claude-haiku-4-5'
     
     def route(self, prompt: str) -> str:
         """

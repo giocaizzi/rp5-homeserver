@@ -146,7 +146,7 @@ Wrapper for executing OpenClaw commands on the remote Pi gateway container.
 
 ### Cost optimization (optional)
 
-Deploy the `router` skill to automatically route queries to cost-appropriate models (Haiku for routine, Sonnet for complex):
+Deploy the `router` skill to automatically route queries to cost-appropriate models (Haiku 4.5 for routine, Sonnet for complex):
 
 ```bash
 # Upload router skill
@@ -159,7 +159,7 @@ cat services/openclaw/skills/router.py | ssh pi@pi.local \
 ./openclaw.sh skills enable router --path /home/node/.openclaw/workspace/skills/router.py
 ```
 
-Reduces API costs by 80-90% by routing routine tasks to Haiku ($0.30/MTok) instead of Sonnet ($3/MTok).
+Reduces API costs by 60-70% by routing routine tasks to Haiku 4.5 ($1/MTok) instead of Sonnet ($3/MTok).
 
 ---
 
