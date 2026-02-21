@@ -27,6 +27,6 @@ fi
 
 exec /usr/local/bin/docker-entrypoint.sh \
   node /app/dist/index.js gateway \
-  --bind all \
+  --bind auto \
   --port 18789 \
   --allow-unconfigured
