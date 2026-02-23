@@ -26,6 +26,7 @@ Raspberry Pi 5 Docker Swarm-based home server.
 - **Netdata** — System monitoring (`https://netdata.home`)
 - **Backrest** — Backup UI (`https://backrest.home`)
 - **Homepage** — Dashboard (`https://homepage.home`)
+- **Shepherd** — Auto-updates Swarm services every 24h
 
 ## 📚 Documentation
 

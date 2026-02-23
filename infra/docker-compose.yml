@@ -336,6 +336,34 @@ services:
       retries: 3
       start_period: 10s
 
+  # Shepherd - Auto-update Swarm services
+  shepherd:
+    image: containrrr/shepherd:latest
+    hostname: infra-shepherd
+    environment:
+      - SLEEP_TIME=24h
+      - IGNORELIST_SERVICES=infra_shepherd
+      - ROLLBACK_ON_FAILURE=true
+      - TZ=Europe/Rome
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - infra_network
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "shepherd"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "shepherd"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 64M
+    logging:
+      <<: *logging-base
+
 volumes:
   nginx_cache:
     driver: local

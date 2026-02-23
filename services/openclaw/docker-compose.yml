@@ -57,7 +57,7 @@ volumes:
 # =============================================================================
 services:
   gateway:
-    image: ghcr.io/openclaw/openclaw:2026.2.19
+    image: ghcr.io/openclaw/openclaw:latest
     hostname: openclaw-gateway
     expose:
       - "18789"
