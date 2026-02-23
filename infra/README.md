@@ -26,6 +26,7 @@
 | netdata | `netdata/netdata:latest` | Real-time system monitoring |
 | backrest | `garethgeorge/backrest:latest` | Restic backup web UI |
 | homepage | `ghcr.io/gethomepage/homepage:latest` | Service dashboard |
+| shepherd | `containrrr/shepherd:latest` | Auto-update Swarm services every 24h |
 
 ---
 
@@ -105,6 +106,14 @@ See [docs/backup.md](../docs/backup.md) for setup.
 ### Homepage
 
 Service dashboard at `https://homepage.home`. Config files in `./homepage/`.
+
+### Shepherd
+
+Automatically checks and updates Swarm services every 24 hours.
+
+- Uses Docker socket (read-only) to run `docker service update`.
+- Runs on manager node only.
+- Ignores `infra_shepherd` to avoid self-update loops.
 
 ---
 
