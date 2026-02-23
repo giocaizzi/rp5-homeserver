@@ -91,7 +91,7 @@ vim openclaw.json  # or your preferred editor
 ./openclaw.sh push-config
 
 # Apply changes (if needed)
-ssh pi@pi.local "docker service update --force openclaw_gateway"
+./openclaw.sh restart
 ```
 
 ### Remote editing (vim in container)
@@ -117,6 +117,7 @@ Wrapper for executing OpenClaw commands on the remote Pi gateway container.
 
 **Special commands:**
 - `edit-config` — Edit `openclaw.json` with vim (auto-installs if needed)
+- `restart` — Force restart OpenClaw Swarm service (`openclaw_gateway`)
 - `shell` — Drop into container shell
 - `help` — Show usage information
 
@@ -131,7 +132,7 @@ Wrapper for executing OpenClaw commands on the remote Pi gateway container.
 
 > **Note:** `gateway restart` is not supported in Docker Swarm — openclaw uses `systemctl --user` internally which is unavailable inside the container. Use the Swarm service update instead:
 > ```sh
-> ssh pi@pi.local "docker service update --force openclaw_gateway"
+> ./services/openclaw/openclaw.sh restart
 > ```
 
 ### Add a channel

@@ -16,6 +16,7 @@ set -euo pipefail
 readonly PI_HOST="${PI_HOST:-pi.local}"
 readonly PI_SSH_USER="${PI_SSH_USER:-giorgiocaizzi}"
 readonly CONTAINER_NAME="openclaw_gateway"
+readonly SERVICE_NAME="openclaw_gateway"
 readonly CONFIG_PATH="/home/node/.openclaw/openclaw.json"
 readonly LOCAL_CONFIG="./openclaw.json"
 
@@ -34,6 +35,7 @@ Special commands:
   edit-config       Edit openclaw.json with vim
   pull-config       Download config from Pi to ./openclaw.json
   push-config       Upload ./openclaw.json to Pi container
+  restart           Force restart Swarm service
   shell             Drop into container shell
   help              Show this help
 
@@ -50,6 +52,7 @@ Examples:
   $0 edit-config
   $0 pull-config
   $0 push-config
+  $0 restart
   $0 doctor
   $0 channels list
   $0 skills list
@@ -193,6 +196,18 @@ exec_shell() {
     "docker exec -it ${container_id} sh"
 }
 
+exec_restart() {
+  echo "Restarting OpenClaw service '${SERVICE_NAME}' on ${PI_HOST}..."
+
+  ssh -q "${PI_SSH_USER}@${PI_HOST}" \
+    "docker service inspect ${SERVICE_NAME} >/dev/null 2>&1 && docker service update --force ${SERVICE_NAME}" || {
+      echo "Error: Failed to restart service '${SERVICE_NAME}'" >&2
+      exit 1
+    }
+
+  echo "Restart triggered successfully."
+}
+
 exec_openclaw_cli() {
   local -a args=("$@")
   local remote_args
@@ -235,6 +250,9 @@ main() {
       ;;
     upload-skill)
       exec_upload_skill "$@"
+      ;;
+    restart)
+      exec_restart
       ;;
     shell)
       exec_shell
