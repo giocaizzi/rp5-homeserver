@@ -67,6 +67,7 @@
                       label: Messages/s
                       format: number
 
+- AI:
       - Ollama:
             href: https://ai.home
             description: Local AI models
