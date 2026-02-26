@@ -67,7 +67,7 @@ For webhooks through Cloudflare tunnel, use GitHub Actions with service token au
 | n8n | `services/n8n/docker-compose.yml` | `/mnt/stacks/n8n` |
 | firefly | `services/firefly/docker-compose.yml` | `/mnt/stacks/firefly` |
 | adguard | `services/adguard/docker-compose.yml` | `/mnt/stacks/adguard` |
-| ollama | `services/ollama/docker-compose.yml` | `/mnt/stacks/ollama` |
+| ai | `services/ai/docker-compose.yml` | `/mnt/stacks/ai` |
 | langfuse | `services/langfuse/docker-compose.yml` | `/mnt/stacks/langfuse` |
 | ntfy | `services/ntfy/docker-compose.yml` | `/mnt/stacks/ntfy` |
 | observability | `services/observability/docker-compose.yml` | `/mnt/stacks/observability` |

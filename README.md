@@ -14,7 +14,7 @@ Raspberry Pi 5 Docker Swarm-based home server.
 | **[N8N](./services/n8n/README.md)** | `https://n8n.home` | Workflow automation |
 | **[Firefly III](./services/firefly/README.md)** | `https://firefly.home` | Personal finance |
 | **[AdGuard Home](./services/adguard/README.md)** | `https://adguard.home` | DNS & ad blocking |
-| **[Ollama](./services/ollama/README.md)** | `https://ollama.home` | Local LLM server |
+| **[AI (Ollama + OpenWebUI)](./services/ai/README.md)** | `https://chat.home`, `https://ai.home` | Local LLM server and chat UI |
 | **[Langfuse](./services/langfuse/README.md)** | `https://langfuse.home` | LLM observability |
 | **[Ntfy](./services/ntfy/README.md)** | `https://ntfy.home` | Push notifications |
 | **[Observability](./services/observability/README.md)** | `https://grafana.home` | Grafana, Loki, Tempo, Prometheus |

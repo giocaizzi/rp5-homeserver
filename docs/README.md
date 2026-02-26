@@ -78,7 +78,7 @@ flowchart TB
 | N8N | `https://n8n.home` | services/n8n |
 | Firefly III | `https://firefly.home` | services/firefly |
 | AdGuard | `https://adguard.home` | services/adguard |
-| Ollama | `https://ollama.home` | services/ollama |
+| AI (Ollama + OpenWebUI) | `https://chat.home`, `https://ai.home` | services/ai |
 | Langfuse | `https://langfuse.home` | services/langfuse |
 | Ntfy | `https://ntfy.home` | services/ntfy |
 | Grafana | `https://grafana.home` | services/observability |
