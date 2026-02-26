@@ -68,10 +68,16 @@
                       format: number
 
       - Ollama:
-            href: https://ollama.home
+            href: https://ai.home
             description: Local AI models
             icon: ollama.png
-            ping: http://ollama_llm:11434
+            ping: http://ai_llm:11434
+
+      - OpenWebUI:
+            href: https://chat.home
+            description: AI chat interface
+            icon: sh-open-webui
+            ping: http://ai_chat:8080
 
       - OpenClaw:
             href: https://openclaw.giocaizzi.xyz
