@@ -17,6 +17,10 @@ layout:
     style: row
     columns: 3
     icon: mdi-application-cog
+  AI:
+    style: row
+    columns: 3
+    icon: mdi-robot
   Finance:
     style: row
     columns: 3

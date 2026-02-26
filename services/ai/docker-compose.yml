@@ -2,7 +2,7 @@
 # YAML Anchors - Common configurations
 # =============================================================================
 x-labels-base: &labels-base
-  com.giocaizzi.namespace: "ollama"
+  com.giocaizzi.namespace: "ai"
   com.giocaizzi.env: "production"
 
 x-deploy-base: &deploy-base
@@ -31,10 +31,10 @@ x-security-base: &security-base
 # Networks
 # =============================================================================
 networks:
-  # Private network for ollama stack
-  ollama_network:
+  # Private network for ai stack
+  ai_network:
     driver: overlay
-    name: rp5_ollama
+    name: rp5_ai
 
   # External network to connect to nginx proxy
   public_network:
@@ -47,7 +47,7 @@ networks:
 services:
   llm:
     image: ollama/ollama:latest
-    hostname: ollama-llm
+    hostname: ai-llm
     expose:
       - "11434"
     environment:
@@ -63,11 +63,9 @@ services:
       - OLLAMA_FLASH_ATTENTION=false
     volumes:
       - ollama_data:/root/.ollama   # persists models, configs
-      - ./ollama-entrypoint.sh:/usr/local/bin/ollama-entrypoint.sh:ro
     networks:
-      - ollama_network
+      - ai_network
       - public_network
-    entrypoint: ["/usr/local/bin/ollama-entrypoint.sh"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
       interval: 30s
@@ -98,6 +96,51 @@ services:
     logging:
       <<: *logging-base
 
+  chat:
+    image: ghcr.io/open-webui/open-webui:v0.8.5
+    hostname: ai-chat
+    expose:
+      - "8080"
+    environment:
+      - OLLAMA_BASE_URL=http://llm:11434
+    volumes:
+      - openwebui_data:/app/backend/data
+    secrets:
+      - webui_secret_key
+    entrypoint:
+      - /bin/sh
+      - -c
+      - export WEBUI_SECRET_KEY=$$(cat /run/secrets/webui_secret_key); exec bash start.sh
+    networks:
+      - ai_network
+      - public_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "chat"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "open-webui"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 1G
+    logging:
+      <<: *logging-base
+
 volumes:
   ollama_data:
     driver: local
+  openwebui_data:
+    driver: local
+
+secrets:
+  webui_secret_key:
+    external: true
