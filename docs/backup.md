@@ -34,6 +34,8 @@ terraform output -raw backup_service_account_key | base64 -d > ../infra/secrets/
    - Environment: `GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp_service_account`
 3. **Create backup plan**:
    - Source: `/backup/docker-volumes`
+   - Excludes (recommended):
+     - `/backup/docker-volumes/*ollama_data*` (skip Ollama models)
    - Schedule: Daily at preferred time (e.g., 6:00 AM UTC)
    - Retention: 7 daily, 4 weekly, 6 monthly, 2 yearly
 
@@ -48,6 +50,7 @@ terraform output -raw backup_service_account_key | base64 -d > ../infra/secrets/
 - Cache volumes (`nginx_cache`, `netdata_cache`)
 - Log volumes (`*_logs`)
 - Metrics/traces (time-series data that ages out)
+- Ollama model data (`*ollama_data*`) when model re-pull is acceptable
 
 Each service README documents its volumes under **💾 Volumes**.
 

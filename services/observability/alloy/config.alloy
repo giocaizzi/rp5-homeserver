@@ -42,7 +42,7 @@ import.file "pipelines" {
 
 discovery.docker "containers" {
   host                = "unix:///var/run/docker.sock"
-  refresh_interval    = "30s"
+  refresh_interval    = "43s"  // Staggered to avoid sync with other polls
   match_first_network = false  // Required for multi-network exporters
 
   filter {
