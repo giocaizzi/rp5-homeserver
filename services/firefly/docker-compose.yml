@@ -247,8 +247,11 @@ services:
         # Execute original entrypoint
         exec docker-php-serversideup-entrypoint /init
     volumes:
-      - ./config/config.json:/var/www/html/import/config.json:ro
       - firefly_upload:/var/www/html/storage/upload
+    configs:
+      - source: importer_config
+        target: /var/www/html/import/config.json
+        mode: 0444
     networks:
       - firefly_network
       - public_network
@@ -446,6 +449,10 @@ volumes:
     driver: local
   firefly_pico_db:
     driver: local
+
+configs:
+  importer_config:
+    file: ./config/config.json
 
 secrets:
   app_key:
