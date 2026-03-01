@@ -38,6 +38,10 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 - Reuse scripts in `/scripts`; propose new ones only if essential.
 
 ---
+# Repository
+
+Commits on `main` are blocked by branch protection rules. Use feature branches and PRs for all changes.
+---
 
 # Constraints
 
