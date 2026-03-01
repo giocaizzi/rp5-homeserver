@@ -101,11 +101,8 @@ services:
       - app_key
       - db_password
       - static_cron_token
-    configs:
-      - source: load_secrets
-        target: /etc/cont-init.d/00-load-secrets
-        mode: 0555
     volumes:
+      - ./scripts/load-secrets.sh:/etc/cont-init.d/00-load-secrets:ro
       - firefly_upload:/var/www/html/storage/upload
     networks:
       - firefly_network
@@ -144,11 +141,8 @@ services:
     secrets:
       - db_password
     volumes:
+      - ./mariadb/mariadb.cnf:/etc/mysql/conf.d/custom.cnf:ro
       - firefly_db:/var/lib/mysql
-    configs:
-      - source: mariadb_config
-        target: /etc/mysql/conf.d/custom.cnf
-        mode: 0444
     networks:
       - firefly_network
     healthcheck:
@@ -242,7 +236,6 @@ services:
       - firefly_client_id
       - lunch_flow_api_key
       - auto_import_secret
-      - import_config
     entrypoint:
       - /bin/sh
       - -c
@@ -251,12 +244,10 @@ services:
         export FIREFLY_III_CLIENT_ID=$$(cat /run/secrets/firefly_client_id)
         export LUNCH_FLOW_API_KEY=$$(cat /run/secrets/lunch_flow_api_key)
         export AUTO_IMPORT_SECRET=$$(cat /run/secrets/auto_import_secret)
-        # Copy import config from secret to expected location
-        mkdir -p /var/www/html/import
-        cp /run/secrets/import_config /var/www/html/import/config.json
         # Execute original entrypoint
         exec docker-php-serversideup-entrypoint /init
     volumes:
+      - ./config/config.json:/var/www/html/import/config.json:ro
       - firefly_upload:/var/www/html/storage/upload
     networks:
       - firefly_network
@@ -382,11 +373,8 @@ services:
     secrets:
       - pico_db_password
     volumes:
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
       - firefly_pico_db:/var/lib/postgresql/data
-    configs:
-      - source: postgres_config
-        target: /etc/postgresql/postgresql.conf
-        mode: 0444
     networks:
       - firefly_network
     healthcheck:
@@ -459,14 +447,6 @@ volumes:
   firefly_pico_db:
     driver: local
 
-configs:
-  mariadb_config:
-    file: ./mariadb/mariadb.cnf
-  postgres_config:
-    file: ./postgres/postgresql.conf
-  load_secrets:
-    file: ./scripts/load-secrets.sh
-
 secrets:
   app_key:
     external: true
@@ -489,9 +469,6 @@ secrets:
   lunch_flow_api_key:
     external: true
     name: firefly_lunch_flow_api_key
-  import_config:
-    external: true
-    name: firefly_import_config
   pico_db_password:
     external: true
     name: firefly_pico_db_password

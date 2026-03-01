@@ -82,7 +82,7 @@ All containers must include these labels for identification and observability.
 | `com.giocaizzi.env` | Environment | Always `production` |
 | `com.giocaizzi.service` | Service identifier | Compose service key (must match) |
 | `com.giocaizzi.component` | Architectural layer | See values below |
-| `com.giocaizzi.tier` | Criticality | `core` or `extra` |
+| `com.giocaizzi.tier` | Criticality | `critical`, `core`, or `extra` |
 | `com.giocaizzi.technology` | Tool/image name | Base image name |
 
 ### Label Values
@@ -96,12 +96,13 @@ All containers must include these labels for identification and observability.
 | `worker` | Background processor | exporters, collectors, schedulers, importers |
 | `gateway` | Network entry point | nginx, adguard, cloudflared |
 
-#### `tier` (2 values)
+#### `tier` (3 values)
 
 | Value | Description |
 |-------|-------------|
-| `core` | Essential for stack functionality |
-| `extra` | Optional, supporting (exporters, agents) |
+| `critical` | Infrastructure services (always-on, checked every 24h by Shepherd) |
+| `core` | Essential application services (checked every 48h by Shepherd) |
+| `extra` | Optional, supporting services - exporters, workers, agents (checked every 72h by Shepherd) |
 
 #### `technology`
 

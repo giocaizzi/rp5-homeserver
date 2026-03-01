@@ -122,7 +122,7 @@ service-name:
     <<: *labels-base
     com.giocaizzi.service: "<service>"      # matches compose service key
     com.giocaizzi.component: "<component>"  # app | data | worker | gateway
-    com.giocaizzi.tier: "<tier>"            # core | extra
+    com.giocaizzi.tier: "<tier>"            # critical | core | extra
     com.giocaizzi.technology: "<tech>"      # image/tool name (postgres, redis, nginx...)
   <<: *security-base
   # user: "<uid>:<gid>"
