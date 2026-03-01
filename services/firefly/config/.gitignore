@@ -1,0 +1,5 @@
+# Ignore all secret files - these contain sensitive data
+*
+
+# But track the .gitignore itself
+!.gitignore
