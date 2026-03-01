@@ -1,7 +1,6 @@
 ---
 name: openclaw-cli
-description: Repository-specific runbook for operating OpenClaw CLI on the Raspberry Pi Swarm deployment. Use this when asked to inspect, configure, troubleshoot, or operate OpenClaw in this repo.
-license: Proprietary (repository internal)
+description: Runbook for operating OpenClaw CLI on the Raspberry Pi Swarm deployment. Use this when asked to inspect, configure, troubleshoot, or operate OpenClaw 
 ---
 
 # OpenClaw CLI (rp5-homeserver)

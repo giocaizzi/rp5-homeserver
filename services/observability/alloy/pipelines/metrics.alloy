@@ -40,7 +40,7 @@ declare "prometheus_scrape" {
     ]
 
     forward_to      = [prometheus.relabel.add_defaults.receiver]
-    scrape_interval = "15s"
+    scrape_interval = "17s"  // Staggered to avoid sync with Netdata/logs
     job_name        = "observability"
   }
 
@@ -52,7 +52,7 @@ declare "prometheus_scrape" {
   prometheus.scrape "exporters" {
     targets         = argument.exporter_targets_output.value
     forward_to      = [prometheus.relabel.add_defaults.receiver]
-    scrape_interval = "30s"
+    scrape_interval = "29s"  // Staggered to distribute DB query load
   }
 
   // ---------------------------------------------------------------------------
