@@ -61,6 +61,13 @@ volumes:
     driver: local
 
 # =============================================================================
+# Configs
+# =============================================================================
+configs:
+  tempo_config:
+    file: ./tempo/tempo-config.yaml
+  
+# =============================================================================
 # Secrets (external - create on Pi before deployment)
 # =============================================================================
 secrets:
@@ -159,8 +166,11 @@ services:
       - "3200"  # Tempo HTTP (queries)
       - "4317"  # OTLP gRPC (from Alloy only)
     command: -config.file=/etc/tempo/tempo-config.yaml
+    configs:
+      - source: tempo_config
+        target: /etc/tempo/tempo-config.yaml
+        mode: 0444
     volumes:
-      - ./tempo/tempo-config.yaml:/etc/tempo/tempo-config.yaml:ro
       - tempo_data:/var/tempo
     networks:
       - observability_network
