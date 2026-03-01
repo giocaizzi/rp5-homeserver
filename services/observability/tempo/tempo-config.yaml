@@ -33,13 +33,12 @@ storage:
       path: /var/tempo/traces
     wal:
       path: /var/tempo/wal
+    block:
+      # Block retention in Tempo 2.x is configured in storage.trace
+      retention: 720h # 30 days
     pool:
       max_workers: 10
       queue_depth: 1000
-
-compactor:
-  compaction:
-    block_retention: 720h # 30 days
 
 # Single-node memberlist config - prevents "empty ring" errors
 memberlist:
