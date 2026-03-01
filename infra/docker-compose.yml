@@ -80,7 +80,7 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "proxy"
       com.giocaizzi.component: "gateway"
-      com.giocaizzi.tier: "core"
+      com.giocaizzi.tier: "critical"
       com.giocaizzi.technology: "nginx"
     <<: *security-base
     deploy:
@@ -139,7 +139,7 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "management"
       com.giocaizzi.component: "app"
-      com.giocaizzi.tier: "core"
+      com.giocaizzi.tier: "critical"
       com.giocaizzi.technology: "portainer"
     <<: *security-base
     deploy:
@@ -170,7 +170,7 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "tunnel"
       com.giocaizzi.component: "gateway"
-      com.giocaizzi.tier: "core"
+      com.giocaizzi.tier: "critical"
       com.giocaizzi.technology: "cloudflared"
     <<: *security-base
     read_only: true
@@ -217,7 +217,7 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "monitoring"
       com.giocaizzi.component: "app"
-      com.giocaizzi.tier: "core"
+      com.giocaizzi.tier: "critical"
       com.giocaizzi.technology: "netdata"
     deploy:
       <<: *deploy-base
@@ -255,7 +255,7 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "backup"
       com.giocaizzi.component: "app"
-      com.giocaizzi.tier: "core"
+      com.giocaizzi.tier: "critical"
       com.giocaizzi.technology: "backrest"
     <<: *security-base
     deploy:
@@ -319,7 +319,7 @@ services:
       <<: *labels-base
       com.giocaizzi.service: "dashboard"
       com.giocaizzi.component: "app"
-      com.giocaizzi.tier: "core"
+      com.giocaizzi.tier: "critical"
       com.giocaizzi.technology: "homepage"
     <<: *security-base
     deploy:
@@ -336,13 +336,15 @@ services:
       retries: 3
       start_period: 10s
 
-  # Shepherd - Auto-update Swarm services
-  shepherd:
+  # Shepherd - Auto-update Swarm services (tiered strategy)
+  # Critical tier: infra services, checked every 24h
+  shepherd-critical:
     image: containrrr/shepherd:latest
-    hostname: infra-shepherd
+    hostname: infra-shepherd-critical
     environment:
       - SLEEP_TIME=24h
-      - IGNORELIST_SERVICES=infra_shepherd
+      - FILTER_SERVICES=label=com.giocaizzi.tier=critical
+      - IGNORELIST_SERVICES=infra_shepherd-critical,infra_shepherd-core,infra_shepherd-extra
       - ROLLBACK_ON_FAILURE=true
       - TZ=Europe/Rome
     volumes:
@@ -351,9 +353,67 @@ services:
       - infra_network
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "shepherd"
+      com.giocaizzi.service: "shepherd-critical"
       com.giocaizzi.component: "worker"
-      com.giocaizzi.tier: "core"
+      com.giocaizzi.tier: "critical"
+      com.giocaizzi.technology: "shepherd"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 64M
+    logging:
+      <<: *logging-base
+
+  # Core tier: main application services, checked every 48h
+  shepherd-core:
+    image: containrrr/shepherd:latest
+    hostname: infra-shepherd-core
+    environment:
+      - SLEEP_TIME=48h
+      - FILTER_SERVICES=label=com.giocaizzi.tier=core
+      - IGNORELIST_SERVICES=infra_shepherd-critical,infra_shepherd-core,infra_shepherd-extra
+      - ROLLBACK_ON_FAILURE=true
+      - TZ=Europe/Rome
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - infra_network
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "shepherd-core"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.tier: "critical"
+      com.giocaizzi.technology: "shepherd"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 64M
+    logging:
+      <<: *logging-base
+
+  # Extra tier: exporters/workers, checked every 72h
+  shepherd-extra:
+    image: containrrr/shepherd:latest
+    hostname: infra-shepherd-extra
+    environment:
+      - SLEEP_TIME=72h
+      - FILTER_SERVICES=label=com.giocaizzi.tier=extra
+      - IGNORELIST_SERVICES=infra_shepherd-critical,infra_shepherd-core,infra_shepherd-extra
+      - ROLLBACK_ON_FAILURE=true
+      - TZ=Europe/Rome
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - infra_network
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "shepherd-extra"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.tier: "critical"
       com.giocaizzi.technology: "shepherd"
     <<: *security-base
     deploy:

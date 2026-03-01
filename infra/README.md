@@ -109,11 +109,22 @@ Service dashboard at `https://homepage.home`. Config files in `./homepage/`.
 
 ### Shepherd
 
-Automatically checks and updates Swarm services every 24 hours.
+Automatically checks and updates Swarm services with tiered strategy to stay within Docker Hub unauthenticated rate limits (100 pulls/6h).
+
+**Three-tier system:**
+
+| Tier | Services | Check Interval | Pull Volume |
+|------|----------|----------------|-------------|
+| **Critical** | Infra (proxy, tunnel, portainer, netdata, backrest, homepage) | 24h | ~8 pulls/day |
+| **Core** | Main apps (observability, ntfy, adguard, openclaw, firefly, n8n) | 48h | ~12 pulls/2 days |
+| **Extra** | Exporters, workers, optional services | 72h | ~6 pulls/3 days |
+
+**Total:** ~26 pulls spread over 24h window = **well within 100 pulls/6h limit**.
 
 - Uses Docker socket (read-only) to run `docker service update`.
 - Runs on manager node only.
-- Ignores `infra_shepherd` to avoid self-update loops.
+- Auto-ignores all shepherd instances.
+- No authentication required—tiered intervals prevent rate limiting.
 
 ---
 
