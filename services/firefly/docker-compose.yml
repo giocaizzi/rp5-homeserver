@@ -452,7 +452,8 @@ volumes:
 
 configs:
   importer_config:
-    file: ./config/config.json
+    external: true
+    name: firefly_importer_config
 
 secrets:
   app_key:
