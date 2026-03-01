@@ -68,7 +68,7 @@ declare "docker_logs" {
     host             = "unix:///var/run/docker.sock"
     targets          = discovery.relabel.logs.output
     forward_to       = [loki.process.preprocess.receiver]
-    refresh_interval = "5s"
+    refresh_interval = "11s"  // Staggered to distribute I/O load
     relabel_rules    = argument.docker_labels_rules.value
   }
 
