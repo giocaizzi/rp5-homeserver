@@ -55,12 +55,9 @@ services:
     environment:
       - TZ=Europe/Rome
     volumes:
+      - ./server.yml:/etc/ntfy/server.yml:ro
       - ntfy_cache:/var/cache/ntfy
       - ntfy_data:/var/lib/ntfy
-    configs:
-      - source: ntfy_config
-        target: /etc/ntfy/server.yml
-        mode: 0444
     networks:
       - ntfy_network
       - public_network
@@ -93,10 +90,3 @@ volumes:
     driver: local
   ntfy_data:
     driver: local
-
-# =============================================================================
-# Configs
-# =============================================================================
-configs:
-  ntfy_config:
-    file: ./server.yml
