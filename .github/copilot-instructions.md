@@ -38,6 +38,10 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 - Reuse scripts in `/scripts`; propose new ones only if essential.
 
 ---
+# Repository
+
+Commits on `main` are blocked by branch protection rules. Use feature branches and PRs for all changes.
+---
 
 # Constraints
 
@@ -172,6 +176,8 @@ See [Naming & Labeling Standards](../docs/naming_labels.md) for complete referen
 | `services/` | Edit locally → commit/push → Portainer deploys |
 
 **Portainer Remote Stacks:** Portainer clones repo, enabling relative bind mounts (`./config`), Swarm configs (`file:`), and named volumes. Secrets must be external (pre-created on Pi).
+
+> Portainer services use local mount cloning the repo at `/mnt`.
 
 | Mount Type | `infra/` | `services/` |
 |------------|----------|-------------|
