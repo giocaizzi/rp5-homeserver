@@ -177,6 +177,8 @@ See [Naming & Labeling Standards](../docs/naming_labels.md) for complete referen
 
 **Portainer Remote Stacks:** Portainer clones repo, enabling relative bind mounts (`./config`), Swarm configs (`file:`), and named volumes. Secrets must be external (pre-created on Pi).
 
+> Portainer services use local mount cloning the repo at `/mnt`.
+
 | Mount Type | `infra/` | `services/` |
 |------------|----------|-------------|
 | **Secrets** | File-based (`file:`) | External (pre-create on Pi) |
