@@ -57,7 +57,10 @@ volumes:
 # =============================================================================
 services:
   gateway:
-    image: ghcr.io/openclaw/openclaw:latest
+    image: openclaw-gateway:custom
+    build:
+      context: .
+      dockerfile: Dockerfile
     hostname: openclaw-gateway
     expose:
       - "18789"

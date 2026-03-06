@@ -231,3 +231,13 @@ Add service-specific sections as needed.
 - No unused configs, networks, or stale stack definitions.
 - No duplicate environment sources.
 - No secret values in repo—only templates or references.
+
+---
+
+# Openclaw
+
+Always push and pull the latest config before making changes to ensure local state is up to date:
+
+```bash
+openclaw.sh pull-config
+```
