@@ -42,3 +42,18 @@ UPDATE transaction_groups SET deleted_at = NULL WHERE ...;
 UPDATE transaction_journals SET deleted_at = NULL WHERE ...;
 UPDATE transactions SET deleted_at = NULL WHERE ...;
 ``` 
+
+## Updating the Importer Config
+
+Swarm configs are immutable. Scale down first to release the lock, then recreate.
+
+```bash
+scp services/firefly/config/config.json pi@pi.local:/tmp/importer_config.json
+ssh pi@pi.local
+docker service scale firefly_importer=0
+docker config rm firefly_importer_config
+docker config create firefly_importer_config /tmp/importer_config.json && rm /tmp/importer_config.json
+docker service scale firefly_importer=1
+```
+
+> `config.json` is gitignored — contains `access_token`, never commit it.
