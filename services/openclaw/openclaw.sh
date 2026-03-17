@@ -220,9 +220,7 @@ exec_openclaw_cli() {
   container_id=$(get_container_id)
   
   ssh -t "${PI_SSH_USER}@${PI_HOST}" \
-    "docker exec -it ${container_id} sh -c '\
-      export OPENCLAW_GATEWAY_URL=ws://127.0.0.1:18789; \
-      exec node /app/dist/index.js \"\$@\"' sh ${remote_args}"
+    "docker exec -it ${container_id} node /app/dist/index.js ${remote_args}"
 }
 
 # =============================================================================
