@@ -47,13 +47,18 @@ UPDATE transactions SET deleted_at = NULL WHERE ...;
 
 Swarm configs are immutable. Scale down first to release the lock, then recreate.
 
+Scaling to 0 is **not** enough — the service definition still holds a reference. Use `--config-rm`/`--config-add` to detach/reattach.
+
 ```bash
 scp services/firefly/config/config.json pi@pi.local:/tmp/importer_config.json
-ssh pi@pi.local
-docker service scale firefly_importer=0
-docker config rm firefly_importer_config
-docker config create firefly_importer_config /tmp/importer_config.json && rm /tmp/importer_config.json
-docker service scale firefly_importer=1
+ssh pi@pi.local "
+  docker service update --config-rm firefly_importer_config firefly_importer &&
+  docker config rm firefly_importer_config &&
+  docker config create firefly_importer_config /tmp/importer_config.json &&
+  rm /tmp/importer_config.json &&
+  docker service update --config-add source=firefly_importer_config,target=/var/www/html/import/config.json,mode=0444 firefly_importer &&
+  docker service scale firefly_importer=1
+"
 ```
 
 > `config.json` is gitignored — contains `access_token`, never commit it.
