@@ -38,10 +38,34 @@ Each transaction has:
 **Rollback Pattern:**
 ```sql
 -- Always restore in this order:
-UPDATE transaction_groups SET deleted_at = NULL WHERE ...;
-UPDATE transaction_journals SET deleted_at = NULL WHERE ...;
-UPDATE transactions SET deleted_at = NULL WHERE ...;
-``` 
+UPDATE transaction_groups SET deleted_at = NULL, updated_at = NOW()
+WHERE deleted_at IS NOT NULL AND EXISTS (
+  SELECT 1 FROM transaction_journals tj
+  WHERE tj.transaction_group_id = transaction_groups.id AND tj.description LIKE '%<pattern>%'
+);
+UPDATE transaction_journals SET deleted_at = NULL, updated_at = NOW()
+WHERE deleted_at IS NOT NULL AND description LIKE '%<pattern>%';
+UPDATE transactions t SET t.deleted_at = NULL, t.updated_at = NOW()
+WHERE t.deleted_at IS NOT NULL AND EXISTS (
+  SELECT 1 FROM transaction_journals tj
+  WHERE tj.id = t.transaction_journal_id AND tj.description LIKE '%<pattern>%'
+);
+```
+
+**Post-restore commands (run in app container):**
+```bash
+php artisan cache:clear
+php artisan firefly-iii:correct-database
+php artisan firefly-iii:refresh-running-balance
+```
+
+**Connect to DB from app container (password via secret):**
+```bash
+APP=$(docker ps --filter 'label=com.docker.swarm.service.name=firefly_app' --format '{{.Names}}' | head -1)
+DB=$(docker ps --filter 'label=com.docker.swarm.service.name=firefly_db' --format '{{.Names}}' | head -1)
+DB_PASS=$(docker exec $APP cat /run/secrets/db_password)
+docker exec $DB mariadb -u firefly -p"$DB_PASS" firefly -e "SELECT ...;"
+```
 
 ## Updating the Importer Config
 
