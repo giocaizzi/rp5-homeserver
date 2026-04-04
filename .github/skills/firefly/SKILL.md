@@ -62,3 +62,24 @@ ssh pi@pi.local "
 ```
 
 > `config.json` is gitignored — contains `access_token`, never commit it.
+
+## Triggering an Import Manually
+
+The `/autoimport` endpoint requires an `Authorization: Bearer` header with the Firefly III personal access token (`firefly_access_token` secret). Read it from the scheduler container (which holds the secret), then POST to the importer:
+
+```bash
+ssh pi@pi.local "
+  SCHEDULER=\$(docker ps --filter 'label=com.docker.swarm.service.name=firefly_scheduler' --format '{{.Names}}' | head -1)
+  ACCESS_TOKEN=\$(docker exec \$SCHEDULER cat /run/secrets/firefly_access_token)
+
+  IMPORTER=\$(docker ps --filter 'label=com.docker.swarm.service.name=firefly_importer' --format '{{.Names}}' | head -1)
+  AUTO_IMPORT_SECRET=\$(docker exec \$IMPORTER cat /run/secrets/auto_import_secret)
+
+  docker exec \$IMPORTER curl -s -X POST \
+    -H 'Accept: application/json' \
+    -H \"Authorization: Bearer \${ACCESS_TOKEN}\" \
+    \"http://localhost:8080/autoimport?directory=/var/www/html/import&secret=\${AUTO_IMPORT_SECRET}\"
+"
+```
+
+Expected response: `{"message":"Seems to have worked!"}` (HTTP 200). Duplicate transaction errors in logs (`a115`) are non-fatal — they indicate already-imported data in the date range.
