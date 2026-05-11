@@ -1,0 +1,129 @@
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "greenhouse"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  # Private network for greenhouse stack
+  greenhouse_network:
+    driver: overlay
+    name: rp5_greenhouse
+
+  # External network to connect to nginx proxy
+  public_network:
+    external: true
+    name: rp5_public
+
+# =============================================================================
+# Volumes
+# =============================================================================
+# SQLite archive is the permanent record (Tuya Cloud is the live source).
+# Named volume persists across redeploys and is backup-target compatible.
+volumes:
+  greenhouse_data:
+    driver: local
+
+# =============================================================================
+# Secrets
+# =============================================================================
+# Pre-create on the Pi with `docker secret create` — see README.
+secrets:
+  tuya_client_id:
+    external: true
+    name: greenhouse_tuya_client_id
+  tuya_client_secret:
+    external: true
+    name: greenhouse_tuya_client_secret
+
+# =============================================================================
+# Services
+# =============================================================================
+services:
+  app:
+    image: ghcr.io/giocaizzi/greenhouse:latest
+    hostname: greenhouse-app
+    expose:
+      - "8000"
+    environment:
+      - TZ=Europe/Rome
+      # Tuya Cloud
+      - TUYA_REGION=eu
+      # Server settings (prefixed IRRIGATION_ per Pydantic BaseSettings)
+      - IRRIGATION_DB_URL=sqlite:////app/data/irrigation.db
+      - IRRIGATION_HOST=0.0.0.0
+      - IRRIGATION_PORT=8000
+      - IRRIGATION_SYNC_INTERVAL_MINUTES=30
+      - IRRIGATION_CHECK_INTERVAL_HOURS=6
+      - IRRIGATION_ENABLE_SCHEDULER=true
+      # Weather (Milan defaults — override per location)
+      - IRRIGATION_WEATHER_LAT=45.464
+      - IRRIGATION_WEATHER_LON=9.189
+    secrets:
+      - tuya_client_id
+      - tuya_client_secret
+    # Wrap secrets into env vars before exec'ing the server entrypoint.
+    # The greenhouse image reads TUYA_CLIENT_ID/SECRET directly from the
+    # environment (no _FILE suffix support), so we export from /run/secrets.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export TUYA_CLIENT_ID=$$(cat /run/secrets/tuya_client_id)
+        export TUYA_CLIENT_SECRET=$$(cat /run/secrets/tuya_client_secret)
+        exec greenhouse-server
+    volumes:
+      - greenhouse_data:/app/data
+    networks:
+      - greenhouse_network
+      - public_network
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/clusters', timeout=3).status < 500 else 1)"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "app"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "greenhouse"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      <<: *logging-base
