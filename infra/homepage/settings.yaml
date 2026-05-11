@@ -25,6 +25,10 @@ layout:
     style: row
     columns: 3
     icon: mdi-currency-usd
+  Home:
+    style: row
+    columns: 3
+    icon: mdi-home-automation
   Observability:
     style: row
     columns: 3

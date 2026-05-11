@@ -110,6 +110,13 @@
             icon: firefly.png
             ping: http://firefly_importer:8080
 
+- Home:
+      - Greenhouse:
+            href: https://greenhouse.home
+            description: Smart plant irrigation
+            icon: mdi-sprout-#22c55e
+            ping: http://greenhouse_app:8000/api/v1/clusters
+
 - Observability:
       - Grafana:
             href: https://grafana.home
