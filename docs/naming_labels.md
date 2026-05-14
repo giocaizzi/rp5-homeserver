@@ -37,11 +37,11 @@ services:
 | Pattern | Examples |
 |---------|----------|
 | Primary app | `app` |
-| Database | `db`, `pico-db` (scoped) |
+| Database | `db` |
 | Cache | `cache` |
 | Storage | `storage`, `analytics` |
 | Workers | `worker`, `scheduler`, `importer` |
-| Exporters | `db-exporter`, `cache-exporter`, `pico-db-exporter` (scoped) |
+| Exporters | `db-exporter`, `cache-exporter` |
 | Telemetry | `metrics-store`, `log-store`, `trace-store`, `collector` |
 | Infrastructure | `proxy`, `dns`, `tunnel`, `monitoring`, `backup`, `management`, `dashboard` |
 

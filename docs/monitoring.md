@@ -120,7 +120,6 @@ Prometheus scrapes metrics from internal services via Alloy.
 |--------|-------|----------|---------||
 | n8n-db-exporter | n8n | `:9187/metrics` | PostgreSQL stats |
 | firefly-db-exporter | firefly | `:9104/metrics` | MariaDB stats |
-| firefly-pico-db-exporter | firefly | `:9187/metrics` | Pico PostgreSQL |
 | langfuse-db-exporter | langfuse | `:9187/metrics` | Langfuse PostgreSQL |
 | langfuse-cache-exporter | langfuse | `:9121/metrics` | Redis stats |
 | langfuse-analytics | langfuse | `:9363/metrics` | ClickHouse stats |

@@ -563,7 +563,6 @@ key: "{{HOMEPAGE_FILE_PORTAINER_API_KEY}}"
 |-------|--------|--------|---------|
 | n8n | `postgres_config` | `./postgres/postgresql.conf` | DB tuning |
 | firefly | `mariadb_config` | `./mariadb/mariadb.cnf` | DB tuning |
-| firefly | `postgres_config` | `./postgres/postgresql.conf` | Pico DB tuning |
 | langfuse | `clickhouse_config` | `./clickhouse/config.xml` | OLAP config |
 | langfuse | `clickhouse_users` | `./clickhouse/users.xml` | ⚠️ Contains password |
 | langfuse | `postgres_config` | `./postgres/postgresql.conf` | DB tuning |

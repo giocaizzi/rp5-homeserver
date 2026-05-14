@@ -82,7 +82,6 @@ nginx reverse-proxies all `.home` domains to internal services via overlay DNS.
 | `n8n.home` | `n8n_app` | 5678 |
 | `firefly.home` | `firefly_app` | 8080 |
 | `firefly-importer.home` | `firefly_importer` | 8080 |
-| `firefly-pico.home` | `firefly_pico` | 80 |
 | `adguard.home` | `adguard_dns` | 3000 |
 | `ai.home` | `ai_llm` | 11434 |
 | `chat.home` | `ai_chat` | 8080 |
