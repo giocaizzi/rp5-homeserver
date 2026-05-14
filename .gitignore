@@ -4,3 +4,10 @@
 
 # openclaw config
 **/openclaw.json
+
+# Local agent-tooling shims (Portainer's git unpacker rejects symlinks).
+# Recreate locally with:
+#   ln -s AGENTS.md CLAUDE.md
+#   ln -s ../.agents/skills .claude/skills
+/CLAUDE.md
+/.claude/skills

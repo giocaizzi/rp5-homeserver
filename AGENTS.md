@@ -179,6 +179,8 @@ See [Naming & Labeling Standards](../docs/naming_labels.md) for complete referen
 
 > Portainer services use local mount cloning the repo at `/mnt`.
 
+> **No symlinks in the repo.** Portainer's git unpacker rejects any tracked symlink (`exit 255: repository contains a symlink, which is not allowed for security reasons`), blocking every Remote Stack deploy. Local-only agent shims (e.g. `CLAUDE.md`, `.claude/skills`) must stay untracked via `.gitignore` — never `git add` a symlink.
+
 | Mount Type | `infra/` | `services/` |
 |------------|----------|-------------|
 | **Secrets** | File-based (`file:`) | External (pre-create on Pi) |
