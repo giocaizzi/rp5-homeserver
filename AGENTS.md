@@ -189,6 +189,8 @@ service-name:
   # user: "<uid>:<gid>"
   deploy:
     <<: *deploy-base
+    labels:
+      com.giocaizzi.tier: "<tier>"        # service-level — required for Shepherd filter
     resources:
       limits:
         memory: <limit>M                # required for ARM64
@@ -197,6 +199,8 @@ service-name:
   logging:
     <<: *logging-base
 ```
+
+> **Tier label must appear in both blocks.** `labels:` (top-level) sets container labels; Shepherd filters on **service** labels via `docker service ls --filter` and needs `deploy.labels.com.giocaizzi.tier`. Omitting the deploy-level tier silently disables Shepherd auto-updates for that service.
 
 **Component values:** `app`, `data`, `worker`, `gateway`.
 

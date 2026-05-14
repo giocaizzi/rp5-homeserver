@@ -80,6 +80,8 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "core"
       resources:
         limits:
           memory: 256M
@@ -121,6 +123,8 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
       resources:
         limits:
           memory: 64M
@@ -205,6 +209,8 @@ services:
     user: "1000:1000"
     deploy:
       <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "core"
       resources:
         limits:
           memory: 512M

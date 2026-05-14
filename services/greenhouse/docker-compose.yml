@@ -130,6 +130,8 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
       resources:
         limits:
           memory: 512M
