@@ -170,6 +170,8 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "core"
       resources:
         limits:
           memory: 256M
@@ -221,6 +223,8 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "core"
       resources:
         limits:
           memory: 1024M
@@ -264,6 +268,8 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "core"
       resources:
         limits:
           memory: 256M
@@ -306,6 +312,8 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "core"
       resources:
         limits:
           memory: 128M
@@ -348,6 +356,8 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
       resources:
         limits:
           memory: 64M
@@ -391,6 +401,8 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
       resources:
         limits:
           memory: 64M
@@ -440,6 +452,8 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "core"
       resources:
         limits:
           memory: 512M
@@ -513,6 +527,8 @@ services:
     <<: *security-base
     deploy:
       <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "core"
       resources:
         limits:
           memory: 512M
