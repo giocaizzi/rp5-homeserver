@@ -1,9 +1,23 @@
+# Secrets / credentials (per-service secrets/.gitignore handles the rest)
 *.env
 *.pem
+*.key
+*.crt
+
+# OpenClaw runtime config (contains gateway tokens and auth profiles)
+**/openclaw.json
+
+# Logs
 *.log
 
-# openclaw config
-**/openclaw.json
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
 
 # Local agent-tooling shims (Portainer's git unpacker rejects symlinks).
 # Recreate locally with:
