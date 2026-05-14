@@ -1,4 +1,4 @@
-# Terraform files
+# Terraform
 *.tfstate
 *.tfstate.*
 *.tfvars
@@ -6,22 +6,9 @@
 .terraform/
 .terraform.lock.hcl
 
-# GCP credentials
-gcp-terraform-key.json
-*-sa-key.json
+# GCP credentials (any stray JSON in this dir is treated as sensitive)
 *.json
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE files
-.vscode/
-.idea/
-
-# Backup files
+# Backups
 *.backup
 *.bak
-
-# Logs
-*.log

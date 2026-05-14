@@ -1,3 +1,9 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) and other AI coding assistants when working with this repository. It is the source of repo-specific rules. `CLAUDE.md` is a local-only symlink to this file (gitignored — Portainer's git unpacker rejects tracked symlinks).
+
+---
+
 # Role
 
 Enterprise-level senior AI coding assistant for **Raspberry Pi 5 home-server**. Expert in single-node **Docker Swarm**, **Portainer**, **ARM64** containers, and **Linux**.
@@ -12,9 +18,9 @@ Enterprise-level senior AI coding assistant for **Raspberry Pi 5 home-server**. 
 - Reject unnecessary abstraction, scripts, or automation.
 - Produce optimal, production-ready code.
 - Resolve queries fully before yielding.
-- Whenever a substantial change is made, review also this file (`.github/copilot-instructions.md`) and update it accordingly. This file defines the rules you must follow, must be imperative, clear, and concise. Always follow current content and style.
+- When making substantial changes, review and update **this file** (`AGENTS.md`) accordingly. Rules must stay imperative, clear, concise.
 
-When needed, run command directly on the Pi via SSH.
+When needed, run commands directly on the Pi via SSH:
 ```
 ssh giorgiocaizzi@pi.local
 ```
@@ -27,20 +33,71 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 
 **Architecture:**
 - Single-node Docker Swarm.
-- `infra/` — manually deployed manually via SSH (`rsync` + `docker stack deploy`) - this is the only always-on stack.
-- `services/` — deployed via Portainer Remote Stacks (git-based). These services might not always be running.
+- `infra/` — always-on, deployed manually via SSH (`rsync` + `docker stack deploy`). Provides shared networks (`rp5_public`, `rp5_infra`) other stacks depend on.
+- `services/` — deployed via Portainer Remote Stacks (git-based, GitOps). Stacks may be started/stopped on demand.
 
 **Workflow:**
 - Edit locally on macOS → sync/push → deploy.
-- SSH target: `giorgiocaizzi@pi.local` (use for operations, NOT in docs as its personal info).
-- `infra/` deployed to `/home/giorgiocaizzi/rp5-homeserver` on Pi.
+- SSH target: `giorgiocaizzi@pi.local` (use in operations only; in docs use `pi@pi.local`).
+- `infra/` deployed to `/home/giorgiocaizzi/rp5-homeserver/infra` on Pi.
 - Sync entire `infra/` folder (contains `VERSION` file).
 - Reuse scripts in `/scripts`; propose new ones only if essential.
 
 ---
-# Repository
 
-Commits on `main` are blocked by branch protection rules. Use feature branches and PRs for all changes.
+# Repository Layout
+
+| Path | Purpose |
+|------|---------|
+| `infra/` | Always-on infra stack (nginx, portainer, cloudflared, netdata, backrest, homepage, shepherd). Single `docker-compose.yml` + `VERSION` + local `secrets/`. |
+| `services/<stack>/` | One folder per service stack (n8n, firefly, adguard, ai, langfuse, ntfy, observability, openclaw, greenhouse). Each ships a `docker-compose.yml`, optional `secrets/` template, and a README. |
+| `scripts/` | Operational scripts — see Common Commands. |
+| `cloud/` | Terraform for Cloudflare Tunnel + GCS backup bucket. |
+| `docs/` | Architecture, networking, backup, gitops, monitoring, naming/labels. |
+| `.agents/skills/` | Repo-local agent skills (e.g. `firefly`, `openclaw-cli`). |
+| `.github/workflows/` | CI (e.g. `openclaw-image.yml` builds the OpenClaw ARM64 image). |
+
+**Branch protection:** commits to `main` are blocked. All changes go through feature branches + PRs. Use Conventional Commits (`feat`, `fix`, `chore`, `docs`, `refactor`, …; `!` or `BREAKING CHANGE:` for breaks).
+
+---
+
+# Common Commands
+
+All scripts require `PI_SSH_USER`. `PI_HOST` defaults to `pi.local`.
+
+```bash
+# Deploy / update the infra stack (rsync infra/ → deploy stack)
+PI_SSH_USER=giorgiocaizzi ./scripts/sync_infra.sh
+PI_SSH_USER=giorgiocaizzi ./scripts/sync_infra.sh --pull   # pull latest images first
+
+# Create Swarm external secrets for a service stack (used before first Portainer deploy)
+PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack>             # n8n | firefly | langfuse | observability | ...
+PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack> --dry-run
+PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack> --force     # recreate existing
+
+# Unstick Portainer/Docker (compose-unpacker hangs, blocking `docker stack rm`, etc.)
+PI_SSH_USER=giorgiocaizzi ./scripts/kill_stuck_processes.sh --dry-run
+PI_SSH_USER=giorgiocaizzi ./scripts/kill_stuck_processes.sh --force
+
+# Validate a stack locally before pushing (catches anchor / interpolation errors)
+docker compose -f services/<stack>/docker-compose.yml config -q
+
+# Inspect Swarm state on the Pi
+ssh giorgiocaizzi@pi.local 'docker stack ls'
+ssh giorgiocaizzi@pi.local 'docker stack services <stack>'
+ssh giorgiocaizzi@pi.local 'docker service logs --tail 200 -f <stack>_<service>'
+
+# OpenClaw (auth gateway) — always sync before editing config
+./services/openclaw/openclaw.sh pull-config
+./services/openclaw/openclaw.sh push-config
+
+# Cloudflare / GCS infrastructure (from cloud/)
+cd cloud && terraform plan
+cd cloud && terraform apply
+```
+
+There is no application test/lint/build suite — this repo is configuration. "Tests" = `docker compose config` + post-deploy health checks via `docker service ps` / service health endpoints (`https://<service>.home`).
+
 ---
 
 # Constraints
@@ -172,7 +229,7 @@ See [Naming & Labeling Standards](../docs/naming_labels.md) for complete referen
 
 | Component | Workflow |
 |-----------|----------|
-| `infra/`  | Edit locally → `./scripts/sync-infra.sh` |
+| `infra/`  | Edit locally → `./scripts/sync_infra.sh` |
 | `services/` | Edit locally → commit/push → Portainer deploys |
 
 **Portainer Remote Stacks:** Portainer clones repo, enabling relative bind mounts (`./config`), Swarm configs (`file:`), and named volumes. Secrets must be external (pre-created on Pi).
