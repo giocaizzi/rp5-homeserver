@@ -3,7 +3,7 @@
 > Smart plant irrigation system with evidence-based plant care, multi-sensor
 > conflict resolution, weather-aware decisions, and a learning loop.
 
-**URL**: `https://greenhouse.home`
+**URL**: `http://greenhouse.home`
 
 Upstream: [giocaizzi/greenhouse](https://github.com/giocaizzi/greenhouse)
 
@@ -13,7 +13,7 @@ Upstream: [giocaizzi/greenhouse](https://github.com/giocaizzi/greenhouse)
 
 1. Create the two Tuya Cloud secrets (see [Secrets](#-secrets)).
 2. Deploy via Portainer → Swarm mode (Remote Stack from this repo).
-3. Open `https://greenhouse.home` and onboard clusters/plants/irrigators.
+3. Open `http://greenhouse.home` and onboard clusters/plants/irrigators.
 
 ---
 
@@ -104,7 +104,7 @@ docker run --rm -v greenhouse_data:/data -v "$PWD":/out alpine \
 
 ## 🧪 Initial Setup
 
-After deploy, onboard your devices via the web UI at `https://greenhouse.home`:
+After deploy, onboard your devices via the web UI at `http://greenhouse.home`:
 
 1. **Sync from Tuya Cloud** — the app pulls your devices list and offers to
    register the sensors and irrigators it recognizes.
