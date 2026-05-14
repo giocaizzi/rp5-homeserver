@@ -1,11 +1,10 @@
 # 💰 Firefly III
 
-> Personal finance manager with data importer and mobile frontend
+> Personal finance manager with data importer
 
 **URLs**:
 - Main app: `https://firefly.home`
 - Data Importer: `https://firefly-importer.home`
-- Pico (mobile): `https://firefly-pico.home`
 
 ---
 
@@ -25,8 +24,6 @@
 | firefly-db | `mariadb:lts` | Main database |
 | firefly-app | `fireflyiii/core:latest` | Finance app |
 | firefly-importer | `fireflyiii/data-importer:latest` | Bank imports |
-| firefly-pico-db | `postgres:16-alpine` | Pico database |
-| firefly-pico | `cioraneanu/firefly-pico:latest` | Mobile frontend |
 | firefly-cron | `alpine` | Scheduled jobs |
 
 ---
@@ -39,7 +36,6 @@
 | `firefly_db_password` | `openssl rand -base64 32 \| docker secret create firefly_db_password -` |
 | `firefly_static_cron_token` | `openssl rand -hex 32 \| docker secret create firefly_static_cron_token -` |
 | `firefly_auto_import_secret` | `openssl rand -hex 16 \| docker secret create firefly_auto_import_secret -` |
-| `firefly_pico_db_password` | `openssl rand -base64 32 \| docker secret create firefly_pico_db_password -` |
 
 **After deployment** (from Firefly UI):
 | Secret | Source |
@@ -75,33 +71,6 @@ Navigate to `https://firefly.home` and create your account (first user = admin).
 - Navigate to `https://firefly-importer.home`
 - Firefly III URL: `http://firefly-app:8080` (internal)
 - Enter Client ID from step 2
-
----
-
-## 📱 Pico Mobile Frontend
-
-Lightweight mobile interface connecting to Firefly III API.
-
-### Setup
-
-1. Generate Personal Access Token in Firefly III:
-   - Profile → OAuth → Personal Access Tokens → Create
-   - Select all scopes
-
-2. Configure Pico:
-   - Navigate to `https://firefly-pico.home`
-   - Settings → App Config
-   - Paste the Personal Access Token
-   - Leave "Pico Backend URL" as default
-
-### Architecture Note
-
-Two-layer communication:
-```
-Browser → Pico Frontend (https://firefly-pico.home)
-                ↓
-        Pico Backend → Firefly API (http://firefly-app:8080)
-```
 
 ---
 
@@ -156,6 +125,5 @@ Both run in the `firefly-cron` Alpine container.
 |--------|---------|
 | `firefly_db` | MariaDB data |
 | `firefly_upload` | User uploads |
-| `firefly_pico_db` | Pico PostgreSQL |
 
 

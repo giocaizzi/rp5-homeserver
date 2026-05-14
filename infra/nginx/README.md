@@ -20,8 +20,7 @@ nginx/
 │       ├── langfuse.conf
 │       ├── ntfy.conf
 │       ├── firefly.conf
-│       ├── firefly-importer.conf
-│       └── firefly-pico.conf
+│       └── firefly-importer.conf
 └── snippets/
     ├── ssl-params.conf
     ├── proxy-headers.conf

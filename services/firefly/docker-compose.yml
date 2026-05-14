@@ -318,136 +318,10 @@ services:
     logging:
       <<: *logging-base
 
-  pico:
-    image: cioraneanu/firefly-pico:latest
-    hostname: firefly-pico
-    expose:
-      - "80"
-    environment:
-      - FIREFLY_URL=http://firefly-app:8080
-      - DB_CONNECTION=pgsql
-      - DB_HOST=firefly-pico-db
-      - DB_PORT=5432
-      - DB_DATABASE=firefly-pico
-      - DB_USERNAME=firefly-pico
-      - TZ=Europe/Rome
-    secrets:
-      - pico_db_password
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        # Export DB password from Docker secret
-        export DB_PASSWORD=$$(cat /run/secrets/pico_db_password)
-        # Run official entrypoint (waits for DB, runs migrations, caches config from env vars, starts supervisord)
-        exec /docker-entrypoint.d/start.sh
-    networks:
-      - firefly_network
-      - public_network
-    healthcheck:
-      test: ["CMD-SHELL", "nc -z 127.0.0.1 80"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "pico"
-      com.giocaizzi.component: "app"
-      com.giocaizzi.tier: "extra"
-      com.giocaizzi.technology: "firefly-pico"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      resources:
-        limits:
-          memory: 256M
-    logging:
-      <<: *logging-base
-
-  pico-db:
-    image: postgres:16-alpine
-    hostname: firefly-pico-db
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf
-    environment:
-      - POSTGRES_DB=firefly-pico
-      - POSTGRES_USER=firefly-pico
-      - POSTGRES_PASSWORD_FILE=/run/secrets/pico_db_password
-    secrets:
-      - pico_db_password
-    volumes:
-      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-      - firefly_pico_db:/var/lib/postgresql/data
-    networks:
-      - firefly_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U firefly-pico -d firefly-pico"]
-      interval: 20s
-      timeout: 10s
-      retries: 6
-      start_period: 60s
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "pico-db"
-      com.giocaizzi.component: "data"
-      com.giocaizzi.tier: "extra"
-      com.giocaizzi.technology: "postgres"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      resources:
-        limits:
-          memory: 128M
-    logging:
-      <<: *logging-base
-
-  # PostgreSQL Exporter for Pico DB - Metrics for Prometheus/Alloy
-  pico-db-exporter:
-    image: quay.io/prometheuscommunity/postgres-exporter:latest
-    hostname: firefly-pico-db-exporter
-    expose:
-      - "9187"
-    environment:
-      - DATA_SOURCE_URI=firefly-pico-db:5432/firefly-pico?sslmode=disable
-      - DATA_SOURCE_USER=firefly-pico
-    secrets:
-      - pico_db_password
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        export DATA_SOURCE_PASS=$$(cat /run/secrets/pico_db_password)
-        exec /bin/postgres_exporter
-    networks:
-      - firefly_network
-      - observability_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9187/metrics"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "pico-db-exporter"
-      com.giocaizzi.component: "worker"
-      com.giocaizzi.tier: "extra"
-      com.giocaizzi.technology: "postgres-exporter"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      resources:
-        limits:
-          memory: 64M
-    logging:
-      <<: *logging-base
-
 volumes:
   firefly_upload:
     driver: local
   firefly_db:
-    driver: local
-  firefly_pico_db:
     driver: local
 
 configs:
@@ -477,6 +351,3 @@ secrets:
   lunch_flow_api_key:
     external: true
     name: firefly_lunch_flow_api_key
-  pico_db_password:
-    external: true
-    name: firefly_pico_db_password
