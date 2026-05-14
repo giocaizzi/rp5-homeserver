@@ -61,6 +61,9 @@ secrets:
   tuya_client_secret:
     external: true
     name: greenhouse_tuya_client_secret
+  mcp_token:
+    external: true
+    name: greenhouse_mcp_token
 
 # =============================================================================
 # Services
@@ -80,7 +83,9 @@ services:
       - IRRIGATION_HOST=0.0.0.0
       - IRRIGATION_PORT=8000
       - IRRIGATION_SYNC_INTERVAL_MINUTES=30
-      - IRRIGATION_CHECK_INTERVAL_HOURS=6
+      # Cron hour spec for the check_all job (every 6h at :00). Replaces the
+      # deprecated IRRIGATION_CHECK_INTERVAL_HOURS shim (removed in next major).
+      - IRRIGATION_CHECK_CRON_HOURS=*/6
       - IRRIGATION_ENABLE_SCHEDULER=true
       # Weather (Milan defaults — override per location)
       - IRRIGATION_WEATHER_LAT=45.464
@@ -88,15 +93,18 @@ services:
     secrets:
       - tuya_client_id
       - tuya_client_secret
+      - mcp_token
     # Wrap secrets into env vars before exec'ing the server entrypoint.
-    # The greenhouse image reads TUYA_CLIENT_ID/SECRET directly from the
-    # environment (no _FILE suffix support), so we export from /run/secrets.
+    # The greenhouse image reads these directly from the environment (no
+    # _FILE suffix support), so we export from /run/secrets. GREENHOUSE_MCP_TOKEN
+    # is fail-closed upstream (>=v2.0.0): unset → /mcp returns 503.
     entrypoint:
       - /bin/sh
       - -c
       - |
         export TUYA_CLIENT_ID=$$(cat /run/secrets/tuya_client_id)
         export TUYA_CLIENT_SECRET=$$(cat /run/secrets/tuya_client_secret)
+        export GREENHOUSE_MCP_TOKEN=$$(cat /run/secrets/mcp_token)
         exec greenhouse-server
     volumes:
       - greenhouse_data:/app/data

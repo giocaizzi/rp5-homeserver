@@ -37,9 +37,9 @@ Tuya Cloud (sensors)
   Irrigators on LAN
 ```
 
-> ⚠️ The container actuates physical irrigation hardware. MCP at `/mcp` is
-> blocked at the nginx vhost — the upstream project flags it as
-> unauthenticated and localhost-only until auth lands.
+> ⚠️ The container actuates physical irrigation hardware. `/mcp` is gated
+> by a bearer token (`GREENHOUSE_MCP_TOKEN`, fail-closed since upstream
+> v2.0.0): unset → `503`, missing/wrong header → `401`.
 
 ---
 
@@ -49,8 +49,11 @@ Tuya Cloud (sensors)
 |--------|----------|
 | `greenhouse_tuya_client_id` | `echo -n '<your client id>' \| docker secret create greenhouse_tuya_client_id -` |
 | `greenhouse_tuya_client_secret` | `echo -n '<your client secret>' \| docker secret create greenhouse_tuya_client_secret -` |
+| `greenhouse_mcp_token` | `openssl rand -hex 32 \| docker secret create greenhouse_mcp_token -` |
 
-Get the values from the Tuya IoT Cloud project ("Authorization Key").
+Tuya values come from the Tuya IoT Cloud project ("Authorization Key").
+The MCP token is opaque — generate any high-entropy string and share it
+with MCP clients via `Authorization: Bearer <token>`.
 
 ---
 
@@ -64,7 +67,7 @@ Tunables in `docker-compose.yml` `environment:`:
 | `TZ` | `Europe/Rome` | Container timezone |
 | `IRRIGATION_DB_URL` | `sqlite:////app/data/irrigation.db` | DB path inside the volume |
 | `IRRIGATION_SYNC_INTERVAL_MINUTES` | `30` | Sensor sync cadence |
-| `IRRIGATION_CHECK_INTERVAL_HOURS` | `6` | Decision/actuation cadence (matches global cooldown) |
+| `IRRIGATION_CHECK_CRON_HOURS` | `*/6` | Cron hour spec for `check_all` (replaces deprecated `IRRIGATION_CHECK_INTERVAL_HOURS`; engine cooldown still gates actuation) |
 | `IRRIGATION_WEATHER_LAT` / `_LON` | `45.464` / `9.189` | Open-Meteo coordinates for the precipitation-skip rule |
 | `IRRIGATION_ENABLE_SCHEDULER` | `true` | Disable to freeze the system without stopping the stack |
 
