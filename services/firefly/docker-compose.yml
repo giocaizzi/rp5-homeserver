@@ -51,7 +51,7 @@ networks:
 # =============================================================================
 services:
   app:
-    image: fireflyiii/core:latest
+    image: ghcr.io/giocaizzi/firefly-iii:mcp
     hostname: firefly-app
     expose:
       - "8080"
