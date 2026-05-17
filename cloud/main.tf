@@ -9,10 +9,6 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 7.7"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6"
-    }
   }
 }
 
@@ -25,12 +21,20 @@ provider "cloudflare" {
 }
 
 
-# Create the tunnel
+# Create the tunnel.
+# tunnel_secret is intentionally ignored on update: the Cloudflare API never
+# returns secret material on read, so without ignore_changes terraform would
+# propose to rewrite it on every plan — and an actual write would invalidate
+# the running cloudflared on the Pi.
 resource "cloudflare_zero_trust_tunnel_cloudflared" "homeserver" {
   account_id    = var.cloudflare_account_id
   name          = "rp5-homeserver"
   config_src    = "cloudflare"
   tunnel_secret = var.tunnel_secret
+
+  lifecycle {
+    ignore_changes = [tunnel_secret]
+  }
 }
 
 # Reads the token used to run the tunnel on the server.
