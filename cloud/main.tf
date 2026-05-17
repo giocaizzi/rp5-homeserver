@@ -344,6 +344,56 @@ resource "cloudflare_zero_trust_access_application" "openclaw_policy" {
 }
 
 # ============================================================================
+# Claude Code MCP — service token + path-scoped bypass for n8n /mcp-server
+# ============================================================================
+
+# Service token used by Claude Code to authenticate against CF Access when
+# calling the n8n instance-level MCP endpoint. n8n's own MCP access token
+# provides the second auth layer at the application level.
+resource "cloudflare_zero_trust_access_service_token" "claude_mcp" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-mcp"
+}
+
+resource "cloudflare_zero_trust_access_policy" "claude_mcp_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-mcp-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.claude_mcp.id
+      }
+    }
+  ]
+}
+
+# Path-scoped Access app: matches only https://n8n.<zone>/mcp-server*, so the
+# service token cannot be used to reach the n8n UI (which stays gated by
+# cloudflare_zero_trust_access_application.n8n_policy + n8n_users).
+# CF Access matches the most-specific path first.
+resource "cloudflare_zero_trust_access_application" "n8n_mcp_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "n8n-mcp.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "n8n.${var.zone_name}/mcp-server"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.claude_mcp_bypass.id
+      precedence = 1
+    }
+  ]
+}
+
+# ============================================================================
 # GCP Resources
 # ============================================================================
 
