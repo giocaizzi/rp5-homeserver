@@ -33,7 +33,34 @@ Cards in active use:
 | **Manual CSV** (`services/firefly/config/conifg_credit.json`) | `Carta Credito Fineco` | Categorisation only — imports are sporadic ("when I remember"). **Balance is never authoritative.** |
 | **Manual entry / UI** | Anything | Used to fill gaps and to fix one-off mismatches. |
 
-**Implication:** when somebody (you, the user) asks "what's my balance on X?" — trust the Fineco/Revolut LunchFlow-fed accounts and hedge on the credit card.
+**Stationary-balance invariant:** every asset balance must match the bank app at any point in time. When that breaks, **adjust the account's `opening_balance` field** (one PUT on the genesis journal) — do not insert reconciliation transactions, do not create placeholder withdrawals/deposits, do not use a `Cash account` plug.
+
+LunchFlow may occasionally miss a transaction (small purchases, intermittent connection); over months that drifts. If you notice Firefly diverging from the bank app, edit the opening_balance to absorb the gap.
+
+## 2a. Drift correction via opening_balance — the only mechanism
+
+This applies to **every asset** (fineco, revolut, CC, USD/GBP wallets). One pattern, no exceptions:
+
+```
+new_opening = current_opening - (current_balance - target_balance)
+```
+
+- `target_balance` = whatever the bank app currently says (for CC: 0 right after each ESTRATTO).
+- `current_opening` = the asset's current `opening_balance` field.
+- API: `PUT /api/v1/accounts/{id}` with `{ "opening_balance": "<new>", "opening_balance_date": "<unchanged>" }`. Edits the existing system-generated genesis journal in place.
+
+**Why this and not reconciliation transactions:**
+- No synthetic-looking journals appear in the ledger.
+- No paired reconciliation accounts to recreate or manage.
+- One mechanism, applied identically for the one-time historical drift cleanup and the ongoing CC monthly pin.
+
+**What you give up:** a per-correction journal as audit trail. The audit trail instead lives in `docker service logs firefly_scheduler` for the CC cron, and in this skill / project memory for one-off edits.
+
+**Trigger pattern by account:**
+- `fineco`, `revolut`: manual when divergence noticed (no fixed schedule — these are continuously variable).
+- `Carta Credito Fineco`: automatic on the 11th of every month via the cron in §3 (real CC balance ≈ 0 right after each ESTRATTO is the known checkpoint).
+
+Don't try to find the missing/extra transactions to reverse one-by-one — drift accumulates from hundreds of tiny gaps over years and chasing each costs more than it's worth. The opening_balance edit re-establishes a known-good point and you carry on.
 
 ## 3. The credit card mental model
 
@@ -68,21 +95,18 @@ If this rule loses the `convert_transfer` action, the importer silently creates 
 
 Settlements arrive continuously and completely via LunchFlow. Purchases arrive sporadically via manual CSV. **The CC balance in Firefly lags reality between CSV imports** — that's the cost of not running a full PSD2 feed on the card. Chasing per-transaction completeness is not the goal.
 
-### Auto-reconciliation: pin to 0 on the 11th of each month
+### Auto-pin to 0 on the 11th of each month
 
-A cron job in `firefly_scheduler` runs on the **11th at 04:00** (one day after each ESTRATTO) and posts a native Firefly **reconciliation transaction** that brings the CC balance to exactly 0:
+A cron job in `firefly_scheduler` runs on the **11th at 04:00** (one day after each ESTRATTO) and **adjusts `opening_balance`** so current_balance collapses to exactly 0:
 
 - Script: `services/firefly/scripts/cc_monthly_reconcile.py`.
+- Mechanism: `PUT /accounts/3848` with `opening_balance = current_opening - current_balance`. No new journals are created; the existing system genesis journal is edited in place. Consistent with §2a.
 - Defensive: only fires if a `fineco → CC` transfer occurred within the last 14 days. If LunchFlow lagged or the ESTRATTO never arrived, the job logs and skips instead of blindly zeroing.
 - Idempotent: if the balance is already 0, it does nothing.
-- Native reconciliation = excluded from spending reports / charts / category totals; the paired reconciliation account (auto-created by Firefly) absorbs the offsetting side and is excluded from net worth.
-- Reconciliation direction: `source = reconciliation account, destination = CC, amount = -balance` (positive amount brings a negative CC balance up toward 0).
 
-This means right after each settlement the CC balance shows the truth (0 = paid in full). As you upload CSVs through the next cycle, the balance drifts negative — that's "what I've categorised this cycle so far", not the real bank balance. On the next 11th, the cron re-pins to 0.
+This means right after each settlement the CC balance shows the truth (0 = paid in full). As you upload CSVs through the next cycle, the balance drifts negative — that's "what I've categorised this cycle so far", not the real bank balance. On the next 11th, the cron re-pins to 0 by shifting opening_balance.
 
-### Never edit `opening_balance` to mask drift
-
-`opening_balance` represents the real CC owed amount the day Firefly started tracking — nothing else. Editing it post-creation silently rewrites the genesis journal with no audit trail and violates the user's invariant on native reconciliation. If you find yourself wanting to nudge the opening balance, use a reconciliation transaction instead.
+The opening_balance therefore becomes a *rolling drift compensator* rather than a fixed historical starting amount. That's an unusual semantic, but mechanically simplest: one field, no reconciliation accounts to maintain, no journals to manage.
 
 ### Card-number heuristics
 
@@ -172,7 +196,7 @@ Conventions:
 
 ## 9. Hard invariants (don't violate these — or things break in subtle ways)
 
-1. **Native Firefly Reconciliation transactions only.** Never create a fake withdrawal/deposit (or move money to/from "Cash account") to make a balance line up. Firefly's `reconciliation` transaction type is first-class and excluded from spending reports; placeholder journals pollute everything.
+1. **Drift correction = `opening_balance` edit.** Never create reconciliation transactions, fake withdrawals/deposits, or `Cash account` plugs to align a balance. Adjust the asset's `opening_balance` field (see §2a). One mechanism, applied uniformly.
 2. **Bank statement descriptions are not merchants.** The importer creates an expense account with the full description when no rule matches. Those auto-merchants are noise — every cleanup pass should fold them back into the canonical merchant.
 3. **Don't trust the Carta Credito Fineco balance.** Imports are sporadic. Use it for categorisation history, not as ground truth.
 4. **PayPal is not an asset, never was.** Don't recreate the PayPal asset account; don't treat PayPal as if it holds the user's money. PayPal-mediated transactions are either resolved into their real merchant (`Fineco → <Merchant>`) or, when the merchant is unrecoverable from the bank line, attributed to the `PayPal` expense bucket. Incoming PayPal payouts come from the `PayPal Payout` revenue.
