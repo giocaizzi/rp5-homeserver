@@ -44,6 +44,37 @@
 | `firefly_access_token` | Profile → OAuth → Personal Access Tokens |
 | `firefly_lunch_flow_api_key` | External: [lunchflow.app](https://www.lunchflow.app/) |
 
+### Rotating `firefly_access_token`
+
+A Personal Access Token is a Laravel Passport JWT signed by `storage/oauth-private.key`. Generating a new token in the UI does **not** invalidate the previous one — but losing the key pair does (every JWT signed by the old private key fails verification, all at once). The `firefly_storage` volume persists those keys across container restarts; rotation is only needed when you want to revoke an existing token or when the keys were regenerated (e.g. by a deploy that predated `firefly_storage`).
+
+Naive `docker secret rm` + `create` crash-loops the scheduler container, because its startup script `cat`s the secret. Detach first, then swap, then reattach:
+
+```bash
+# 1. Generate a new token in the Firefly UI (Profile → OAuth → Personal Access Tokens)
+#    and place it in services/firefly/secrets/firefly_access_token.txt (gitignored).
+
+# 2. Rotate the Swarm secret in three steps from the Pi.
+NEW_TOKEN=$(cat services/firefly/secrets/firefly_access_token.txt)
+ssh pi@pi.local "TOKEN=$(printf %q "$NEW_TOKEN") bash -s" <<'EOF'
+set -euo pipefail
+docker service update --secret-rm firefly_access_token firefly_scheduler >/dev/null
+docker secret rm firefly_access_token >/dev/null
+printf %s "$TOKEN" | docker secret create firefly_access_token - >/dev/null
+docker service update \
+  --secret-add source=firefly_access_token,target=firefly_access_token \
+  firefly_scheduler >/dev/null
+EOF
+
+# 3. Confirm
+ssh pi@pi.local '
+  SCHED=$(docker ps -qf "label=com.docker.swarm.service.name=firefly_scheduler" | head -1)
+  docker exec "$SCHED" head -c 30 /run/secrets/firefly_access_token; echo
+'
+```
+
+The scheduler will briefly fail one task while the secret is detached — Swarm reschedules within ~5 s as soon as the new secret is attached.
+
 ---
 
 ## 📖 Initial Setup
@@ -121,9 +152,39 @@ Both run in the `firefly-cron` Alpine container.
 
 ## 💾 Volumes
 
-| Volume | Purpose |
-|--------|---------|
-| `firefly_db` | MariaDB data |
-| `firefly_upload` | User uploads |
+| Volume | Mount | Purpose |
+|--------|-------|---------|
+| `firefly_db` | `/var/lib/mysql` | MariaDB data |
+| `firefly_storage` | `/var/www/html/storage` | Laravel storage tree — **persists `oauth-{public,private}.key`** so Personal Access Tokens survive container recreate. Also keeps `framework/`, `logs/`, `app/`. |
+| `firefly_upload` | `/var/www/html/storage/upload` | User attachments. Nested-mounted inside `firefly_storage` so uploads are isolated from the rest of `storage/` for backups. |
+
+> Without `firefly_storage`, every container recreate regenerates the OAuth signing keys, invalidating every existing Personal Access Token at once. See [Rotating `firefly_access_token`](#rotating-firefly_access_token) for recovery.
+
+### First deploy of `firefly_storage` (one-time)
+
+When the volume is first created, Docker copies `storage/*` from the image — which has no OAuth keys (they are generated at runtime). Passport then writes fresh keys into the empty volume, **invalidating the existing PAT**. Two paths:
+
+1. **Easy path — rotate the PAT once after deploy.** Deploy normally, then follow [Rotating `firefly_access_token`](#rotating-firefly_access_token). Every future redeploy is safe.
+
+2. **Preserve current PAT — pre-seed the volume.** Before the redeploy, copy the running keys into a fresh `firefly_firefly_storage` volume:
+
+   ```bash
+   ssh pi@pi.local '
+     APP=$(docker ps -qf "label=com.docker.swarm.service.name=firefly_app" | head -1)
+     docker cp "$APP":/var/www/html/storage/oauth-private.key /tmp/p.key
+     docker cp "$APP":/var/www/html/storage/oauth-public.key  /tmp/P.key
+     docker volume create firefly_firefly_storage
+     docker run --rm \
+       -v firefly_firefly_storage:/dst -v /tmp:/src alpine sh -c "
+         cp /src/p.key /dst/oauth-private.key &&
+         cp /src/P.key /dst/oauth-public.key &&
+         chown 33:33 /dst/oauth-*.key &&
+         chmod 600  /dst/oauth-*.key
+       "
+     shred -u /tmp/p.key /tmp/P.key
+   '
+   ```
+
+   Then deploy. Docker sees the volume is non-empty and skips the image-copy, so the keys you seeded stay — the existing PAT keeps working.
 
 
