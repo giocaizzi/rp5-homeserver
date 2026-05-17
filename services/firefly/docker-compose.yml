@@ -103,6 +103,12 @@ services:
       - static_cron_token
     volumes:
       - ./scripts/load-secrets.sh:/etc/cont-init.d/00-load-secrets:ro
+      # Persist the entire Laravel storage tree — most importantly
+      # storage/oauth-{public,private}.key. Without this, container recreate
+      # regenerates the keys and invalidates every Personal Access Token.
+      - firefly_storage:/var/www/html/storage
+      # Attachments live in a separate volume, nested-mounted so user uploads
+      # survive even if firefly_storage is ever rebuilt.
       - firefly_upload:/var/www/html/storage/upload
     networks:
       - firefly_network
@@ -329,6 +335,8 @@ services:
       <<: *logging-base
 
 volumes:
+  firefly_storage:
+    driver: local
   firefly_upload:
     driver: local
   firefly_db:
