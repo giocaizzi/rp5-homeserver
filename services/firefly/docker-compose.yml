@@ -291,7 +291,7 @@ services:
       <<: *logging-base
 
   scheduler:
-    image: alpine
+    image: python:3.13-alpine
     hostname: firefly-scheduler
     environment:
       - TZ=Europe/Rome
@@ -300,6 +300,7 @@ services:
       - firefly_access_token
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./scripts/cc_monthly_reconcile.py:/usr/local/bin/cc_monthly_reconcile.py:ro
     command: >
       sh -c "apk add --no-cache tzdata wget docker-cli &&
       ln -sf /usr/share/zoneinfo/Europe/Rome /etc/localtime &&
@@ -310,6 +311,7 @@ services:
       FIREFLY_ACCESS_TOKEN=\$$(cat /run/secrets/firefly_access_token) &&
       echo '0 6 * * * docker exec \$$(docker ps --filter "label=com.docker.swarm.service.name=firefly_app" --format "{{.Names}}") php artisan firefly-iii:cron' > /tmp/crontab &&
       echo '0 6 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer '$$FIREFLY_ACCESS_TOKEN'\" http://firefly-importer:8080/autoimport?directory=/var/www/html/import\\&secret='$$AUTO_IMPORT_SECRET >> /tmp/crontab &&
+      echo '0 4 11 * * python3 /usr/local/bin/cc_monthly_reconcile.py >> /proc/1/fd/1 2>&1' >> /tmp/crontab &&
       crontab /tmp/crontab &&
       rm /tmp/crontab &&
       echo 'Cron jobs configured:' &&
