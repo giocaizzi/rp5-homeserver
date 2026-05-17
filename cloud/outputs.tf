@@ -70,7 +70,6 @@ output "backup_service_account_key" {
 output "github_webhook_client_id" {
   description = "Client ID for GitHub webhook service token"
   value       = cloudflare_zero_trust_access_service_token.github_webhook.client_id
-  sensitive   = true
 }
 
 output "github_webhook_client_secret" {
@@ -86,7 +85,6 @@ output "github_webhook_client_secret" {
 output "claude_mcp_client_id" {
   description = "Client ID for Claude Code MCP service token (CF-Access-Client-Id)"
   value       = cloudflare_zero_trust_access_service_token.claude_mcp.client_id
-  sensitive   = true
 }
 
 output "claude_mcp_client_secret" {
