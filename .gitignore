@@ -19,9 +19,7 @@ Thumbs.db
 .idea/
 *.swp
 
-# Local agent-tooling shims (Portainer's git unpacker rejects symlinks).
+# Local agent-tooling shim (Portainer's git unpacker rejects symlinks).
 # Recreate locally with:
 #   ln -s AGENTS.md CLAUDE.md
-#   ln -s ../.agents/skills .claude/skills
 /CLAUDE.md
-/.claude/skills
