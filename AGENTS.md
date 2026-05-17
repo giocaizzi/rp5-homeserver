@@ -1,6 +1,8 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) and other AI coding assistants when working with this repository. It is the source of repo-specific rules. `CLAUDE.md` is a local-only symlink to this file (gitignored — Portainer's git unpacker rejects tracked symlinks).
+This file is the source of repo-specific rules for Claude Code (claude.ai/code) and other AI coding assistants. `CLAUDE.md` is a local-only symlink to this file (gitignored — Portainer's git unpacker rejects tracked symlinks).
+
+**Authoritative runbooks live in `.claude/skills/`** — load `firefly` and `openclaw-cli` before any task touching those stacks.
 
 ---
 
@@ -54,8 +56,8 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 | `scripts/` | Operational scripts — see Common Commands. |
 | `cloud/` | Terraform for Cloudflare Tunnel + GCS backup bucket. |
 | `docs/` | Architecture, networking, backup, gitops, monitoring, naming/labels. |
-| `.agents/skills/` | Repo-local agent skills (e.g. `firefly`, `openclaw-cli`). |
-| `.github/workflows/` | CI (e.g. `openclaw-image.yml` builds the OpenClaw ARM64 image). |
+| `.claude/skills/` | Repo-local agent skills (e.g. `firefly`, `openclaw-cli`). |
+| `.github/workflows/` | CI. `openclaw-image.yml` runs on push to `main` or PR touching `services/openclaw/Dockerfile`; builds multi-arch via QEMU and publishes `ghcr.io/giocaizzi/openclaw-gateway` (push only, not PR). |
 
 **Branch protection:** commits to `main` are blocked. All changes go through feature branches + PRs. Use Conventional Commits (`feat`, `fix`, `chore`, `docs`, `refactor`, …; `!` or `BREAKING CHANGE:` for breaks).
 
@@ -72,8 +74,9 @@ PI_SSH_USER=giorgiocaizzi ./scripts/sync_infra.sh --pull   # pull latest images 
 
 # Create Swarm external secrets for a service stack (used before first Portainer deploy)
 PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack>             # n8n | firefly | langfuse | observability | ...
+PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh --all               # every stack under services/
 PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack> --dry-run
-PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack> --force     # recreate existing
+PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack> --prune     # delete secrets on Pi not present locally
 
 # Unstick Portainer/Docker (compose-unpacker hangs, blocking `docker stack rm`, etc.)
 PI_SSH_USER=giorgiocaizzi ./scripts/kill_stuck_processes.sh --dry-run
@@ -214,7 +217,7 @@ service-name:
 | Volume | `<purpose>_data` | `postgres_data` |
 | Secret | `<name>` | `postgres_password` |
 
-See [Naming & Labeling Standards](../docs/naming_labels.md) for complete reference.
+See [Naming & Labeling Standards](docs/naming_labels.md) for complete reference.
 
 ---
 
@@ -240,7 +243,7 @@ See [Naming & Labeling Standards](../docs/naming_labels.md) for complete referen
 
 > Portainer services use local mount cloning the repo at `/mnt`.
 
-> **No symlinks in the repo.** Portainer's git unpacker rejects any tracked symlink (`exit 255: repository contains a symlink, which is not allowed for security reasons`), blocking every Remote Stack deploy. Local-only agent shims (e.g. `CLAUDE.md`, `.claude/skills`) must stay untracked via `.gitignore` — never `git add` a symlink.
+> **No symlinks in the repo.** Portainer's git unpacker rejects any tracked symlink (`exit 255: repository contains a symlink, which is not allowed for security reasons`), blocking every Remote Stack deploy. Local-only agent shims (e.g. `CLAUDE.md` → `AGENTS.md`) must stay untracked via `.gitignore` — never `git add` a symlink.
 
 | Mount Type | `infra/` | `services/` |
 |------------|----------|-------------|
@@ -253,8 +256,7 @@ See [Naming & Labeling Standards](../docs/naming_labels.md) for complete referen
 - Static configs (nginx, ntfy): Bind mount from repo
 - Runtime-modified configs (openclaw): Named volume, edit via SSH
 
-- Commands: explicit, deterministic, minimal.
-- Version tracked in `infra/VERSION`.
+**`infra/VERSION`** — manually-maintained semver tag for the infra stack. `sync_infra.sh` mirrors it into a Swarm `infra_version_config`; **a changed VERSION triggers `docker stack rm infra` + redeploy** (configs are immutable in Swarm), so bump it *only* when configs or topology change and a restart is acceptable. Routine image-only updates: leave VERSION alone.
 
 ---
 
@@ -297,10 +299,9 @@ Add service-specific sections as needed.
 
 ---
 
-# Openclaw
+# Stack-specific runbooks
 
-Always push and pull the latest config before making changes to ensure local state is up to date:
+Detailed operational procedures live in skill files — load them before touching the stack:
 
-```bash
-openclaw.sh pull-config
-```
+- **OpenClaw**: `.claude/skills/openclaw-cli/SKILL.md` (auth gateway, channel tokens, `openclaw.sh pull-config` / `push-config`).
+- **Firefly**: `.claude/skills/firefly/SKILL.md`.
