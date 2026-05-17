@@ -393,6 +393,30 @@ resource "cloudflare_zero_trust_access_application" "n8n_mcp_policy" {
   ]
 }
 
+# Path-scoped Access app: matches only https://firefly.<zone>/api/v1/mcp*, so
+# the service token cannot be used to reach the Firefly III web UI (which stays
+# gated by the existing firefly Access app). CF Access matches the most-specific
+# path first, so this takes precedence on /api/v1/mcp* requests.
+resource "cloudflare_zero_trust_access_application" "firefly_mcp_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "firefly-mcp.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "firefly.${var.zone_name}/api/v1/mcp"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.claude_mcp_bypass.id
+      precedence = 1
+    }
+  ]
+}
+
 # ============================================================================
 # GCP Resources
 # ============================================================================
