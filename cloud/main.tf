@@ -348,26 +348,29 @@ resource "cloudflare_zero_trust_access_application" "openclaw_policy" {
 }
 
 # ============================================================================
-# Claude Code MCP — service token + path-scoped bypass for n8n /mcp-server
+# Claude Code MCP — per-endpoint service tokens + path-scoped bypass apps
 # ============================================================================
+# One service token per MCP endpoint, so a leaked token for n8n cannot reach
+# Firefly III's MCP (and vice versa). Each endpoint's app references only its
+# own bypass policy. Application-layer auth (n8n MCP token / Firefly III PAT)
+# remains the second factor on top of CF Access bypass.
 
-# Service token used by Claude Code to authenticate against CF Access when
-# calling the n8n instance-level MCP endpoint. n8n's own MCP access token
-# provides the second auth layer at the application level.
-resource "cloudflare_zero_trust_access_service_token" "claude_mcp" {
+# --- n8n MCP --------------------------------------------------------------
+
+resource "cloudflare_zero_trust_access_service_token" "claude_n8n_mcp" {
   account_id = var.cloudflare_account_id
-  name       = "claude-mcp"
+  name       = "claude-n8n-mcp"
 }
 
-resource "cloudflare_zero_trust_access_policy" "claude_mcp_bypass" {
+resource "cloudflare_zero_trust_access_policy" "claude_n8n_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-mcp-bypass"
+  name       = "claude-n8n-mcp-bypass"
   decision   = "bypass"
 
   include = [
     {
       service_token = {
-        token_id = cloudflare_zero_trust_access_service_token.claude_mcp.id
+        token_id = cloudflare_zero_trust_access_service_token.claude_n8n_mcp.id
       }
     }
   ]
@@ -391,8 +394,29 @@ resource "cloudflare_zero_trust_access_application" "n8n_mcp_policy" {
 
   policies = [
     {
-      id         = cloudflare_zero_trust_access_policy.claude_mcp_bypass.id
+      id         = cloudflare_zero_trust_access_policy.claude_n8n_mcp_bypass.id
       precedence = 1
+    }
+  ]
+}
+
+# --- Firefly III MCP ------------------------------------------------------
+
+resource "cloudflare_zero_trust_access_service_token" "claude_firefly_mcp" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-firefly-mcp"
+}
+
+resource "cloudflare_zero_trust_access_policy" "claude_firefly_mcp_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-firefly-mcp-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.claude_firefly_mcp.id
+      }
     }
   ]
 }
@@ -415,7 +439,7 @@ resource "cloudflare_zero_trust_access_application" "firefly_mcp_policy" {
 
   policies = [
     {
-      id         = cloudflare_zero_trust_access_policy.claude_mcp_bypass.id
+      id         = cloudflare_zero_trust_access_policy.claude_firefly_mcp_bypass.id
       precedence = 1
     }
   ]
