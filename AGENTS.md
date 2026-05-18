@@ -57,7 +57,7 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 | `cloud/` | Terraform for Cloudflare Tunnel + GCS backup bucket. |
 | `docs/` | Architecture, networking, backup, gitops, monitoring, naming/labels. |
 | `.claude/skills/` | Repo-local agent skills (e.g. `firefly`, `openclaw-cli`). |
-| `.github/workflows/` | CI. `openclaw-image.yml` runs on push to `main` or PR touching `services/openclaw/Dockerfile`; builds multi-arch via QEMU and publishes `ghcr.io/giocaizzi/openclaw-gateway` (push only, not PR). |
+| `.github/workflows/` | CI/CD. `ci.yml` runs on every PR → `main`: `terraform fmt`/`validate`/`plan` for `cloud/**`, posts a sticky plan comment, exposes a single `gate` job as the required status check. `cd.yml` runs on push to `main` touching `cloud/**` and applies via the `cloud-production` environment (auto-approves; flip env "Required reviewers" to add a human gate). Both use GCS remote state + GCP Workload Identity Federation. |
 
 **Branch protection:** commits to `main` are blocked. All changes go through feature branches + PRs. Use Conventional Commits (`feat`, `fix`, `chore`, `docs`, `refactor`, …; `!` or `BREAKING CHANGE:` for breaks).
 

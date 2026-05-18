@@ -1,0 +1,65 @@
+# Continuous deployment for cloud/ Terraform on push to main.
+#
+# The `cloud-production` environment is what gives us:
+#   - GitHub Deployments tab visibility (audit trail of every apply)
+#   - Per-env secrets (CLOUDFLARE_API_TOKEN scoped to this env only)
+#   - Optional human approval — enable "Required reviewers" in env settings
+#     to gate applies; no workflow change needed.
+name: CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cloud/**'
+      - '.github/workflows/cd.yml'
+
+permissions:
+  contents: read
+  id-token: write   # WIF
+
+concurrency:
+  group: cd
+  cancel-in-progress: false   # never cancel an in-flight apply
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: cloud-production
+    defaults:
+      run:
+        working-directory: cloud
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ vars.TF_VERSION || '1.9.8' }}
+          terraform_wrapper: false
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_TF_SERVICE_ACCOUNT }}
+
+      - name: terraform init
+        run: terraform init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
+
+      - name: terraform apply
+        env:
+          TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          TF_VAR_zone_name: ${{ vars.CLOUDFLARE_ZONE_NAME }}
+          TF_VAR_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_tunnel_secret: ${{ secrets.TUNNEL_SECRET }}
+          TF_VAR_n8n_users: ${{ vars.N8N_USERS }}
+          TF_VAR_portainer_users: ${{ vars.PORTAINER_USERS }}
+          TF_VAR_backrest_users: ${{ vars.BACKREST_USERS }}
+          TF_VAR_firefly_users: ${{ vars.FIREFLY_USERS }}
+          TF_VAR_homepage_users: ${{ vars.HOMEPAGE_USERS }}
+          TF_VAR_openclaw_users: ${{ vars.OPENCLAW_USERS }}
+          TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
+          TF_VAR_gcp_region: ${{ vars.GCP_REGION }}
+          TF_VAR_gcp_backup_bucket_name: ${{ vars.GCP_BACKUP_BUCKET_NAME }}
+          TF_VAR_backup_retention_days: ${{ vars.BACKUP_RETENTION_DAYS }}
+        run: terraform apply -input=false -auto-approve -lock-timeout=5m
