@@ -103,3 +103,23 @@ output "claude_firefly_mcp_client_secret" {
   value       = cloudflare_zero_trust_access_service_token.claude_firefly_mcp.client_secret
   sensitive   = true
 }
+
+# ============================================================================
+# OTLP ingestion outputs (CF Access bypass for otel.<zone>/v1/*)
+# ============================================================================
+
+output "otel_ingest_url" {
+  description = "Public OTLP HTTP endpoint (set as OTEL_EXPORTER_OTLP_ENDPOINT)"
+  value       = "https://otel.${var.zone_name}"
+}
+
+output "otel_ingest_client_id" {
+  description = "Client ID for the otel-ingest service token (CF-Access-Client-Id)"
+  value       = cloudflare_zero_trust_access_service_token.otel_ingest.client_id
+}
+
+output "otel_ingest_client_secret" {
+  description = "Client Secret for the otel-ingest service token (CF-Access-Client-Secret)"
+  value       = cloudflare_zero_trust_access_service_token.otel_ingest.client_secret
+  sensitive   = true
+}

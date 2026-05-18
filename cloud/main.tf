@@ -104,6 +104,17 @@ resource "cloudflare_dns_record" "openclaw" {
   proxied = true
 }
 
+# Creates the CNAME record that routes otel.${var.zone_name} to the tunnel.
+# OTLP HTTP ingestion: CF Access bypass on /v1/* + Alloy bearer auth.
+resource "cloudflare_dns_record" "otel" {
+  zone_id = var.zone_id
+  name    = "otel"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
 # Configures tunnel with a published application for clientless access.
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
@@ -162,6 +173,15 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
           no_tls_verify      = true
           http_host_header   = "openclaw.${var.zone_name}"
           origin_server_name = "openclaw.${var.zone_name}"
+        }
+      },
+      {
+        hostname = "otel.${var.zone_name}"
+        service  = "https://infra-proxy:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "otel.${var.zone_name}"
+          origin_server_name = "otel.${var.zone_name}"
         }
       },
       {
@@ -395,6 +415,55 @@ resource "cloudflare_zero_trust_access_application" "n8n_mcp_policy" {
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.claude_n8n_mcp_bypass.id
+      precedence = 1
+    }
+  ]
+}
+
+# --- OTLP ingestion (Alloy) ----------------------------------------------
+# Public OTLP HTTP endpoint. CF Access bypass is the OUTER gate (short-circuits
+# CF's SSO so SDK clients can POST without a browser), Alloy's bearer auth on
+# the OTLP HTTP receiver is the INNER gate (validates the actual identity).
+# Two independent secrets — leaking one alone does not grant ingestion.
+
+resource "cloudflare_zero_trust_access_service_token" "otel_ingest" {
+  account_id = var.cloudflare_account_id
+  name       = "otel-ingest"
+}
+
+resource "cloudflare_zero_trust_access_policy" "otel_ingest_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "otel-ingest-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.otel_ingest.id
+      }
+    }
+  ]
+}
+
+# Path-scoped Access app: matches only https://otel.<zone>/v1/* (OTLP HTTP
+# paths: /v1/traces, /v1/metrics, /v1/logs). Anything else on this hostname
+# returns the default Access challenge — there is no UI to protect, but this
+# narrows the blast radius if a token leaks.
+resource "cloudflare_zero_trust_access_application" "otel_ingest_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "otel-ingest.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "otel.${var.zone_name}/v1/"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.otel_ingest_bypass.id
       precedence = 1
     }
   ]

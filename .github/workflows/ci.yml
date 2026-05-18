@@ -33,9 +33,9 @@ jobs:
     outputs:
       cloud: ${{ steps.filter.outputs.cloud }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - id: filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             cloud:
@@ -51,15 +51,15 @@ jobs:
       run:
         working-directory: cloud
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ vars.TF_VERSION || '1.9.8' }}
           terraform_wrapper: false
 
       - id: auth
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
           service_account: ${{ vars.GCP_TF_SERVICE_ACCOUNT }}
@@ -101,7 +101,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Comment plan on PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const plan = `${{ steps.plan.outputs.plan }}`;
