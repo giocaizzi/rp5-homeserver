@@ -7,6 +7,15 @@
 // Data Flow:
 //   OTLP Receivers → Batch Processor → Attribute Processor → Backend Exporters
 //
+// Auth:
+//   HTTP (port 4318) requires `Authorization: Bearer <token>`. Same enforcement
+//   applies to LAN traffic (otel.home) and public traffic (otel.giocaizzi.xyz
+//   behind CF Access bypass) — the bearer is validated by Alloy regardless of
+//   source.
+//   gRPC (port 4317) is unauthenticated; the port is bound to the
+//   observability overlay only (no host publish, no nginx route) so it is
+//   reachable solely from other containers on the same Swarm overlay.
+//
 // Arguments:
 //   prometheus_receiver - Prometheus remote_write endpoint receiver
 //   loki_receiver       - Loki write endpoint receiver
@@ -30,9 +39,25 @@ declare "otlp_receivers" {
   }
 
   // ---------------------------------------------------------------------------
+  // BEARER AUTH (HTTP receiver only)
+  // ---------------------------------------------------------------------------
+  // Reads the shared secret from the Swarm-mounted file and exposes a handler
+  // for the OTLP HTTP receiver. `is_secret = true` keeps the value out of
+  // Alloy's debug UI / exported metrics.
+
+  local.file "otel_bearer_token" {
+    filename  = "/run/secrets/alloy_otel_bearer_token"
+    is_secret = true
+  }
+
+  otelcol.auth.bearer "otlp_http" {
+    token = local.file.otel_bearer_token.content
+  }
+
+  // ---------------------------------------------------------------------------
   // OTLP RECEIVERS
   // ---------------------------------------------------------------------------
-  // HTTP: port 4318, gRPC: port 4317
+  // HTTP: port 4318 (bearer-auth required), gRPC: port 4317 (overlay-only)
 
   otelcol.receiver.otlp "default" {
     grpc {
@@ -40,6 +65,7 @@ declare "otlp_receivers" {
     }
     http {
       endpoint = "0.0.0.0:4318"
+      auth     = otelcol.auth.bearer.otlp_http.handler
     }
 
     output {
