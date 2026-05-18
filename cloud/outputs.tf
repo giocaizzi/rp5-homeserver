@@ -70,11 +70,36 @@ output "backup_service_account_key" {
 output "github_webhook_client_id" {
   description = "Client ID for GitHub webhook service token"
   value       = cloudflare_zero_trust_access_service_token.github_webhook.client_id
-  sensitive   = true
 }
 
 output "github_webhook_client_secret" {
   description = "Client Secret for GitHub webhook service token"
   value       = cloudflare_zero_trust_access_service_token.github_webhook.client_secret
+  sensitive   = true
+}
+
+# ============================================================================
+# Claude Code MCP Outputs (per-endpoint, isolated blast radius)
+# ============================================================================
+
+output "claude_n8n_mcp_client_id" {
+  description = "Client ID for the n8n MCP service token (CF-Access-Client-Id)"
+  value       = cloudflare_zero_trust_access_service_token.claude_n8n_mcp.client_id
+}
+
+output "claude_n8n_mcp_client_secret" {
+  description = "Client Secret for the n8n MCP service token (CF-Access-Client-Secret)"
+  value       = cloudflare_zero_trust_access_service_token.claude_n8n_mcp.client_secret
+  sensitive   = true
+}
+
+output "claude_firefly_mcp_client_id" {
+  description = "Client ID for the Firefly III MCP service token (CF-Access-Client-Id)"
+  value       = cloudflare_zero_trust_access_service_token.claude_firefly_mcp.client_id
+}
+
+output "claude_firefly_mcp_client_secret" {
+  description = "Client Secret for the Firefly III MCP service token (CF-Access-Client-Secret)"
+  value       = cloudflare_zero_trust_access_service_token.claude_firefly_mcp.client_secret
   sensitive   = true
 }
