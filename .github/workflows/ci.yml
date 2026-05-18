@@ -1,4 +1,7 @@
-# Pull-request CI for cloud/ Terraform.
+# Pull-request CI.
+#
+# Currently scoped to cloud/ Terraform; structured so other PR checks can be
+# added as additional jobs without changing the required-check contract.
 #
 # Design notes:
 #   - Workflow always triggers on PRs (no top-level path filter) so the `gate`
@@ -9,7 +12,7 @@
 #   - `gate` runs after all other jobs with `if: always()` and asserts that
 #     none of them failed. That single job name (`gate`) is what you add to
 #     the branch ruleset as the required status check.
-name: cloud-ci
+name: CI
 
 on:
   pull_request:
@@ -21,7 +24,7 @@ permissions:
   id-token: write        # WIF OIDC token for GCP
 
 concurrency:
-  group: cloud-ci-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -37,7 +40,7 @@ jobs:
           filters: |
             cloud:
               - 'cloud/**'
-              - '.github/workflows/cloud-ci.yml'
+              - '.github/workflows/ci.yml'
 
   tf-checks:
     needs: detect

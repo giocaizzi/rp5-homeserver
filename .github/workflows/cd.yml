@@ -5,21 +5,21 @@
 #   - Per-env secrets (CLOUDFLARE_API_TOKEN scoped to this env only)
 #   - Optional human approval — enable "Required reviewers" in env settings
 #     to gate applies; no workflow change needed.
-name: cloud-apply
+name: CD
 
 on:
   push:
     branches: [main]
     paths:
       - 'cloud/**'
-      - '.github/workflows/cloud-apply.yml'
+      - '.github/workflows/cd.yml'
 
 permissions:
   contents: read
   id-token: write   # WIF
 
 concurrency:
-  group: cloud-apply
+  group: cd
   cancel-in-progress: false   # never cancel an in-flight apply
 
 jobs:
