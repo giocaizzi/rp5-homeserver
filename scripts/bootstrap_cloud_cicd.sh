@@ -48,6 +48,19 @@ ignore_exists() {
   fi
 }
 
+# ---------- API enablement ----------
+# Required for: state bucket (storage), WIF token exchange (iamcredentials,
+# sts), SA + IAM management (iam, cloudresourcemanager). Idempotent.
+info "Enabling required APIs"
+gcloud services enable \
+  iamcredentials.googleapis.com \
+  iam.googleapis.com \
+  sts.googleapis.com \
+  cloudresourcemanager.googleapis.com \
+  storage.googleapis.com \
+  --project="$GCP_PROJECT_ID" >/dev/null
+ok "APIs enabled"
+
 # ---------- State bucket ----------
 info "State bucket: gs://${STATE_BUCKET}"
 if gcloud storage buckets describe "gs://${STATE_BUCKET}" --project="$GCP_PROJECT_ID" >/dev/null 2>&1; then
