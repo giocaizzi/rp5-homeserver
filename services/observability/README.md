@@ -4,7 +4,8 @@
 
 **URLs**:
 - Grafana: `https://grafana.home`
-- OTLP HTTP: `https://otel.home`
+- OTLP HTTP (LAN): `https://otel.home`
+- OTLP HTTP (public): `https://otel.giocaizzi.xyz` — CF Access bypass on `/v1/*` + Alloy bearer auth
 
 ---
 
@@ -67,6 +68,11 @@ flowchart TB
 | Secret | Generate |
 |--------|----------|
 | `observability_grafana_admin_password` | `openssl rand -base64 32 \| docker secret create observability_grafana_admin_password -` |
+| `observability_alloy_otel_bearer_token` | `openssl rand -base64 48 \| tr -d '\n=' \| tr '+/' '-_' > services/observability/secrets/alloy_otel_bearer_token.txt` then `PI_SSH_USER=$USER ./scripts/create_secrets.sh observability` |
+
+The bearer token is the **inner** auth gate on the OTLP HTTP receiver (port 4318). It is enforced for **both** `otel.home` (LAN) and `otel.giocaizzi.xyz` (public via CF Access bypass) — the receiver does not distinguish between sources.
+
+> The matching CF service-token credentials (`CF-Access-Client-Id` / `CF-Access-Client-Secret`) for the public path live in Terraform outputs `otel_ingest_client_id` / `otel_ingest_client_secret` (see `cloud/outputs.tf`).
 
 ---
 
@@ -110,38 +116,38 @@ alloy/
 
 ### Endpoints
 
-| Protocol | Internal | External |
-|----------|----------|----------|
-| OTLP gRPC | `alloy:4317` | — |
-| OTLP HTTP | `http://alloy:4318` | `https://otel.home` |
-
-### Python Example
-
-```python
-from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.sdk.resources import Resource
-
-resource = Resource.create({
-    "service.name": "my-service",
-    "deployment.environment.name": "production",
-})
-
-exporter = OTLPSpanExporter(endpoint="alloy:4317", insecure=True)
-provider = TracerProvider(resource=resource)
-provider.add_span_processor(BatchSpanProcessor(exporter))
-trace.set_tracer_provider(provider)
-```
+| Protocol | Endpoint | Auth |
+|----------|----------|------|
+| OTLP gRPC | `observability-collector:4317` (overlay only) | none — Swarm-internal |
+| OTLP HTTP | `http://observability-collector:4318` (overlay) | bearer token |
+| OTLP HTTP | `https://otel.home` (LAN) | bearer token |
+| OTLP HTTP | `https://otel.giocaizzi.xyz` (public) | CF Access service token (outer) + bearer token (inner) |
 
 ### Environment Variables
+
+LAN client (HTTP, bearer only):
 
 ```yaml
 environment:
   - OTEL_SERVICE_NAME=my-service
   - OTEL_RESOURCE_ATTRIBUTES=deployment.environment.name=production
-  - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
+  - OTEL_EXPORTER_OTLP_ENDPOINT=https://otel.home
+  - OTEL_EXPORTER_OTLP_HEADERS=Authorization=Bearer ${BEARER}
+```
+
+Public client (HTTP, CF Access bypass + bearer):
+
+```yaml
+environment:
+  - OTEL_EXPORTER_OTLP_ENDPOINT=https://otel.giocaizzi.xyz
+  - OTEL_EXPORTER_OTLP_HEADERS=CF-Access-Client-Id=${CF_ID},CF-Access-Client-Secret=${CF_SECRET},Authorization=Bearer ${BEARER}
+```
+
+Overlay client (gRPC, no auth — Swarm-internal only):
+
+```python
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+exporter = OTLPSpanExporter(endpoint="observability-collector:4317", insecure=True)
 ```
 
 ---

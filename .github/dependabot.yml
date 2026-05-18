@@ -1,0 +1,41 @@
+# Dependabot keeps third-party version pins moving without manual chasing.
+# Ecosystems active in this repo:
+#   - github-actions    — action @vX refs in .github/workflows/*
+#   - terraform         — provider + module versions in cloud/
+#
+# We pin actions to a major (e.g. @v6); Dependabot opens a PR only when a NEW
+# major lands, so day-to-day patch/minor updates flow through transparently
+# via the floating tag and don't churn the PR queue.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    labels:
+      - dependencies
+      - github-actions
+    groups:
+      actions-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: terraform
+    directory: /cloud
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    labels:
+      - dependencies
+      - terraform
+    groups:
+      terraform-minor-patch:
+        update-types: [minor, patch]
