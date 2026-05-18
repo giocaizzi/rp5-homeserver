@@ -6,6 +6,9 @@
 .terraform/
 .terraform.lock.hcl
 
+# Workstation-only partial-backend config (bucket name)
+backend.hcl
+
 # GCP credentials (any stray JSON in this dir is treated as sensitive)
 *.json
 

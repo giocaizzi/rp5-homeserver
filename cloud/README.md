@@ -74,9 +74,11 @@ gcloud auth application-default login
 ### 3. Deploy Cloud Infrastructure
 
 ```bash
-terraform init
+terraform init -backend-config=backend.hcl   # bucket = "<your-tfstate-bucket>"
 terraform apply
 ```
+
+> **State lives in GCS.** First-time setup must run [`scripts/bootstrap_cloud_cicd.sh`](../scripts/bootstrap_cloud_cicd.sh) — see [CI/CD](#-cicd) below. Create `cloud/backend.hcl` (gitignored as `*.hcl`) containing `bucket = "<your-tfstate-bucket>"`.
 
 ### 4. Extract Outputs
 
@@ -141,3 +143,49 @@ backup_retention_days = 730  # 2 years
 - Credentials secured on home server at `infra/backup/secrets/gcp_service_account.json`
 
 > **Note:** GCS does not support IP-based restrictions via IAM. Access control relies on securing the service account credentials. Only systems with valid credentials can access the bucket.
+
+---
+
+## 🚦 CI/CD
+
+Two workflows manage this directory:
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | PR (any branch → `main`) | `terraform fmt -check`, `init`, `validate`, `plan`. Posts the plan as a sticky PR comment. The `gate` job is the **single required status check** — it always runs and asserts that nothing failed, so it stays correct even when there are no `cloud/**` changes. |
+| [`.github/workflows/cd.yml`](../.github/workflows/cd.yml) | Push to `main` touching `cloud/**` | `terraform apply -auto-approve` inside the `cloud-production` environment. Toggle "Required reviewers" on that environment to add a human approval gate without changing the workflow. |
+
+Auth model:
+
+- **GCP**: Workload Identity Federation. No service-account key stored in GitHub — Actions exchanges its OIDC token for a short-lived SA credential. The WIF provider's `attribute-condition` restricts it to this exact repo.
+- **Cloudflare**: API token stored as a per-environment GH secret.
+
+State backend: GCS, partial config. Bucket name lives in repo variable `TF_STATE_BUCKET`, prefix is hardcoded in `backend.tf`.
+
+### First-time bootstrap
+
+One time, as a project owner on the GCP project:
+
+```bash
+GCP_PROJECT_ID=<your-project> GITHUB_REPO=giocaizzi/rp5-homeserver \
+  ./scripts/bootstrap_cloud_cicd.sh
+```
+
+The script is idempotent. It prints the exact list of GitHub variables, secrets, environments, and the `gh api` ruleset patch you need to run afterwards.
+
+### Local-state → GCS migration (one time)
+
+After bootstrap, on the workstation where the existing `cloud/terraform.tfstate` lives:
+
+```bash
+cd cloud
+echo 'bucket = "<your-tfstate-bucket>"' > backend.hcl
+terraform init -migrate-state -backend-config=backend.hcl
+rm terraform.tfstate terraform.tfstate.backup terraform.tfstate.*.backup
+```
+
+`backend.hcl` is gitignored. The local state files should be deleted only after the migration is confirmed by `terraform plan` returning a clean diff.
+
+### Required status check
+
+The branch ruleset is patched (via `gh api`, instructions printed by the bootstrap script) so `main` requires the `gate` job to pass before merge. `gate` is the only required check name — robust to future workflow restructuring.
