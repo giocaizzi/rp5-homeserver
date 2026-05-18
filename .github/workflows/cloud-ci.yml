@@ -1,0 +1,158 @@
+# Pull-request CI for cloud/ Terraform.
+#
+# Design notes:
+#   - Workflow always triggers on PRs (no top-level path filter) so the `gate`
+#     job is guaranteed to report a status on every PR. The required check is
+#     therefore stable across PRs that don't touch cloud/**.
+#   - `detect` decides whether cloud/** actually changed; downstream jobs use
+#     that output to decide whether to do real work or short-circuit.
+#   - `gate` runs after all other jobs with `if: always()` and asserts that
+#     none of them failed. That single job name (`gate`) is what you add to
+#     the branch ruleset as the required status check.
+name: cloud-ci
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write   # post plan comment
+  id-token: write        # WIF OIDC token for GCP
+
+concurrency:
+  group: cloud-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      cloud: ${{ steps.filter.outputs.cloud }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            cloud:
+              - 'cloud/**'
+              - '.github/workflows/cloud-ci.yml'
+
+  tf-checks:
+    needs: detect
+    if: needs.detect.outputs.cloud == 'true'
+    runs-on: ubuntu-latest
+    environment: cloud-plan
+    defaults:
+      run:
+        working-directory: cloud
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ vars.TF_VERSION || '1.9.8' }}
+          terraform_wrapper: false
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_TF_SERVICE_ACCOUNT }}
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive
+
+      - name: terraform init
+        run: terraform init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
+
+      - name: terraform validate
+        run: terraform validate
+
+      - name: terraform plan
+        id: plan
+        env:
+          TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          TF_VAR_zone_name: ${{ vars.CLOUDFLARE_ZONE_NAME }}
+          TF_VAR_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_tunnel_secret: ${{ secrets.TUNNEL_SECRET }}
+          TF_VAR_n8n_users: ${{ vars.N8N_USERS }}
+          TF_VAR_portainer_users: ${{ vars.PORTAINER_USERS }}
+          TF_VAR_backrest_users: ${{ vars.BACKREST_USERS }}
+          TF_VAR_firefly_users: ${{ vars.FIREFLY_USERS }}
+          TF_VAR_homepage_users: ${{ vars.HOMEPAGE_USERS }}
+          TF_VAR_openclaw_users: ${{ vars.OPENCLAW_USERS }}
+          TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
+          TF_VAR_gcp_region: ${{ vars.GCP_REGION }}
+          TF_VAR_gcp_backup_bucket_name: ${{ vars.GCP_BACKUP_BUCKET_NAME }}
+          TF_VAR_backup_retention_days: ${{ vars.BACKUP_RETENTION_DAYS }}
+        run: |
+          set -o pipefail
+          terraform plan -input=false -no-color -lock-timeout=2m | tee plan.txt
+          {
+            echo 'plan<<TFPLAN_EOF'
+            tail -c 60000 plan.txt
+            echo 'TFPLAN_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Comment plan on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const plan = `${{ steps.plan.outputs.plan }}`;
+            const body = [
+              '### Terraform plan — `cloud/`',
+              '<details><summary>Show plan</summary>',
+              '',
+              '```hcl',
+              plan,
+              '```',
+              '',
+              '</details>',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const marker = '### Terraform plan — `cloud/`';
+            const existing = comments.find(c => c.body && c.body.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+  # Single required status check. Set THIS one in the branch ruleset.
+  # Robust to:
+  #   - skipped jobs (no cloud/** changes → tf-checks is skipped, gate still passes)
+  #   - new jobs added later (just add to `needs:` and the gate keeps gating)
+  #   - job renames (rename here too; the public check name `gate` is stable)
+  gate:
+    needs: [detect, tf-checks]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assert no upstream job failed or was cancelled
+        run: |
+          set -e
+          fail=0
+          for r in "${{ needs.detect.result }}" "${{ needs.tf-checks.result }}"; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "Upstream result: $r"; fail=1 ;;
+            esac
+          done
+          exit $fail
