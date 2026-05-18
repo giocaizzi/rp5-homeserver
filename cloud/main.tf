@@ -9,10 +9,6 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 7.7"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6"
-    }
   }
 }
 
@@ -25,12 +21,20 @@ provider "cloudflare" {
 }
 
 
-# Create the tunnel
+# Create the tunnel.
+# tunnel_secret is intentionally ignored on update: the Cloudflare API never
+# returns secret material on read, so without ignore_changes terraform would
+# propose to rewrite it on every plan — and an actual write would invalidate
+# the running cloudflared on the Pi.
 resource "cloudflare_zero_trust_tunnel_cloudflared" "homeserver" {
   account_id    = var.cloudflare_account_id
   name          = "rp5-homeserver"
   config_src    = "cloudflare"
   tunnel_secret = var.tunnel_secret
+
+  lifecycle {
+    ignore_changes = [tunnel_secret]
+  }
 }
 
 # Reads the token used to run the tunnel on the server.
@@ -338,6 +342,104 @@ resource "cloudflare_zero_trust_access_application" "openclaw_policy" {
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.openclaw_users.id
+      precedence = 1
+    }
+  ]
+}
+
+# ============================================================================
+# Claude Code MCP — per-endpoint service tokens + path-scoped bypass apps
+# ============================================================================
+# One service token per MCP endpoint, so a leaked token for n8n cannot reach
+# Firefly III's MCP (and vice versa). Each endpoint's app references only its
+# own bypass policy. Application-layer auth (n8n MCP token / Firefly III PAT)
+# remains the second factor on top of CF Access bypass.
+
+# --- n8n MCP --------------------------------------------------------------
+
+resource "cloudflare_zero_trust_access_service_token" "claude_n8n_mcp" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-n8n-mcp"
+}
+
+resource "cloudflare_zero_trust_access_policy" "claude_n8n_mcp_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-n8n-mcp-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.claude_n8n_mcp.id
+      }
+    }
+  ]
+}
+
+# Path-scoped Access app: matches only https://n8n.<zone>/mcp-server*, so the
+# service token cannot be used to reach the n8n UI (which stays gated by
+# cloudflare_zero_trust_access_application.n8n_policy + n8n_users).
+# CF Access matches the most-specific path first.
+resource "cloudflare_zero_trust_access_application" "n8n_mcp_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "n8n-mcp.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "n8n.${var.zone_name}/mcp-server"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.claude_n8n_mcp_bypass.id
+      precedence = 1
+    }
+  ]
+}
+
+# --- Firefly III MCP ------------------------------------------------------
+
+resource "cloudflare_zero_trust_access_service_token" "claude_firefly_mcp" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-firefly-mcp"
+}
+
+resource "cloudflare_zero_trust_access_policy" "claude_firefly_mcp_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-firefly-mcp-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.claude_firefly_mcp.id
+      }
+    }
+  ]
+}
+
+# Path-scoped Access app: matches only https://firefly.<zone>/api/v1/mcp*, so
+# the service token cannot be used to reach the Firefly III web UI (which stays
+# gated by the existing firefly Access app). CF Access matches the most-specific
+# path first, so this takes precedence on /api/v1/mcp* requests.
+resource "cloudflare_zero_trust_access_application" "firefly_mcp_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "firefly-mcp.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "firefly.${var.zone_name}/api/v1/mcp"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.claude_firefly_mcp_bypass.id
       precedence = 1
     }
   ]
