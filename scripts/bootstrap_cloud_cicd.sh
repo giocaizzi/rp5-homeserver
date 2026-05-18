@@ -168,55 +168,16 @@ Migrate local state to GCS (run from your workstation, one time):
 After migration, gitignore backend.hcl locally (already covered by *.hcl in
 cloud/.gitignore if you choose to add it — otherwise add a one-liner).
 
-Branch ruleset — add the required check.
-The PUT replaces the ruleset wholesale, so existing rules are re-sent
-alongside the new required_status_checks. integration_id 15368 = GitHub
-Actions. strict_required_status_checks_policy:false means PRs do NOT have to
-be rebased onto latest main before merging.
+Branch ruleset — add one rule to the existing "main" ruleset
+(Settings → Rules → main → Add rule):
 
-  RULESET_ID=9672411   # current "main" ruleset on ${GITHUB_REPO}
-  gh api --method PUT "repos/${GITHUB_REPO}/rulesets/\${RULESET_ID}" --input - <<'JSON'
-  {
-    "name": "main",
-    "target": "branch",
-    "enforcement": "active",
-    "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
-    "rules": [
-      { "type": "deletion" },
-      { "type": "non_fast_forward" },
-      {
-        "type": "pull_request",
-        "parameters": {
-          "required_approving_review_count": 0,
-          "dismiss_stale_reviews_on_push": false,
-          "require_code_owner_review": false,
-          "require_last_push_approval": false,
-          "required_review_thread_resolution": false,
-          "allowed_merge_methods": ["merge","squash","rebase"]
-        }
-      },
-      {
-        "type": "required_status_checks",
-        "parameters": {
-          "strict_required_status_checks_policy": false,
-          "do_not_enforce_on_create": false,
-          "required_status_checks": [
-            { "context": "gate", "integration_id": 15368 }
-          ]
-        }
-      }
-    ]
-  }
-  JSON
+  Require status checks to pass
+    Status checks that are required:
+      gate   (GitHub Actions)
+    Require branches to be up to date before merging: off
 
-Optional extra secret-scanning toggles (already-enabled flags are no-ops):
-  gh api --method PATCH "repos/${GITHUB_REPO}" --input - <<'JSON'
-  {
-    "security_and_analysis": {
-      "secret_scanning_non_provider_patterns": { "status": "enabled" },
-      "secret_scanning_validity_checks":       { "status": "enabled" }
-    }
-  }
-  JSON
+Optional extra secret-scanning toggles (Settings → Code security):
+  - Secret scanning · Non-provider patterns        → enabled
+  - Secret scanning · Validity checks              → enabled
 ────────────────────────────────────────────────────────────
 EOF
