@@ -33,3 +33,14 @@ providers:
     editable: true
     options:
       path: /etc/grafana/provisioning/dashboards/shared
+
+  # Claude Code OTel dashboards (sourced from ColeMurray/claude-code-otel)
+  - name: 'claude-code'
+    orgId: 1
+    folder: 'claude-code'
+    folderUid: 'claude-code'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/claude-code
