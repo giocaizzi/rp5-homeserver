@@ -278,7 +278,7 @@ groups:
               to: 0
             datasourceUid: prometheus
             model:
-              expr: up{technology=~"postgres|mariadb|redis|nginx|clickhouse"}
+              expr: up{job=~"postgres|mariadb|redis|nginx|clickhouse"}
               instant: true
               refId: A
           - refId: B
@@ -326,7 +326,7 @@ groups:
               to: 0
             datasourceUid: prometheus
             model:
-              expr: up{service_name="log-store"}
+              expr: up{job="loki"}
               instant: true
               refId: A
           - refId: B
@@ -366,7 +366,7 @@ groups:
               to: 0
             datasourceUid: prometheus
             model:
-              expr: up{service_name="trace-store"}
+              expr: up{job="tempo"}
               instant: true
               refId: A
           - refId: B
@@ -406,7 +406,7 @@ groups:
               to: 0
             datasourceUid: prometheus
             model:
-              expr: up{service_name="collector"}
+              expr: up{job="alloy"}
               instant: true
               refId: A
           - refId: B
