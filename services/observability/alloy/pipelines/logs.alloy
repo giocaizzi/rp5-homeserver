@@ -43,14 +43,9 @@ declare "docker_logs" {
   discovery.relabel "logs" {
     targets = argument.docker_labels_output.value
 
-    // Drop containers without namespace (external/unmanaged)
-    rule {
-      source_labels = ["service_namespace"]
-      regex         = "external"
-      action        = "drop"
-    }
-
-    // Keep only our labeled containers
+    // Keep only our labeled containers (com.giocaizzi.namespace present).
+    // No separate "drop external" rule — the namespace default was removed
+    // from docker_labels, so the keep below is the sole gate.
     rule {
       source_labels = ["__meta_docker_container_label_com_giocaizzi_namespace"]
       regex         = ".+"

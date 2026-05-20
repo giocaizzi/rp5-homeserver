@@ -52,10 +52,16 @@ limits_config:
   max_query_lookback: 720h
   split_queries_by_interval: 30m
   max_cache_freshness_per_query: 10m
-
-table_manager:
-  retention_deletes_enabled: true
-  retention_period: 720h
+  otlp_config:
+    resource_attributes:
+      attributes_config:
+        - action: index_label
+          attributes:
+            - service.name
+            - service.namespace
+            - deployment.environment.name
+            - component
+            - host.name
 
 querier:
   max_concurrent: 4

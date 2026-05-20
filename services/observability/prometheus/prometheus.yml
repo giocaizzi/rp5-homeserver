@@ -1,9 +1,10 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
-  external_labels:
-    cluster: 'portfolio'
-    environment: 'production'
+
+storage:
+  tsdb:
+    out_of_order_time_window: 10m
 
 # Alertmanager configuration (optional, can be added later)
 # alerting:

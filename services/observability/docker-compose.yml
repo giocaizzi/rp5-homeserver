@@ -80,7 +80,7 @@ services:
   # Prometheus - Metrics Storage
   # ========================================
   metrics-store:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.5.3
     hostname: observability-metrics-store
     expose:
       - "9090"
@@ -124,7 +124,7 @@ services:
   # Loki - Log Aggregation
   # ========================================
   log-store:
-    image: grafana/loki:latest
+    image: grafana/loki:3.5.12
     hostname: observability-log-store
     expose:
       - "3100"
@@ -164,7 +164,6 @@ services:
     hostname: observability-trace-store
     expose:
       - "3200"  # Tempo HTTP (queries)
-      - "4317"  # OTLP gRPC (from Alloy only)
     command: -config.file=/etc/tempo/tempo-config.yaml
     volumes:
       - ./tempo/tempo-config.yaml:/etc/tempo/tempo-config.yaml:ro
@@ -194,7 +193,7 @@ services:
   # Grafana Alloy - OpenTelemetry Collector
   # ========================================
   collector:
-    image: grafana/alloy:latest
+    image: grafana/alloy:v1.15.1
     hostname: observability-collector
     expose:
       - "12345" # Alloy metrics
@@ -239,7 +238,7 @@ services:
   # Grafana - Dashboards and Visualization
   # ========================================
   dashboard:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.6.14
     hostname: observability-dashboard
     expose:
       - "3000"

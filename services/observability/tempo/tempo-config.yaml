@@ -37,6 +37,10 @@ storage:
       max_workers: 10
       queue_depth: 1000
 
+compactor:
+  compaction:
+    block_retention: 720h
+
 # Single-node memberlist config - prevents "empty ring" errors
 memberlist:
   abort_if_cluster_join_fails: false
@@ -64,9 +68,8 @@ metrics_generator:
     local_blocks:
       flush_to_storage: true
       max_block_duration: 1m
-      max_block_bytes: 500000000
+      max_block_bytes: 150000000
       complete_block_timeout: 1h
-      filter_server_spans: true
 
 overrides:
   defaults:

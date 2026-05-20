@@ -135,9 +135,17 @@ declare "exporter_targets" {
       target_label = "source"
       replacement  = "scrape"
     }
+
+    // -------------------------------------------------------------------------
+    // JOB LABEL: Prometheus convention — `job` is a *kind* of target (the
+    // scrape-config name), not a per-target identity. For exporters that means
+    // the technology name: postgres, mariadb, redis, nginx, clickhouse. This
+    // matches what community Grafana dashboards filter on by default and what
+    // the upstream exporter READMEs (postgres_exporter, redis_exporter, etc.)
+    // assume. Per-target identity lives in `service_name` / `service_namespace`.
+    // -------------------------------------------------------------------------
     rule {
-      source_labels = ["service_namespace", "technology"]
-      separator     = "/"
+      source_labels = ["technology"]
       target_label  = "job"
     }
 

@@ -55,11 +55,11 @@ flowchart TB
 
 | Container | Image | Purpose |
 |-----------|-------|---------|
-| prometheus | `prom/prometheus:latest` | Metrics TSDB |
-| loki | `grafana/loki:latest` | Log aggregation |
-| tempo | `grafana/tempo:latest` | Distributed tracing |
-| alloy | `grafana/alloy:latest` | OTEL collector |
-| grafana | `grafana/grafana:latest` | Dashboards |
+| prometheus | `prom/prometheus:v3.5.3` | Metrics TSDB |
+| loki | `grafana/loki:3.5.12` | Log aggregation |
+| tempo | `grafana/tempo:2.10.5` | Distributed tracing |
+| alloy | `grafana/alloy:v1.15.1` | OTEL collector |
+| grafana | `grafana/grafana:11.6.14` | Dashboards |
 
 ---
 

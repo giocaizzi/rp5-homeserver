@@ -21,11 +21,11 @@ datasources:
       maxLines: 1000
       # Enable derived fields for trace correlation
       derivedFields:
-        - datasourceUid: tempo
-          matcherRegex: "trace_id=(\\w+)"
-          name: TraceID
-          url: "$${__value.raw}"
-          urlDisplayLabel: "View Trace"
+        - name: TraceID
+          matcherRegex: '(?:traceID|trace_id|trace-id)["\\\s:=]*([a-f0-9]{16,32})'
+          datasourceUid: tempo
+          url: '$${__value.raw}'
+          urlDisplayLabel: 'View Trace'
 
   - name: Tempo
     type: tempo
@@ -35,24 +35,24 @@ datasources:
     editable: true
     jsonData:
       httpMethod: GET
-      tracesToLogs:
+      tracesToLogsV2:
         datasourceUid: 'loki'
-        tags: ['job', 'instance', 'pod', 'namespace']
-        mappedTags: [{ key: 'service.name', value: 'service' }]
-        mapTagNamesEnabled: true
-        spanStartTimeShift: '1h'
+        spanStartTimeShift: '-1h'
         spanEndTimeShift: '1h'
+        tags:
+          - { key: 'service.name', value: 'service_name' }
+          - { key: 'service.namespace', value: 'service_namespace' }
         filterByTraceID: true
         filterBySpanID: true
-        # Use structured metadata for trace correlation (modern approach)
         customQuery: true
-        query: '{service_name="$${__span.tags["service.name"]}"} | trace_id=`$${__trace.traceId}`'
+        query: '{service_name="$${__span.tags["service.name"]}"} | traceID="$${__span.traceId}"'
       tracesToMetrics:
         datasourceUid: 'prometheus'
-        tags: [{ key: 'service.name', value: 'service' }]
+        tags:
+          - { key: 'service.name', value: 'service_name' }
         queries:
           - name: 'Request rate'
-            query: 'sum(rate(http_server_requests_total{$__tags}[5m]))'
+            query: 'sum(rate(http_server_request_duration_seconds_count{$$__tags}[5m]))'
       serviceMap:
         datasourceUid: 'prometheus'
       nodeGraph:

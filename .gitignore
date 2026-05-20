@@ -23,3 +23,6 @@ Thumbs.db
 # Recreate locally with:
 #   ln -s AGENTS.md CLAUDE.md
 /CLAUDE.md
+
+# Sub-agent worktrees (created by the harness; do not track).
+.claude/worktrees/

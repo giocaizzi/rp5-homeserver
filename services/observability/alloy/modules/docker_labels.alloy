@@ -31,12 +31,9 @@ declare "docker_labels" {
 
     // -------------------------------------------------------------------------
     // SERVICE_NAMESPACE: Stack/project grouping
-    // Fallback: custom label > swarm stack > compose project > "external"
+    // Fallback: custom label > swarm stack > compose project
+    // No default — unlabeled containers end with empty service_namespace.
     // -------------------------------------------------------------------------
-    rule {
-      target_label = "service_namespace"
-      replacement  = "external"
-    }
     rule {
       source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
       regex         = "(.+)"

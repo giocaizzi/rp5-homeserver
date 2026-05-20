@@ -41,7 +41,11 @@ declare "prometheus_scrape" {
 
     forward_to      = [prometheus.relabel.add_defaults.receiver]
     scrape_interval = "17s"  // Staggered to avoid sync with Netdata/logs
-    job_name        = "observability"
+    // No `job_name` here: per Prom convention `job` describes a *kind* of
+    // target. The four observability components are four different kinds
+    // (alloy/prometheus/loki/tempo), so we let `add_defaults` derive `job`
+    // from each target's inline `technology` label instead of stamping a
+    // single shared value.
   }
 
   // ---------------------------------------------------------------------------
@@ -89,6 +93,18 @@ declare "prometheus_scrape" {
       regex         = "^$"
       target_label  = "component"
       replacement   = "app"
+    }
+
+    // Derive `job` from `technology` (Prom convention: one job per kind of
+    // target). For the static observability scrape that produces job=alloy,
+    // job=prometheus, job=loki, job=tempo. For exporters, exporter_targets
+    // module already sets `job=technology` upstream — this rule re-applies
+    // it harmlessly. Avoids stamping a single shared job across heterogeneous
+    // targets.
+    rule {
+      source_labels = ["technology"]
+      regex         = "(.+)"
+      target_label  = "job"
     }
   }
 }
