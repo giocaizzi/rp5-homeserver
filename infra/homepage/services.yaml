@@ -106,14 +106,14 @@
 
 - Home:
       - Greenhouse:
-            href: http://greenhouse.home
+            href: https://greenhouse.{{HOMEPAGE_FILE_DOMAIN}}
             description: Smart plant irrigation
             icon: mdi-sprout-#22c55e
             ping: http://greenhouse_app:8000/api/v1/clusters
 
 - Observability:
       - Grafana:
-            href: https://grafana.home
+            href: https://grafana.{{HOMEPAGE_FILE_DOMAIN}}
             description: Metrics and logs visualization
             icon: grafana.png
             ping: http://observability_dashboard:3000
