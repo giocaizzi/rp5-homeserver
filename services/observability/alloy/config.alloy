@@ -119,8 +119,9 @@ pipelines.prometheus_scrape "default" {
 }
 
 // OTEL: OTLP receivers → backends
+// Logs no longer flow through loki.write — the otel pipeline ships them
+// directly to Loki's /otlp endpoint via otelcol.exporter.otlphttp.
 pipelines.otlp_receivers "default" {
   prometheus_receiver = [prometheus.remote_write.default.receiver]
-  loki_receiver       = [loki.write.default.receiver]
 }
 
