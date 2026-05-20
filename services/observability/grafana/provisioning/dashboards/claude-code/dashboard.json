@@ -93,7 +93,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_session_count_total[1h]))",
+          "expr": "sum(increase(claude_code_session_count_total{job=~\".*/claude-code\"}[1h]))",
           "interval": "",
           "legendFormat": "Sessions (1h)",
           "refId": "A"
@@ -161,7 +161,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total[1h]))",
+          "expr": "sum(increase(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[1h]))",
           "interval": "",
           "legendFormat": "Cost (1h)",
           "refId": "A"
@@ -229,7 +229,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total[1h]))",
+          "expr": "sum(increase(claude_code_token_usage_tokens_total{job=~\".*/claude-code\"}[1h]))",
           "interval": "",
           "legendFormat": "Tokens (1h)",
           "refId": "A"
@@ -297,7 +297,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_lines_of_code_count_total[1h]))",
+          "expr": "sum(increase(claude_code_lines_of_code_count_total{job=~\".*/claude-code\"}[1h]))",
           "interval": "",
           "legendFormat": "Lines Changed (1h)",
           "refId": "A"
@@ -400,7 +400,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (model) (increase(claude_code_cost_usage_USD_total[1h]))",
+          "expr": "sum by (model) (increase(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[1h]))",
           "interval": "",
           "legendFormat": "{{model}}",
           "refId": "A"
@@ -570,7 +570,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (type) (rate(claude_code_token_usage_tokens_total[5m]) * 60)",
+          "expr": "sum by (type) (rate(claude_code_token_usage_tokens_total{job=~\".*/claude-code\"}[5m]) * 60)",
           "interval": "",
           "legendFormat": "{{type}}",
           "refId": "A"
@@ -702,7 +702,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (model) (changes(claude_code_cost_usage_USD_total[5m]))",
+          "expr": "sum by (model) (changes(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[5m]))",
           "interval": "",
           "legendFormat": "{{model}}",
           "refId": "A"
@@ -1424,7 +1424,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (type) (rate(claude_code_lines_of_code_count_total[5m]) * 60)",
+          "expr": "sum by (type) (rate(claude_code_lines_of_code_count_total{job=~\".*/claude-code\"}[5m]) * 60)",
           "interval": "",
           "legendFormat": "{{type}} lines/min",
           "refId": "A"
@@ -1515,7 +1515,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_commit_count_total[1h])) or vector(0)",
+          "expr": "sum(increase(claude_code_commit_count_total{job=~\".*/claude-code\"}[1h])) or vector(0)",
           "interval": "",
           "legendFormat": "Commits",
           "refId": "A"
@@ -1525,7 +1525,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_pull_request_count_total[1h])) or vector(0)",
+          "expr": "sum(increase(claude_code_pull_request_count_total{job=~\".*/claude-code\"}[1h])) or vector(0)",
           "interval": "",
           "legendFormat": "Pull Requests",
           "refId": "B"
