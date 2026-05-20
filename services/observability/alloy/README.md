@@ -28,15 +28,21 @@ alloy/
 │  │  HTTP/gRPC      │        │  via Socket     │     │  Scrape         │     │
 │  └────────┬────────┘        └────────┬────────┘     └────────┬────────┘     │
 │           │                          │                       │              │
+│           ▼                          │                       │              │
+│  ┌─────────────────┐                 │                       │              │
+│  │ memory_limiter  │                 │                       │              │
+│  │ (200MiB/50MiB)  │                 │                       │              │
+│  └────────┬────────┘                 │                       │              │
 │           ▼                          ▼                       ▼              │
 │  ┌─────────────────┐        ┌─────────────────┐     ┌─────────────────┐     │
-│  │  Batch + Attrs  │        │  modules/labels │     │  modules/labels │     │
-│  │  Processors     │        │  + Processing   │     │  + Relabel      │     │
+│  │  batch →        │        │  modules/labels │     │  modules/labels │     │
+│  │  transform      │        │  + Processing   │     │  + Relabel      │     │
 │  └────────┬────────┘        └────────┬────────┘     └────────┬────────┘     │
 │           │                          │                       │              │
 │     ┌─────┼─────┐                    │                       │              │
 │     ▼     ▼     ▼                    ▼                       ▼              │
 │   Prom  Loki  Tempo               Loki                    Prom             │
+│        (OTLP)                                                                │
 │                                                                              │
 │  ═══════════════════════════════════════════════════════════════════════    │
 │                   config.alloy (outputs + shared discovery)                  │
@@ -74,7 +80,7 @@ Contains `declare` blocks for consistent label extraction:
 
 | File | Data Flow |
 |------|-----------|
-| `otel.alloy` | OTLP receivers → batch → attributes → backends |
+| `otel.alloy` | OTLP receivers → memory_limiter → batch → transform → backends |
 | `logs.alloy` | Docker discovery → log collection → processing → Loki |
 | `metrics.alloy` | Static + dynamic targets → scrape → Prometheus |
 
@@ -87,7 +93,7 @@ Labels are normalized to underscore format for Prometheus/Loki compatibility whi
 | Storage Label | OTEL Semconv | Docker Label | Default | Description |
 |---------------|--------------|--------------|---------|-------------|
 | `service_name` | `service.name` | `com.giocaizzi.service` | container name | Logical service name |
-| `service_namespace` | `service.namespace` | `com.giocaizzi.namespace` | `external` | Stack/project grouping |
+| `service_namespace` | `service.namespace` | `com.giocaizzi.namespace` | _(none — sender owns it)_ | Stack/project grouping |
 | `deployment_environment_name` | `deployment.environment.name` | `com.giocaizzi.env` | `production` | Environment |
 | `technology` | (custom) | `com.giocaizzi.technology` | — | Implementation technology |
 | `tier` | (custom) | `com.giocaizzi.tier` | `core` | core/extra |
@@ -110,9 +116,13 @@ Stored as structured metadata in Loki. Not indexed, but searchable.
 The `docker_labels` module applies fallbacks:
 
 ```
-service_namespace: custom label > swarm stack > compose project > "external"
+service_namespace: custom label > swarm stack > compose project (no default — empty if unset)
 service_name:      custom label > swarm service > compose service > container name
 ```
+
+Containers without any of those labels surface with an empty `service_namespace`
+and are filtered out of the log pipeline by the `keep` rule on
+`com.giocaizzi.namespace`.
 
 ### Query Examples
 
@@ -158,12 +168,52 @@ Benefits:
 
 ## OTEL Integration
 
+### Pipeline
+
+```
+OTLP receiver → memory_limiter → batch → transform (defaults) → ┬─ Prometheus (metrics)
+                                                                ├─ Loki OTLP /otlp (logs)
+                                                                └─ Tempo OTLP gRPC (traces)
+```
+
+- `memory_limiter` caps the collector at **200MiB** resident with a **50MiB**
+  spike headroom — sized for a Pi 5 (8GB). Over the soft limit the processor
+  refuses new data with a retryable error so producers back off.
+- `batch` groups data points (5s / 100 items) before export.
+- `transform` (resource context) fills missing resource attributes:
+  `deployment.environment.name=production`, `source=otel`, `tier=core`.
+  `service.namespace` is **not** defaulted — senders own it; missing values
+  stay empty.
+
 ### Endpoints
 
 | Protocol | Port | Description |
 |----------|------|-------------|
-| OTLP gRPC | 4317 | Binary protocol |
-| OTLP HTTP | 4318 | JSON/Protobuf over HTTP |
+| OTLP gRPC | 4317 | Binary protocol (overlay-only) |
+| OTLP HTTP | 4318 | JSON/Protobuf — bearer-auth required |
+
+### Backends
+
+| Signal | Exporter | Endpoint |
+|--------|----------|----------|
+| Metrics | `otelcol.exporter.prometheus` → `prometheus.remote_write` | `observability-metrics-store:9090/api/v1/write` |
+| Logs    | `otelcol.exporter.otlphttp`                              | `observability-log-store:3100/otlp` |
+| Traces  | `otelcol.exporter.otlp` (gRPC)                            | `observability-trace-store:4317` |
+
+### Loki ingest (native OTLP)
+
+Logs are shipped to Loki's native OTLP endpoint (`/otlp`). The legacy
+hint-attribute bridge (`otelcol.exporter.loki` +
+`loki.resource.labels` / `loki.attribute.labels`) is gone — label promotion
+is configured **server-side** in Loki's `limits_config.otlp_config`. The
+promoted attributes are:
+
+```
+service.name, service.namespace, deployment.environment.name, component, host.name
+```
+
+Other resource and log-record attributes are preserved as structured metadata,
+not indexed labels.
 
 ### Incoming Data Requirements
 
@@ -171,7 +221,8 @@ Apps sending OTLP should use standard OTEL semantic conventions:
 - `service.name`, `service.namespace`, `service.version`
 - `deployment.environment.name`
 
-The attributes processor adds defaults for missing required attributes.
+`service.namespace` has no default — set it on the client. Other defaults
+(`deployment.environment.name`, `source`, `tier`) are filled if missing.
 
 ### Example App Configuration
 

@@ -1,29 +1,36 @@
 // =============================================================================
 // OTEL PIPELINE MODULE
 // =============================================================================
-// Receives telemetry via OTLP (HTTP/gRPC), applies resource-level defaults
-// for external clients, then fans out by signal to the appropriate backend.
+// Receives telemetry via OTLP (HTTP/gRPC), guards collector memory, batches,
+// applies resource-level defaults, then fans out by signal to the appropriate
+// backend.
 //
 // Data Flow:
-//   OTLP Receivers → Batch → Resource Defaults → ┌─ metrics → Prometheus
-//                                                ├─ traces  → Tempo
-//                                                └─ logs    → Loki Hints → Loki
+//   OTLP Receivers → memory_limiter → batch → transform (defaults) →
+//                                                ├─ metrics → Prometheus
+//                                                ├─ traces  → Tempo (OTLP gRPC)
+//                                                └─ logs    → Loki (OTLP HTTP)
 //
-// Why split by signal:
-//   Loki uses magic "loki.resource.labels" / "loki.attribute.labels" hint
-//   attributes to choose which keys become indexed stream labels. Inserting
-//   them in a shared processor leaks them as labels onto Prometheus series
-//   (cardinality bloat) and as attributes on Tempo spans. They live only on
-//   the log path.
+// Why memory_limiter first:
+//   On a Pi 5 (8GB) we cap the collector at 200MiB resident with a 50MiB
+//   spike headroom. When over the soft limit the processor starts refusing
+//   new data with a retryable error, protecting the rest of the host before
+//   the runtime OOMs.
 //
-//   Resource-level metadata (service.namespace, deployment.environment.name,
-//   source, tier) must be applied via otelcol.processor.resource — not
-//   otelcol.processor.attributes — so they land on the Resource and not on
-//   every data point. The attributes processor would otherwise overwrite
-//   nothing on the resource (resource keeps the client's value) but inject
-//   the default into each metric/log/span attribute, producing two competing
-//   values for the same key (e.g. job="claude-code/claude-code" on the
-//   resource but service_namespace="external" on the data point).
+// Loki ingest:
+//   Logs go to Loki's native OTLP endpoint (/otlp) via otelcol.exporter.otlphttp.
+//   Label promotion (which OTEL attributes become Loki stream labels) is
+//   configured server-side in Loki's `limits_config.otlp_config`, not via the
+//   legacy "loki.resource.labels" / "loki.attribute.labels" hint attributes.
+//   This keeps hint metadata off Prometheus series and Tempo spans without
+//   needing a log-only attributes processor.
+//
+// Resource defaults:
+//   `otelcol.processor.transform` with `context = "resource"` fills missing
+//   resource attributes for external clients. `where ... == nil` preserves
+//   any value the client already sent. `service.namespace` is intentionally
+//   NOT defaulted — senders own it; if a payload arrives without one the
+//   attribute stays empty and is queryable as such downstream.
 //
 // Auth:
 //   HTTP (port 4318) requires `Authorization: Bearer <token>`. Same enforcement
@@ -36,12 +43,11 @@
 //
 // Arguments:
 //   prometheus_receiver - Prometheus remote_write endpoint receiver
-//   loki_receiver       - Loki write endpoint receiver
 //
 // Backends:
 //   Metrics → Prometheus remote_write (via argument)
-//   Logs    → Loki (via argument)
-//   Traces  → Tempo (hardcoded endpoint)
+//   Logs    → Loki OTLP HTTP (hardcoded endpoint)
+//   Traces  → Tempo OTLP gRPC (hardcoded endpoint)
 // =============================================================================
 
 declare "otlp_receivers" {
@@ -50,10 +56,6 @@ declare "otlp_receivers" {
   // ---------------------------------------------------------------------------
   argument "prometheus_receiver" {
     comment = "Prometheus remote_write endpoint receiver"
-  }
-
-  argument "loki_receiver" {
-    comment = "Loki write endpoint receiver"
   }
 
   // ---------------------------------------------------------------------------
@@ -87,6 +89,24 @@ declare "otlp_receivers" {
     }
 
     output {
+      metrics = [otelcol.processor.memory_limiter.default.input]
+      logs    = [otelcol.processor.memory_limiter.default.input]
+      traces  = [otelcol.processor.memory_limiter.default.input]
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // MEMORY LIMITER
+  // ---------------------------------------------------------------------------
+  // Backpressure guard sized for the Pi. Sits before batch so spikes can be
+  // shed before they accumulate in the batch buffer.
+
+  otelcol.processor.memory_limiter "default" {
+    check_interval = "1s"
+    limit          = "200MiB"
+    spike_limit    = "50MiB"
+
+    output {
       metrics = [otelcol.processor.batch.default.input]
       logs    = [otelcol.processor.batch.default.input]
       traces  = [otelcol.processor.batch.default.input]
@@ -115,8 +135,9 @@ declare "otlp_receivers" {
   // Fills missing resource attributes for external OTLP clients that don't
   // set them. Uses otelcol.processor.transform with `context = "resource"` so
   // statements run against resource attributes (not data-point attributes).
-  // The `where ... == nil` guard preserves any value the client already sent
-  // (e.g. service.namespace=claude-code from Claude Code's resource attrs).
+  // The `where ... == nil` guard preserves any value the client already sent.
+  //
+  // `service.namespace` is intentionally absent — senders own this attribute.
 
   otelcol.processor.transform "defaults" {
     error_mode = "ignore"
@@ -124,7 +145,6 @@ declare "otlp_receivers" {
     metric_statements {
       context = "resource"
       statements = [
-        `set(resource.attributes["service.namespace"], "external") where resource.attributes["service.namespace"] == nil`,
         `set(resource.attributes["deployment.environment.name"], "production") where resource.attributes["deployment.environment.name"] == nil`,
         `set(resource.attributes["source"], "otel") where resource.attributes["source"] == nil`,
         `set(resource.attributes["tier"], "core") where resource.attributes["tier"] == nil`,
@@ -134,7 +154,6 @@ declare "otlp_receivers" {
     log_statements {
       context = "resource"
       statements = [
-        `set(resource.attributes["service.namespace"], "external") where resource.attributes["service.namespace"] == nil`,
         `set(resource.attributes["deployment.environment.name"], "production") where resource.attributes["deployment.environment.name"] == nil`,
         `set(resource.attributes["source"], "otel") where resource.attributes["source"] == nil`,
         `set(resource.attributes["tier"], "core") where resource.attributes["tier"] == nil`,
@@ -144,7 +163,6 @@ declare "otlp_receivers" {
     trace_statements {
       context = "resource"
       statements = [
-        `set(resource.attributes["service.namespace"], "external") where resource.attributes["service.namespace"] == nil`,
         `set(resource.attributes["deployment.environment.name"], "production") where resource.attributes["deployment.environment.name"] == nil`,
         `set(resource.attributes["source"], "otel") where resource.attributes["source"] == nil`,
         `set(resource.attributes["tier"], "core") where resource.attributes["tier"] == nil`,
@@ -153,35 +171,8 @@ declare "otlp_receivers" {
 
     output {
       metrics = [otelcol.exporter.prometheus.default.input]
-      logs    = [otelcol.processor.attributes.loki_hints.input]
+      logs    = [otelcol.exporter.otlphttp.loki.input]
       traces  = [otelcol.exporter.otlp.tempo.input]
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // LOKI LABEL HINTS (log path only)
-  // ---------------------------------------------------------------------------
-  // The Loki exporter reads these magic attributes to decide which resource
-  // and log-record attributes to promote to indexed stream labels. Confined
-  // to the log path so they never appear on Prometheus series or Tempo spans.
-  //
-  // loki.resource.labels  - promotes RESOURCE attributes (set by client SDK)
-  // loki.attribute.labels - promotes LOG RECORD attributes
-
-  otelcol.processor.attributes "loki_hints" {
-    action {
-      key    = "loki.resource.labels"
-      value  = "service.name, service.namespace, deployment.environment.name, component, host.name"
-      action = "insert"
-    }
-    action {
-      key    = "loki.attribute.labels"
-      value  = "source, tier"
-      action = "insert"
-    }
-
-    output {
-      logs = [otelcol.exporter.loki.default.input]
     }
   }
 
@@ -195,12 +186,18 @@ declare "otlp_receivers" {
   }
 
   // ---------------------------------------------------------------------------
-  // LOKI EXPORTER (Logs)
+  // LOKI EXPORTER (Logs) — native OTLP HTTP
   // ---------------------------------------------------------------------------
-  // Forwards OTEL logs to Loki
+  // Forwards OTEL logs to Loki's /otlp endpoint. Label promotion is configured
+  // in Loki's limits_config.otlp_config — no client-side hint attributes.
 
-  otelcol.exporter.loki "default" {
-    forward_to = argument.loki_receiver.value
+  otelcol.exporter.otlphttp "loki" {
+    client {
+      endpoint = "http://observability-log-store:3100/otlp"
+      tls {
+        insecure = true
+      }
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -212,8 +209,7 @@ declare "otlp_receivers" {
     client {
       endpoint = "observability-trace-store:4317"
       tls {
-        insecure             = true
-        insecure_skip_verify = true
+        insecure = true
       }
     }
 
