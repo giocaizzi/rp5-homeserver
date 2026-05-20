@@ -1,11 +1,29 @@
 // =============================================================================
 // OTEL PIPELINE MODULE
 // =============================================================================
-// Receives telemetry via OTLP (HTTP/gRPC), processes with batching and
-// attribute injection, then exports to appropriate backends.
+// Receives telemetry via OTLP (HTTP/gRPC), applies resource-level defaults
+// for external clients, then fans out by signal to the appropriate backend.
 //
 // Data Flow:
-//   OTLP Receivers → Batch Processor → Attribute Processor → Backend Exporters
+//   OTLP Receivers → Batch → Resource Defaults → ┌─ metrics → Prometheus
+//                                                ├─ traces  → Tempo
+//                                                └─ logs    → Loki Hints → Loki
+//
+// Why split by signal:
+//   Loki uses magic "loki.resource.labels" / "loki.attribute.labels" hint
+//   attributes to choose which keys become indexed stream labels. Inserting
+//   them in a shared processor leaks them as labels onto Prometheus series
+//   (cardinality bloat) and as attributes on Tempo spans. They live only on
+//   the log path.
+//
+//   Resource-level metadata (service.namespace, deployment.environment.name,
+//   source, tier) must be applied via otelcol.processor.resource — not
+//   otelcol.processor.attributes — so they land on the Resource and not on
+//   every data point. The attributes processor would otherwise overwrite
+//   nothing on the resource (resource keeps the client's value) but inject
+//   the default into each metric/log/span attribute, producing two competing
+//   values for the same key (e.g. job="claude-code/claude-code" on the
+//   resource but service_namespace="external" on the data point).
 //
 // Auth:
 //   HTTP (port 4318) requires `Authorization: Bearer <token>`. Same enforcement
@@ -85,55 +103,64 @@ declare "otlp_receivers" {
     send_batch_size = 100
 
     output {
-      metrics = [otelcol.processor.attributes.default.input]
-      logs    = [otelcol.processor.attributes.default.input]
-      traces  = [otelcol.processor.attributes.default.input]
+      metrics = [otelcol.processor.resource.defaults.input]
+      logs    = [otelcol.processor.resource.defaults.input]
+      traces  = [otelcol.processor.resource.defaults.input]
     }
   }
 
   // ---------------------------------------------------------------------------
-  // ATTRIBUTES PROCESSOR
+  // RESOURCE-LEVEL DEFAULTS
   // ---------------------------------------------------------------------------
-  // Injects standard attributes into all telemetry
+  // Fills missing resource attributes for external OTLP clients that don't
+  // set them. `action = "insert"` preserves any value the client already sent
+  // (e.g. service.namespace=claude-code from Claude Code's resource attrs).
 
-  otelcol.processor.attributes "default" {
-    // Default namespace for external apps
-    action {
+  otelcol.processor.resource "defaults" {
+    attributes {
+      action = "insert"
       key    = "service.namespace"
       value  = "external"
-      action = "insert"
     }
-
-    // Default environment
-    action {
+    attributes {
+      action = "insert"
       key    = "deployment.environment.name"
       value  = "production"
-      action = "insert"
     }
-
-    // Source identifier
-    action {
+    attributes {
+      action = "insert"
       key    = "source"
       value  = "otel"
-      action = "insert"
     }
-
-    // Default tier
-    action {
+    attributes {
+      action = "insert"
       key    = "tier"
       value  = "core"
-      action = "insert"
     }
 
-    // Loki label hints - controls which attributes become indexed labels
-    // loki.resource.labels: promotes RESOURCE attributes (sent by app)
+    output {
+      metrics = [otelcol.exporter.prometheus.default.input]
+      logs    = [otelcol.processor.attributes.loki_hints.input]
+      traces  = [otelcol.exporter.otlp.tempo.input]
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // LOKI LABEL HINTS (log path only)
+  // ---------------------------------------------------------------------------
+  // The Loki exporter reads these magic attributes to decide which resource
+  // and log-record attributes to promote to indexed stream labels. Confined
+  // to the log path so they never appear on Prometheus series or Tempo spans.
+  //
+  // loki.resource.labels  - promotes RESOURCE attributes (set by client SDK)
+  // loki.attribute.labels - promotes LOG RECORD attributes
+
+  otelcol.processor.attributes "loki_hints" {
     action {
       key    = "loki.resource.labels"
-      value  = "service.name, service.namespace, deployment.environment.name, component"
+      value  = "service.name, service.namespace, deployment.environment.name, component, host.name"
       action = "insert"
     }
-
-    // loki.attribute.labels: promotes LOG RECORD attributes (inserted above)
     action {
       key    = "loki.attribute.labels"
       value  = "source, tier"
@@ -141,9 +168,7 @@ declare "otlp_receivers" {
     }
 
     output {
-      metrics = [otelcol.exporter.prometheus.default.input]
-      logs    = [otelcol.exporter.loki.default.input]
-      traces  = [otelcol.exporter.otlp.tempo.input]
+      logs = [otelcol.exporter.loki.default.input]
     }
   }
 
