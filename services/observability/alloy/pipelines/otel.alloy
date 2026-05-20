@@ -103,9 +103,9 @@ declare "otlp_receivers" {
     send_batch_size = 100
 
     output {
-      metrics = [otelcol.processor.resource.defaults.input]
-      logs    = [otelcol.processor.resource.defaults.input]
-      traces  = [otelcol.processor.resource.defaults.input]
+      metrics = [otelcol.processor.transform.defaults.input]
+      logs    = [otelcol.processor.transform.defaults.input]
+      traces  = [otelcol.processor.transform.defaults.input]
     }
   }
 
@@ -113,29 +113,42 @@ declare "otlp_receivers" {
   // RESOURCE-LEVEL DEFAULTS
   // ---------------------------------------------------------------------------
   // Fills missing resource attributes for external OTLP clients that don't
-  // set them. `action = "insert"` preserves any value the client already sent
+  // set them. Uses otelcol.processor.transform with `context = "resource"` so
+  // statements run against resource attributes (not data-point attributes).
+  // The `where ... == nil` guard preserves any value the client already sent
   // (e.g. service.namespace=claude-code from Claude Code's resource attrs).
 
-  otelcol.processor.resource "defaults" {
-    attributes {
-      action = "insert"
-      key    = "service.namespace"
-      value  = "external"
+  otelcol.processor.transform "defaults" {
+    error_mode = "ignore"
+
+    metric_statements {
+      context = "resource"
+      statements = [
+        `set(resource.attributes["service.namespace"], "external") where resource.attributes["service.namespace"] == nil`,
+        `set(resource.attributes["deployment.environment.name"], "production") where resource.attributes["deployment.environment.name"] == nil`,
+        `set(resource.attributes["source"], "otel") where resource.attributes["source"] == nil`,
+        `set(resource.attributes["tier"], "core") where resource.attributes["tier"] == nil`,
+      ]
     }
-    attributes {
-      action = "insert"
-      key    = "deployment.environment.name"
-      value  = "production"
+
+    log_statements {
+      context = "resource"
+      statements = [
+        `set(resource.attributes["service.namespace"], "external") where resource.attributes["service.namespace"] == nil`,
+        `set(resource.attributes["deployment.environment.name"], "production") where resource.attributes["deployment.environment.name"] == nil`,
+        `set(resource.attributes["source"], "otel") where resource.attributes["source"] == nil`,
+        `set(resource.attributes["tier"], "core") where resource.attributes["tier"] == nil`,
+      ]
     }
-    attributes {
-      action = "insert"
-      key    = "source"
-      value  = "otel"
-    }
-    attributes {
-      action = "insert"
-      key    = "tier"
-      value  = "core"
+
+    trace_statements {
+      context = "resource"
+      statements = [
+        `set(resource.attributes["service.namespace"], "external") where resource.attributes["service.namespace"] == nil`,
+        `set(resource.attributes["deployment.environment.name"], "production") where resource.attributes["deployment.environment.name"] == nil`,
+        `set(resource.attributes["source"], "otel") where resource.attributes["source"] == nil`,
+        `set(resource.attributes["tier"], "core") where resource.attributes["tier"] == nil`,
+      ]
     }
 
     output {
