@@ -260,6 +260,20 @@ See [Naming & Labeling Standards](docs/naming_labels.md) for complete reference.
 
 ---
 
+# CI/CD (cloud/ only)
+
+`infra/` and `services/` have no CI — Portainer + `sync_infra.sh` are the deploy paths. `cloud/**` is the only thing CI/CD touches.
+
+**Pipeline.** `ci.yml` runs on every PR → `main` and short-circuits via `paths-filter` when `cloud/**` didn't change. When it did: `terraform fmt -check → init (GCS backend) → validate → plan`, then posts a sticky plan comment on the PR. The single required status check is the `gate` job (always runs, asserts no upstream job failed) — robust to skipped jobs and renames. `cd.yml` runs on push to `main` touching `cloud/**` and does `terraform apply -auto-approve` from the `cloud-production` environment. Flip "Required reviewers" on that environment to add a human gate without changing the workflow.
+
+**Auth.** GCP via Workload Identity Federation — no SA key in GitHub; Actions exchanges its OIDC token for a short-lived credential, restricted to this repo by the WIF provider's attribute-condition. Cloudflare via API token stored as a GH **secret** (`CLOUDFLARE_API_TOKEN`). Tunnel secret stored as `TUNNEL_SECRET`. State backend: GCS, bucket name in repo var `TF_STATE_BUCKET`, prefix hardcoded in `cloud/backend.tf`.
+
+**Variable wiring.** Both workflows declare a `TF_VAR_*` env block under the plan/apply step that maps GH variables/secrets to terraform inputs. Variables (non-secret) live at **repo level** (`gh variable list`); secrets at repo level too. The `cloud-plan` / `cloud-production` environments exist for the Deployments-tab audit trail and the optional approval gate — they hold no variables of their own today (env-level vars/secrets would override repo-level if added). Adding a new terraform variable means: add `variable "..."` to `cloud/variables.tf`, add `TF_VAR_<name>: ${{ vars.<NAME> }}` (or `secrets.<NAME>`) to **both** `ci.yml` and `cd.yml` plan/apply steps, set the GH var (`gh variable set <NAME> --body '...'`), and append it to the bootstrap script's printed checklist so future bootstraps stay accurate. List-typed terraform vars must be JSON-encoded strings (e.g. `'["a@x.com","b@y.com"]'`).
+
+**Adding a public service (the recipe).** (1) nginx: `server_name` + `globals.conf` backend map + `defaults.conf` HTTP→HTTPS redirect. (2) terraform: CNAME, tunnel ingress entry (host-correct `http_host_header` and `origin_server_name`), `<svc>_users` variable, Access policy + self-hosted Access app, `<svc>_url` output. (3) GH: set `<SVC>_USERS` repo variable (JSON array) and add `TF_VAR_<svc>_users` to both workflows. (4) Bump `infra/VERSION` so `sync_infra.sh` redeploys nginx (Swarm configs are immutable). Bootstrap script (`scripts/bootstrap_cloud_cicd.sh`) prints the canonical variable/secret/environment checklist when re-run.
+
+---
+
 # Security
 
 - Swarm secrets for credentials; `.env` files gitignored.

@@ -38,6 +38,16 @@ output "openclaw_url" {
   value       = "https://openclaw.${var.zone_name}"
 }
 
+output "grafana_url" {
+  description = "The public URL for Grafana"
+  value       = "https://grafana.${var.zone_name}"
+}
+
+output "greenhouse_url" {
+  description = "The public URL for Greenhouse"
+  value       = "https://greenhouse.${var.zone_name}"
+}
+
 # ============================================================================
 # GCP Outputs
 # ============================================================================
