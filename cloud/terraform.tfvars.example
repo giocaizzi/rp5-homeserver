@@ -43,6 +43,18 @@ firefly_users = [
   "user2@example.com"
 ]
 
+# List of allowed email addresses for Grafana
+grafana_users = [
+  "user1@example.com",
+  "user2@example.com"
+]
+
+# List of allowed email addresses for Greenhouse
+greenhouse_users = [
+  "user1@example.com",
+  "user2@example.com"
+]
+
 # ============================================================================
 # GCP Configuration
 # ============================================================================

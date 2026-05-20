@@ -104,6 +104,26 @@ resource "cloudflare_dns_record" "openclaw" {
   proxied = true
 }
 
+# Creates the CNAME record that routes grafana.${var.zone_name} to the tunnel.
+resource "cloudflare_dns_record" "grafana" {
+  zone_id = var.zone_id
+  name    = "grafana"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
+# Creates the CNAME record that routes greenhouse.${var.zone_name} to the tunnel.
+resource "cloudflare_dns_record" "greenhouse" {
+  zone_id = var.zone_id
+  name    = "greenhouse"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
 # Creates the CNAME record that routes otel.${var.zone_name} to the tunnel.
 # OTLP HTTP ingestion: CF Access bypass on /v1/* + Alloy bearer auth.
 resource "cloudflare_dns_record" "otel" {
@@ -185,6 +205,24 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
         }
       },
       {
+        hostname = "grafana.${var.zone_name}"
+        service  = "https://infra-proxy:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "grafana.${var.zone_name}"
+          origin_server_name = "grafana.${var.zone_name}"
+        }
+      },
+      {
+        hostname = "greenhouse.${var.zone_name}"
+        service  = "https://infra-proxy:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "greenhouse.${var.zone_name}"
+          origin_server_name = "greenhouse.${var.zone_name}"
+        }
+      },
+      {
         service = "http_status:404"
       }
     ]
@@ -243,6 +281,24 @@ resource "cloudflare_zero_trust_access_policy" "openclaw_users" {
   decision   = "allow"
   include = [
     for email in var.openclaw_users : { email = { email = email } }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_policy" "grafana_users" {
+  account_id = var.cloudflare_account_id
+  name       = "grafana-users"
+  decision   = "allow"
+  include = [
+    for email in var.grafana_users : { email = { email = email } }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_policy" "greenhouse_users" {
+  account_id = var.cloudflare_account_id
+  name       = "greenhouse-users"
+  decision   = "allow"
+  include = [
+    for email in var.greenhouse_users : { email = { email = email } }
   ]
 }
 
@@ -362,6 +418,36 @@ resource "cloudflare_zero_trust_access_application" "openclaw_policy" {
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.openclaw_users.id
+      precedence = 1
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "grafana_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "grafana.${var.zone_name}"
+  domain     = "grafana.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.grafana_users.id
+      precedence = 1
+    }
+  ]
+}
+
+# greenhouse_policy gates the whole hostname (UI + JSON API + /mcp) on email.
+# /mcp at the app level is independently bearer-gated (GREENHOUSE_MCP_TOKEN,
+# fail-closed since v2.0.0), so public /mcp is double-gated. LAN MCP keeps
+# using greenhouse.home (plain HTTP, no CF Access).
+resource "cloudflare_zero_trust_access_application" "greenhouse_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "greenhouse.${var.zone_name}"
+  domain     = "greenhouse.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.greenhouse_users.id
       precedence = 1
     }
   ]

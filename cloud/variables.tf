@@ -73,6 +73,18 @@ variable "openclaw_users" {
   default     = []
 }
 
+variable "grafana_users" {
+  description = "List of email addresses allowed to access Grafana"
+  type        = list(string)
+  default     = []
+}
+
+variable "greenhouse_users" {
+  description = "List of email addresses allowed to access Greenhouse"
+  type        = list(string)
+  default     = []
+}
+
 # ============================================================================
 # GCP Variables
 # ============================================================================
