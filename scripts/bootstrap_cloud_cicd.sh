@@ -159,6 +159,8 @@ GitHub Actions repository variables (Settings → Variables → Actions):
   FIREFLY_USERS             <JSON array string>
   HOMEPAGE_USERS            <JSON array string>
   OPENCLAW_USERS            <JSON array string>
+  GRAFANA_USERS             <JSON array string>
+  GREENHOUSE_USERS          <JSON array string>
   TF_VERSION                1.9.8 (optional override)
 
 GitHub Environments to create (Settings → Environments):
