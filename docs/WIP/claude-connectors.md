@@ -180,11 +180,20 @@ that already exist.
 
 ## 5. Open items to resolve during implementation
 
-1. **`linked_app_token` `app_uid` reference.** The portal→upstream Access
-   traversal is implemented with a `linked_app_token` policy on each upstream
-   app. The `app_uid` is wired to the portal resource `id`; the correct value
-   may instead be the portal's computed Access-app UID/`aud`. **Confirm with
-   `terraform plan` and a live connect**, and adjust the attribute if needed.
+1. **Token secrets must exist in the GitHub environment.** CI/CD inject vars as
+   `TF_VAR_*`. The three sensitive tokens are wired in `ci.yml`/`cd.yml` as
+   `secrets.GREENHOUSE_MCP_TOKEN`, `secrets.FIREFLY_MCP_TOKEN`,
+   `secrets.N8N_MCP_TOKEN` — **add these to the `cloud-production` environment**
+   (and the CI environment) before merge/apply, with the same values as the
+   Swarm secrets. They default to `""`, so a missing secret applies a blank
+   bearer → greenhouse 503 (fail-closed), firefly/n8n reject.
+
+2. **`linked_app_token` `app_uid` — confirmed by `plan`, verify at runtime.**
+   `terraform plan` (PR #139) accepted `app_uid = "<portal>-mcp-portal"` (the
+   portal `id`) and `id` as a settable arg. Plan is clean (16 add / 2 change /
+   0 destroy). Whether CF Access actually matches that `app_uid` against the
+   linked portal at connect time still needs a **live connect test**; adjust to
+   the portal's `aud` if the connector can't reach the upstream.
 2. **n8n MCP Server Trigger.** Confirm a workflow with an MCP Server Trigger
    node is actually live at `/mcp-server` and retrieve its bearer token.
 3. **Plan availability.** Confirm MCP Server Portals are enabled on the
