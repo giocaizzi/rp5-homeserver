@@ -93,13 +93,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_session_count_total{job=~\".*/claude-code\"}[1h]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum(increase(claude_code_session_count_total{job=~\".*/claude-code\"}[$__range]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
           "interval": "",
-          "legendFormat": "Sessions (1h)",
+          "legendFormat": "Sessions",
           "refId": "A"
         }
       ],
-      "title": "Active Sessions (1h)",
+      "title": "Active Sessions",
       "type": "stat"
     },
     {
@@ -161,13 +161,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[1h]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum(increase(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
           "interval": "",
-          "legendFormat": "Cost (1h)",
+          "legendFormat": "Cost",
           "refId": "A"
         }
       ],
-      "title": "Cost (Last Hour)",
+      "title": "Cost (range)",
       "type": "stat"
     },
     {
@@ -229,13 +229,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total{job=~\".*/claude-code\"}[1h]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum(increase(claude_code_token_usage_tokens_total{job=~\".*/claude-code\"}[$__range]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
           "interval": "",
-          "legendFormat": "Tokens (1h)",
+          "legendFormat": "Tokens",
           "refId": "A"
         }
       ],
-      "title": "Token Usage (1h)",
+      "title": "Token Usage (range)",
       "type": "stat"
     },
     {
@@ -297,13 +297,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_lines_of_code_count_total{job=~\".*/claude-code\"}[1h]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum(increase(claude_code_lines_of_code_count_total{job=~\".*/claude-code\"}[$__range]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
           "interval": "",
-          "legendFormat": "Lines Changed (1h)",
+          "legendFormat": "Lines Changed",
           "refId": "A"
         }
       ],
-      "title": "Lines of Code (1h)",
+      "title": "Lines of Code (range)",
       "type": "stat"
     },
     {
@@ -1663,5 +1663,5 @@
   "timezone": "",
   "title": "Claude Code Observability",
   "uid": "claude-code-obs",
-  "version": 3
+  "version": 4
 }
