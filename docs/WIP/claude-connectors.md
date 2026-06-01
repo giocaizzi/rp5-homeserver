@@ -53,11 +53,20 @@ secret material needs to be generated for the app layer.
 ## 3. Chosen approach — Cloudflare MCP Server Portal (Option A)
 
 Cloudflare One **MCP Server Portals** (GA Aug 2025) front one or more MCP
-servers behind a **single portal URL**, run the **full OAuth flow with Claude
-via Cloudflare Access**, and enforce existing Access policies (email, MFA, geo,
-device posture). One portal aggregates all three servers — Claude connects
-once and sees greenhouse + firefly + n8n tools together, with per-server tool
-curation and context-window optimization.
+servers behind a **portal URL**, run the **full OAuth flow with Claude via
+Cloudflare Access**, and enforce existing Access policies (email, MFA, geo,
+device posture).
+
+### Decision — three separate connectors, not one aggregated
+
+A portal maps 1:1 to a connector in Claude.ai. We use **three single-server
+portals** (one per service) so greenhouse, firefly, and n8n each appear as
+their **own connector** in Claude.ai — independently toggled, isolated, with
+its own OAuth login. This preserves the per-token isolation already designed
+into `cloud/main.tf` ("a leaked token for n8n cannot reach Firefly III's MCP").
+The cost is three OAuth logins in Claude instead of one. (Aggregating all three
+into a single portal/connector is the alternative — fewer logins, but a shared
+surface and no per-service on/off; rejected.)
 
 ### 3.1 Key simplification — Cloudflare injects the inner bearer
 
@@ -78,19 +87,18 @@ Consequences:
 
 ### 3.2 Target architecture
 
+Three independent connectors, each = one single-server portal:
+
 ```
-Claude.ai ──OAuth (one CF Access login)──▶  mcp.giocaizzi.xyz   (the Portal)
-                                              │  aggregates 3 servers, CF injects each bearer
-                  ┌───────────────────────────┼────────────────────────────┐
-                  ▼                            ▼                            ▼
-   greenhouse.…/mcp            firefly.…/api/v1/mcp            n8n.…/mcp-server
-   auth_type=bearer            auth_type=bearer               auth_type=bearer
-   (GREENHOUSE_MCP_TOKEN)      (Firefly PAT)                  (n8n MCP token)
+Claude.ai ──OAuth──▶ greenhouse-mcp.…xyz  (portal) ─▶ greenhouse.…/mcp        bearer: GREENHOUSE_MCP_TOKEN
+Claude.ai ──OAuth──▶ firefly-mcp.…xyz     (portal) ─▶ firefly.…/api/v1/mcp    bearer: Firefly PAT
+Claude.ai ──OAuth──▶ n8n-mcp.…xyz         (portal) ─▶ n8n.…/mcp-server        bearer: n8n MCP token
 ```
 
-Claude sends **no** headers; the portal does OAuth; Cloudflare injects each
-app bearer. The existing Claude Code paths (service-token bypass) stay
-untouched and continue to work in parallel.
+Each connector does its own OAuth via CF Access; Cloudflare injects that
+service's app bearer (`auth_type=bearer`). Claude sends **no** headers. The
+existing Claude Code paths (service-token bypass) stay untouched and continue
+to work in parallel.
 
 ---
 
@@ -100,11 +108,15 @@ untouched and continue to work in parallel.
 > The portal needs its **DNS record created separately** (the TF provider does
 > not auto-create it, unlike the dashboard).
 
+One DNS record + one single-server portal **per service** (three connectors).
+Shown for greenhouse; firefly and n8n are identical with their own
+host/path/token.
+
 ```hcl
-# One DNS record for the portal hostname → tunnel.
-resource "cloudflare_dns_record" "mcp_portal" {
+# DNS record for each portal hostname → tunnel (one per connector).
+resource "cloudflare_dns_record" "greenhouse_mcp_portal" {
   zone_id = var.zone_id
-  name    = "mcp"
+  name    = "greenhouse-mcp"
   content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
   type    = "CNAME"
   ttl     = 1
@@ -139,25 +151,25 @@ resource "cloudflare_zero_trust_access_ai_controls_mcp_server" "n8n" {
   auth_credentials = var.n8n_mcp_token
 }
 
-# Aggregate the three into one portal, gated by an email Access policy.
-resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "home" {
+# One single-server portal per service → one Claude.ai connector each.
+resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "greenhouse" {
   account_id = var.cloudflare_account_id
-  id         = "home-mcp-portal"
-  name       = "Home MCP"
-  hostname   = "mcp.${var.zone_name}"
+  id         = "greenhouse-mcp-portal"
+  name       = "Greenhouse"
+  hostname   = "greenhouse-mcp.${var.zone_name}"
 
   servers = [
     { server_id = cloudflare_zero_trust_access_ai_controls_mcp_server.greenhouse.id },
-    { server_id = cloudflare_zero_trust_access_ai_controls_mcp_server.firefly.id },
-    { server_id = cloudflare_zero_trust_access_ai_controls_mcp_server.n8n.id },
   ]
 }
+# … firefly-mcp.${zone} and n8n-mcp.${zone} portals identical, one server each.
 ```
 
-A self-hosted Access application + email policy on `mcp.${var.zone_name}` (same
-pattern as the existing services) provides the user-identity gate that Claude
-satisfies via OAuth. The three `auth_credentials` are new sensitive tfvars,
-sourced from the Swarm secrets that already exist.
+A self-hosted Access application + email policy on each
+`*-mcp.${var.zone_name}` hostname (same pattern as the existing services)
+provides the user-identity gate that Claude satisfies via OAuth. The three
+`auth_credentials` are new sensitive tfvars, sourced from the Swarm secrets
+that already exist.
 
 ---
 
