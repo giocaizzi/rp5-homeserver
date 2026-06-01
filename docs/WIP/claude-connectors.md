@@ -1,6 +1,7 @@
 # Connecting Claude.ai Custom Connectors to Home MCP Servers
 
-**Status:** Design / research (not yet implemented)
+**Status:** Implemented in `cloud/` (first draft — needs `terraform plan` + a
+live connect test before apply; see §5)
 **Date:** 2026-06-01
 **Scope:** Expose `greenhouse`, `firefly`, and `n8n` MCP servers to **Claude.ai**
 (web + mobile) custom connectors.
@@ -112,12 +113,16 @@ One DNS record + one single-server portal **per service** (three connectors).
 Shown for greenhouse; firefly and n8n are identical with their own
 host/path/token.
 
+> **DNS target:** the portal is Cloudflare-hosted, so its hostname is a proxied
+> CNAME to **`gateway.agents.cloudflare.com`** — *not* the tunnel. (Without this
+> the portal returns 522.)
+
 ```hcl
-# DNS record for each portal hostname → tunnel (one per connector).
+# DNS record for each portal hostname (one per connector).
 resource "cloudflare_dns_record" "greenhouse_mcp_portal" {
   zone_id = var.zone_id
   name    = "greenhouse-mcp"
-  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  content = "gateway.agents.cloudflare.com"
   type    = "CNAME"
   ttl     = 1
   proxied = true
@@ -175,13 +180,11 @@ that already exist.
 
 ## 5. Open items to resolve during implementation
 
-1. **Outer CF Access on the upstream paths.** The three upstream hostnames are
-   themselves behind CF Access. Confirm how the portal's outbound connection
-   passes that outer gate — likely via **auth delegation / linked Access
-   application** (Cloudflare-hosted origins in the same account), otherwise the
-   portal connection would hit the Access challenge. If delegation is not
-   available on-plan, fall back to a path-scoped **service-token bypass** that
-   Cloudflare presents on the portal→upstream hop. Needs a live test.
+1. **`linked_app_token` `app_uid` reference.** The portal→upstream Access
+   traversal is implemented with a `linked_app_token` policy on each upstream
+   app. The `app_uid` is wired to the portal resource `id`; the correct value
+   may instead be the portal's computed Access-app UID/`aud`. **Confirm with
+   `terraform plan` and a live connect**, and adjust the attribute if needed.
 2. **n8n MCP Server Trigger.** Confirm a workflow with an MCP Server Trigger
    node is actually live at `/mcp-server` and retrieve its bearer token.
 3. **Plan availability.** Confirm MCP Server Portals are enabled on the

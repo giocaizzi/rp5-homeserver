@@ -502,6 +502,11 @@ resource "cloudflare_zero_trust_access_application" "n8n_mcp_policy" {
     {
       id         = cloudflare_zero_trust_access_policy.claude_n8n_mcp_bypass.id
       precedence = 1
+    },
+    # Claude.ai connector: portal traverses Access via linked-app token.
+    {
+      id         = cloudflare_zero_trust_access_policy.n8n_mcp_linked.id
+      precedence = 2
     }
   ]
 }
@@ -596,6 +601,247 @@ resource "cloudflare_zero_trust_access_application" "firefly_mcp_policy" {
     {
       id         = cloudflare_zero_trust_access_policy.claude_firefly_mcp_bypass.id
       precedence = 1
+    },
+    # Claude.ai connector: portal traverses Access via linked-app token.
+    {
+      id         = cloudflare_zero_trust_access_policy.firefly_mcp_linked.id
+      precedence = 2
+    }
+  ]
+}
+
+# ============================================================================
+# Claude.ai connectors — MCP Server Portals (OAuth, no custom headers)
+# ============================================================================
+# Claude.ai custom connectors authenticate ONLY via OAuth — the UI has no field
+# for a bearer token or custom header (anthropics/claude-ai-mcp#110, closed
+# "not planned"). The Claude Code MCP section above (service-token bypass +
+# client-sent bearer) therefore does NOT work for Claude.ai; this is a separate,
+# parallel path that leaves it untouched.
+#
+# Each MCP server gets its OWN single-server portal, so it shows up as a
+# separate connector in Claude.ai (independently toggled, isolated — same
+# blast-radius philosophy as the per-endpoint service tokens above).
+#
+# Per service:
+#   1. DNS: <svc>-mcp.<zone> CNAME -> gateway.agents.cloudflare.com (proxied).
+#      The portal is Cloudflare-hosted; it is NOT served by the tunnel/nginx.
+#   2. mcp_server: registers the upstream endpoint. auth_type=bearer makes
+#      Cloudflare inject the app token (Authorization: Bearer) itself, so no
+#      nginx header injection and no client-sent headers are needed.
+#   3. mcp_portal: single-server portal at the <svc>-mcp.<zone> hostname.
+#   4. Access app on the portal hostname, reusing the service's existing user
+#      policy — the OAuth/identity gate Claude satisfies on connect.
+#   5. linked_app_token policy on the UPSTREAM Access app, authorizing the
+#      portal to traverse the upstream's CF Access on the portal->origin hop.
+#
+# VERIFY-ON-PLAN: the `app_uid` in each *_mcp_linked policy must reference the
+# portal's Access-app UID. It is wired to the portal resource id here; confirm
+# the exact attribute with `terraform plan` + a live connect before apply.
+# See docs/WIP/claude-connectors.md for the full design and open items.
+
+# --- Greenhouse connector --------------------------------------------------
+
+resource "cloudflare_dns_record" "greenhouse_mcp" {
+  zone_id = var.zone_id
+  name    = "greenhouse-mcp"
+  content = "gateway.agents.cloudflare.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
+resource "cloudflare_zero_trust_access_ai_controls_mcp_server" "greenhouse" {
+  account_id       = var.cloudflare_account_id
+  id               = "greenhouse-mcp"
+  name             = "Greenhouse"
+  auth_type        = "bearer"
+  hostname         = "https://greenhouse.${var.zone_name}/mcp"
+  auth_credentials = var.greenhouse_mcp_token
+}
+
+resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "greenhouse" {
+  account_id = var.cloudflare_account_id
+  id         = "greenhouse-mcp-portal"
+  name       = "Greenhouse"
+  hostname   = "greenhouse-mcp.${var.zone_name}"
+
+  servers = [
+    { server_id = cloudflare_zero_trust_access_ai_controls_mcp_server.greenhouse.id },
+  ]
+}
+
+# OAuth/identity gate on the portal hostname (reuses greenhouse_users).
+resource "cloudflare_zero_trust_access_application" "greenhouse_mcp_portal" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "greenhouse-mcp.${var.zone_name}"
+  domain     = "greenhouse-mcp.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.greenhouse_users.id
+      precedence = 1
+    }
+  ]
+}
+
+# Portal->origin traversal. greenhouse.<zone>/mcp is email-gated whole-host by
+# greenhouse_policy; this path-scoped app allows EITHER a logged-in user OR the
+# linked portal, preserving the browser double-gating (email + bearer) while
+# letting the portal reach /mcp.
+resource "cloudflare_zero_trust_access_policy" "greenhouse_mcp_linked" {
+  account_id = var.cloudflare_account_id
+  name       = "greenhouse-mcp-linked"
+  decision   = "allow"
+  include = [
+    {
+      linked_app_token = {
+        app_uid = cloudflare_zero_trust_access_ai_controls_mcp_portal.greenhouse.id
+      }
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "greenhouse_mcp_upstream" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "greenhouse-mcp-upstream.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "greenhouse.${var.zone_name}/mcp"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.greenhouse_mcp_linked.id
+      precedence = 1
+    },
+    {
+      id         = cloudflare_zero_trust_access_policy.greenhouse_users.id
+      precedence = 2
+    }
+  ]
+}
+
+# --- Firefly III connector -------------------------------------------------
+
+resource "cloudflare_dns_record" "firefly_mcp" {
+  zone_id = var.zone_id
+  name    = "firefly-mcp"
+  content = "gateway.agents.cloudflare.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
+resource "cloudflare_zero_trust_access_ai_controls_mcp_server" "firefly" {
+  account_id       = var.cloudflare_account_id
+  id               = "firefly-mcp"
+  name             = "Firefly III"
+  auth_type        = "bearer"
+  hostname         = "https://firefly.${var.zone_name}/api/v1/mcp"
+  auth_credentials = var.firefly_mcp_token
+}
+
+resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "firefly" {
+  account_id = var.cloudflare_account_id
+  id         = "firefly-mcp-portal"
+  name       = "Firefly III"
+  hostname   = "firefly-mcp.${var.zone_name}"
+
+  servers = [
+    { server_id = cloudflare_zero_trust_access_ai_controls_mcp_server.firefly.id },
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "firefly_mcp_portal" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "firefly-mcp.${var.zone_name}"
+  domain     = "firefly-mcp.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.firefly_users.id
+      precedence = 1
+    }
+  ]
+}
+
+# Portal->origin traversal for firefly.<zone>/api/v1/mcp. Added alongside the
+# existing claude_firefly_mcp_bypass (Claude Code service token) on the same
+# path-scoped upstream app, so both clients can reach the endpoint.
+resource "cloudflare_zero_trust_access_policy" "firefly_mcp_linked" {
+  account_id = var.cloudflare_account_id
+  name       = "firefly-mcp-linked"
+  decision   = "allow"
+  include = [
+    {
+      linked_app_token = {
+        app_uid = cloudflare_zero_trust_access_ai_controls_mcp_portal.firefly.id
+      }
+    }
+  ]
+}
+
+# --- n8n connector ---------------------------------------------------------
+
+resource "cloudflare_dns_record" "n8n_mcp" {
+  zone_id = var.zone_id
+  name    = "n8n-mcp"
+  content = "gateway.agents.cloudflare.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
+resource "cloudflare_zero_trust_access_ai_controls_mcp_server" "n8n" {
+  account_id       = var.cloudflare_account_id
+  id               = "n8n-mcp"
+  name             = "n8n"
+  auth_type        = "bearer"
+  hostname         = "https://n8n.${var.zone_name}/mcp-server"
+  auth_credentials = var.n8n_mcp_token
+}
+
+resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "n8n" {
+  account_id = var.cloudflare_account_id
+  id         = "n8n-mcp-portal"
+  name       = "n8n"
+  hostname   = "n8n-mcp.${var.zone_name}"
+
+  servers = [
+    { server_id = cloudflare_zero_trust_access_ai_controls_mcp_server.n8n.id },
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "n8n_mcp_portal" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "n8n-mcp.${var.zone_name}"
+  domain     = "n8n-mcp.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.n8n_users.id
+      precedence = 1
+    }
+  ]
+}
+
+# Portal->origin traversal for n8n.<zone>/mcp-server. Added alongside the
+# existing claude_n8n_mcp_bypass (Claude Code service token) on the same
+# path-scoped upstream app.
+resource "cloudflare_zero_trust_access_policy" "n8n_mcp_linked" {
+  account_id = var.cloudflare_account_id
+  name       = "n8n-mcp-linked"
+  decision   = "allow"
+  include = [
+    {
+      linked_app_token = {
+        app_uid = cloudflare_zero_trust_access_ai_controls_mcp_portal.n8n.id
+      }
     }
   ]
 }
