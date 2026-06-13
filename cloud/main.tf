@@ -653,14 +653,15 @@ resource "cloudflare_dns_record" "greenhouse_mcp" {
 }
 
 resource "cloudflare_zero_trust_access_ai_controls_mcp_server" "greenhouse" {
-  account_id       = var.cloudflare_account_id
-  id               = "greenhouse-mcp"
-  name             = "Greenhouse"
-  auth_type        = "bearer"
-  hostname         = "https://greenhouse.${var.zone_name}/mcp"
-  auth_credentials = var.greenhouse_mcp_token
-  updated_tools    = []
-  updated_prompts  = []
+  account_id                       = var.cloudflare_account_id
+  id                               = "greenhouse-mcp"
+  name                             = "Greenhouse"
+  auth_type                        = "bearer"
+  hostname                         = "https://greenhouse.${var.zone_name}/mcp"
+  auth_credentials                 = var.greenhouse_mcp_token
+  is_shared_oauth_callback_enabled = true
+  updated_tools                    = []
+  updated_prompts                  = []
 }
 
 resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "greenhouse" {
@@ -741,14 +742,15 @@ resource "cloudflare_dns_record" "firefly_mcp" {
 }
 
 resource "cloudflare_zero_trust_access_ai_controls_mcp_server" "firefly" {
-  account_id       = var.cloudflare_account_id
-  id               = "firefly-mcp"
-  name             = "Firefly III"
-  auth_type        = "bearer"
-  hostname         = "https://firefly.${var.zone_name}/api/v1/mcp"
-  auth_credentials = var.firefly_mcp_token
-  updated_tools    = []
-  updated_prompts  = []
+  account_id                       = var.cloudflare_account_id
+  id                               = "firefly-mcp"
+  name                             = "Firefly III"
+  auth_type                        = "bearer"
+  hostname                         = "https://firefly.${var.zone_name}/api/v1/mcp"
+  auth_credentials                 = var.firefly_mcp_token
+  is_shared_oauth_callback_enabled = true
+  updated_tools                    = []
+  updated_prompts                  = []
 }
 
 resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "firefly" {
@@ -803,14 +805,15 @@ resource "cloudflare_dns_record" "n8n_mcp" {
 }
 
 resource "cloudflare_zero_trust_access_ai_controls_mcp_server" "n8n" {
-  account_id       = var.cloudflare_account_id
-  id               = "n8n-mcp"
-  name             = "n8n"
-  auth_type        = "bearer"
-  hostname         = "https://n8n.${var.zone_name}/mcp-server/http"
-  auth_credentials = var.n8n_mcp_token
-  updated_tools    = []
-  updated_prompts  = []
+  account_id                       = var.cloudflare_account_id
+  id                               = "n8n-mcp"
+  name                             = "n8n"
+  auth_type                        = "bearer"
+  hostname                         = "https://n8n.${var.zone_name}/mcp-server/http"
+  auth_credentials                 = var.n8n_mcp_token
+  is_shared_oauth_callback_enabled = true
+  updated_tools                    = []
+  updated_prompts                  = []
 }
 
 resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "n8n" {
