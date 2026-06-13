@@ -24,7 +24,7 @@
   "liveNow": false,
   "panels": [
     {
-      "title": "\ud83d\udcca Overview",
+      "title": "📊 Overview",
       "type": "row",
       "gridPos": {
         "h": 1,
@@ -93,7 +93,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_session_count_total{job=~\".*/claude-code\"}[$__range]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "count( max_over_time(claude_code_session_count_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) )",
           "interval": "",
           "legendFormat": "Sessions",
           "refId": "A"
@@ -161,7 +161,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum( (max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) )",
           "interval": "",
           "legendFormat": "Cost",
           "refId": "A"
@@ -229,7 +229,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total{job=~\".*/claude-code\"}[$__range]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum( (max_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) )",
           "interval": "",
           "legendFormat": "Tokens",
           "refId": "A"
@@ -297,7 +297,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_lines_of_code_count_total{job=~\".*/claude-code\"}[$__range]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum( (max_over_time(claude_code_lines_of_code_count_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_lines_of_code_count_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) )",
           "interval": "",
           "legendFormat": "Lines Changed",
           "refId": "A"
@@ -307,7 +307,7 @@
       "type": "stat"
     },
     {
-      "title": "\ud83d\udcb0 Cost & Usage Analysis",
+      "title": "💰 Cost & Usage Analysis",
       "type": "row",
       "gridPos": {
         "h": 1,
@@ -400,12 +400,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (model) (increase(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum by (model) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__rate_interval]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__rate_interval])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
           "interval": "",
           "legendFormat": "{{model}}",
           "refId": "A"
         }
       ],
+      "description": "Per-interval cost via windowed delta (max_over_time - min_over_time) instead of increase(), avoiding session-reset extrapolation spikes.",
       "title": "Cost by Model (per interval)",
       "type": "timeseries"
     },
@@ -570,7 +571,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (type) (rate(claude_code_token_usage_tokens_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"} * 60)",
+          "expr": "sum by (type) (rate(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__rate_interval]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) * 60)",
           "interval": "",
           "legendFormat": "{{type}}",
           "refId": "A"
@@ -702,7 +703,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (model) (changes(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum by (model) (changes(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__rate_interval]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
           "interval": "",
           "legendFormat": "{{model}}",
           "refId": "A"
@@ -712,13 +713,675 @@
       "type": "timeseries"
     },
     {
-      "title": "\ud83d\udd27 Tool Usage & Performance",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 22
+      },
+      "id": 20,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum( (max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) )",
+          "interval": "",
+          "legendFormat": "Total Spend",
+          "refId": "A"
+        }
+      ],
+      "description": "Total spend over the dashboard range via windowed delta (max_over_time - min_over_time) summed across session series, host-joined. Avoids increase() extrapolation inflation.",
+      "title": "Total Spend (range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 22
+      },
+      "id": 21,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum( (max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) ) / ($__range_s / 3600)",
+          "interval": "",
+          "legendFormat": "Cost/hr",
+          "refId": "A"
+        }
+      ],
+      "description": "Total windowed-delta spend divided by range hours ($__range_s / 3600).",
+      "title": "Avg Cost / Hour",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (model) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "interval": "",
+          "legendFormat": "{{model}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Total spend per model over the range (windowed delta, host-joined).",
+      "title": "Cost by Model",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "USD/hr",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 30
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (model) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__rate_interval]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__rate_interval])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"})) / ($__rate_interval_s / 3600)",
+          "interval": "",
+          "legendFormat": "{{model}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Per-model hourly cost rate: windowed delta over $__rate_interval scaled to $/hr via $__rate_interval_s. Windowed delta avoids session-reset spikes from increase().",
+      "title": "Cost Rate ($/hr) by Model",
+      "type": "timeseries"
+    },
+    {
+      "title": "🧑‍💻 Sessions",
       "type": "row",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 38
+      },
+      "collapsed": false
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 39
+      },
+      "id": 25,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count( max_over_time(claude_code_session_count_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) )",
+          "interval": "",
+          "legendFormat": "Sessions",
+          "refId": "A"
+        }
+      ],
+      "description": "Distinct session series active within the dashboard range (count of host-joined session_count series seen over the window).",
+      "title": "Total Sessions (range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 39
+      },
+      "id": 26,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count( max_over_time(claude_code_session_count_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) ) / ($__range_s / 3600)",
+          "interval": "",
+          "legendFormat": "Sessions/hr",
+          "refId": "A"
+        }
+      ],
+      "description": "Total distinct sessions divided by range hours ($__range_s / 3600).",
+      "title": "Avg Sessions / Hour",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 39
+      },
+      "id": 27,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum( (max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) ) / (count( max_over_time(claude_code_session_count_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) ) or vector(0))",
+          "interval": "",
+          "legendFormat": "Cost/session",
+          "refId": "A"
+        }
+      ],
+      "description": "Total windowed-delta spend divided by distinct sessions in range. Divide-by-zero guarded with 'or vector(0)'.",
+      "title": "Avg Cost / Session",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Active sessions",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 43
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count(last_over_time(claude_code_session_count_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__interval]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "interval": "",
+          "legendFormat": "Active sessions",
+          "refId": "A"
+        }
+      ],
+      "description": "Active session series per step via last_over_time over $__interval, host-joined.",
+      "title": "Sessions Over Time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "session_id"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Filter dashboard to this session",
+                    "url": "/d/claude-code-obs/?var-session_id=${__data.fields.session_id}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 51
+      },
+      "id": 38,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Value",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "topk(15, sum by (session_id) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"})))",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Most Expensive Sessions",
+      "type": "table",
+      "description": "Top 15 sessions by cost over range (deliberately NOT session_id-filtered — this is the picker). Click a session_id to filter."
+    },
+    {
+      "title": "🔧 Tool Usage & Performance",
+      "type": "row",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 59
       },
       "collapsed": false
     },
@@ -852,7 +1515,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 23
+        "y": 60
       },
       "id": 7,
       "options": {
@@ -876,14 +1539,16 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (tool_name) (count_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.tool_result\" [$__interval]))",
+          "expr": "sum by (tool_name) (count_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.tool_result\" | session_id=~\"$session_id\" [$__interval]))",
           "interval": "",
           "legendFormat": "{{tool_name}}",
           "refId": "A"
         }
       ],
       "title": "Tool Usage Rate Over Time",
-      "type": "timeseries"
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
     },
     {
       "datasource": {
@@ -1007,7 +1672,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 23
+        "y": 60
       },
       "id": 14,
       "options": {
@@ -1031,14 +1696,16 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (tool_name) (count_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.tool_result\" [$__range]))",
+          "expr": "sum by (tool_name) (count_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.tool_result\" | session_id=~\"$session_id\" [$__range]))",
           "interval": "",
           "legendFormat": "{{tool_name}}",
           "refId": "A"
         }
       ],
       "title": "Cumulative Tool Usage",
-      "type": "timeseries"
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
     },
     {
       "datasource": {
@@ -1105,8 +1772,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 23
+        "x": 0,
+        "y": 68
       },
       "id": 8,
       "options": {
@@ -1128,23 +1795,236 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "100 * (sum by (tool_name) (count_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.tool_result\" | json | success=\"true\" [$__interval]))) / (sum by (tool_name) (count_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.tool_result\" [$__interval])))",
+          "expr": "100 * (sum by (tool_name) (count_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.tool_result\" | json | session_id=~\"$session_id\" | success=\"true\" [$__interval]))) / (sum by (tool_name) (count_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.tool_result\" | session_id=~\"$session_id\" [$__interval])))",
           "interval": "",
           "legendFormat": "{{tool_name}}",
           "refId": "A"
         }
       ],
       "title": "Tool Success Rate",
-      "type": "timeseries"
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
     },
     {
-      "title": "\u26a1 Performance & Errors",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 68
+      },
+      "id": 42,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "100 * sum((max_over_time(claude_code_code_edit_tool_decision_total{job=~\".*/claude-code\", session_id=~\"$session_id\", decision=\"accept\"}[$__range]) - min_over_time(claude_code_code_edit_tool_decision_total{job=~\".*/claude-code\", session_id=~\"$session_id\", decision=\"accept\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"})) / clamp_min(sum((max_over_time(claude_code_code_edit_tool_decision_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_code_edit_tool_decision_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"})), 1)",
+          "interval": "",
+          "legendFormat": "Accept %",
+          "refId": "A"
+        }
+      ],
+      "title": "Edit/Write Accept Rate",
+      "type": "stat",
+      "description": "Accepted edit/write decisions over total (windowed delta). Denominator clamped to >=1 to avoid divide-by-zero."
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Decisions",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 76
+      },
+      "id": 43,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (tool_name, decision) (count_over_time({service_name=\"claude-code\"} | event_name=\"tool_decision\" | session_id=~\"$session_id\" [$__range]))",
+          "interval": "",
+          "legendFormat": "{{tool_name}} ({{decision}})",
+          "refId": "A"
+        }
+      ],
+      "title": "Tool Decisions by Tool",
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 76
+      },
+      "id": 44,
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (tool_name, error_type) (count_over_time({service_name=\"claude-code\"} | event_name=\"tool_result\" | session_id=~\"$session_id\" | success=\"false\" [$__range]))",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Tool Failures by Error Type",
+      "type": "table",
+      "maxDataPoints": 500,
+      "description": "Failed tool_result events grouped by tool and error_type over range."
+    },
+    {
+      "title": "⚡ Performance & Errors",
       "type": "row",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 39
+        "y": 84
       },
       "collapsed": false
     },
@@ -1208,7 +2088,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 40
+        "y": 85
       },
       "id": 9,
       "options": {
@@ -1231,14 +2111,16 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg by (model) (avg_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.api_request\" | unwrap duration_ms [$__interval]))",
+          "expr": "avg by (model) (avg_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.api_request\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]))",
           "interval": "",
           "legendFormat": "{{model}}",
           "refId": "A"
         }
       ],
       "title": "API Request Duration by Model",
-      "type": "timeseries"
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
     },
     {
       "datasource": {
@@ -1300,7 +2182,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 40
+        "y": 85
       },
       "id": 10,
       "options": {
@@ -1322,23 +2204,225 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (status_code) (rate({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.api_error\" | json | __error__ = \"\" [$__interval]))",
+          "expr": "sum by (status_code) (rate({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.api_error\" | json | session_id=~\"$session_id\" | __error__ = \"\" [$__interval]))",
           "interval": "",
           "legendFormat": "HTTP {{status_code}}",
           "refId": "A"
         }
       ],
       "title": "API Error Rate",
-      "type": "timeseries"
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
     },
     {
-      "title": "\ud83d\udcdd User Activity & Productivity",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Milliseconds",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 93
+      },
+      "id": 45,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.50, {service_name=\"claude-code\"} | event_name=\"api_request\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]) by (model)",
+          "interval": "",
+          "legendFormat": "p50 {{model}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.95, {service_name=\"claude-code\"} | event_name=\"api_request\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]) by (model)",
+          "interval": "",
+          "legendFormat": "p95 {{model}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.99, {service_name=\"claude-code\"} | event_name=\"api_request\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]) by (model)",
+          "interval": "",
+          "legendFormat": "p99 {{model}}",
+          "refId": "C"
+        }
+      ],
+      "title": "API Latency p50/p95/p99",
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Errors",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 93
+      },
+      "id": 46,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (status_code) (count_over_time({service_name=\"claude-code\"} | event_name=\"api_error\" | session_id=~\"$session_id\" [$__range]))",
+          "interval": "",
+          "legendFormat": "HTTP {{status_code}}",
+          "refId": "A"
+        }
+      ],
+      "title": "API Errors by Status Code",
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
+    },
+    {
+      "title": "📝 User Activity & Productivity",
       "type": "row",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 101
       },
       "collapsed": false
     },
@@ -1402,7 +2486,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 49
+        "y": 102
       },
       "id": 11,
       "options": {
@@ -1424,7 +2508,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (type) (rate(claude_code_lines_of_code_count_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"} * 60)",
+          "expr": "sum by (type) (rate(claude_code_lines_of_code_count_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__rate_interval]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) * 60)",
           "interval": "",
           "legendFormat": "{{type}} lines/min",
           "refId": "A"
@@ -1493,7 +2577,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 49
+        "y": 102
       },
       "id": 12,
       "options": {
@@ -1515,7 +2599,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_commit_count_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"}) or vector(0)",
+          "expr": "sum(increase(claude_code_commit_count_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__rate_interval]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"})) or vector(0)",
           "interval": "",
           "legendFormat": "Commits",
           "refId": "A"
@@ -1525,7 +2609,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_pull_request_count_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"}) or vector(0)",
+          "expr": "sum(increase(claude_code_pull_request_count_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__rate_interval]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"})) or vector(0)",
           "interval": "",
           "legendFormat": "Pull Requests",
           "refId": "B"
@@ -1535,13 +2619,13 @@
       "type": "timeseries"
     },
     {
-      "title": "\ud83d\udd0d Event Logs",
+      "title": "🔍 Event Logs",
       "type": "row",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 57
+        "y": 110
       },
       "collapsed": false
     },
@@ -1554,7 +2638,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 58
+        "y": 111
       },
       "id": 13,
       "options": {
@@ -1573,12 +2657,14 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.tool_result\" | line_format \"{{.event_timestamp}} [{{.tool_name}}] {{if eq .success \\\"true\\\"}}\u2705{{else}}\u274c{{end}} {{.duration_ms}}ms {{if .error}}ERROR: {{.error}}{{end}}\"",
+          "expr": "{service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.tool_result\" | session_id=~\"$session_id\" | line_format \"{{.event_timestamp}} [{{.tool_name}}] {{if eq .success \\\"true\\\"}}✅{{else}}❌{{end}} {{.duration_ms}}ms {{if .error}}ERROR: {{.error}}{{end}}\"",
           "refId": "A"
         }
       ],
       "title": "Tool Execution Events",
-      "type": "logs"
+      "type": "logs",
+      "maxDataPoints": 500,
+      "interval": "1m"
     },
     {
       "datasource": {
@@ -1589,7 +2675,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 58
+        "y": 111
       },
       "id": 17,
       "options": {
@@ -1608,12 +2694,919 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.api_error\" | line_format \"{{.event_timestamp}} [{{.model}}] \u274c HTTP {{.status_code}} {{.duration_ms}}ms ERROR: {{.error}}\"",
+          "expr": "{service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.api_error\" | session_id=~\"$session_id\" | line_format \"{{.event_timestamp}} [{{.model}}] ❌ HTTP {{.status_code}} {{.duration_ms}}ms ERROR: {{.error}}\"",
           "refId": "A"
         }
       ],
       "title": "API Error Events",
-      "type": "logs"
+      "type": "logs",
+      "maxDataPoints": 500,
+      "interval": "1m"
+    },
+    {
+      "title": "🧮 Tokens & Cache",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 119
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 120
+      },
+      "id": 30,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (type) ((max_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "interval": "",
+          "legendFormat": "{{type}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Token Distribution by Type",
+      "type": "piechart",
+      "description": "Total tokens per type over range (windowed delta, host-joined)."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 120
+      },
+      "id": 31,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "100 * sum((max_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\", type=\"cacheRead\"}[$__range]) - min_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\", type=\"cacheRead\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"})) / sum((max_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\", type=~\"cacheRead|cacheCreation|input\"}[$__range]) - min_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\", type=~\"cacheRead|cacheCreation|input\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "interval": "",
+          "legendFormat": "Cache hit %",
+          "refId": "A"
+        }
+      ],
+      "title": "Cache Hit Rate",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Tokens",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 128
+      },
+      "id": 32,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (model) ((max_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "interval": "",
+          "legendFormat": "{{model}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Token Usage by Model",
+      "type": "timeseries",
+      "description": "Total tokens per model over range (windowed delta)."
+    },
+    {
+      "title": "🏷️ Cost Attribution",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 136
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 137
+      },
+      "id": 33,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (query_source) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "interval": "",
+          "legendFormat": "{{query_source}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost by Query Source",
+      "type": "piechart",
+      "description": "Cost per query_source over range (windowed delta, host-joined)."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 137
+      },
+      "id": 34,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Value",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (agent_name) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost by Subagent",
+      "type": "table",
+      "description": "Cost per subagent (agent_name). Empty agent_name = main-thread / unattributed."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 145
+      },
+      "id": 35,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "showUnfilled": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (skill_name) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "interval": "",
+          "legendFormat": "{{skill_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost by Skill",
+      "type": "bargauge",
+      "description": "Cost per skill. Empty skill_name = non-skill / main-thread work."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 145
+      },
+      "id": 36,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "showUnfilled": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (skill_name) ((max_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "interval": "",
+          "legendFormat": "{{skill_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Token Usage by Skill",
+      "type": "bargauge",
+      "description": "Tokens per skill. Empty skill_name = non-skill / main-thread work."
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 145
+      },
+      "id": 37,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "showUnfilled": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (mcp_server_name) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "interval": "",
+          "legendFormat": "{{mcp_server_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Cost by MCP Server",
+      "type": "bargauge",
+      "description": "Cost per MCP server. Empty mcp_server_name = no MCP attribution."
+    },
+    {
+      "title": "🔌 Skills & Subagents",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 153
+      }
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Activations",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 154
+      },
+      "id": 39,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (skill_name, invocation_trigger) (count_over_time({service_name=\"claude-code\"} | event_name=\"skill_activated\" | session_id=~\"$session_id\" [$__interval]))",
+          "interval": "",
+          "legendFormat": "{{skill_name}} ({{invocation_trigger}})",
+          "refId": "A"
+        }
+      ],
+      "title": "Skill Activations by Trigger",
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Milliseconds",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 154
+      },
+      "id": 40,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "avg_over_time({service_name=\"claude-code\"} | event_name=\"subagent_completed\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]) by (agent_type)",
+          "interval": "",
+          "legendFormat": "{{agent_type}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Subagent Avg Duration",
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 162
+      },
+      "id": 41,
+      "options": {
+        "showHeader": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (agent_type) (sum_over_time({service_name=\"claude-code\"} | event_name=\"subagent_completed\" | session_id=~\"$session_id\" | unwrap total_tokens [$__range]))",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "title": "Subagent Token Usage",
+      "type": "table",
+      "maxDataPoints": 500,
+      "description": "Total tokens per subagent type over range."
+    },
+    {
+      "title": "⏱️ Engagement",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 170
+      }
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Seconds",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 171
+      },
+      "id": 47,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (type) ((max_over_time(claude_code_active_time_seconds_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_active_time_seconds_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "interval": "",
+          "legendFormat": "{{type}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Time (cli vs user)",
+      "type": "timeseries",
+      "description": "Active time per type (cli vs user) over range (windowed delta)."
     }
   ],
   "refresh": "30s",
@@ -1642,6 +3635,38 @@
           "selected": false,
           "text": "All",
           "value": "$__all"
+        },
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".+",
+        "refresh": 2,
+        "sort": 1,
+        "hide": 0,
+        "options": [],
+        "regex": "",
+        "skipUrlSync": false
+      },
+      {
+        "name": "session_id",
+        "label": "Session",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "definition": "label_values(claude_code_session_count_total{job=~\".*/claude-code\"}, session_id)",
+        "query": {
+          "query": "label_values(claude_code_session_count_total{job=~\".*/claude-code\"}, session_id)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "current": {
+          "selected": false,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
         },
         "includeAll": true,
         "multi": true,

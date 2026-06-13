@@ -50,7 +50,11 @@ limits_config:
   per_stream_rate_limit_burst: 10MB
   max_query_series: 500
   max_query_lookback: 720h
-  split_queries_by_interval: 30m
+  # 24h splitting: a 30d dashboard query splits into ~30 subqueries instead of
+  # ~1440 at 30m, which is what overflowed the frontend/scheduler queue ("too
+  # many outstanding requests" 429). Larger interval = fewer subqueries, no extra
+  # RAM — the right lever for a memory-constrained Pi.
+  split_queries_by_interval: 24h
   max_cache_freshness_per_query: 10m
   otlp_config:
     resource_attributes:
@@ -67,10 +71,14 @@ querier:
   max_concurrent: 4
 
 query_scheduler:
-  max_outstanding_requests_per_tenant: 64
+  # Headroom for dashboard load (many panels) + TSDB shard fan-out on top of the
+  # ~30 time splits. Queue holds lightweight request descriptors, not query
+  # state, so 256 adds negligible RAM; actual memory stays bounded by
+  # querier.max_concurrent (4), which we deliberately leave untouched.
+  max_outstanding_requests_per_tenant: 256
 
 frontend:
-  max_outstanding_per_tenant: 64
+  max_outstanding_per_tenant: 256
   compress_responses: true
 
 analytics:
