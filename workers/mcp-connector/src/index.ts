@@ -25,4 +25,6 @@ export default new OAuthProvider({
   tokenEndpoint: "/token",
   // Claude.ai self-registers via Dynamic Client Registration (RFC 7591).
   clientRegistrationEndpoint: "/register",
+  // Claude.ai requires PKCE S256; reject the weaker `plain` method.
+  allowPlainPKCE: false,
 });
