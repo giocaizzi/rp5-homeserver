@@ -55,20 +55,6 @@ greenhouse_users = [
   "user2@example.com"
 ]
 
-# ----------------------------------------------------------------------------
-# Claude.ai MCP connector tokens (app-level bearer, injected by Cloudflare).
-# Use the SAME values as the corresponding Docker Swarm secrets.
-# ----------------------------------------------------------------------------
-
-# Greenhouse MCP token (= Swarm secret greenhouse_mcp_token)
-greenhouse_mcp_token = "your_greenhouse_mcp_token_here"
-
-# Firefly III Personal Access Token (= Swarm secret firefly_access_token)
-firefly_mcp_token = "your_firefly_personal_access_token_here"
-
-# n8n MCP Server Trigger bearer token
-n8n_mcp_token = "your_n8n_mcp_token_here"
-
 # ============================================================================
 # GCP Configuration
 # ============================================================================
