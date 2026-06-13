@@ -635,10 +635,11 @@ resource "cloudflare_zero_trust_access_application" "firefly_mcp_policy" {
 #   5. linked_app_token policy on the UPSTREAM Access app, authorizing the
 #      portal to traverse the upstream's CF Access on the portal->origin hop.
 #
-# VERIFY-ON-PLAN: the `app_uid` in each *_mcp_linked policy must reference the
-# portal's Access-app UID. It is wired to the portal resource id here; confirm
-# the exact attribute with `terraform plan` + a live connect before apply.
-# See docs/WIP/claude-connectors.md for the full design and open items.
+# The `app_uid` in each *_mcp_linked policy must be the UID of the portal's
+# self-hosted Access application (the `<svc>_mcp_portal` app's `id`, a UUID) —
+# NOT the mcp_portal resource id string, which CF rejects with code 12130
+# ("linked app must be an existing app"). See the linked-apps docs.
+# https://developers.cloudflare.com/cloudflare-one/access-controls/ai-controls/linked-apps/
 
 # --- Greenhouse connector --------------------------------------------------
 
@@ -696,7 +697,7 @@ resource "cloudflare_zero_trust_access_policy" "greenhouse_mcp_linked" {
   include = [
     {
       linked_app_token = {
-        app_uid = cloudflare_zero_trust_access_ai_controls_mcp_portal.greenhouse.id
+        app_uid = cloudflare_zero_trust_access_application.greenhouse_mcp_portal.id
       }
     }
   ]
@@ -780,7 +781,7 @@ resource "cloudflare_zero_trust_access_policy" "firefly_mcp_linked" {
   include = [
     {
       linked_app_token = {
-        app_uid = cloudflare_zero_trust_access_ai_controls_mcp_portal.firefly.id
+        app_uid = cloudflare_zero_trust_access_application.firefly_mcp_portal.id
       }
     }
   ]
@@ -840,7 +841,7 @@ resource "cloudflare_zero_trust_access_policy" "n8n_mcp_linked" {
   include = [
     {
       linked_app_token = {
-        app_uid = cloudflare_zero_trust_access_ai_controls_mcp_portal.n8n.id
+        app_uid = cloudflare_zero_trust_access_application.n8n_mcp_portal.id
       }
     }
   ]
