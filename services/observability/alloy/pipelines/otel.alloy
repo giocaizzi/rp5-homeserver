@@ -32,6 +32,15 @@
 //   NOT defaulted — senders own it; if a payload arrives without one the
 //   attribute stays empty and is queryable as such downstream.
 //
+// host.name datapoint promotion:
+//   The Prometheus exporter puts resource attributes only into `target_info`,
+//   not as labels on each series — so `host_name` is inconsistent across
+//   `claude_code_*` metrics (some counters carry none). A `context = "datapoint"`
+//   metric_statements block copies resource `host.name` onto each datapoint so
+//   it surfaces as a uniform `host_name` label, queryable without joining to
+//   `target_info`. Only `host.name` is promoted; `service.version` / `os.version`
+//   are deliberately left on the resource to avoid per-release counter churn.
+//
 // Auth:
 //   HTTP (port 4318) requires `Authorization: Bearer <token>`. Same enforcement
 //   applies to LAN traffic (otel.home) and public traffic (otel.giocaizzi.xyz
@@ -148,6 +157,17 @@ declare "otlp_receivers" {
         `set(resource.attributes["deployment.environment.name"], "production") where resource.attributes["deployment.environment.name"] == nil`,
         `set(resource.attributes["source"], "otel") where resource.attributes["source"] == nil`,
         `set(resource.attributes["tier"], "core") where resource.attributes["tier"] == nil`,
+      ]
+    }
+
+    // Promote resource host.name onto each datapoint so the Prometheus exporter
+    // emits a uniform `host_name` label on every series (it otherwise lands only
+    // in `target_info`). Guarded to never overwrite an existing value or set nil.
+    // Only host.name — promoting service.version/os.version would churn counters.
+    metric_statements {
+      context = "datapoint"
+      statements = [
+        `set(attributes["host.name"], resource.attributes["host.name"]) where attributes["host.name"] == nil and resource.attributes["host.name"] != nil`,
       ]
     }
 
