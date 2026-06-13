@@ -115,6 +115,25 @@ output "claude_firefly_mcp_client_secret" {
 }
 
 # ============================================================================
+# Claude.ai connector URLs (paste into Claude → Settings → Connectors)
+# ============================================================================
+
+output "greenhouse_connector_url" {
+  description = "Greenhouse MCP portal URL for the Claude.ai custom connector"
+  value       = "https://greenhouse-mcp.${var.zone_name}"
+}
+
+output "firefly_connector_url" {
+  description = "Firefly III MCP portal URL for the Claude.ai custom connector"
+  value       = "https://firefly-mcp.${var.zone_name}"
+}
+
+output "n8n_connector_url" {
+  description = "n8n MCP portal URL for the Claude.ai custom connector"
+  value       = "https://n8n-mcp.${var.zone_name}"
+}
+
+# ============================================================================
 # OTLP ingestion outputs (CF Access bypass for otel.<zone>/v1/*)
 # ============================================================================
 
