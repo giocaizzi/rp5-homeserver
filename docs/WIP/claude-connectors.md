@@ -40,7 +40,7 @@ Code sends both as headers; Claude.ai cannot.
 |---------|-------------------|------------------------|------------------------|
 | greenhouse | `greenhouse.giocaizzi.xyz/mcp` | `greenhouse_users` email policy (whole host) | `Authorization: Bearer GREENHOUSE_MCP_TOKEN` (fail-closed ≥ v2.0.0) |
 | firefly | `firefly.giocaizzi.xyz/api/v1/mcp` | path-scoped bypass app + `claude-firefly-mcp` service token | `Authorization: Bearer <Firefly PAT>` (`firefly_access_token`) |
-| n8n | `n8n.giocaizzi.xyz/mcp-server` | path-scoped bypass app + `claude-n8n-mcp` service token | `Authorization: Bearer <n8n MCP token>` (set on the MCP Server Trigger node) |
+| n8n | `n8n.giocaizzi.xyz/mcp-server/http` | path-scoped bypass app + `claude-n8n-mcp` service token | `Authorization: Bearer <n8n MCP token>` (set on the MCP Server Trigger node) |
 
 Defined in `cloud/main.tf` (search "Claude Code MCP"). **None of this is
 reachable from Claude.ai** — it all relies on the client sending headers.
@@ -93,7 +93,7 @@ Three independent connectors, each = one single-server portal:
 ```
 Claude.ai ──OAuth──▶ greenhouse-mcp.…xyz  (portal) ─▶ greenhouse.…/mcp        bearer: GREENHOUSE_MCP_TOKEN
 Claude.ai ──OAuth──▶ firefly-mcp.…xyz     (portal) ─▶ firefly.…/api/v1/mcp    bearer: Firefly PAT
-Claude.ai ──OAuth──▶ n8n-mcp.…xyz         (portal) ─▶ n8n.…/mcp-server        bearer: n8n MCP token
+Claude.ai ──OAuth──▶ n8n-mcp.…xyz         (portal) ─▶ n8n.…/mcp-server/http   bearer: n8n MCP token
 ```
 
 Each connector does its own OAuth via CF Access; Cloudflare injects that

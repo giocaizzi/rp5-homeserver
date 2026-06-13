@@ -802,7 +802,7 @@ resource "cloudflare_zero_trust_access_ai_controls_mcp_server" "n8n" {
   id               = "n8n-mcp"
   name             = "n8n"
   auth_type        = "bearer"
-  hostname         = "https://n8n.${var.zone_name}/mcp-server"
+  hostname         = "https://n8n.${var.zone_name}/mcp-server/http"
   auth_credentials = var.n8n_mcp_token
 }
 
