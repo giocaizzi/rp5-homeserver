@@ -24,7 +24,7 @@
   "liveNow": false,
   "panels": [
     {
-      "title": "\ud83d\udcca Overview",
+      "title": "📊 Overview",
       "type": "row",
       "gridPos": {
         "h": 1,
@@ -93,7 +93,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_session_count_total{job=~\".*/claude-code\"}[$__range]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "count( max_over_time(claude_code_session_count_total{job=~\".*/claude-code\"}[$__range]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) )",
           "interval": "",
           "legendFormat": "Sessions",
           "refId": "A"
@@ -161,7 +161,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum( (max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) )",
           "interval": "",
           "legendFormat": "Cost",
           "refId": "A"
@@ -229,7 +229,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_token_usage_tokens_total{job=~\".*/claude-code\"}[$__range]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum( (max_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\"}[$__range]) - min_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) )",
           "interval": "",
           "legendFormat": "Tokens",
           "refId": "A"
@@ -297,7 +297,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_lines_of_code_count_total{job=~\".*/claude-code\"}[$__range]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum( (max_over_time(claude_code_lines_of_code_count_total{job=~\".*/claude-code\"}[$__range]) - min_over_time(claude_code_lines_of_code_count_total{job=~\".*/claude-code\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) )",
           "interval": "",
           "legendFormat": "Lines Changed",
           "refId": "A"
@@ -307,7 +307,7 @@
       "type": "stat"
     },
     {
-      "title": "\ud83d\udcb0 Cost & Usage Analysis",
+      "title": "💰 Cost & Usage Analysis",
       "type": "row",
       "gridPos": {
         "h": 1,
@@ -400,12 +400,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (model) (increase(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum by (model) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__rate_interval]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__rate_interval])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
           "interval": "",
           "legendFormat": "{{model}}",
           "refId": "A"
         }
       ],
+      "description": "Per-interval cost via windowed delta (max_over_time - min_over_time) instead of increase(), avoiding session-reset extrapolation spikes.",
       "title": "Cost by Model (per interval)",
       "type": "timeseries"
     },
@@ -570,7 +571,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (type) (rate(claude_code_token_usage_tokens_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"} * 60)",
+          "expr": "sum by (type) (rate(claude_code_token_usage_tokens_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) * 60)",
           "interval": "",
           "legendFormat": "{{type}}",
           "refId": "A"
@@ -702,7 +703,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (model) (changes(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"})",
+          "expr": "sum by (model) (changes(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
           "interval": "",
           "legendFormat": "{{model}}",
           "refId": "A"
@@ -712,13 +713,580 @@
       "type": "timeseries"
     },
     {
-      "title": "\ud83d\udd27 Tool Usage & Performance",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 22
+      },
+      "id": 20,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum( (max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) )",
+          "interval": "",
+          "legendFormat": "Total Spend",
+          "refId": "A"
+        }
+      ],
+      "description": "Total spend over the dashboard range via windowed delta (max_over_time - min_over_time) summed across session series, host-joined. Avoids increase() extrapolation inflation.",
+      "title": "Total Spend (range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 22
+      },
+      "id": 21,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum( (max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) ) / ($__range_s / 3600)",
+          "interval": "",
+          "legendFormat": "Cost/hr",
+          "refId": "A"
+        }
+      ],
+      "description": "Total windowed-delta spend divided by range hours ($__range_s / 3600).",
+      "title": "Avg Cost / Hour",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (model) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "interval": "",
+          "legendFormat": "{{model}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Total spend per model over the range (windowed delta, host-joined).",
+      "title": "Cost by Model",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "USD/hr",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (model) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__rate_interval]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__rate_interval])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"})) / ($__rate_interval_s / 3600)",
+          "interval": "",
+          "legendFormat": "{{model}}",
+          "refId": "A"
+        }
+      ],
+      "description": "Per-model hourly cost rate: windowed delta over $__rate_interval scaled to $/hr via $__rate_interval_s. Windowed delta avoids session-reset spikes from increase().",
+      "title": "Cost Rate ($/hr) by Model",
+      "type": "timeseries"
+    },
+    {
+      "title": "🧑‍💻 Sessions",
       "type": "row",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 34
+      },
+      "collapsed": false
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 35
+      },
+      "id": 25,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count( max_over_time(claude_code_session_count_total{job=~\".*/claude-code\"}[$__range]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) )",
+          "interval": "",
+          "legendFormat": "Sessions",
+          "refId": "A"
+        }
+      ],
+      "description": "Distinct session series active within the dashboard range (count of host-joined session_count series seen over the window).",
+      "title": "Total Sessions (range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 35
+      },
+      "id": 26,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count( max_over_time(claude_code_session_count_total{job=~\".*/claude-code\"}[$__range]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) ) / ($__range_s / 3600)",
+          "interval": "",
+          "legendFormat": "Sessions/hr",
+          "refId": "A"
+        }
+      ],
+      "description": "Total distinct sessions divided by range hours ($__range_s / 3600).",
+      "title": "Avg Sessions / Hour",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 35
+      },
+      "id": 27,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum( (max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) ) / (count( max_over_time(claude_code_session_count_total{job=~\".*/claude-code\"}[$__range]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) ) or vector(0))",
+          "interval": "",
+          "legendFormat": "Cost/session",
+          "refId": "A"
+        }
+      ],
+      "description": "Total windowed-delta spend divided by distinct sessions in range. Divide-by-zero guarded with 'or vector(0)'.",
+      "title": "Avg Cost / Session",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Active sessions",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 39
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "count(last_over_time(claude_code_session_count_total{job=~\".*/claude-code\"}[$__interval]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "interval": "",
+          "legendFormat": "Active sessions",
+          "refId": "A"
+        }
+      ],
+      "description": "Active session series per step via last_over_time over $__interval, host-joined.",
+      "title": "Sessions Over Time",
+      "type": "timeseries"
+    },
+    {
+      "title": "🔧 Tool Usage & Performance",
+      "type": "row",
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 47
       },
       "collapsed": false
     },
@@ -852,7 +1420,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 23
+        "y": 48
       },
       "id": 7,
       "options": {
@@ -883,7 +1451,9 @@
         }
       ],
       "title": "Tool Usage Rate Over Time",
-      "type": "timeseries"
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
     },
     {
       "datasource": {
@@ -1007,7 +1577,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 23
+        "y": 48
       },
       "id": 14,
       "options": {
@@ -1038,7 +1608,9 @@
         }
       ],
       "title": "Cumulative Tool Usage",
-      "type": "timeseries"
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
     },
     {
       "datasource": {
@@ -1106,7 +1678,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 23
+        "y": 48
       },
       "id": 8,
       "options": {
@@ -1135,16 +1707,18 @@
         }
       ],
       "title": "Tool Success Rate",
-      "type": "timeseries"
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
     },
     {
-      "title": "\u26a1 Performance & Errors",
+      "title": "⚡ Performance & Errors",
       "type": "row",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 39
+        "y": 64
       },
       "collapsed": false
     },
@@ -1208,7 +1782,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 40
+        "y": 65
       },
       "id": 9,
       "options": {
@@ -1238,7 +1812,9 @@
         }
       ],
       "title": "API Request Duration by Model",
-      "type": "timeseries"
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
     },
     {
       "datasource": {
@@ -1300,7 +1876,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 40
+        "y": 65
       },
       "id": 10,
       "options": {
@@ -1329,16 +1905,18 @@
         }
       ],
       "title": "API Error Rate",
-      "type": "timeseries"
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
     },
     {
-      "title": "\ud83d\udcdd User Activity & Productivity",
+      "title": "📝 User Activity & Productivity",
       "type": "row",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 73
       },
       "collapsed": false
     },
@@ -1402,7 +1980,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 49
+        "y": 74
       },
       "id": 11,
       "options": {
@@ -1424,7 +2002,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (type) (rate(claude_code_lines_of_code_count_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"} * 60)",
+          "expr": "sum by (type) (rate(claude_code_lines_of_code_count_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}) * 60)",
           "interval": "",
           "legendFormat": "{{type}} lines/min",
           "refId": "A"
@@ -1493,7 +2071,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 49
+        "y": 74
       },
       "id": 12,
       "options": {
@@ -1515,7 +2093,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_commit_count_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"}) or vector(0)",
+          "expr": "sum(increase(claude_code_commit_count_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"})) or vector(0)",
           "interval": "",
           "legendFormat": "Commits",
           "refId": "A"
@@ -1525,7 +2103,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(increase(claude_code_pull_request_count_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job, instance) group_left() target_info{host_name=~\"$host_name\"}) or vector(0)",
+          "expr": "sum(increase(claude_code_pull_request_count_total{job=~\".*/claude-code\"}[$__rate_interval]) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"})) or vector(0)",
           "interval": "",
           "legendFormat": "Pull Requests",
           "refId": "B"
@@ -1535,13 +2113,13 @@
       "type": "timeseries"
     },
     {
-      "title": "\ud83d\udd0d Event Logs",
+      "title": "🔍 Event Logs",
       "type": "row",
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 57
+        "y": 82
       },
       "collapsed": false
     },
@@ -1554,7 +2132,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 58
+        "y": 83
       },
       "id": 13,
       "options": {
@@ -1573,12 +2151,14 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.tool_result\" | line_format \"{{.event_timestamp}} [{{.tool_name}}] {{if eq .success \\\"true\\\"}}\u2705{{else}}\u274c{{end}} {{.duration_ms}}ms {{if .error}}ERROR: {{.error}}{{end}}\"",
+          "expr": "{service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.tool_result\" | line_format \"{{.event_timestamp}} [{{.tool_name}}] {{if eq .success \\\"true\\\"}}✅{{else}}❌{{end}} {{.duration_ms}}ms {{if .error}}ERROR: {{.error}}{{end}}\"",
           "refId": "A"
         }
       ],
       "title": "Tool Execution Events",
-      "type": "logs"
+      "type": "logs",
+      "maxDataPoints": 500,
+      "interval": "1m"
     },
     {
       "datasource": {
@@ -1589,7 +2169,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 58
+        "y": 83
       },
       "id": 17,
       "options": {
@@ -1608,12 +2188,14 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.api_error\" | line_format \"{{.event_timestamp}} [{{.model}}] \u274c HTTP {{.status_code}} {{.duration_ms}}ms ERROR: {{.error}}\"",
+          "expr": "{service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.api_error\" | line_format \"{{.event_timestamp}} [{{.model}}] ❌ HTTP {{.status_code}} {{.duration_ms}}ms ERROR: {{.error}}\"",
           "refId": "A"
         }
       ],
       "title": "API Error Events",
-      "type": "logs"
+      "type": "logs",
+      "maxDataPoints": 500,
+      "interval": "1m"
     }
   ],
   "refresh": "30s",
