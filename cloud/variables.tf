@@ -85,6 +85,32 @@ variable "greenhouse_users" {
   default     = []
 }
 
+# ---- Claude.ai MCP connectors ----
+# App-level bearer tokens injected by Cloudflare (auth_type=bearer) on the
+# portal->origin hop. Same secret values as the corresponding Swarm secrets:
+# greenhouse_mcp_token, firefly_access_token (PAT), and the n8n MCP trigger token.
+
+variable "greenhouse_mcp_token" {
+  description = "Greenhouse MCP bearer token (matches Swarm secret greenhouse_mcp_token)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "firefly_mcp_token" {
+  description = "Firefly III Personal Access Token used by its MCP endpoint (matches Swarm secret firefly_access_token)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "n8n_mcp_token" {
+  description = "n8n MCP Server Trigger bearer token"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
 # ============================================================================
 # GCP Variables
 # ============================================================================
