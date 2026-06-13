@@ -1,50 +1,60 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  // Single-origin OAuth + MCP reverse-proxy. One codebase, deployed three times
-  // (one Worker per upstream MCP server) via wrangler environments.
-  //
-  // Each env gets its own workers.dev hostname, its own KV namespace, and its
-  // own secrets. Fill the KV `id`s after `wrangler kv namespace create` (see README).
-  "name": "mcp-connector",
-  "main": "src/index.ts",
-  "compatibility_date": "2025-06-01",
-  "workers_dev": true,
-  "observability": { "enabled": true },
-
-  // No top-level deploy target — always deploy with --env <service>.
-  "env": {
-    "greenhouse": {
-      "name": "mcp-connector-greenhouse",
-      "vars": {
-        "SERVICE_NAME": "Greenhouse",
-        "UPSTREAM_URL": "https://greenhouse.giocaizzi.xyz/mcp",
-        "ALLOWED_EMAILS": "giocaizzi@gmail.com"
-      },
-      "kv_namespaces": [
-        { "binding": "OAUTH_KV", "id": "REPLACE_WITH_GREENHOUSE_KV_ID" }
-      ]
-    },
-    "firefly": {
-      "name": "mcp-connector-firefly",
-      "vars": {
-        "SERVICE_NAME": "Firefly III",
-        "UPSTREAM_URL": "https://firefly.giocaizzi.xyz/api/v1/mcp",
-        "ALLOWED_EMAILS": "giocaizzi@gmail.com"
-      },
-      "kv_namespaces": [
-        { "binding": "OAUTH_KV", "id": "REPLACE_WITH_FIREFLY_KV_ID" }
-      ]
-    },
-    "n8n": {
-      "name": "mcp-connector-n8n",
-      "vars": {
-        "SERVICE_NAME": "n8n",
-        "UPSTREAM_URL": "https://n8n.giocaizzi.xyz/mcp-server/http",
-        "ALLOWED_EMAILS": "giocaizzi@gmail.com"
-      },
-      "kv_namespaces": [
-        { "binding": "OAUTH_KV", "id": "REPLACE_WITH_N8N_KV_ID" }
-      ]
-    }
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	// Single-origin OAuth + MCP reverse-proxy. One codebase, deployed three times
+	// (one Worker per upstream MCP server) via wrangler environments.
+	//
+	// Each env gets its own workers.dev hostname, its own KV namespace, and its
+	// own secrets. Fill the KV `id`s after `wrangler kv namespace create` (see README).
+	"name": "mcp-connector",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-06-01",
+	"workers_dev": true,
+	"observability": {
+		"enabled": true
+	},
+	// No top-level deploy target — always deploy with --env <service>.
+	"env": {
+		"greenhouse": {
+			"name": "mcp-connector-greenhouse",
+			"vars": {
+				"SERVICE_NAME": "Greenhouse",
+				"UPSTREAM_URL": "https://greenhouse.giocaizzi.xyz/mcp",
+				"ALLOWED_EMAILS": "giocaizzi@gmail.com"
+			},
+			"kv_namespaces": [
+				{
+					"binding": "OAUTH_KV",
+					"id": "07a2c01840b44f96966e2691dbac4d9e"
+				}
+			]
+		},
+		"firefly": {
+			"name": "mcp-connector-firefly",
+			"vars": {
+				"SERVICE_NAME": "Firefly III",
+				"UPSTREAM_URL": "https://firefly.giocaizzi.xyz/api/v1/mcp",
+				"ALLOWED_EMAILS": "giocaizzi@gmail.com"
+			},
+			"kv_namespaces": [
+				{
+					"binding": "OAUTH_KV",
+					"id": "90e16176346a472d8375b4c310868f40"
+				}
+			]
+		},
+		"n8n": {
+			"name": "mcp-connector-n8n",
+			"vars": {
+				"SERVICE_NAME": "n8n",
+				"UPSTREAM_URL": "https://n8n.giocaizzi.xyz/mcp-server/http",
+				"ALLOWED_EMAILS": "giocaizzi@gmail.com"
+			},
+			"kv_namespaces": [
+				{
+					"binding": "OAUTH_KV",
+					"id": "20c5002a26414d7d94cace25ddbf637a"
+				}
+			]
+		}
+	}
 }
