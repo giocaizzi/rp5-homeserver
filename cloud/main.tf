@@ -681,6 +681,19 @@ resource "cloudflare_zero_trust_access_application" "greenhouse_mcp_portal" {
   type       = "self_hosted"
   name       = "greenhouse-mcp.${var.zone_name}"
   domain     = "greenhouse-mcp.${var.zone_name}"
+
+  # Managed OAuth: lets non-browser MCP clients (Claude.ai) auth via OAuth2+DCR
+  # instead of a 302 browser redirect. Allowlist Claude's DCR callback URIs.
+  oauth_configuration = {
+    enabled = true
+    dynamic_client_registration = {
+      enabled = true
+      allowed_uris = [
+        "https://claude.ai/api/mcp/auth_callback",
+        "https://claude.com/api/mcp/auth_callback",
+      ]
+    }
+  }
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.greenhouse_users.id
@@ -769,6 +782,19 @@ resource "cloudflare_zero_trust_access_application" "firefly_mcp_portal" {
   type       = "self_hosted"
   name       = "firefly-mcp.${var.zone_name}"
   domain     = "firefly-mcp.${var.zone_name}"
+
+  # Managed OAuth: lets non-browser MCP clients (Claude.ai) auth via OAuth2+DCR
+  # instead of a 302 browser redirect. Allowlist Claude's DCR callback URIs.
+  oauth_configuration = {
+    enabled = true
+    dynamic_client_registration = {
+      enabled = true
+      allowed_uris = [
+        "https://claude.ai/api/mcp/auth_callback",
+        "https://claude.com/api/mcp/auth_callback",
+      ]
+    }
+  }
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.firefly_users.id
@@ -832,6 +858,19 @@ resource "cloudflare_zero_trust_access_application" "n8n_mcp_portal" {
   type       = "self_hosted"
   name       = "n8n-mcp.${var.zone_name}"
   domain     = "n8n-mcp.${var.zone_name}"
+
+  # Managed OAuth: lets non-browser MCP clients (Claude.ai) auth via OAuth2+DCR
+  # instead of a 302 browser redirect. Allowlist Claude's DCR callback URIs.
+  oauth_configuration = {
+    enabled = true
+    dynamic_client_registration = {
+      enabled = true
+      allowed_uris = [
+        "https://claude.ai/api/mcp/auth_callback",
+        "https://claude.com/api/mcp/auth_callback",
+      ]
+    }
+  }
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.n8n_users.id
