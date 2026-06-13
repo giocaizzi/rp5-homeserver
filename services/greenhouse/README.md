@@ -50,10 +50,34 @@ Tuya Cloud (sensors)
 | `greenhouse_tuya_client_id` | `echo -n '<your client id>' \| docker secret create greenhouse_tuya_client_id -` |
 | `greenhouse_tuya_client_secret` | `echo -n '<your client secret>' \| docker secret create greenhouse_tuya_client_secret -` |
 | `greenhouse_mcp_token` | `openssl rand -hex 32 \| docker secret create greenhouse_mcp_token -` |
+| `greenhouse_auth_secret_key` | `openssl rand -hex 32 \| docker secret create greenhouse_auth_secret_key -` |
+| `greenhouse_auth_admin_password` | `openssl rand -base64 24 \| docker secret create greenhouse_auth_admin_password -` |
 
 Tuya values come from the Tuya IoT Cloud project ("Authorization Key").
 The MCP token is opaque — generate any high-entropy string and share it
 with MCP clients via `Authorization: Bearer <token>`.
+
+### Session auth (v3.0.0+)
+
+Since upstream **v3.0.0** every `/api/v1` route (except `/auth/login` and
+`/.well-known/*`) and every web page requires a login. Two secrets back it:
+
+- `greenhouse_auth_secret_key` — HS256 key that signs the session JWT.
+- `greenhouse_auth_admin_password` — bootstraps the admin user on the **first**
+  v3.0.0 boot (username is `admin`, set via `GREENHOUSE_AUTH_ADMIN_USERNAME`).
+  Save the generated value before creating the secret; it is the login password.
+
+> **MCP is unaffected.** `/mcp` keeps its own `greenhouse_mcp_token` bearer gate
+> (`require_user` also accepts that token), so MCP tool calls work without a
+> session. The two auth surfaces are independent — session auth for humans, the
+> bearer token for machines.
+
+> **Cookie is non-secure on purpose.** The LAN serves plain HTTP at
+> `greenhouse.home`, so a `Secure` cookie would never be sent there and would
+> break LAN login. Public access (`greenhouse.giocaizzi.xyz`) is HTTPS via the
+> Cloudflare tunnel + CF Access, and the non-secure cookie still rides that
+> encrypted path. Public browser users therefore see **two** prompts: the CF
+> Access email gate, then the app login.
 
 ---
 
@@ -70,6 +94,8 @@ Tunables in `docker-compose.yml` `environment:`:
 | `IRRIGATION_CHECK_CRON_HOURS` | `*/6` | Cron hour spec for `check_all` (replaces deprecated `IRRIGATION_CHECK_INTERVAL_HOURS`; engine cooldown still gates actuation) |
 | `IRRIGATION_WEATHER_LAT` / `_LON` | `45.464` / `9.189` | Open-Meteo coordinates for the precipitation-skip rule |
 | `IRRIGATION_ENABLE_SCHEDULER` | `true` | Disable to freeze the system without stopping the stack |
+| `IRRIGATION_AUTH_ENABLED` | `true` | Session auth gate (v3.0.0+). `false` opts out — dev/migration only |
+| `GREENHOUSE_AUTH_ADMIN_USERNAME` | `admin` | Bootstrap admin username (password is a secret) |
 
 The local key for each irrigator is fetched from the Tuya Cloud API at
 runtime — only the client ID + secret are needed as Swarm secrets.

@@ -64,6 +64,14 @@ secrets:
   mcp_token:
     external: true
     name: greenhouse_mcp_token
+  # Session auth (v3.0.0+). HS256 key signs the session JWT; admin password
+  # bootstraps the first user on initial boot. Username is non-sensitive (env).
+  auth_secret_key:
+    external: true
+    name: greenhouse_auth_secret_key
+  auth_admin_password:
+    external: true
+    name: greenhouse_auth_admin_password
 
 # =============================================================================
 # Services
@@ -90,10 +98,22 @@ services:
       # Weather (Milan defaults — override per location)
       - IRRIGATION_WEATHER_LAT=45.464
       - IRRIGATION_WEATHER_LON=9.189
+      # Session auth (v3.0.0+). Every /api/v1 route (except /auth/login and
+      # /.well-known/*) and every web page requires a login. MCP is unaffected
+      # — it keeps its own GREENHOUSE_MCP_TOKEN bearer (require_user also
+      # accepts that token). Cookie stays NON-secure: the LAN serves plain HTTP
+      # at greenhouse.home, so a Secure cookie would never be sent there and
+      # would break LAN login. Public access (greenhouse.giocaizzi.xyz) is HTTPS
+      # via the Cloudflare tunnel + CF Access; the non-secure cookie still rides
+      # that encrypted path fine.
+      - IRRIGATION_AUTH_ENABLED=true
+      - GREENHOUSE_AUTH_ADMIN_USERNAME=admin
     secrets:
       - tuya_client_id
       - tuya_client_secret
       - mcp_token
+      - auth_secret_key
+      - auth_admin_password
     # Wrap secrets into env vars before exec'ing the server entrypoint.
     # The greenhouse image reads these directly from the environment (no
     # _FILE suffix support), so we export from /run/secrets. GREENHOUSE_MCP_TOKEN
@@ -105,18 +125,25 @@ services:
         export TUYA_CLIENT_ID=$$(cat /run/secrets/tuya_client_id)
         export TUYA_CLIENT_SECRET=$$(cat /run/secrets/tuya_client_secret)
         export GREENHOUSE_MCP_TOKEN=$$(cat /run/secrets/mcp_token)
+        export GREENHOUSE_AUTH_SECRET_KEY=$$(cat /run/secrets/auth_secret_key)
+        export GREENHOUSE_AUTH_ADMIN_PASSWORD=$$(cat /run/secrets/auth_admin_password)
         exec greenhouse-server
     volumes:
       - greenhouse_data:/app/data
     networks:
       - greenhouse_network
       - public_network
+    # Liveness probe hits the only unauthenticated GET that returns 200:
+    # /.well-known/oauth-protected-resource (root-mounted, no session required).
+    # Since v3.0.0 every /api/v1 route needs auth, so the old /api/v1/clusters
+    # probe returned 401 — still <500, so it reported "healthy" without ever
+    # exercising the app. The well-known route proves routing + app are alive.
     healthcheck:
       test:
         - "CMD"
         - "python"
         - "-c"
-        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/clusters', timeout=3).status < 500 else 1)"
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/.well-known/oauth-protected-resource', timeout=3).status == 200 else 1)"
       interval: 30s
       timeout: 10s
       retries: 3
