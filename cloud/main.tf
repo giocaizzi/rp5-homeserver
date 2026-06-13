@@ -659,6 +659,8 @@ resource "cloudflare_zero_trust_access_ai_controls_mcp_server" "greenhouse" {
   auth_type        = "bearer"
   hostname         = "https://greenhouse.${var.zone_name}/mcp"
   auth_credentials = var.greenhouse_mcp_token
+  updated_tools    = []
+  updated_prompts  = []
 }
 
 resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "greenhouse" {
@@ -668,7 +670,7 @@ resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "greenhouse" {
   hostname   = "greenhouse-mcp.${var.zone_name}"
 
   servers = [
-    { server_id = cloudflare_zero_trust_access_ai_controls_mcp_server.greenhouse.id },
+    { server_id = cloudflare_zero_trust_access_ai_controls_mcp_server.greenhouse.id, updated_tools = [], updated_prompts = [] },
   ]
 }
 
@@ -745,6 +747,8 @@ resource "cloudflare_zero_trust_access_ai_controls_mcp_server" "firefly" {
   auth_type        = "bearer"
   hostname         = "https://firefly.${var.zone_name}/api/v1/mcp"
   auth_credentials = var.firefly_mcp_token
+  updated_tools    = []
+  updated_prompts  = []
 }
 
 resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "firefly" {
@@ -754,7 +758,7 @@ resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "firefly" {
   hostname   = "firefly-mcp.${var.zone_name}"
 
   servers = [
-    { server_id = cloudflare_zero_trust_access_ai_controls_mcp_server.firefly.id },
+    { server_id = cloudflare_zero_trust_access_ai_controls_mcp_server.firefly.id, updated_tools = [], updated_prompts = [] },
   ]
 }
 
@@ -805,6 +809,8 @@ resource "cloudflare_zero_trust_access_ai_controls_mcp_server" "n8n" {
   auth_type        = "bearer"
   hostname         = "https://n8n.${var.zone_name}/mcp-server/http"
   auth_credentials = var.n8n_mcp_token
+  updated_tools    = []
+  updated_prompts  = []
 }
 
 resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "n8n" {
@@ -814,7 +820,7 @@ resource "cloudflare_zero_trust_access_ai_controls_mcp_portal" "n8n" {
   hostname   = "n8n-mcp.${var.zone_name}"
 
   servers = [
-    { server_id = cloudflare_zero_trust_access_ai_controls_mcp_server.n8n.id },
+    { server_id = cloudflare_zero_trust_access_ai_controls_mcp_server.n8n.id, updated_tools = [], updated_prompts = [] },
   ]
 }
 
