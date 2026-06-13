@@ -114,23 +114,15 @@ output "claude_firefly_mcp_client_secret" {
   sensitive   = true
 }
 
-# ============================================================================
-# Claude.ai connector URLs (paste into Claude → Settings → Connectors)
-# ============================================================================
-
-output "greenhouse_connector_url" {
-  description = "Greenhouse MCP portal URL for the Claude.ai custom connector"
-  value       = "https://greenhouse-mcp.${var.zone_name}"
+output "claude_greenhouse_mcp_client_id" {
+  description = "Client ID for the greenhouse MCP service token (CF-Access-Client-Id)"
+  value       = cloudflare_zero_trust_access_service_token.claude_greenhouse_mcp.client_id
 }
 
-output "firefly_connector_url" {
-  description = "Firefly III MCP portal URL for the Claude.ai custom connector"
-  value       = "https://firefly-mcp.${var.zone_name}"
-}
-
-output "n8n_connector_url" {
-  description = "n8n MCP portal URL for the Claude.ai custom connector"
-  value       = "https://n8n-mcp.${var.zone_name}"
+output "claude_greenhouse_mcp_client_secret" {
+  description = "Client Secret for the greenhouse MCP service token (CF-Access-Client-Secret)"
+  value       = cloudflare_zero_trust_access_service_token.claude_greenhouse_mcp.client_secret
+  sensitive   = true
 }
 
 # ============================================================================
