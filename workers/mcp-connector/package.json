@@ -1,0 +1,23 @@
+{
+  "name": "mcp-connector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Single-origin OAuth + MCP reverse-proxy Worker fronting self-hosted MCP servers for Claude.ai connectors",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "deploy:greenhouse": "wrangler deploy --env greenhouse",
+    "deploy:firefly": "wrangler deploy --env firefly",
+    "deploy:n8n": "wrangler deploy --env n8n",
+    "deploy:all": "npm run deploy:greenhouse && npm run deploy:firefly && npm run deploy:n8n",
+    "tail:greenhouse": "wrangler tail --env greenhouse"
+  },
+  "dependencies": {
+    "@cloudflare/workers-oauth-provider": "^0.0.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250601.0",
+    "typescript": "^5.5.0",
+    "wrangler": "^4.0.0"
+  }
+}
