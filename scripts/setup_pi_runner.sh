@@ -56,9 +56,13 @@ command -v tar  >/dev/null 2>&1 || die "tar required"
 # ---------- Resolve version ----------
 if [ -z "${RUNNER_VERSION:-}" ]; then
   info "Resolving latest runner release"
-  RUNNER_VERSION="$(curl -fsSL https://api.github.com/repos/actions/runner/releases/latest \
-    | grep -m1 '"tag_name"' | sed -E 's/.*"v?([^"]+)".*/\1/')"
-  [ -n "$RUNNER_VERSION" ] || die "Could not resolve latest runner version (set RUNNER_VERSION)"
+  # Read into a var first — piping curl into grep -m1 trips SIGPIPE under
+  # `set -o pipefail` (curl exit 23). Parse with a bash regex, no pipes.
+  api_json="$(curl -fsSL https://api.github.com/repos/actions/runner/releases/latest)"
+  if [[ "$api_json" =~ \"tag_name\"[[:space:]]*:[[:space:]]*\"v?([^\"]+)\" ]]; then
+    RUNNER_VERSION="${BASH_REMATCH[1]}"
+  fi
+  [ -n "${RUNNER_VERSION:-}" ] || die "Could not resolve latest runner version (set RUNNER_VERSION)"
 fi
 RUNNER_VERSION="${RUNNER_VERSION#v}"
 ok "Runner version: $RUNNER_VERSION"

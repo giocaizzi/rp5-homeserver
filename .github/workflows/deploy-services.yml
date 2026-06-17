@@ -88,31 +88,31 @@ jobs:
     steps:
       - name: Trigger Portainer redeploy via webhook
         env:
-          PORTAINER_URL: ${{ vars.PORTAINER_URL }}
+          PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
           # One webhook id per stack (Portainer stack -> GitOps -> Webhook).
-          # Add a line here when you add a new service stack.
-          WH_ADGUARD: ${{ secrets.PORTAINER_WEBHOOK_ADGUARD }}
-          WH_AI: ${{ secrets.PORTAINER_WEBHOOK_AI }}
-          WH_FIREFLY: ${{ secrets.PORTAINER_WEBHOOK_FIREFLY }}
-          WH_GREENHOUSE: ${{ secrets.PORTAINER_WEBHOOK_GREENHOUSE }}
-          WH_LANGFUSE: ${{ secrets.PORTAINER_WEBHOOK_LANGFUSE }}
-          WH_N8N: ${{ secrets.PORTAINER_WEBHOOK_N8N }}
-          WH_NTFY: ${{ secrets.PORTAINER_WEBHOOK_NTFY }}
-          WH_OBSERVABILITY: ${{ secrets.PORTAINER_WEBHOOK_OBSERVABILITY }}
-          WH_OPENCLAW: ${{ secrets.PORTAINER_WEBHOOK_OPENCLAW }}
+          # Add a line here when you give a new service stack a webhook.
+          WEBHOOK_ID_ADGUARD: ${{ secrets.WEBHOOK_ID_ADGUARD }}
+          WEBHOOK_ID_AI: ${{ secrets.WEBHOOK_ID_AI }}
+          WEBHOOK_ID_FIREFLY: ${{ secrets.WEBHOOK_ID_FIREFLY }}
+          WEBHOOK_ID_GREENHOUSE: ${{ secrets.WEBHOOK_ID_GREENHOUSE }}
+          WEBHOOK_ID_LANGFUSE: ${{ secrets.WEBHOOK_ID_LANGFUSE }}
+          WEBHOOK_ID_N8N: ${{ secrets.WEBHOOK_ID_N8N }}
+          WEBHOOK_ID_NTFY: ${{ secrets.WEBHOOK_ID_NTFY }}
+          WEBHOOK_ID_OBSERVABILITY: ${{ secrets.WEBHOOK_ID_OBSERVABILITY }}
+          WEBHOOK_ID_OPENCLAW: ${{ secrets.WEBHOOK_ID_OPENCLAW }}
         run: |
           set -euo pipefail
           stack="${{ matrix.stack }}"
-          key="WH_$(echo "$stack" | tr '[:lower:]-' '[:upper:]_')"
+          key="WEBHOOK_ID_$(echo "$stack" | tr '[:lower:]-' '[:upper:]_')"
           id="${!key:-}"
 
           if [ -z "${PORTAINER_URL:-}" ]; then
-            echo "::error::Repository variable PORTAINER_URL is not set"; exit 1
+            echo "::error::Secret PORTAINER_URL is not set"; exit 1
           fi
           if [ -z "$id" ]; then
-            echo "::warning::No webhook secret ($key) for stack '$stack' — skipping. Add it to deploy and to repo secrets."
+            echo "::warning::No webhook secret ($key) for stack '$stack' — skipping. Add it to deploy env + repo secrets."
             exit 0
           fi
 

@@ -94,14 +94,12 @@ Portainer then git-pulls and redeploys only the changed stack(s).
 
 ### GitHub config
 
-Repo **variable**:
-- `PORTAINER_URL` — e.g. `https://portainer.giocaizzi.xyz`
-
 Repo **secrets**:
+- `PORTAINER_URL` — e.g. `https://portainer.giocaizzi.xyz`
 - `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` — from
   `cd cloud && terraform output github_webhook_client_id` / `…client_secret`
-- `PORTAINER_WEBHOOK_<STACK>` — the webhook id per stack
-  (`PORTAINER_WEBHOOK_N8N`, `PORTAINER_WEBHOOK_FIREFLY`, …)
+- `WEBHOOK_ID_<STACK>` — the webhook id per stack
+  (`WEBHOOK_ID_N8N`, `WEBHOOK_ID_FIREFLY`, `WEBHOOK_ID_ADGUARD`, …)
 
 Environment `pi-services` (Settings → Environments): create it; optional
 required reviewers.
@@ -113,8 +111,8 @@ required reviewers.
 ### Adding a new service stack
 
 1. Create `services/<stack>/` and deploy it once in Portainer (steps above).
-2. Add `PORTAINER_WEBHOOK_<STACK>` repo secret.
-3. Add `WH_<STACK>: ${{ secrets.PORTAINER_WEBHOOK_<STACK> }}` to the `deploy`
+2. Add `WEBHOOK_ID_<STACK>` repo secret.
+3. Add `WEBHOOK_ID_<STACK>: ${{ secrets.WEBHOOK_ID_<STACK> }}` to the `deploy`
    job env in `deploy-services.yml`.
 
 ---
