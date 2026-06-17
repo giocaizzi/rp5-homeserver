@@ -79,7 +79,9 @@ jobs:
   deploy:
     needs: detect
     if: needs.detect.outputs.stacks != '[]'
-    runs-on: ubuntu-latest
+    # Runs on the Pi self-hosted runner so it can reach Portainer locally,
+    # bypassing Cloudflare (CF WAF blocks GitHub-cloud egress IPs with 403).
+    runs-on: [self-hosted, rp5]
     environment: pi-services
     strategy:
       fail-fast: false
@@ -89,8 +91,6 @@ jobs:
       - name: Trigger Portainer redeploy via webhook
         env:
           PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
-          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
-          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
           # One webhook id per stack (Portainer stack -> GitOps -> Webhook).
           # Add a line here when you give a new service stack a webhook.
           WEBHOOK_ID_ADGUARD: ${{ secrets.WEBHOOK_ID_ADGUARD }}
@@ -116,11 +116,13 @@ jobs:
             exit 0
           fi
 
-          echo "Redeploying '$stack' via Portainer webhook..."
-          code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
-            -H "CF-Access-Client-Id: ${CF_ACCESS_CLIENT_ID}" \
-            -H "CF-Access-Client-Secret: ${CF_ACCESS_CLIENT_SECRET}" \
-            "${PORTAINER_URL%/}/api/stacks/webhooks/${id}")"
+          # Hit Portainer locally via nginx (resolve the host to loopback), so the
+          # request never leaves the Pi and never touches Cloudflare's WAF. The
+          # GitOps webhook endpoint is unauthenticated and LAN-reachable here.
+          host="$(echo "${PORTAINER_URL#*://}" | sed 's#/.*##')"
+          echo "Redeploying '$stack' via local Portainer webhook ($host)..."
+          code="$(curl -sS -k --resolve "$host:443:127.0.0.1" -o /dev/null -w '%{http_code}' -X POST \
+            "https://$host/api/stacks/webhooks/$id")"
 
           echo "HTTP $code"
           case "$code" in

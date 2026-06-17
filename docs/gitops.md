@@ -10,7 +10,7 @@ human approval gate (env "Required reviewers"), mirroring the `cloud/` pipeline.
 |-------|---------|--------|-------------|
 | `cloud/` | push to `main` (`cloud/**`) | GH Actions + Terraform (WIF) | `cloud-production` |
 | `infra/` | push to `main` (`infra/**`) | GH Actions on **self-hosted runner** (Pi) → `sync_infra.sh --local` | `pi-production` |
-| `services/` | push to `main` (`services/**`) | GH Actions → Portainer GitOps webhook (via Cloudflare tunnel) | `pi-services` |
+| `services/` | push to `main` (`services/**`) | GH Actions (Pi runner) → local Portainer GitOps webhook | `pi-services` |
 
 ```
 Edit locally → PR → merge to main
@@ -73,11 +73,17 @@ PI_SSH_USER=<user> ./scripts/sync_infra.sh --pull     # pull images first
 
 ## services/ — Portainer webhook from GitHub Actions
 
-`deploy-services.yml` detects which `services/<stack>/` changed in the push and
-POSTs that stack's **Portainer GitOps webhook**. The call goes through the
-Cloudflare tunnel, authenticated with the `github-webhooks` CF Access service
-token (provisioned in `cloud/main.tf` + the Portainer webhook-bypass policy).
-Portainer then git-pulls and redeploys only the changed stack(s).
+`deploy-services.yml` detects which `services/<stack>/` changed in the push, then
+the `deploy` job runs on the **Pi self-hosted runner** and POSTs that stack's
+**Portainer GitOps webhook** locally (resolving the Portainer host to loopback,
+so the request hits nginx → Portainer without leaving the Pi). Portainer then
+git-pulls and redeploys only the changed stack(s).
+
+> Why local, not through Cloudflare: Cloudflare's WAF blocks GitHub's cloud
+> egress IPs with HTTP 403, so a `ubuntu-latest` runner cannot reach the webhook
+> even with a valid CF Access service token. Running on the Pi runner sidesteps
+> Cloudflare entirely. The GitOps webhook endpoint is unauthenticated and only
+> LAN-reachable from there.
 
 ### Per-stack Portainer setup (once per stack)
 
@@ -95,11 +101,13 @@ Portainer then git-pulls and redeploys only the changed stack(s).
 ### GitHub config
 
 Repo **secrets**:
-- `PORTAINER_URL` — e.g. `https://portainer.giocaizzi.xyz`
-- `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` — from
-  `cd cloud && terraform output github_webhook_client_id` / `…client_secret`
+- `PORTAINER_URL` — e.g. `https://portainer.giocaizzi.xyz` (host is resolved to
+  loopback on the Pi runner; only the hostname is used, for nginx server_name).
 - `WEBHOOK_ID_<STACK>` — the webhook id per stack
   (`WEBHOOK_ID_N8N`, `WEBHOOK_ID_FIREFLY`, `WEBHOOK_ID_ADGUARD`, …)
+
+> The CF Access service token (`CF_ACCESS_CLIENT_ID/SECRET`) is **no longer used**
+> by this workflow — the call is local. Those secrets remain for other uses.
 
 Environment `pi-services` (Settings → Environments): create it; optional
 required reviewers.
