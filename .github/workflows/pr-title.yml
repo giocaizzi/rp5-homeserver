@@ -1,0 +1,54 @@
+name: pr-title
+
+# Validate that every PR title is a Conventional Commit with a MANDATORY scope.
+#
+# Why this gate exists: `main` is squash-only and the repo is configured with
+# squash_merge_commit_title=PR_TITLE, so the PR title becomes the squashed commit
+# subject that release-please parses on main. A malformed or unscoped title would
+# silently misattribute (or drop) the release. The local commit-guard hook only
+# checks agent-authored commits, never PR titles — this is the human-facing gate.
+#
+# Implemented as a plain regex (no third-party action) that mirrors the same
+# type/scope vocabulary as .claude/hooks/conventional-commit-guard.sh. Scope must
+# be a release-please component or `repo` for cross-cutting changes. See AGENTS.md
+# "Pull requests & commit titles".
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  validate:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title format
+        # release-please authors its own Release PRs on `release-please--*` branches
+        # with compliant `chore(repo): release ...` titles; we skip the lint for them
+        # anyway as a safety net (covers in-flight Release PRs still carrying an older
+        # title until release-please refreshes them). The skip is at the STEP level —
+        # NOT the job — so the job still runs and reports SUCCESS: a JOB-level skip
+        # leaves this required check unreported and permanently BLOCKS every Release PR.
+        if: ${{ !startsWith(github.head_ref, 'release-please--') }}
+        # Title is read from an env var, NEVER interpolated into the script body,
+        # so a crafted title cannot inject shell commands.
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          types='feat|fix|perf|refactor|revert|docs|style|test|build|ci|chore'
+          scopes='infra|cloud|mcp-connector|adguard|ai|firefly|greenhouse|langfuse|n8n|ntfy|observability|openclaw|repo'
+          re="^(${types})\((${scopes})\)!?: [a-z].*$"
+          if [[ "$TITLE" =~ $re ]]; then
+            echo "OK: $TITLE"
+          else
+            echo "::error::PR title must be 'type(scope): description' with a mandatory scope."
+            echo "  Title: $TITLE"
+            echo "  type  in: ${types//|/, }"
+            echo "  scope in: ${scopes//|/, }  (release-please component, or 'repo' for cross-cutting)"
+            echo "  subject must start lowercase. e.g. 'feat(greenhouse): add humidity sensor',"
+            echo "                                      'ci(repo): add pr-title lint'"
+            exit 1
+          fi

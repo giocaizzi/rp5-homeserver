@@ -57,9 +57,9 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 | `cloud/` | Terraform for Cloudflare Tunnel + GCS backup bucket. |
 | `docs/` | Architecture, networking, backup, gitops, monitoring, naming/labels. |
 | `.claude/skills/` | Repo-local agent skills (e.g. `firefly`, `openclaw-cli`). |
-| `.github/workflows/` | CI/CD. `ci.yml` (PR → `main`): `terraform fmt`/`validate`/`plan` for `cloud/**`, sticky plan comment, single `gate` required check. `cd.yml` (push `cloud/**`): `terraform apply` via `cloud-production` env (GCS state + GCP WIF). `deploy-infra.yml` (push `infra/**`): runs on the **self-hosted Pi runner**, `sync_infra.sh --local`, env `pi-production`. `deploy-services.yml` (push `services/**`): detects changed stacks, POSTs each stack's Portainer webhook through the CF tunnel, env `pi-services`. All four envs expose the Deployments-tab audit trail + optional "Required reviewers" gate. |
+| `.github/workflows/` | CI/CD. **`ci.yml`** (PR → `main`): `terraform fmt`/`validate`/`plan` for `cloud/**`, sticky plan comment, single `gate` required check. **`pr-title.yml`** (PR): scoped Conventional-Commit title lint. **`release-please.yml`** (push `main`): versioning/changelogs/tags only (App-token; no deploys). **`apply-cloud.yml`** (push `cloud/**`): `terraform apply` via `cloud-production` env (GCS state + GCP WIF) — Terraform stays plan-reviewed-on-merge. **`deploy-infra.yml`** (on **`infra` release**): self-hosted Pi runner, `sync_infra.sh --local`, env `pi-production`. **`deploy-services.yml`** (on **service release**): per-released-stack Portainer webhook on the Pi runner, env `pi-services`. Deploy envs expose the Deployments-tab audit + optional "Required reviewers" gate. Full flow: [Releases](docs/releases.md). |
 
-**Branch protection:** commits to `main` are blocked. All changes go through feature branches + PRs. Use Conventional Commits (`feat`, `fix`, `chore`, `docs`, `refactor`, …; `!` or `BREAKING CHANGE:` for breaks).
+**Branch protection:** commits to `main` are blocked. All changes go through feature branches + PRs. **Every PR title and commit subject MUST be `type(scope): description`** — a Conventional Commit with a mandatory scope — because release-please parses them to version + changelog each component. The exact format, scope vocabulary, and enforcement layers are in [Pull requests & commit titles](#pull-requests--commit-titles--mandatory-format).
 
 ---
 
@@ -256,7 +256,7 @@ See [Naming & Labeling Standards](docs/naming_labels.md) for complete reference.
 - Static configs (nginx, ntfy): Bind mount from repo
 - Runtime-modified configs (openclaw): Named volume, edit via SSH
 
-**`infra/VERSION`** — manually-maintained semver tag for the infra stack. `sync_infra.sh` mirrors it into a Swarm `infra_version_config`; **a changed VERSION triggers `docker stack rm infra` + redeploy** (configs are immutable in Swarm), so bump it *only* when configs or topology change and a restart is acceptable. Routine image-only updates: leave VERSION alone.
+**`infra/VERSION`** — the infra stack's version, now **owned by release-please** (it is the `infra` package's `version-file`, the bare `vX.Y.Z` main line, seeded at `1.13.0`). **Do not hand-edit it** — release-please overwrites it from `.release-please-manifest.json`. It bumps when an **infra Release PR merges**, i.e. when a releasing-type commit (`feat`/`fix`/`refactor`/`perf`) scoped to `infra/**` lands. `sync_infra.sh` mirrors it into a Swarm `infra_version_config`; **a changed VERSION triggers `docker stack rm infra` + redeploy** (configs are immutable in Swarm). Consequence: cutting an infra release implies an infra redeploy on the next `sync_infra.sh`. To change `infra/**` *without* bumping VERSION (and so without forcing a redeploy), use a non-releasing type — `chore(infra):` / `docs(infra):`.
 
 ---
 
@@ -277,6 +277,28 @@ Four GitHub Actions workflows, all keyed off `main` and surfaced in the Deployme
 **Adding a public service (the recipe).** (1) nginx: `server_name` + `globals.conf` backend map + `defaults.conf` HTTP→HTTPS redirect. (2) terraform: CNAME, tunnel ingress entry (host-correct `http_host_header` and `origin_server_name`), `<svc>_users` variable, Access policy + self-hosted Access app, `<svc>_url` output. (3) GH: set `<SVC>_USERS` repo variable (JSON array) and add `TF_VAR_<svc>_users` to both workflows. (4) Bump `infra/VERSION` so `sync_infra.sh` redeploys nginx (Swarm configs are immutable). Bootstrap script (`scripts/bootstrap_cloud_cicd.sh`) prints the canonical variable/secret/environment checklist when re-run.
 
 ---
+
+# Pull requests & commit titles — MANDATORY format
+
+**Every PR title and every commit subject MUST be `type(scope): description`** — a [Conventional Commit](https://www.conventionalcommits.org) **with a mandatory scope**. This is not optional. `main` is **squash-only** with `squash_merge_commit_title=PR_TITLE`, so **the PR title becomes the commit subject release-please parses on `main`**. A malformed or unscoped title silently misattributes — or drops — the release.
+
+- **`type`** ∈ `feat` · `fix` · `perf` · `refactor` · `revert` · `docs` · `style` · `test` · `build` · `ci` · `chore`. The type drives the bump: `feat` → MINOR, `fix`/`perf`/`refactor`/`revert` → PATCH, `feat!` or a `BREAKING CHANGE:` footer → MAJOR; `docs`/`style`/`test`/`build`/`ci`/`chore` → no bump.
+- **`scope`** (REQUIRED) ∈ exactly one of:
+  - `infra` — the infra stack (the **main `vX.Y.Z` line**, `infra/VERSION`).
+  - `cloud` · `mcp-connector` · `adguard` · `ai` · `firefly` · `greenhouse` · `langfuse` · `n8n` · `ntfy` · `observability` · `openclaw` — the per-component **release-please packages** (`<scope>-vX.Y.Z`, `0.x` config tracks). Use the scope matching the path the PR touches, and keep each PR to a **single** component (release-please attributes by file path).
+  - `repo` — **cross-cutting** changes touching **no** release package: CI/workflows, root docs, `scripts/`, repo tooling. Produces no release. (e.g. `ci(repo): …`, `docs(repo): …`.)
+- **`description`** — imperative, lowercase first word, no trailing period.
+- Breaking change: add `!` after the scope (`feat(greenhouse)!: …`) and/or a `BREAKING CHANGE:` footer.
+
+Examples: `feat(greenhouse): add humidity sensor` · `fix(infra): correct nginx healthcheck` · `ci(repo): add pr-title lint` · `chore(openclaw)!: drop legacy auth`.
+
+Enforced on **three** layers: the **`pr-title.yml`** workflow (a plain regex — no third-party action) validates every PR title; the **`conventional-commit-guard.sh`** `PreToolUse` hook (wired per-developer in the gitignored `.claude/settings.local.json`) blocks any agent commit whose subject doesn't match; and the squash-merge setting makes the validated PR title the commit of record. release-please's own Release PRs (branch `release-please--*`, titled `chore(repo): release …`) are already compliant and additionally skipped by the lint as a safety net.
+
+## Releases (release-please)
+
+`release-please.yml` watches `main`, parses these commits, and maintains **one batched Release PR** (`release-please-config.json` + `.release-please-manifest.json`); merging it bumps each changed component's version + `CHANGELOG.md` and cuts the tag(s) — `vX.Y.Z` for `infra` (which writes `infra/VERSION`), `<component>-v0.x` for the `0.x` config tracks (`cloud`, `mcp-connector`, the services). It **only versions and tags — deploys are unchanged** (`cloud/`→`cd.yml`, `infra/`→`sync_infra.sh`, `services/`→Portainer). It authenticates via a **GitHub App** (`RELEASE_PLEASE_APP_ID` + `RELEASE_PLEASE_APP_PRIVATE_KEY`) so its Release PR triggers the required `gate` check and can merge.
+
+**Full flow, components, versioning policy, and required GitHub config: [docs/releases.md](docs/releases.md).** Never hand-edit `.release-please-manifest.json`, `infra/VERSION`, or any generated `CHANGELOG.md`.
 
 # Security
 

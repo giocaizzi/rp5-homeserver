@@ -1,0 +1,48 @@
+name: release-please
+
+# Watches the default branch, parses Conventional Commits, and opens/updates a
+# single batched Release PR (separate-pull-requests=false) covering every package
+# in release-please-config.json. Merging that PR cuts the release(s): it bumps each
+# changed package's version + CHANGELOG and creates the tag(s) + GitHub Release(s):
+#   - infra  -> bare `vX.Y.Z` (the main line; writes infra/VERSION in place)
+#   - <svc>  -> `<component>-vX.Y.Z` (services, cloud, mcp-connector; 0.x config tracks)
+#
+# This workflow ONLY versions/tags. Deploys are unchanged: cloud/ via cd.yml,
+# infra/ + services/ via their own pipelines. No deploy is gated on a release here.
+
+on:
+  # DELIBERATELY NOT path-filtered. release-please must observe EVERY commit on
+  # main to keep each component's Release PR, version, and CHANGELOG accurate — a
+  # `paths:` filter would drop commits and corrupt versioning.
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Release PR / tag
+    runs-on: ubuntu-latest
+    steps:
+      # Mint a short-lived installation token from a GitHub App, NOT the default
+      # GITHUB_TOKEN. `main` requires the `gate` status check before merge, and a PR
+      # opened by GITHUB_TOKEN does NOT trigger `on: pull_request` CI — `gate` would
+      # never report and the Release PR could never merge. An App-token-authored PR
+      # triggers CI normally. Prefer an App over a PAT: org-owned identity (not tied
+      # to a person), per-run short-lived tokens (no long-lived secret / expiry),
+      # scoped to Contents + Pull requests.
+      # Secrets: RELEASE_PLEASE_APP_ID + RELEASE_PLEASE_APP_PRIVATE_KEY.
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ secrets.RELEASE_PLEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
+
+      - uses: googleapis/release-please-action@v5
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          # The App installation token (Release PRs it authors trigger the required CI).
+          token: ${{ steps.app-token.outputs.token }}
