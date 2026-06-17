@@ -52,15 +52,15 @@ jobs:
           TF_VAR_zone_name: ${{ vars.CLOUDFLARE_ZONE_NAME }}
           TF_VAR_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
           TF_VAR_tunnel_secret: ${{ secrets.TUNNEL_SECRET }}
-          TF_VAR_n8n_users: ${{ vars.N8N_USERS }}
-          TF_VAR_portainer_users: ${{ vars.PORTAINER_USERS }}
-          TF_VAR_backrest_users: ${{ vars.BACKREST_USERS }}
-          TF_VAR_firefly_users: ${{ vars.FIREFLY_USERS }}
-          TF_VAR_homepage_users: ${{ vars.HOMEPAGE_USERS }}
-          TF_VAR_openclaw_users: ${{ vars.OPENCLAW_USERS }}
-          TF_VAR_grafana_users: ${{ vars.GRAFANA_USERS }}
-          TF_VAR_greenhouse_users: ${{ vars.GREENHOUSE_USERS }}
-          TF_VAR_code_users: ${{ vars.CODE_USERS }}
+          TF_VAR_n8n_users: ${{ vars.N8N_USERS || '[]' }}
+          TF_VAR_portainer_users: ${{ vars.PORTAINER_USERS || '[]' }}
+          TF_VAR_backrest_users: ${{ vars.BACKREST_USERS || '[]' }}
+          TF_VAR_firefly_users: ${{ vars.FIREFLY_USERS || '[]' }}
+          TF_VAR_homepage_users: ${{ vars.HOMEPAGE_USERS || '[]' }}
+          TF_VAR_openclaw_users: ${{ vars.OPENCLAW_USERS || '[]' }}
+          TF_VAR_grafana_users: ${{ vars.GRAFANA_USERS || '[]' }}
+          TF_VAR_greenhouse_users: ${{ vars.GREENHOUSE_USERS || '[]' }}
+          TF_VAR_code_users: ${{ vars.CODE_USERS || '[]' }}
           TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
           TF_VAR_gcp_region: ${{ vars.GCP_REGION }}
           TF_VAR_gcp_backup_bucket_name: ${{ vars.GCP_BACKUP_BUCKET_NAME }}
