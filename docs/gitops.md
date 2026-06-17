@@ -1,86 +1,128 @@
 # GitOps
 
-Automated deployment using Portainer GitOps and GitHub webhooks.
+End-to-end deployment driven by GitHub Actions + GitHub Environments. Every
+layer deploys from `main` with an audit trail (Deployments tab) and an optional
+human approval gate (env "Required reviewers"), mirroring the `cloud/` pipeline.
 
 ## Deployment Methods
 
-| Component | Method | Trigger |
-|-----------|--------|---------|
-| `infra/` | `./scripts/sync_infra.sh` | Manual |
-| `services/` | Portainer GitOps | Webhook on push |
+| Layer | Trigger | Engine | Environment |
+|-------|---------|--------|-------------|
+| `cloud/` | push to `main` (`cloud/**`) | GH Actions + Terraform (WIF) | `cloud-production` |
+| `infra/` | push to `main` (`infra/**`) | GH Actions on **self-hosted runner** (Pi) → `sync_infra.sh --local` | `pi-production` |
+| `services/` | push to `main` (`services/**`) | GH Actions → Portainer GitOps webhook (via Cloudflare tunnel) | `pi-services` |
 
-## Infrastructure Deployment
-
-```bash
-# Sync and deploy infra stack
-./scripts/sync_infra.sh
+```
+Edit locally → PR → merge to main
+   ├─ cloud/**     → cd.yml             → terraform apply           (cloud-production)
+   ├─ infra/**     → deploy-infra.yml   → runner on Pi: stack deploy (pi-production)
+   └─ services/**  → deploy-services.yml→ POST Portainer webhook(s)  (pi-services)
 ```
 
-Script syncs `infra/` to Pi and runs `docker stack deploy`.
+---
 
-## Service Deployment (GitOps)
+## infra/ — self-hosted runner
 
-### Initial Setup
+`infra/` holds Portainer, cloudflared, nginx, backrest… and its secrets are
+file-based and **gitignored** (they live only on the Pi). A cloud runner can't
+reach the Pi's Docker socket or those files, so deploys run on a self-hosted
+runner installed on the Pi itself.
+
+`deploy-infra.yml` checks out the repo and runs `sync_infra.sh --local`, which
+rsyncs `infra/` into the deploy path and runs `docker stack deploy` — no SSH
+hop. In `--local` mode the script **excludes `secrets/` from the rsync** so the
+`--delete` flag never wipes the on-Pi secrets that aren't in git.
+
+### One-time setup
+
+1. **Install the runner on the Pi** (as the user that owns
+   `/home/<user>/rp5-homeserver/infra` and is in the `docker` group):
+   ```bash
+   # On GitHub: Settings → Actions → Runners → New self-hosted runner → copy the token
+   GITHUB_REPO=giocaizzi/rp5-homeserver RUNNER_TOKEN=<token> \
+     ./scripts/setup_pi_runner.sh
+   ```
+   This registers a runner with the `rp5` label and installs it as a systemd
+   service. Verify it shows **Idle** under Settings → Actions → Runners.
+
+2. **Repo variable** (Settings → Variables → Actions):
+   - `PI_DEPLOY_USER` — the Pi user owning the deploy path (e.g. the runner user)
+   - `PI_INFRA_PATH` — *optional* override; default `/home/<PI_DEPLOY_USER>/rp5-homeserver/infra`
+
+3. **Environment** `pi-production` (Settings → Environments): create it; toggle
+   **Required reviewers** if you want a manual gate before each deploy.
+
+4. **Security** (Settings → Actions → General): keep **"Require approval for all
+   outside collaborators"** on. `deploy-infra.yml` triggers only on push to
+   `main` and `workflow_dispatch` — never on `pull_request` — so untrusted fork
+   code never runs on the Pi.
+
+### Manual deploy / options
+
+```bash
+# From the Actions tab: "Deploy infra" → Run workflow (pull / restart toggles)
+# Or still locally over SSH from your workstation:
+PI_SSH_USER=<user> ./scripts/sync_infra.sh            # in-place update
+PI_SSH_USER=<user> ./scripts/sync_infra.sh --pull     # pull images first
+```
+
+> Bump `infra/VERSION` only when configs/topology change — a changed VERSION
+> forces `docker stack rm infra` + redeploy (Swarm configs are immutable).
+
+---
+
+## services/ — Portainer webhook from GitHub Actions
+
+`deploy-services.yml` detects which `services/<stack>/` changed in the push and
+POSTs that stack's **Portainer GitOps webhook**. The call goes through the
+Cloudflare tunnel, authenticated with the `github-webhooks` CF Access service
+token (provisioned in `cloud/main.tf` + the Portainer webhook-bypass policy).
+Portainer then git-pulls and redeploys only the changed stack(s).
+
+### Per-stack Portainer setup (once per stack)
 
 1. **Portainer** → Stacks → Add Stack → Git Repository
-2. Configure:
-   - **URL**: `https://github.com/<owner>/rp5-homeserver`
+   - **URL**: `https://github.com/giocaizzi/rp5-homeserver`
    - **Branch**: `refs/heads/main`
-   - **Compose path**: `services/<service>/docker-compose.yml`
-   - **Mode**: Swarm (not Standalone)
-3. Enable **Relative path volumes**:
-   - Path: `/mnt/` - (Portainer will create `/mnt/stacks/<service>` and handle uniqueness of directories)
-4. Enable **GitOps updates** → Webhook
-5. Copy webhook URL
+   - **Compose path**: `services/<stack>/docker-compose.yml`
+   - **Mode**: Swarm
+   - **Relative path volumes**: enable, base path `/mnt/`
+2. Enable **GitOps updates** → **Webhook**, copy the webhook URL. The id is the
+   last path segment: `…/api/stacks/webhooks/<WEBHOOK_ID>`.
+3. Pre-create the stack's external Swarm secrets:
+   `PI_SSH_USER=<user> ./scripts/create_secrets.sh <stack>`
 
-### GitHub Webhook
+### GitHub config
 
-1. Repository Settings → Webhooks → Add
-2. **Payload URL**: Portainer webhook URL
-3. **Content type**: `application/json`
-4. **Events**: Push events
+Repo **secrets**:
+- `PORTAINER_URL` — e.g. `https://portainer.giocaizzi.xyz`
+- `CF_ACCESS_CLIENT_ID` / `CF_ACCESS_CLIENT_SECRET` — from
+  `cd cloud && terraform output github_webhook_client_id` / `…client_secret`
+- `WEBHOOK_ID_<STACK>` — the webhook id per stack
+  (`WEBHOOK_ID_N8N`, `WEBHOOK_ID_FIREFLY`, `WEBHOOK_ID_ADGUARD`, …)
 
-### Cloudflare Access (External Access)
+Environment `pi-services` (Settings → Environments): create it; optional
+required reviewers.
 
-For webhooks through Cloudflare tunnel, use GitHub Actions with service token authentication.
+> Polling fallback: instead of webhooks you can set Portainer's stack to **Git
+> polling** (it pulls on an interval). The Actions webhook is preferred — it's
+> immediate, mirrors the other layers, and shows in the Deployments tab.
 
-```yaml
-# .github/workflows/deploy.yml
-- name: Trigger deployment
-  run: |
-    curl -X POST \
-      -H "CF-Access-Client-Id: ${{ secrets.CF_ACCESS_CLIENT_ID }}" \
-      -H "CF-Access-Client-Secret: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}" \
-      "${{ secrets.PORTAINER_URL }}/api/stacks/webhooks/${{ secrets.WEBHOOK_ID }}"
-```
+### Adding a new service stack
 
-**Secrets required**:
-- `CF_ACCESS_CLIENT_ID` — from `terraform output`
-- `CF_ACCESS_CLIENT_SECRET` — from `terraform output`
-- `PORTAINER_URL` — `https://portainer.yourdomain.com`
-- `WEBHOOK_ID_<SERVICE>` — from Portainer stack GitOps settings
+1. Create `services/<stack>/` and deploy it once in Portainer (steps above).
+2. Add `WEBHOOK_ID_<STACK>` repo secret.
+3. Add `WEBHOOK_ID_<STACK>: ${{ secrets.WEBHOOK_ID_<STACK> }}` to the `deploy`
+   job env in `deploy-services.yml`.
 
-### Stack Paths
+---
 
-| Stack | Compose Path | Webhook Path |
-|-------|--------------|--------------|
-| n8n | `services/n8n/docker-compose.yml` | `/mnt/stacks/n8n` |
-| firefly | `services/firefly/docker-compose.yml` | `/mnt/stacks/firefly` |
-| adguard | `services/adguard/docker-compose.yml` | `/mnt/stacks/adguard` |
-| ai | `services/ai/docker-compose.yml` | `/mnt/stacks/ai` |
-| langfuse | `services/langfuse/docker-compose.yml` | `/mnt/stacks/langfuse` |
-| ntfy | `services/ntfy/docker-compose.yml` | `/mnt/stacks/ntfy` |
-| observability | `services/observability/docker-compose.yml` | `/mnt/stacks/observability` |
-
-## Workflow
-
-```
-Edit locally → Push to main → GitHub webhook → Portainer pulls → Stack redeploy
-```
-
-## Manual Trigger
+## Manual trigger (debug)
 
 ```bash
-# Test webhook
-curl -X POST "https://portainer.home/api/stacks/webhooks/<webhook-id>"
+# Re-fire a stack's Portainer webhook directly (through the tunnel)
+curl -X POST \
+  -H "CF-Access-Client-Id: $CF_ID" \
+  -H "CF-Access-Client-Secret: $CF_SECRET" \
+  "https://portainer.<zone>/api/stacks/webhooks/<webhook-id>"
 ```

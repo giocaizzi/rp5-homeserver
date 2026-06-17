@@ -1,0 +1,129 @@
+# Continuous deployment for services/ stacks on push to main.
+#
+# Replaces the old "GitHub repo webhook -> Portainer" wiring with a first-class
+# GitHub Actions deployment, so service deploys get the same Deployments-tab
+# audit trail and optional approval gate as cloud/ and infra/.
+#
+# Flow: detect which services/<stack>/ changed in the push -> for each, POST the
+# stack's Portainer GitOps webhook. The call goes through the Cloudflare tunnel
+# and is authenticated with the github-webhooks CF Access service token
+# (already provisioned in cloud/main.tf: cloudflare_zero_trust_access_service_token.github_webhook
+# + the portainer webhook-bypass policy). Portainer then git-pulls and redeploys
+# that stack on the Pi.
+#
+# The `pi-services` environment provides the audit trail and the optional
+# "Required reviewers" gate.
+name: Deploy services
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/**'
+      - '.github/workflows/deploy-services.yml'
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: 'Single stack to redeploy (e.g. n8n). Empty = no-op.'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-services-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      stacks: ${{ steps.set.outputs.stacks }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - id: set
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            s="${{ inputs.stack }}"
+            if [ -n "$s" ]; then
+              echo "stacks=$(printf '["%s"]' "$s")" >> "$GITHUB_OUTPUT"
+            else
+              echo "stacks=[]" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+
+          base="${{ github.event.before }}"
+          head="${{ github.sha }}"
+          # First push / forced push: before may be all-zeros or unreachable.
+          if ! git rev-parse --quiet --verify "${base}^{commit}" >/dev/null 2>&1; then
+            base="$(git rev-parse --quiet --verify HEAD~1 || echo "$head")"
+          fi
+
+          changed="$(git diff --name-only "$base" "$head" -- 'services/**' \
+            | awk -F/ 'NF>=2 {print $2}' | sort -u)"
+
+          if [ -z "$changed" ]; then
+            echo "stacks=[]" >> "$GITHUB_OUTPUT"
+          else
+            json="$(printf '%s\n' $changed | jq -R . | jq -cs .)"
+            echo "stacks=$json" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Changed stacks: ${changed:-<none>}"
+
+  deploy:
+    needs: detect
+    if: needs.detect.outputs.stacks != '[]'
+    runs-on: ubuntu-latest
+    environment: pi-services
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: ${{ fromJson(needs.detect.outputs.stacks) }}
+    steps:
+      - name: Trigger Portainer redeploy via webhook
+        env:
+          PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+          # One webhook id per stack (Portainer stack -> GitOps -> Webhook).
+          # Add a line here when you give a new service stack a webhook.
+          WEBHOOK_ID_ADGUARD: ${{ secrets.WEBHOOK_ID_ADGUARD }}
+          WEBHOOK_ID_AI: ${{ secrets.WEBHOOK_ID_AI }}
+          WEBHOOK_ID_FIREFLY: ${{ secrets.WEBHOOK_ID_FIREFLY }}
+          WEBHOOK_ID_GREENHOUSE: ${{ secrets.WEBHOOK_ID_GREENHOUSE }}
+          WEBHOOK_ID_LANGFUSE: ${{ secrets.WEBHOOK_ID_LANGFUSE }}
+          WEBHOOK_ID_N8N: ${{ secrets.WEBHOOK_ID_N8N }}
+          WEBHOOK_ID_NTFY: ${{ secrets.WEBHOOK_ID_NTFY }}
+          WEBHOOK_ID_OBSERVABILITY: ${{ secrets.WEBHOOK_ID_OBSERVABILITY }}
+          WEBHOOK_ID_OPENCLAW: ${{ secrets.WEBHOOK_ID_OPENCLAW }}
+        run: |
+          set -euo pipefail
+          stack="${{ matrix.stack }}"
+          key="WEBHOOK_ID_$(echo "$stack" | tr '[:lower:]-' '[:upper:]_')"
+          id="${!key:-}"
+
+          if [ -z "${PORTAINER_URL:-}" ]; then
+            echo "::error::Secret PORTAINER_URL is not set"; exit 1
+          fi
+          if [ -z "$id" ]; then
+            echo "::warning::No webhook secret ($key) for stack '$stack' — skipping. Add it to deploy env + repo secrets."
+            exit 0
+          fi
+
+          echo "Redeploying '$stack' via Portainer webhook..."
+          code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+            -H "CF-Access-Client-Id: ${CF_ACCESS_CLIENT_ID}" \
+            -H "CF-Access-Client-Secret: ${CF_ACCESS_CLIENT_SECRET}" \
+            "${PORTAINER_URL%/}/api/stacks/webhooks/${id}")"
+
+          echo "HTTP $code"
+          case "$code" in
+            2*) echo "✓ $stack redeploy triggered" ;;
+            *)  echo "::error::Portainer webhook for '$stack' returned HTTP $code"; exit 1 ;;
+          esac
