@@ -48,6 +48,11 @@ output "greenhouse_url" {
   value       = "https://greenhouse.${var.zone_name}"
 }
 
+output "code_url" {
+  description = "The public URL for the Code dev environment (CloudCLI)"
+  value       = "https://code.${var.zone_name}"
+}
+
 # ============================================================================
 # GCP Outputs
 # ============================================================================

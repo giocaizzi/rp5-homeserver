@@ -60,6 +60,7 @@ jobs:
           TF_VAR_openclaw_users: ${{ vars.OPENCLAW_USERS }}
           TF_VAR_grafana_users: ${{ vars.GRAFANA_USERS }}
           TF_VAR_greenhouse_users: ${{ vars.GREENHOUSE_USERS }}
+          TF_VAR_code_users: ${{ vars.CODE_USERS }}
           TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
           TF_VAR_gcp_region: ${{ vars.GCP_REGION }}
           TF_VAR_gcp_backup_bucket_name: ${{ vars.GCP_BACKUP_BUCKET_NAME }}

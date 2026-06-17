@@ -86,6 +86,13 @@
             icon: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxt1l_gNERueMEr2kTmbkbCe0mSzSjBgbIRQ&s
             ping: http://openclaw-gateway:18789
 
+- Development:
+      - Code:
+            href: https://code.giocaizzi.xyz
+            description: Remote Claude Code dev environment
+            icon: mdi-robot-happy-#a855f7
+            ping: http://code_app:3001
+
 - Finance:
       - Firefly III:
             href: https://firefly.{{HOMEPAGE_FILE_DOMAIN}}
