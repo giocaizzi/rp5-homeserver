@@ -66,6 +66,10 @@ flowchart LR
 **Three control surfaces, one source of truth.** The UI, the official app (Remote
 Control), and SSH/tmux all act on the same `~/.claude` session store in `home_data`.
 
+**Preinstalled tooling** (what Claude reaches for): `git`, `gh`, `ripgrep`, `fd`,
+`jq`, `yq`, `tree`, `build-essential` + `python3`/`pip`/`pipx`, `sqlite3`, `tmux`,
+`vim`/`nano`, and net-debug (`nc`, `dig`, `ping`). Node 22 is the base.
+
 **Security model:**
 - Runs as `node` (uid 1000) — never root. `no-new-privileges` enforced.
 - No host bind mounts, no Docker socket, no privileged mode. The in-browser shell
