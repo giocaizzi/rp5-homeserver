@@ -260,6 +260,12 @@ See [Naming & Labeling Standards](docs/naming_labels.md) for complete reference.
 
 ---
 
+# Homepage (dashboard)
+
+Two-file pairing in `infra/homepage/`: **sections live in `settings.yaml`** (`layout:` — order, columns, icon), **components reference a section by name in another file** (`services.yaml`, `bookmarks.yaml`). A group used in `services.yaml`/`bookmarks.yaml` **must** have a matching `layout:` entry, or it renders orphaned (no icon, dumped at the end). Adding a service = add the tile under its group **and** ensure that group exists in the layout.
+
+---
+
 # CI/CD (cloud/ only)
 
 `infra/` and `services/` have no CI — Portainer + `sync_infra.sh` are the deploy paths. `cloud/**` is the only thing CI/CD touches.

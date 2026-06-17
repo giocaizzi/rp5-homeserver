@@ -21,6 +21,10 @@ layout:
     style: row
     columns: 3
     icon: mdi-robot
+  Development:
+    style: row
+    columns: 3
+    icon: mdi-code-braces
   Finance:
     style: row
     columns: 3
