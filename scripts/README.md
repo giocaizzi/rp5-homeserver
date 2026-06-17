@@ -17,22 +17,29 @@ Syncs the local infra directory to the Raspberry Pi and deploys the infrastructu
 - `PI_HOST` - Pi hostname or IP (default: `pi.local`)
 - `PI_INFRA_PATH` - Remote infra directory path (default: `/home/${PI_SSH_USER}/rp5-homeserver/infra`)
 
+**Flags:** `--dry-run`, `--pull`, `--restart`, `--local`, `--help`
+
+`--local` runs directly on the Pi (no SSH) — used by the `deploy-infra.yml`
+self-hosted runner. In `--local` mode `secrets/` is excluded from the `rsync
+--delete`, so the on-Pi secrets (gitignored, not in the CI checkout) are never
+wiped. `PI_SSH_USER` is still required (it derives `PI_INFRA_PATH`).
+
 **Usage:**
 ```bash
-# Basic usage
+# Basic usage (SSH from your workstation)
 PI_SSH_USER=pi ./sync_infra.sh
 
 # With image pull
 PI_SSH_USER=pi ./sync_infra.sh --pull
+
+# On the Pi itself (what CI runs)
+PI_SSH_USER=pi ./sync_infra.sh --local
 
 # Show help
 ./sync_infra.sh --help
 
 # With custom host
 PI_SSH_USER=pi PI_HOST=192.168.1.100 ./sync_infra.sh
-
-# With custom paths and image pull
-PI_SSH_USER=pi PI_INFRA_PATH=/opt/homeserver/infra ./sync_infra.sh --pull
 ```
 
 **What it does:**
@@ -44,6 +51,29 @@ PI_SSH_USER=pi PI_INFRA_PATH=/opt/homeserver/infra ./sync_infra.sh --pull
 6. Optionally pulls latest Docker images (with `--pull` flag)
 7. Deploys the stack using `docker stack deploy`
 8. Shows final stack status and services
+
+---
+
+### setup_pi_runner.sh
+
+Installs and registers a self-hosted GitHub Actions runner **on the Pi** (label
+`rp5`) as a systemd service, so `deploy-infra.yml` can run `sync_infra.sh
+--local`. Run it on the Pi, as the user owning the deploy path (and in the
+`docker` group).
+
+**Required Environment Variables:**
+- `GITHUB_REPO` - `owner/repo` (e.g. `giocaizzi/rp5-homeserver`)
+- `RUNNER_TOKEN` - registration token from GitHub → Settings → Actions → Runners → New self-hosted runner
+
+**Optional Environment Variables:**
+- `RUNNER_LABELS` (default: `rp5`), `RUNNER_NAME`, `RUNNER_VERSION`, `RUNNER_DIR`
+
+**Usage:**
+```bash
+GITHUB_REPO=giocaizzi/rp5-homeserver RUNNER_TOKEN=<token> ./setup_pi_runner.sh
+```
+
+Re-running is safe (re-registers with `--replace`). See [docs/gitops.md](../docs/gitops.md).
 
 ---
 

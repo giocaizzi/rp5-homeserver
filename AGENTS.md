@@ -35,8 +35,8 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 
 **Architecture:**
 - Single-node Docker Swarm.
-- `infra/` — always-on, deployed manually via SSH (`rsync` + `docker stack deploy`). Provides shared networks (`rp5_public`, `rp5_infra`) other stacks depend on.
-- `services/` — deployed via Portainer Remote Stacks (git-based, GitOps). Stacks may be started/stopped on demand.
+- `infra/` — always-on. Auto-deployed by `deploy-infra.yml` on a **self-hosted runner on the Pi** (`sync_infra.sh --local`); also deployable manually via SSH (`rsync` + `docker stack deploy`). Provides shared networks (`rp5_public`, `rp5_infra`) other stacks depend on.
+- `services/` — deployed via Portainer Remote Stacks (git-based, GitOps), triggered by `deploy-services.yml` (per-stack Portainer webhook). Stacks may be started/stopped on demand.
 
 **Workflow:**
 - Edit locally on macOS → sync/push → deploy.
@@ -57,7 +57,7 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 | `cloud/` | Terraform for Cloudflare Tunnel + GCS backup bucket. |
 | `docs/` | Architecture, networking, backup, gitops, monitoring, naming/labels. |
 | `.claude/skills/` | Repo-local agent skills (e.g. `firefly`, `openclaw-cli`). |
-| `.github/workflows/` | CI/CD. `ci.yml` runs on every PR → `main`: `terraform fmt`/`validate`/`plan` for `cloud/**`, posts a sticky plan comment, exposes a single `gate` job as the required status check. `cd.yml` runs on push to `main` touching `cloud/**` and applies via the `cloud-production` environment (auto-approves; flip env "Required reviewers" to add a human gate). Both use GCS remote state + GCP Workload Identity Federation. |
+| `.github/workflows/` | CI/CD. `ci.yml` (PR → `main`): `terraform fmt`/`validate`/`plan` for `cloud/**`, sticky plan comment, single `gate` required check. `cd.yml` (push `cloud/**`): `terraform apply` via `cloud-production` env (GCS state + GCP WIF). `deploy-infra.yml` (push `infra/**`): runs on the **self-hosted Pi runner**, `sync_infra.sh --local`, env `pi-production`. `deploy-services.yml` (push `services/**`): detects changed stacks, POSTs each stack's Portainer webhook through the CF tunnel, env `pi-services`. All four envs expose the Deployments-tab audit trail + optional "Required reviewers" gate. |
 
 **Branch protection:** commits to `main` are blocked. All changes go through feature branches + PRs. Use Conventional Commits (`feat`, `fix`, `chore`, `docs`, `refactor`, …; `!` or `BREAKING CHANGE:` for breaks).
 
@@ -236,8 +236,8 @@ See [Naming & Labeling Standards](docs/naming_labels.md) for complete reference.
 
 | Component | Workflow |
 |-----------|----------|
-| `infra/`  | Edit locally → `./scripts/sync_infra.sh` |
-| `services/` | Edit locally → commit/push → Portainer deploys |
+| `infra/`  | Push `infra/**` → `deploy-infra.yml` (Pi runner, `sync_infra.sh --local`). Manual fallback: `PI_SSH_USER=<user> ./scripts/sync_infra.sh` |
+| `services/` | Push `services/**` → `deploy-services.yml` fires per-stack Portainer webhook |
 
 **Portainer Remote Stacks:** Portainer clones repo, enabling relative bind mounts (`./config`), Swarm configs (`file:`), and named volumes. Secrets must be external (pre-created on Pi).
 
@@ -260,13 +260,17 @@ See [Naming & Labeling Standards](docs/naming_labels.md) for complete reference.
 
 ---
 
-# CI/CD (cloud/ only)
+# CI/CD
 
-`infra/` and `services/` have no CI — Portainer + `sync_infra.sh` are the deploy paths. `cloud/**` is the only thing CI/CD touches.
+Four GitHub Actions workflows, all keyed off `main` and surfaced in the Deployments tab. See [docs/gitops.md](docs/gitops.md) for setup.
 
-**Pipeline.** `ci.yml` runs on every PR → `main` and short-circuits via `paths-filter` when `cloud/**` didn't change. When it did: `terraform fmt -check → init (GCS backend) → validate → plan`, then posts a sticky plan comment on the PR. The single required status check is the `gate` job (always runs, asserts no upstream job failed) — robust to skipped jobs and renames. `cd.yml` runs on push to `main` touching `cloud/**` and does `terraform apply -auto-approve` from the `cloud-production` environment. Flip "Required reviewers" on that environment to add a human gate without changing the workflow.
+**`cloud/`.** `ci.yml` runs on every PR → `main` and short-circuits via `paths-filter` when `cloud/**` didn't change. When it did: `terraform fmt -check → init (GCS backend) → validate → plan`, then posts a sticky plan comment on the PR. The single required status check is the `gate` job (always runs, asserts no upstream job failed) — robust to skipped jobs and renames. `cd.yml` runs on push to `main` touching `cloud/**` and does `terraform apply -auto-approve` from the `cloud-production` environment. Flip "Required reviewers" on that environment to add a human gate without changing the workflow.
 
-**Auth.** GCP via Workload Identity Federation — no SA key in GitHub; Actions exchanges its OIDC token for a short-lived credential, restricted to this repo by the WIF provider's attribute-condition. Cloudflare via API token stored as a GH **secret** (`CLOUDFLARE_API_TOKEN`). Tunnel secret stored as `TUNNEL_SECRET`. State backend: GCS, bucket name in repo var `TF_STATE_BUCKET`, prefix hardcoded in `cloud/backend.tf`.
+**`infra/`.** `deploy-infra.yml` runs on push to `main` touching `infra/**`, on a **self-hosted runner on the Pi** (label `rp5`, installed via `scripts/setup_pi_runner.sh`). It runs `sync_infra.sh --local` (no SSH — already on the Pi). `--local` mode excludes `secrets/` from the `rsync --delete` (secrets are gitignored, live only on the Pi). Env `pi-production`; needs repo var `PI_DEPLOY_USER` (owner of the deploy path). Triggers only on push/`workflow_dispatch`, never `pull_request`, so fork code never runs on the Pi.
+
+**`services/`.** `deploy-services.yml` runs on push touching `services/**`: a `detect` job diffs the push to find changed `services/<stack>/` dirs, then a matrix `deploy` job POSTs each stack's Portainer GitOps webhook through the CF tunnel (auth: `github-webhooks` CF Access service token + Portainer webhook-bypass policy, both in `cloud/main.tf`). Env `pi-services`; needs secrets `PORTAINER_URL`, `CF_ACCESS_CLIENT_ID`/`CF_ACCESS_CLIENT_SECRET` (terraform outputs) and `WEBHOOK_ID_<STACK>` per stack. Adding a stack: add the secret **and** a `WEBHOOK_ID_<STACK>` line to the deploy job env.
+
+**Auth (cloud/).** GCP via Workload Identity Federation — no SA key in GitHub; Actions exchanges its OIDC token for a short-lived credential, restricted to this repo by the WIF provider's attribute-condition. Cloudflare via API token stored as a GH **secret** (`CLOUDFLARE_API_TOKEN`). Tunnel secret stored as `TUNNEL_SECRET`. State backend: GCS, bucket name in repo var `TF_STATE_BUCKET`, prefix hardcoded in `cloud/backend.tf`.
 
 **Variable wiring.** Both workflows declare a `TF_VAR_*` env block under the plan/apply step that maps GH variables/secrets to terraform inputs. Variables (non-secret) live at **repo level** (`gh variable list`); secrets at repo level too. The `cloud-plan` / `cloud-production` environments exist for the Deployments-tab audit trail and the optional approval gate — they hold no variables of their own today (env-level vars/secrets would override repo-level if added). Adding a new terraform variable means: add `variable "..."` to `cloud/variables.tf`, add `TF_VAR_<name>: ${{ vars.<NAME> }}` (or `secrets.<NAME>`) to **both** `ci.yml` and `cd.yml` plan/apply steps, set the GH var (`gh variable set <NAME> --body '...'`), and append it to the bootstrap script's printed checklist so future bootstraps stay accurate. List-typed terraform vars must be JSON-encoded strings (e.g. `'["a@x.com","b@y.com"]'`).
 

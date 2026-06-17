@@ -22,6 +22,11 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DRY_RUN=false
 PULL_IMAGES=false
 FULL_RESTART=false
+LOCAL_MODE=false   # run on the Pi itself (self-hosted runner): no SSH, no remote rsync
+
+# Transport state (computed in validate_environment once LOCAL_MODE/PI_* are known)
+RSYNC_DEST=""
+RSYNC_EXCLUDES=()
 
 # Counters
 FILES_SYNCED=0
@@ -46,6 +51,17 @@ log_skip()    { echo -e "${BLUE}│${NC} ${DIM}─${NC} $1"; }
 log_section() { echo -e "${BLUE}├─${NC} ${CYAN}$1${NC}"; }
 log_end()     { echo -e "${BLUE}└─${NC} $1"; }
 
+# Run a command either on the Pi over SSH (default) or locally (--local).
+# In --local mode the script already runs on the Pi (e.g. a self-hosted GitHub
+# Actions runner), so commands execute directly — no SSH hop.
+remote() {
+    if [ "$LOCAL_MODE" = true ]; then
+        bash -c "$1"
+    else
+        ssh "$PI_SSH_USER@$PI_HOST" "$1"
+    fi
+}
+
 show_help() {
     cat << EOF
 Sync and deploy infra stack on Raspberry Pi using Docker Swarm
@@ -64,6 +80,8 @@ Options:
   --pull          Pull latest Docker images before deploying
   --restart       Full stack restart (removes and redeploys)
                   Default behavior updates in-place via docker stack deploy
+  --local         Run directly on the Pi (no SSH). For self-hosted CI runners.
+                  Skips the secrets/ dir from rsync (kept on the Pi out of git).
   --help, -h      Show this help message
 
 Behavior:
@@ -101,6 +119,10 @@ parse_arguments() {
                 FULL_RESTART=true
                 shift
                 ;;
+            --local)
+                LOCAL_MODE=true
+                shift
+                ;;
             --help|-h)
                 show_help
                 exit 0
@@ -121,14 +143,34 @@ validate_environment() {
     fi
     
     PI_INFRA_PATH="${PI_INFRA_PATH:-/home/${PI_SSH_USER}/rp5-homeserver/infra}"
-    
+
     if [ ! -d "$LOCAL_INFRA_PATH" ]; then
         echo -e "${RED}Error: Local infra directory not found: $LOCAL_INFRA_PATH${NC}" >&2
         exit 1
     fi
+
+    # Resolve rsync destination + excludes once transport mode is known.
+    RSYNC_EXCLUDES=(--exclude='homepage/logs/')
+    if [ "$LOCAL_MODE" = true ]; then
+        # On the Pi: write straight to the deploy path. CRITICAL: never --delete
+        # the secrets/ dir — secrets live only on the Pi (gitignored), the CI
+        # checkout has none, so syncing it with --delete would wipe them.
+        RSYNC_DEST="$PI_INFRA_PATH/"
+        RSYNC_EXCLUDES+=(--exclude='secrets/')
+    else
+        RSYNC_DEST="$PI_SSH_USER@$PI_HOST:$PI_INFRA_PATH/"
+    fi
 }
 
 test_ssh_connection() {
+    if [ "$LOCAL_MODE" = true ]; then
+        # No SSH hop in local mode — just verify the local Docker engine is reachable.
+        if ! docker info >/dev/null 2>&1; then
+            echo -e "${RED}Error: Local Docker engine not reachable (is the runner user in the docker group?)${NC}" >&2
+            exit 1
+        fi
+        return 0
+    fi
     if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$PI_SSH_USER@$PI_HOST" "true" 2>/dev/null; then
         echo -e "${RED}Error: Cannot connect to $PI_SSH_USER@$PI_HOST${NC}" >&2
         exit 1
@@ -144,13 +186,13 @@ get_local_version() {
 }
 
 get_remote_version() {
-    ssh "$PI_SSH_USER@$PI_HOST" "cat $PI_INFRA_PATH/VERSION 2>/dev/null" || echo "not deployed"
+    remote "cat $PI_INFRA_PATH/VERSION 2>/dev/null" || echo "not deployed"
 }
 
 # Check if swarm is initialized
 check_swarm() {
     local state
-    state=$(ssh "$PI_SSH_USER@$PI_HOST" "docker info --format '{{.Swarm.LocalNodeState}}'" 2>/dev/null || echo "inactive")
+    state=$(remote "docker info --format '{{.Swarm.LocalNodeState}}'" 2>/dev/null || echo "inactive")
     echo "$state"
 }
 
@@ -169,7 +211,7 @@ initialize_swarm() {
         return 0
     fi
     
-    if ssh "$PI_SSH_USER@$PI_HOST" "docker swarm init" 2>/dev/null; then
+    if remote "docker swarm init" 2>/dev/null; then
         log_success "Docker Swarm initialized"
     else
         log_error "Failed to initialize Swarm"
@@ -185,12 +227,12 @@ sync_files() {
     if [ "$DRY_RUN" = true ]; then
         log_info "Would ensure remote directory: $PI_INFRA_PATH"
     else
-        ssh "$PI_SSH_USER@$PI_HOST" "mkdir -p $PI_INFRA_PATH" 2>/dev/null
+        remote "mkdir -p $PI_INFRA_PATH" 2>/dev/null
     fi
-    
+
     # Get rsync dry-run output to count changes
     local rsync_output
-    rsync_output=$(rsync -avz --delete --exclude='homepage/logs/' --dry-run "$LOCAL_INFRA_PATH/" "$PI_SSH_USER@$PI_HOST:$PI_INFRA_PATH/" 2>/dev/null | grep -E '^[<>ch.]|deleting' || true)
+    rsync_output=$(rsync -avz --delete "${RSYNC_EXCLUDES[@]}" --dry-run "$LOCAL_INFRA_PATH/" "$RSYNC_DEST" 2>/dev/null | grep -E '^[<>ch.]|deleting' || true)
     
     if [ -z "$rsync_output" ]; then
         log_skip "No file changes detected"
@@ -229,7 +271,7 @@ sync_files() {
     else
         # Run rsync - status 23/24 are partial transfer (permission issues) which we handle with fix_permissions
         local rsync_status=0
-        rsync -avz --delete --exclude='homepage/logs/' "$LOCAL_INFRA_PATH/" "$PI_SSH_USER@$PI_HOST:$PI_INFRA_PATH/" >/dev/null 2>&1 || rsync_status=$?
+        rsync -avz --delete "${RSYNC_EXCLUDES[@]}" "$LOCAL_INFRA_PATH/" "$RSYNC_DEST" >/dev/null 2>&1 || rsync_status=$?
         
         if [ "$rsync_status" -eq 0 ] || [ "$rsync_status" -eq 23 ] || [ "$rsync_status" -eq 24 ]; then
             [ "$send_count" -gt 0 ] && log_success "Synced $send_count file(s)" || true
@@ -243,7 +285,8 @@ sync_files() {
 
 # Fix permissions on remote
 fix_permissions() {
-    if [ "$DRY_RUN" = true ]; then
+    if [ "$DRY_RUN" = true ] || [ "$LOCAL_MODE" = true ]; then
+        # Local mode: the runner already owns the deploy path; avoid sudo in CI.
         return 0
     fi
     ssh "$PI_SSH_USER@$PI_HOST" "sudo chown -R $PI_SSH_USER:$PI_SSH_USER $PI_INFRA_PATH/" 2>/dev/null || true
@@ -262,7 +305,7 @@ pull_images() {
     fi
     
     log_info "Pulling latest images..."
-    if ssh "$PI_SSH_USER@$PI_HOST" "cd $PI_INFRA_PATH && docker compose pull" 2>/dev/null; then
+    if remote "cd $PI_INFRA_PATH && docker compose pull" 2>/dev/null; then
         log_success "Images updated"
     else
         log_warning "Some images failed to pull"
@@ -271,12 +314,12 @@ pull_images() {
 
 # Check if stack exists
 stack_exists() {
-    ssh "$PI_SSH_USER@$PI_HOST" "docker stack ls --format '{{.Name}}' | grep -q '^infra$'" 2>/dev/null
+    remote "docker stack ls --format '{{.Name}}' | grep -q '^infra$'" 2>/dev/null
 }
 
 # Get current service states
 get_service_count() {
-    ssh "$PI_SSH_USER@$PI_HOST" "docker stack services infra --format '{{.Name}}' 2>/dev/null | wc -l" || echo 0
+    remote "docker stack services infra --format '{{.Name}}' 2>/dev/null | wc -l" || echo 0
 }
 
 # Remove stack (for full restart) - preserves volumes
@@ -292,7 +335,7 @@ remove_stack() {
     fi
     
     log_info "Removing stack (named volumes preserved)..."
-    ssh "$PI_SSH_USER@$PI_HOST" "docker stack rm infra" 2>/dev/null || true
+    remote "docker stack rm infra" 2>/dev/null || true
     
     # Wait for complete removal
     local attempts=0
@@ -353,11 +396,11 @@ deploy_stack() {
     # Check if configs need update (content changed) - requires full restart
     local local_ver remote_config_exists needs_restart=false
     local_ver=$(cat "$LOCAL_INFRA_PATH/VERSION" 2>/dev/null | tr -d '\n' || echo "")
-    remote_config_exists=$(ssh "$PI_SSH_USER@$PI_HOST" "docker config ls --format '{{.Name}}' | grep -q '^infra_version_config$' && echo yes || echo no" 2>/dev/null)
-    
+    remote_config_exists=$(remote "docker config ls --format '{{.Name}}' | grep -q '^infra_version_config$' && echo yes || echo no" 2>/dev/null)
+
     if [ "$remote_config_exists" = "yes" ] && [ "$is_new" = false ]; then
         local remote_ver
-        remote_ver=$(ssh "$PI_SSH_USER@$PI_HOST" "docker config inspect infra_version_config --format '{{json .Spec.Data}}' 2>/dev/null | tr -d '\"' | base64 -d 2>/dev/null | tr -d '\n' || echo """)
+        remote_ver=$(remote "docker config inspect infra_version_config --format '{{json .Spec.Data}}' 2>/dev/null | tr -d '\"' | base64 -d 2>/dev/null | tr -d '\n' || echo """)
         if [ "$local_ver" != "$remote_ver" ]; then
             log_warning "Config changed (v$remote_ver → v$local_ver) — requires restart"
             needs_restart=true
@@ -367,7 +410,7 @@ deploy_stack() {
     # If config changed, need to remove stack first to allow config update
     if [ "$needs_restart" = true ]; then
         log_info "Removing stack for config update..."
-        ssh "$PI_SSH_USER@$PI_HOST" "docker stack rm infra" >/dev/null 2>&1 || true
+        remote "docker stack rm infra" >/dev/null 2>&1 || true
         # Wait for removal
         local attempts=0
         while stack_exists && [ $attempts -lt 30 ]; do
@@ -375,13 +418,13 @@ deploy_stack() {
             ((attempts++)) || true
         done
         # Remove the config
-        ssh "$PI_SSH_USER@$PI_HOST" "docker config rm infra_version_config" >/dev/null 2>&1 || true
+        remote "docker config rm infra_version_config" >/dev/null 2>&1 || true
         log_success "Stack removed"
     fi
     
     # Deploy (docker stack deploy handles both create and update)
     log_info "Deploying..."
-    if ssh "$PI_SSH_USER@$PI_HOST" "cd $PI_INFRA_PATH && docker stack deploy -c docker-compose.yml infra" >/dev/null 2>&1; then
+    if remote "cd $PI_INFRA_PATH && docker stack deploy -c docker-compose.yml infra" >/dev/null 2>&1; then
         if [ "$is_new" = true ]; then
             log_success "Stack created"
         else
@@ -408,7 +451,7 @@ check_health() {
     sleep 5
     
     local services
-    services=$(ssh "$PI_SSH_USER@$PI_HOST" "docker stack services infra --format '{{.Name}}\t{{.Replicas}}'" 2>/dev/null || true)
+    services=$(remote "docker stack services infra --format '{{.Name}}\t{{.Replicas}}'" 2>/dev/null || true)
     
     if [ -z "$services" ]; then
         log_warning "No services found"
@@ -479,6 +522,7 @@ main() {
     echo -e "${DIM}   Local:  v$local_version${NC}"
     echo -e "${DIM}   Remote: v$remote_version${NC}"
     [ "$DRY_RUN" = true ] && echo -e "${DIM}   Mode: dry-run${NC}"
+    [ "$LOCAL_MODE" = true ] && echo -e "${DIM}   Transport: local (no SSH)${NC}"
     [ "$FULL_RESTART" = true ] && echo -e "${DIM}   Restart: full${NC}"
     [ "$PULL_IMAGES" = true ] && echo -e "${DIM}   Pull: enabled${NC}"
     echo
@@ -486,7 +530,11 @@ main() {
     echo -e "${BLUE}┌─${NC} ${CYAN}Infrastructure Deployment${NC}"
     
     test_ssh_connection
-    log_success "SSH connected"
+    if [ "$LOCAL_MODE" = true ]; then
+        log_success "Local Docker engine reachable"
+    else
+        log_success "SSH connected"
+    fi
     
     log_section "Swarm"
     initialize_swarm
