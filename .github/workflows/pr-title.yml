@@ -39,7 +39,7 @@ jobs:
           TITLE: ${{ github.event.pull_request.title }}
         run: |
           types='feat|fix|perf|refactor|revert|docs|style|test|build|ci|chore'
-          scopes='infra|cloud|mcp-connector|adguard|ai|firefly|greenhouse|langfuse|n8n|ntfy|observability|openclaw|repo'
+          scopes='infra|cloud|workers|mcp-connector|adguard|ai|firefly|greenhouse|langfuse|n8n|ntfy|observability|openclaw|cicd|repo'
           re="^(${types})\((${scopes})\)!?: [a-z].*$"
           if [[ "$TITLE" =~ $re ]]; then
             echo "OK: $TITLE"

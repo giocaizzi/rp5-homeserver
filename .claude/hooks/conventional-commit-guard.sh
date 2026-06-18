@@ -62,7 +62,7 @@ TYPES = "feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert"
 # the commit subject release-please parses, so every subject must be
 # `type(scope): …`. Scope must be a release-please component or `repo` for
 # cross-cutting changes. See AGENTS.md "Pull requests & commit titles".
-SCOPES = "infra|cloud|mcp-connector|adguard|ai|firefly|greenhouse|langfuse|n8n|ntfy|observability|openclaw|repo"
+SCOPES = "infra|cloud|workers|mcp-connector|adguard|ai|firefly|greenhouse|langfuse|n8n|ntfy|observability|openclaw|cicd|repo"
 pattern = rf"^({TYPES})\(({SCOPES})\)!?: .+"
 if re.match(pattern, subject):
     sys.exit(0)

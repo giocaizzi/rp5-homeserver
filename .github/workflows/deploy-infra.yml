@@ -1,9 +1,15 @@
-# Continuous deployment for the infra/ stack on push to main.
+# Release-gated deployment for the infra/ stack.
+#
+# RELEASE-GATED: fires when release-please publishes the infra release — the bare
+# `vX.Y.Z` tag (infra is the only unprefixed component; services/cloud/worker tags
+# are `<component>-vX.Y.Z`). So merging a feature PR STAGES the change; merging the
+# Release PR (which bumps infra/VERSION) SHIPS it. The release event checks out the
+# tagged commit, so the deployed infra/ matches the released version. See
+# docs/releases.md.
 #
 # Runs on a SELF-HOSTED runner installed on the Pi (label `rp5`), so the job
 # already sits inside the LAN with the Docker socket and the secrets/ dir on
-# disk — no SSH hop, no exposed port. This is the infra/ equivalent of cd.yml
-# (which applies cloud/ Terraform).
+# disk — no SSH hop, no exposed port.
 #
 # The `pi-production` environment gives:
 #   - GitHub Deployments tab visibility (audit trail of every deploy)
@@ -11,18 +17,14 @@
 #     to gate deploys; no workflow change needed.
 #
 # SECURITY: self-hosted runners are NOT ephemeral/isolated. This workflow only
-# triggers on push to main (post-merge) and workflow_dispatch — never on
+# triggers on a published release (post-merge) and workflow_dispatch — never on
 # pull_request — so untrusted fork code never executes on the Pi. Keep
 # "Require approval for all outside collaborators" on in Actions settings.
 name: Deploy infra
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'infra/**'
-      - 'scripts/sync_infra.sh'
-      - '.github/workflows/deploy-infra.yml'
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       pull:
@@ -43,6 +45,9 @@ concurrency:
 
 jobs:
   deploy:
+    # Only the infra release (bare `vX.Y.Z`); component releases (`<name>-vX.Y.Z`)
+    # don't start with `v` and are ignored here. Manual runs always deploy.
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'v') }}
     runs-on: [self-hosted, rp5]
     environment: pi-production
     steps:

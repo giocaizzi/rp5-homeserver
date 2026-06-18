@@ -7,8 +7,10 @@ name: release-please
 #   - infra  -> bare `vX.Y.Z` (the main line; writes infra/VERSION in place)
 #   - <svc>  -> `<component>-vX.Y.Z` (services, cloud, mcp-connector; 0.x config tracks)
 #
-# This workflow ONLY versions/tags. Deploys are unchanged: cloud/ via cd.yml,
-# infra/ + services/ via their own pipelines. No deploy is gated on a release here.
+# This workflow ONLY versions/tags. The runtime deploys are release-GATED off the
+# tags it publishes: the `infra` release (v*) fires deploy-infra.yml and a service
+# release (<stack>-v*) fires deploy-services.yml (both trigger on the `release`
+# event). cloud/ Terraform stays apply-on-merge (apply-cloud.yml).
 
 on:
   # DELIBERATELY NOT path-filtered. release-please must observe EVERY commit on

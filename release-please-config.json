@@ -6,7 +6,7 @@
   "bump-minor-pre-major": true,
   "pull-request-title-pattern": "chore(repo): release${component} ${version}",
   "group-pull-request-title-pattern": "chore(repo): release ${branch}",
-  "bootstrap-sha": "cd5bd633fa7dc5f4b2f3f83abc6880acfcf0fe36",
+  "bootstrap-sha": "08d1d2f2257586f2bce586765e8469ab4407838b",
   "changelog-sections": [
     { "type": "feat", "section": "Features" },
     { "type": "fix", "section": "Bug Fixes" },

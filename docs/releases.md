@@ -2,14 +2,17 @@
 
 Automated versioning, changelogs, and tags via [release-please](https://github.com/googleapis/release-please). This is the diagram-led companion to the **[Pull requests & commit titles](../AGENTS.md#pull-requests--commit-titles--mandatory-format)** rules in `AGENTS.md` (the authoritative, imperative contract). Read them together.
 
-release-please **only versions and tags — it deploys nothing.** Delivery is unchanged: `cloud/` via `cd.yml`, `infra/` via `sync_infra.sh`, `services/` via Portainer GitOps ([GitOps](./gitops.md)).
+release-please cuts versions, changelogs, and tags. **The runtime deploys are release-gated off those tags** — merging a feature PR *stages* a change; merging the Release PR *ships* it. The one exception is `cloud/` Terraform, which stays plan-reviewed-on-merge (see [Deployment](#deployment-release-gated)).
 
 ## Workflows
 
 | Workflow | File | Trigger | Role |
 |---|---|---|---|
-| **release-please** | `release-please.yml` | push to `main` | Parses Conventional Commits, maintains one batched Release PR; merging it bumps versions + `CHANGELOG.md` and creates tags + GitHub Releases. |
+| **release-please** | `release-please.yml` | push to `main` | Parses Conventional Commits, maintains one batched Release PR; merging it bumps versions + `CHANGELOG.md` and publishes per-component tags + GitHub Releases. |
 | **PR title** | `pr-title.yml` | PR opened/edited/reopened/synced | Validates the PR title is a Conventional Commit with a mandatory scope. Skips `release-please--*` PRs. |
+| **Deploy infra** | `deploy-infra.yml` | **`infra` release** (`v*`) + manual | Self-hosted Pi runner runs `sync_infra.sh --local`. |
+| **Deploy services** | `deploy-services.yml` | **service release** (`<stack>-v*`) + manual | Parses the stack from the tag, POSTs its Portainer webhook on the Pi. |
+| **Apply cloud** | `apply-cloud.yml` | push `main` ∩ `cloud/**` | `terraform apply` — plan-reviewed-on-merge, **not** release-gated. |
 
 ```mermaid
 flowchart LR
@@ -17,8 +20,9 @@ flowchart LR
     RP --> PR["one batched Release PR<br/>chore(repo): release main"]
     PR -->|merge| Cut["per-component:<br/>version bump + CHANGELOG<br/>+ tag + GitHub Release"]
     Cut --> Infra["infra → vX.Y.Z<br/>(writes infra/VERSION)"]
-    Cut --> Comp["others → component-v0.Y.Z<br/>(manifest-only)"]
-    Infra -. "next sync_infra.sh" .-> Redeploy["infra stack redeploy<br/>(VERSION change is immutable-config trigger)"]
+    Cut --> Comp["service → service-v0.Y.Z"]
+    Infra -->|"release event"| DI["deploy-infra.yml<br/>sync_infra --local (Pi)"]
+    Comp -->|"release event"| DS["deploy-services.yml<br/>Portainer webhook (Pi)"]
 ```
 
 ## Components
@@ -35,6 +39,22 @@ Manifest mode: [`release-please-config.json`](../release-please-config.json) + [
 Services covered: `adguard`, `ai`, `firefly`, `greenhouse`, `langfuse`, `n8n`, `ntfy`, `observability`, `openclaw`.
 
 Cross-cutting changes (CI, root docs, `scripts/`) use the `repo` scope, touch no component path, and cut **no** release.
+
+## Deployment (release-gated)
+
+The runtime stacks deploy **when their release is published**, not on merge to `main`:
+
+| Target | Deployed by | Fires on | How |
+|---|---|---|---|
+| `infra/` stack | `deploy-infra.yml` | `infra` release (bare `v*` tag) | self-hosted Pi runner → `sync_infra.sh --local` |
+| `services/<stack>` | `deploy-services.yml` | service release (`<stack>-v*` tag) | Pi runner → that stack's Portainer webhook (local, bypasses CF WAF) |
+| `cloud/` Terraform | `apply-cloud.yml` | **push** `main` ∩ `cloud/**` | `terraform apply` (plan-reviewed-on-merge — **not** release-gated) |
+
+- The deploy workflows trigger on `release: [published]`. Because release-please authors the release with the **GitHub App** token (not `GITHUB_TOKEN`), the `release` event *does* fire downstream workflows.
+- A batched Release PR publishes **one release per changed component**, so each fires its own deploy; `deploy-services.yml` parses the stack from the tag and no-ops on non-service releases (`infra`, `cloud`, `mcp-connector`).
+- The release event checks out the **tagged commit**, so the deployed stack matches the released version. Cutting an `infra` release bumps `infra/VERSION`, which `sync_infra.sh` treats as the immutable-config redeploy trigger.
+- Both Pi deploys also accept **`workflow_dispatch`** for manual runs (infra: `pull`/`restart`; services: a single `stack`).
+- **Why `cloud/` is excluded:** Terraform is desired-state — release-gating it would let `main` diverge from applied infra until a release is cut. Its review gate is the plan (`ci.yml`), and merge applies it. release-please still versions `cloud` (`cloud-vX.Y.Z`) for the changelog/tag record.
 
 ## Versioning policy
 
