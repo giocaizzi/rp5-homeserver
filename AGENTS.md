@@ -284,11 +284,9 @@ Six GitHub Actions workflows. Versioning/tagging (`release-please.yml`, `pr-titl
 **Every PR title and every commit subject MUST be `type(scope): description`** — a [Conventional Commit](https://www.conventionalcommits.org) **with a mandatory scope**. This is not optional. `main` is **squash-only** with `squash_merge_commit_title=PR_TITLE`, so **the PR title becomes the commit subject release-please parses on `main`**. A malformed or unscoped title silently misattributes — or drops — the release.
 
 - **`type`** ∈ `feat` · `fix` · `perf` · `refactor` · `revert` · `docs` · `style` · `test` · `build` · `ci` · `chore`. The type drives the bump: `feat` → MINOR, `fix`/`perf`/`refactor`/`revert` → PATCH, `feat!` or a `BREAKING CHANGE:` footer → MAJOR; `docs`/`style`/`test`/`build`/`ci`/`chore` → no bump.
-- **`scope`** (REQUIRED) ∈ exactly one of:
-  - `infra` — the infra stack (the **main `vX.Y.Z` line**, `infra/VERSION`).
-  - `cloud` · `workers`/`mcp-connector` · `adguard` · `ai` · `firefly` · `greenhouse` · `langfuse` · `n8n` · `ntfy` · `observability` · `openclaw` — the per-component **release-please packages** (`<scope>-vX.Y.Z`, `0.x` config tracks; the worker tags as `mcp-connector-vX.Y.Z`). Use the scope matching the path the PR touches, and keep each PR to a **single** component (release-please attributes by file path).
-  - `cicd` — CI/CD workflow & deploy changes (`.github/workflows/**`, deploy scripts). Touches no release package → produces no release.
-  - `repo` — other **cross-cutting** changes touching no release package: root docs, `scripts/`, `.gitignore`, repo tooling. Produces no release. (e.g. `docs(repo): …`, `chore(repo): …`.)
+- **`scope`** (REQUIRED) — any lowercase token (`[a-z][a-z0-9-]*`); **not an allowlist** (release-please attributes releases by file **path**, not scope, so the scope is advisory). Pick it to communicate *what changed*:
+  - a **release-please component** when the PR touches that path — `infra` (the **main `vX.Y.Z` line**, `infra/VERSION`), `cloud`, `mcp-connector` (`workers/`), or a service (`greenhouse`, `n8n`, …). Keep each PR to a **single** component so the version + changelog land on the right one.
+  - a **meta scope** for cross-cutting work that touches no component → no release: `cicd` (`.github/workflows/**`, deploy scripts), `repo` (root docs, `scripts/`, tooling), `deps` (dependency bumps), etc.
 - **`description`** — imperative, lowercase first word, no trailing period.
 - Breaking change: add `!` after the scope (`feat(greenhouse)!: …`) and/or a `BREAKING CHANGE:` footer.
 
