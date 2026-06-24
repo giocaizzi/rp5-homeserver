@@ -1,0 +1,96 @@
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "code"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  code_network:
+    driver: overlay
+    name: rp5_code
+
+  public_network:
+    external: true
+    name: rp5_public
+
+# =============================================================================
+# Volumes
+# =============================================================================
+# Single home volume = single source of truth for ALL session/auth state:
+#   ~/.claude        Claude Code OAuth credentials + session transcripts (JSONL)
+#   ~/.config/gh     GitHub CLI auth (clone/push)
+#   ~/workspace      cloned repos Claude operates on
+# Auth is established interactively once (see README) and persists here — no
+# Swarm secrets, mirroring the OpenClaw CLI-managed-auth pattern.
+volumes:
+  home_data:
+
+# =============================================================================
+# Services
+# =============================================================================
+services:
+  app:
+    image: ghcr.io/giocaizzi/rp5-code:latest
+    hostname: code-app
+    expose:
+      - "3001"
+    environment:
+      - HOME=/home/node
+      - HOST=0.0.0.0
+      - PORT=3001
+      - TERM=xterm-256color
+    volumes:
+      - home_data:/home/node
+    networks:
+      - code_network
+      - public_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "app"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "cloudcli"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 2048M
+        reservations:
+          memory: 512M
+    logging:
+      <<: *logging-base

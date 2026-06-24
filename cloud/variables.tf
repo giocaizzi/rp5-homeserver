@@ -85,6 +85,12 @@ variable "greenhouse_users" {
   default     = []
 }
 
+variable "code_users" {
+  description = "List of email addresses allowed to access the Code dev environment (CloudCLI). Shell-equivalent access — keep this list minimal."
+  type        = list(string)
+  default     = []
+}
+
 # ============================================================================
 # GCP Variables
 # ============================================================================

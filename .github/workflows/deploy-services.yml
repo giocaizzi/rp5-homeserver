@@ -99,6 +99,7 @@ jobs:
           WEBHOOK_ID_NTFY: ${{ secrets.WEBHOOK_ID_NTFY }}
           WEBHOOK_ID_OBSERVABILITY: ${{ secrets.WEBHOOK_ID_OBSERVABILITY }}
           WEBHOOK_ID_OPENCLAW: ${{ secrets.WEBHOOK_ID_OPENCLAW }}
+          WEBHOOK_ID_CODE: ${{ secrets.WEBHOOK_ID_CODE }}
         run: |
           set -euo pipefail
           stack="${{ matrix.stack }}"
