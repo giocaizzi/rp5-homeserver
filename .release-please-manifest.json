@@ -10,5 +10,6 @@
   "services/n8n": "0.1.0",
   "services/ntfy": "0.1.0",
   "services/observability": "0.1.0",
-  "services/openclaw": "0.1.0"
+  "services/openclaw": "0.1.0",
+  "services/code": "0.1.0"
 }

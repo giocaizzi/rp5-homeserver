@@ -52,7 +52,7 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 | Path | Purpose |
 |------|---------|
 | `infra/` | Always-on infra stack (nginx, portainer, cloudflared, netdata, backrest, homepage, shepherd). Single `docker-compose.yml` + `VERSION` + local `secrets/`. |
-| `services/<stack>/` | One folder per service stack (n8n, firefly, adguard, ai, langfuse, ntfy, observability, openclaw, greenhouse). Each ships a `docker-compose.yml`, optional `secrets/` template, and a README. |
+| `services/<stack>/` | One folder per service stack (n8n, firefly, adguard, ai, langfuse, ntfy, observability, openclaw, greenhouse, code). Each ships a `docker-compose.yml`, optional `secrets/` template, and a README. |
 | `scripts/` | Operational scripts — see Common Commands. |
 | `cloud/` | Terraform for Cloudflare Tunnel + GCS backup bucket. |
 | `docs/` | Architecture, networking, backup, gitops, monitoring, naming/labels. |
@@ -261,6 +261,12 @@ See [Naming & Labeling Standards](docs/naming_labels.md) for complete reference.
 
 ---
 
+# Homepage (dashboard)
+
+Two-file pairing in `infra/homepage/`: **sections live in `settings.yaml`** (`layout:` — order, columns, icon), **components reference a section by name in another file** (`services.yaml`, `bookmarks.yaml`). A group used in `services.yaml`/`bookmarks.yaml` **must** have a matching `layout:` entry, or it renders orphaned (no icon, dumped at the end). Adding a service = add the tile under its group **and** ensure that group exists in the layout.
+
+---
+
 # CI/CD
 
 Six GitHub Actions workflows. Versioning/tagging (`release-please.yml`, `pr-title.yml`) and the PR gate (`ci.yml`) run off PRs/`main`; the **runtime deploys are release-gated** (`deploy-infra.yml`, `deploy-services.yml`), while `cloud/` Terraform stays apply-on-merge (`apply-cloud.yml`). Full release/versioning flow: **[docs/releases.md](docs/releases.md)**; deploy setup: [docs/gitops.md](docs/gitops.md).
@@ -273,7 +279,7 @@ Six GitHub Actions workflows. Versioning/tagging (`release-please.yml`, `pr-titl
 
 **Auth (cloud/).** GCP via Workload Identity Federation — no SA key in GitHub; Actions exchanges its OIDC token for a short-lived credential, restricted to this repo by the WIF provider's attribute-condition. Cloudflare via API token stored as a GH **secret** (`CLOUDFLARE_API_TOKEN`). Tunnel secret stored as `TUNNEL_SECRET`. State backend: GCS, bucket name in repo var `TF_STATE_BUCKET`, prefix hardcoded in `cloud/backend.tf`.
 
-**Variable wiring.** Both workflows declare a `TF_VAR_*` env block under the plan/apply step that maps GH variables/secrets to terraform inputs. Variables (non-secret) live at **repo level** (`gh variable list`); secrets at repo level too. The `cloud-plan` / `cloud-production` environments exist for the Deployments-tab audit trail and the optional approval gate — they hold no variables of their own today (env-level vars/secrets would override repo-level if added). Adding a new terraform variable means: add `variable "..."` to `cloud/variables.tf`, add `TF_VAR_<name>: ${{ vars.<NAME> }}` (or `secrets.<NAME>`) to **both** `ci.yml` and `apply-cloud.yml` plan/apply steps, set the GH var (`gh variable set <NAME> --body '...'`), and append it to the bootstrap script's printed checklist so future bootstraps stay accurate. List-typed terraform vars must be JSON-encoded strings (e.g. `'["a@x.com","b@y.com"]'`).
+**Variable wiring.** Both workflows declare a `TF_VAR_*` env block under the plan/apply step that maps GH variables/secrets to terraform inputs. Variables (non-secret) live at **repo level** (`gh variable list`); secrets at repo level too. The `cloud-plan` / `cloud-production` environments exist for the Deployments-tab audit trail and the optional approval gate — they hold no variables of their own today (env-level vars/secrets would override repo-level if added). Adding a new terraform variable means: add `variable "..."` to `cloud/variables.tf`, add `TF_VAR_<name>: ${{ vars.<NAME> }}` (or `secrets.<NAME>`) to **both** `ci.yml` and `apply-cloud.yml` plan/apply steps, set the GH var (`gh variable set <NAME> --body '...'`), and append it to the bootstrap script's printed checklist so future bootstraps stay accurate. List-typed terraform vars must be JSON-encoded strings (e.g. `'["a@x.com","b@y.com"]'`); **user-list vars use `${{ vars.<NAME> || '[]' }}`** so an unset GH variable defaults to an empty list (Access locked, no users) instead of crashing `terraform plan` with "Missing expression".
 
 **Adding a public service (the recipe).** (1) nginx: `server_name` + `globals.conf` backend map + `defaults.conf` HTTP→HTTPS redirect. (2) terraform: CNAME, tunnel ingress entry (host-correct `http_host_header` and `origin_server_name`), `<svc>_users` variable, Access policy + self-hosted Access app, `<svc>_url` output. (3) GH: set `<SVC>_USERS` repo variable (JSON array) and add `TF_VAR_<svc>_users` to both `ci.yml` and `apply-cloud.yml`. (4) Land the nginx change as `feat(infra):`/`fix(infra):` and **cut the infra release** — that bumps `infra/VERSION`, which makes `deploy-infra.yml` (`sync_infra.sh`) redeploy nginx (Swarm configs are immutable). Do not hand-edit VERSION. Bootstrap script (`scripts/bootstrap_cloud_cicd.sh`) prints the canonical variable/secret/environment checklist when re-run.
 

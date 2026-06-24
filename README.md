@@ -18,6 +18,7 @@ Raspberry Pi 5 Docker Swarm-based home server.
 | **[Langfuse](./services/langfuse/README.md)** | `https://langfuse.home` | LLM observability |
 | **[Ntfy](./services/ntfy/README.md)** | `https://ntfy.home` | Push notifications |
 | **[Observability](./services/observability/README.md)** | `https://grafana.home` | Grafana, Loki, Tempo, Prometheus |
+| **[Code](./services/code/README.md)** | `https://code.giocaizzi.xyz` | Remote Claude Code dev environment (CloudCLI) |
 
 **Infrastructure** (deployed with `infra/`):
 - **Portainer** — Docker management (`https://portainer.home`)
