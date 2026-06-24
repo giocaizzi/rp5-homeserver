@@ -1,0 +1,48 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "separate-pull-requests": false,
+  "include-component-in-tag": true,
+  "tag-separator": "-",
+  "bump-minor-pre-major": true,
+  "pull-request-title-pattern": "chore(repo): release${component} ${version}",
+  "group-pull-request-title-pattern": "chore(repo): release ${branch}",
+  "bootstrap-sha": "08d1d2f2257586f2bce586765e8469ab4407838b",
+  "changelog-sections": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "perf", "section": "Performance Improvements" },
+    { "type": "revert", "section": "Reverts" },
+    { "type": "refactor", "section": "Code Refactoring" },
+    { "type": "docs", "section": "Documentation", "hidden": false },
+    { "type": "build", "section": "Build System", "hidden": true },
+    { "type": "ci", "section": "Continuous Integration", "hidden": true },
+    { "type": "chore", "section": "Miscellaneous", "hidden": true },
+    { "type": "style", "section": "Styles", "hidden": true },
+    { "type": "test", "section": "Tests", "hidden": true }
+  ],
+  "packages": {
+    "infra": {
+      "release-type": "simple",
+      "component": "",
+      "version-file": "VERSION"
+    },
+    "cloud": {
+      "release-type": "simple",
+      "component": "cloud"
+    },
+    "workers/mcp-connector": {
+      "release-type": "node",
+      "component": "mcp-connector"
+    },
+    "services/adguard": { "release-type": "simple", "component": "adguard" },
+    "services/ai": { "release-type": "simple", "component": "ai" },
+    "services/firefly": { "release-type": "simple", "component": "firefly" },
+    "services/greenhouse": { "release-type": "simple", "component": "greenhouse" },
+    "services/langfuse": { "release-type": "simple", "component": "langfuse" },
+    "services/n8n": { "release-type": "simple", "component": "n8n" },
+    "services/ntfy": { "release-type": "simple", "component": "ntfy" },
+    "services/observability": { "release-type": "simple", "component": "observability" },
+    "services/openclaw": { "release-type": "simple", "component": "openclaw" },
+    "services/code": { "release-type": "simple", "component": "code" }
+  }
+}

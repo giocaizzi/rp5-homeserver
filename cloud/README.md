@@ -153,7 +153,7 @@ Two workflows manage this directory:
 | Workflow | Trigger | What it does |
 |---|---|---|
 | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) | PR (any branch → `main`) | `terraform fmt -check`, `init`, `validate`, `plan`. Posts the plan as a sticky PR comment. The `gate` job is the **single required status check** — it always runs and asserts that nothing failed, so it stays correct even when there are no `cloud/**` changes. |
-| [`.github/workflows/cd.yml`](../.github/workflows/cd.yml) | Push to `main` touching `cloud/**` | `terraform apply -auto-approve` inside the `cloud-production` environment. Toggle "Required reviewers" on that environment to add a human approval gate without changing the workflow. |
+| [`.github/workflows/apply-cloud.yml`](../.github/workflows/apply-cloud.yml) | Push to `main` touching `cloud/**` | `terraform apply -auto-approve` inside the `cloud-production` environment. Plan-reviewed-on-merge (not release-gated). Toggle "Required reviewers" on that environment to add a human approval gate without changing the workflow. |
 
 Auth model:
 

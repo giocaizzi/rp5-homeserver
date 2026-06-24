@@ -1,0 +1,129 @@
+# Release-gated deployment for services/ stacks.
+#
+# RELEASE-GATED: fires when release-please publishes a service release — tag
+# `<stack>-vX.Y.Z`. The released stack is parsed from the tag, so merging a feature
+# PR STAGES the change and merging the Release PR SHIPS it. A batched Release PR
+# cuts one release (event) per changed component; non-service releases (infra
+# `vX.Y.Z`, `cloud-*`, `mcp-connector-*`) resolve to no stack and no-op here.
+# See docs/releases.md.
+#
+# Flow: derive the stack from the release tag -> POST that stack's Portainer GitOps
+# webhook. The webhook is hit LOCALLY on the Pi (resolve the Portainer host to
+# loopback -> nginx -> Portainer), so it never leaves the Pi and never touches
+# Cloudflare's WAF (which 403s GitHub cloud egress IPs). Portainer then git-pulls
+# and redeploys that stack.
+#
+# The `pi-services` environment provides the audit trail and the optional
+# "Required reviewers" gate.
+name: Deploy services
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: 'Single stack to redeploy (e.g. n8n). Empty = no-op.'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-services-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      stacks: ${{ steps.set.outputs.stacks }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - id: set
+        env:
+          # Released tag (release event) e.g. `greenhouse-v0.2.0`; empty otherwise.
+          TAG: ${{ github.event.release.tag_name }}
+          STACK_INPUT: ${{ inputs.stack }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "${STACK_INPUT:-}" ]; then
+              echo "stacks=$(printf '["%s"]' "$STACK_INPUT")" >> "$GITHUB_OUTPUT"
+            else
+              echo "stacks=[]" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+
+          # Release event: a service tag is `<stack>-vX.Y.Z`. Strip the trailing
+          # `-vX.Y.Z` to get the stack. Bare `vX.Y.Z` (infra) and non-service
+          # components (cloud, mcp-connector) have no services/<stack> dir -> no-op.
+          stack=""
+          case "$TAG" in
+            *-v[0-9]*) stack="${TAG%-v*}" ;;
+          esac
+          if [ -n "$stack" ] && [ -d "services/$stack" ]; then
+            echo "stacks=$(printf '["%s"]' "$stack")" >> "$GITHUB_OUTPUT"
+            echo "Service release '$TAG' -> deploy stack: $stack"
+          else
+            echo "stacks=[]" >> "$GITHUB_OUTPUT"
+            echo "Release '$TAG' is not a service stack -> nothing to deploy"
+          fi
+
+  deploy:
+    needs: detect
+    if: needs.detect.outputs.stacks != '[]'
+    # Runs on the Pi self-hosted runner so it can reach Portainer locally,
+    # bypassing Cloudflare (CF WAF blocks GitHub-cloud egress IPs with 403).
+    runs-on: [self-hosted, rp5]
+    environment: pi-services
+    strategy:
+      fail-fast: false
+      matrix:
+        stack: ${{ fromJson(needs.detect.outputs.stacks) }}
+    steps:
+      - name: Trigger Portainer redeploy via webhook
+        env:
+          PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
+          # One webhook id per stack (Portainer stack -> GitOps -> Webhook).
+          # Add a line here when you give a new service stack a webhook.
+          WEBHOOK_ID_ADGUARD: ${{ secrets.WEBHOOK_ID_ADGUARD }}
+          WEBHOOK_ID_AI: ${{ secrets.WEBHOOK_ID_AI }}
+          WEBHOOK_ID_FIREFLY: ${{ secrets.WEBHOOK_ID_FIREFLY }}
+          WEBHOOK_ID_GREENHOUSE: ${{ secrets.WEBHOOK_ID_GREENHOUSE }}
+          WEBHOOK_ID_LANGFUSE: ${{ secrets.WEBHOOK_ID_LANGFUSE }}
+          WEBHOOK_ID_N8N: ${{ secrets.WEBHOOK_ID_N8N }}
+          WEBHOOK_ID_NTFY: ${{ secrets.WEBHOOK_ID_NTFY }}
+          WEBHOOK_ID_OBSERVABILITY: ${{ secrets.WEBHOOK_ID_OBSERVABILITY }}
+          WEBHOOK_ID_OPENCLAW: ${{ secrets.WEBHOOK_ID_OPENCLAW }}
+          WEBHOOK_ID_CODE: ${{ secrets.WEBHOOK_ID_CODE }}
+        run: |
+          set -euo pipefail
+          stack="${{ matrix.stack }}"
+          key="WEBHOOK_ID_$(echo "$stack" | tr '[:lower:]-' '[:upper:]_')"
+          id="${!key:-}"
+
+          if [ -z "${PORTAINER_URL:-}" ]; then
+            echo "::error::Secret PORTAINER_URL is not set"; exit 1
+          fi
+          if [ -z "$id" ]; then
+            echo "::warning::No webhook secret ($key) for stack '$stack' — skipping. Add it to deploy env + repo secrets."
+            exit 0
+          fi
+
+          # Hit Portainer locally via nginx (resolve the host to loopback), so the
+          # request never leaves the Pi and never touches Cloudflare's WAF. The
+          # GitOps webhook endpoint is unauthenticated and LAN-reachable here.
+          host="$(echo "${PORTAINER_URL#*://}" | sed 's#/.*##')"
+          echo "Redeploying '$stack' via local Portainer webhook ($host)..."
+          code="$(curl -sS -k --resolve "$host:443:127.0.0.1" -o /dev/null -w '%{http_code}' -X POST \
+            "https://$host/api/stacks/webhooks/$id")"
+
+          echo "HTTP $code"
+          case "$code" in
+            2*) echo "✓ $stack redeploy triggered" ;;
+            *)  echo "::error::Portainer webhook for '$stack' returned HTTP $code"; exit 1 ;;
+          esac

@@ -79,21 +79,6 @@ output "backup_service_account_key" {
 }
 
 # ============================================================================
-# GitOps Webhook Outputs
-# ============================================================================
-
-output "github_webhook_client_id" {
-  description = "Client ID for GitHub webhook service token"
-  value       = cloudflare_zero_trust_access_service_token.github_webhook.client_id
-}
-
-output "github_webhook_client_secret" {
-  description = "Client Secret for GitHub webhook service token"
-  value       = cloudflare_zero_trust_access_service_token.github_webhook.client_secret
-  sensitive   = true
-}
-
-# ============================================================================
 # Claude Code MCP Outputs (per-endpoint, isolated blast radius)
 # ============================================================================
 

@@ -1,0 +1,75 @@
+# Release-gated deployment for the infra/ stack.
+#
+# RELEASE-GATED: fires when release-please publishes the infra release — the bare
+# `vX.Y.Z` tag (infra is the only unprefixed component; services/cloud/worker tags
+# are `<component>-vX.Y.Z`). So merging a feature PR STAGES the change; merging the
+# Release PR (which bumps infra/VERSION) SHIPS it. The release event checks out the
+# tagged commit, so the deployed infra/ matches the released version. See
+# docs/releases.md.
+#
+# Runs on a SELF-HOSTED runner installed on the Pi (label `rp5`), so the job
+# already sits inside the LAN with the Docker socket and the secrets/ dir on
+# disk — no SSH hop, no exposed port.
+#
+# The `pi-production` environment gives:
+#   - GitHub Deployments tab visibility (audit trail of every deploy)
+#   - Optional human approval — enable "Required reviewers" in env settings
+#     to gate deploys; no workflow change needed.
+#
+# SECURITY: self-hosted runners are NOT ephemeral/isolated. This workflow only
+# triggers on a published release (post-merge) and workflow_dispatch — never on
+# pull_request — so untrusted fork code never executes on the Pi. Keep
+# "Require approval for all outside collaborators" on in Actions settings.
+name: Deploy infra
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      pull:
+        description: 'Pull latest images before deploy'
+        type: boolean
+        default: false
+      restart:
+        description: 'Full stack restart (rm + redeploy, volumes preserved)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-infra
+  cancel-in-progress: false   # never cancel an in-flight stack deploy
+
+jobs:
+  deploy:
+    # Only the infra release (bare `vX.Y.Z`); component releases (`<name>-vX.Y.Z`)
+    # don't start with `v` and are ignored here. Manual runs always deploy.
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'v') }}
+    runs-on: [self-hosted, rp5]
+    environment: pi-production
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Deploy infra stack (local mode)
+        env:
+          # User that owns /home/<user>/rp5-homeserver/infra on the Pi (the
+          # deploy path that holds the gitignored secrets/). Set as a repo var.
+          PI_SSH_USER: ${{ vars.PI_DEPLOY_USER }}
+          # Optional override of the deploy path; default is derived from the user.
+          PI_INFRA_PATH: ${{ vars.PI_INFRA_PATH }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PI_SSH_USER:-}" ]; then
+            echo "::error::Repository variable PI_DEPLOY_USER is not set"
+            exit 1
+          fi
+          chmod +x scripts/sync_infra.sh
+          args=(--local)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            [ "${{ inputs.pull }}" = "true" ]    && args+=(--pull)
+            [ "${{ inputs.restart }}" = "true" ] && args+=(--restart)
+          fi
+          ./scripts/sync_infra.sh "${args[@]}"
