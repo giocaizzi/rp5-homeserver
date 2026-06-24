@@ -1,6 +1,6 @@
 {
-  "infra": "1.13.0",
-  "cloud": "0.1.0",
+  "infra": "1.14.0",
+  "cloud": "0.2.0",
   "workers/mcp-connector": "0.1.0",
   "services/adguard": "0.1.0",
   "services/ai": "0.1.0",
@@ -11,5 +11,5 @@
   "services/ntfy": "0.1.0",
   "services/observability": "0.1.0",
   "services/openclaw": "0.1.0",
-  "services/code": "0.1.0"
+  "services/code": "0.2.0"
 }
