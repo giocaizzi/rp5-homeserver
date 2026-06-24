@@ -60,21 +60,23 @@ if subject.startswith(("fixup!", "squash!", "Merge ", "Revert ")):
 TYPES = "feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert"
 # Scope is MANDATORY (repo policy): main is squash-only and the PR title becomes
 # the commit subject release-please parses, so every subject must be
-# `type(scope): …`. Scope must be a release-please component or `repo` for
-# cross-cutting changes. See AGENTS.md "Pull requests & commit titles".
-SCOPES = "infra|cloud|workers|mcp-connector|adguard|ai|firefly|greenhouse|langfuse|n8n|ntfy|observability|openclaw|cicd|repo"
-pattern = rf"^({TYPES})\(({SCOPES})\)!?: .+"
+# `type(scope): …`. The scope is any lowercase token — release-please attributes
+# releases by file PATH, not scope, so the scope is advisory (prefer the component
+# name where one applies). See AGENTS.md "Pull requests & commit titles".
+SCOPE = r"[a-z][a-z0-9-]*"
+pattern = rf"^({TYPES})\({SCOPE}\)!?: .+"
 if re.match(pattern, subject):
     sys.exit(0)
 
 sys.stderr.write(
-    "Blocked: commit subject is not a Conventional Commit with a valid scope.\n\n"
+    "Blocked: commit subject is not a Conventional Commit with a mandatory scope.\n\n"
     f"  Subject: {subject!r}\n\n"
-    "Required: <type>(<scope>)[!]: <description>   (scope is MANDATORY)\n"
+    "Required: <type>(<scope>)[!]: <description>   (scope is MANDATORY, lowercase)\n"
     f"  type in  {{{TYPES.replace('|', ', ')}}}\n"
-    f"  scope in {{{SCOPES.replace('|', ', ')}}}  (release-please component, or `repo` for cross-cutting)\n"
+    "  scope: any lowercase token — a release-please component (infra, cloud, greenhouse, …)\n"
+    "         or a meta scope (repo, cicd, deps, code)\n"
     "  e.g. 'feat(greenhouse): add humidity sensor', 'fix(infra): correct nginx healthcheck',\n"
-    "       'ci(repo): add pr-title lint', 'chore(infra)!: drop legacy config' (! marks a breaking change)\n\n"
+    "       'chore(deps): bump actions/checkout', 'chore(infra)!: drop legacy config' (! = breaking)\n\n"
     "main is squash-only, so the PR title becomes the commit release-please parses;\n"
     "the type drives the version bump and the scope keeps attribution clear.\n"
 )

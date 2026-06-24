@@ -38,17 +38,21 @@ jobs:
         env:
           TITLE: ${{ github.event.pull_request.title }}
         run: |
+          # Conventional Commit type + a MANDATORY scope. The scope is any lowercase
+          # token (`[a-z][a-z0-9-]*`) — not an allowlist: release-please attributes
+          # releases by file PATH, not by scope, so the scope is advisory. An open
+          # vocabulary keeps the gate from rejecting bot/feature scopes (Dependabot's
+          # `deps`, `code`, `cicd`, …). Prefer the component name where one applies.
           types='feat|fix|perf|refactor|revert|docs|style|test|build|ci|chore'
-          scopes='infra|cloud|workers|mcp-connector|adguard|ai|firefly|greenhouse|langfuse|n8n|ntfy|observability|openclaw|cicd|repo'
-          re="^(${types})\((${scopes})\)!?: [a-z].*$"
+          re="^(${types})\([a-z][a-z0-9-]*\)!?: [a-z].*$"
           if [[ "$TITLE" =~ $re ]]; then
             echo "OK: $TITLE"
           else
-            echo "::error::PR title must be 'type(scope): description' with a mandatory scope."
+            echo "::error::PR title must be 'type(scope): description' with a mandatory lowercase scope."
             echo "  Title: $TITLE"
             echo "  type  in: ${types//|/, }"
-            echo "  scope in: ${scopes//|/, }  (release-please component, or 'repo' for cross-cutting)"
-            echo "  subject must start lowercase. e.g. 'feat(greenhouse): add humidity sensor',"
-            echo "                                      'ci(repo): add pr-title lint'"
+            echo "  scope: any lowercase token — a release-please component (infra, cloud, greenhouse, …),"
+            echo "         or a meta scope (repo, cicd, deps, code). Subject must start lowercase."
+            echo "  e.g. 'feat(greenhouse): add humidity sensor', 'chore(deps): bump actions/checkout'"
             exit 1
           fi
