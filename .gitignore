@@ -27,3 +27,7 @@ Thumbs.db
 
 # Sub-agent worktrees (created by the harness; do not track).
 .claude/worktrees/
+
+# Personal Claude Code settings (per-user hooks, permissions). The committed
+# .claude/settings.json holds shared config; this file is local-only.
+.claude/settings.local.json

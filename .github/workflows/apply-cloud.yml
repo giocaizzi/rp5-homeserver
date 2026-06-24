@@ -1,18 +1,25 @@
 # Continuous deployment for cloud/ Terraform on push to main.
 #
+# Terraform is delivered PLAN-REVIEWED-ON-MERGE, NOT release-gated: ci.yml posts
+# the plan on the PR, merging applies it. (release-please still versions cloud as
+# `cloud-vX.Y.Z` for the changelog/tag record — it does not gate this apply.)
+# Release-gating Terraform would let main diverge from applied infra until a
+# release is cut; only the runtime deploys (infra stack, services) are
+# release-gated. See docs/releases.md.
+#
 # The `cloud-production` environment is what gives us:
 #   - GitHub Deployments tab visibility (audit trail of every apply)
 #   - Per-env secrets (CLOUDFLARE_API_TOKEN scoped to this env only)
 #   - Optional human approval — enable "Required reviewers" in env settings
 #     to gate applies; no workflow change needed.
-name: CD
+name: Apply cloud
 
 on:
   push:
     branches: [main]
     paths:
       - 'cloud/**'
-      - '.github/workflows/cd.yml'
+      - '.github/workflows/apply-cloud.yml'
 
 permissions:
   contents: read

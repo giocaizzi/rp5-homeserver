@@ -1,26 +1,25 @@
-# Continuous deployment for services/ stacks on push to main.
+# Release-gated deployment for services/ stacks.
 #
-# Replaces the old "GitHub repo webhook -> Portainer" wiring with a first-class
-# GitHub Actions deployment, so service deploys get the same Deployments-tab
-# audit trail and optional approval gate as cloud/ and infra/.
+# RELEASE-GATED: fires when release-please publishes a service release — tag
+# `<stack>-vX.Y.Z`. The released stack is parsed from the tag, so merging a feature
+# PR STAGES the change and merging the Release PR SHIPS it. A batched Release PR
+# cuts one release (event) per changed component; non-service releases (infra
+# `vX.Y.Z`, `cloud-*`, `mcp-connector-*`) resolve to no stack and no-op here.
+# See docs/releases.md.
 #
-# Flow: detect which services/<stack>/ changed in the push -> for each, POST the
-# stack's Portainer GitOps webhook. The call goes through the Cloudflare tunnel
-# and is authenticated with the github-webhooks CF Access service token
-# (already provisioned in cloud/main.tf: cloudflare_zero_trust_access_service_token.github_webhook
-# + the portainer webhook-bypass policy). Portainer then git-pulls and redeploys
-# that stack on the Pi.
+# Flow: derive the stack from the release tag -> POST that stack's Portainer GitOps
+# webhook. The webhook is hit LOCALLY on the Pi (resolve the Portainer host to
+# loopback -> nginx -> Portainer), so it never leaves the Pi and never touches
+# Cloudflare's WAF (which 403s GitHub cloud egress IPs). Portainer then git-pulls
+# and redeploys that stack.
 #
 # The `pi-services` environment provides the audit trail and the optional
 # "Required reviewers" gate.
 name: Deploy services
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'services/**'
-      - '.github/workflows/deploy-services.yml'
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       stack:
@@ -42,39 +41,37 @@ jobs:
       stacks: ${{ steps.set.outputs.stacks }}
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
 
       - id: set
+        env:
+          # Released tag (release event) e.g. `greenhouse-v0.2.0`; empty otherwise.
+          TAG: ${{ github.event.release.tag_name }}
+          STACK_INPUT: ${{ inputs.stack }}
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            s="${{ inputs.stack }}"
-            if [ -n "$s" ]; then
-              echo "stacks=$(printf '["%s"]' "$s")" >> "$GITHUB_OUTPUT"
+            if [ -n "${STACK_INPUT:-}" ]; then
+              echo "stacks=$(printf '["%s"]' "$STACK_INPUT")" >> "$GITHUB_OUTPUT"
             else
               echo "stacks=[]" >> "$GITHUB_OUTPUT"
             fi
             exit 0
           fi
 
-          base="${{ github.event.before }}"
-          head="${{ github.sha }}"
-          # First push / forced push: before may be all-zeros or unreachable.
-          if ! git rev-parse --quiet --verify "${base}^{commit}" >/dev/null 2>&1; then
-            base="$(git rev-parse --quiet --verify HEAD~1 || echo "$head")"
-          fi
-
-          changed="$(git diff --name-only "$base" "$head" -- 'services/**' \
-            | awk -F/ 'NF>=2 {print $2}' | sort -u)"
-
-          if [ -z "$changed" ]; then
-            echo "stacks=[]" >> "$GITHUB_OUTPUT"
+          # Release event: a service tag is `<stack>-vX.Y.Z`. Strip the trailing
+          # `-vX.Y.Z` to get the stack. Bare `vX.Y.Z` (infra) and non-service
+          # components (cloud, mcp-connector) have no services/<stack> dir -> no-op.
+          stack=""
+          case "$TAG" in
+            *-v[0-9]*) stack="${TAG%-v*}" ;;
+          esac
+          if [ -n "$stack" ] && [ -d "services/$stack" ]; then
+            echo "stacks=$(printf '["%s"]' "$stack")" >> "$GITHUB_OUTPUT"
+            echo "Service release '$TAG' -> deploy stack: $stack"
           else
-            json="$(printf '%s\n' $changed | jq -R . | jq -cs .)"
-            echo "stacks=$json" >> "$GITHUB_OUTPUT"
+            echo "stacks=[]" >> "$GITHUB_OUTPUT"
+            echo "Release '$TAG' is not a service stack -> nothing to deploy"
           fi
-          echo "Changed stacks: ${changed:-<none>}"
 
   deploy:
     needs: detect

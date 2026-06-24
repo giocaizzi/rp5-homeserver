@@ -64,6 +64,7 @@ flowchart TB
 | [Networking](./networking.md) | Network topology, DNS resolution, nginx routing |
 | [Backup](./backup.md) | Backrest setup, restore procedures |
 | [GitOps](./gitops.md) | Portainer webhooks, automated deployment |
+| [Releases](./releases.md) | release-please versioning, tags, changelogs, commit/PR-title contract |
 | [Monitoring](./monitoring.md) | Observability stack (Grafana, Loki, Tempo, Prometheus) |
 | [Naming and Labels](./naming_labels.md) | Docker label schema for service identification |
 
