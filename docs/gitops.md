@@ -1,22 +1,26 @@
 # GitOps
 
-End-to-end deployment driven by GitHub Actions + GitHub Environments. Every
-layer deploys from `main` with an audit trail (Deployments tab) and an optional
-human approval gate (env "Required reviewers"), mirroring the `cloud/` pipeline.
+End-to-end deployment driven by GitHub Actions + GitHub Environments, with an
+audit trail (Deployments tab) and an optional human approval gate (env "Required
+reviewers"). The **runtime layers (`infra/`, `services/`) are release-gated** —
+they deploy when release-please publishes the component's tag, not on every merge.
+`cloud/` Terraform stays apply-on-merge. The release/versioning flow itself lives
+in [Releases](./releases.md); this page covers deploy **setup**.
 
 ## Deployment Methods
 
 | Layer | Trigger | Engine | Environment |
 |-------|---------|--------|-------------|
 | `cloud/` | push to `main` (`cloud/**`) | GH Actions + Terraform (WIF) | `cloud-production` |
-| `infra/` | push to `main` (`infra/**`) | GH Actions on **self-hosted runner** (Pi) → `sync_infra.sh --local` | `pi-production` |
-| `services/` | push to `main` (`services/**`) | GH Actions (Pi runner) → local Portainer GitOps webhook | `pi-services` |
+| `infra/` | **`infra` release** (`v*`) | GH Actions on **self-hosted runner** (Pi) → `sync_infra.sh --local` | `pi-production` |
+| `services/` | **service release** (`<stack>-v*`) | GH Actions (Pi runner) → local Portainer GitOps webhook | `pi-services` |
 
 ```
-Edit locally → PR → merge to main
-   ├─ cloud/**     → cd.yml             → terraform apply           (cloud-production)
-   ├─ infra/**     → deploy-infra.yml   → runner on Pi: stack deploy (pi-production)
-   └─ services/**  → deploy-services.yml→ POST Portainer webhook(s)  (pi-services)
+Edit locally → PR → merge to main → release-please Release PR → merge
+   ├─ cloud/**       → apply-cloud.yml    → terraform apply              (cloud-production)
+   │                    (applies on the cloud/** merge — not release-gated)
+   ├─ infra release  → deploy-infra.yml   → runner on Pi: stack deploy   (pi-production)
+   └─ service release→ deploy-services.yml→ POST that stack's webhook     (pi-services)
 ```
 
 ---
@@ -53,8 +57,8 @@ hop. In `--local` mode the script **excludes `secrets/` from the rsync** so the
    **Required reviewers** if you want a manual gate before each deploy.
 
 4. **Security** (Settings → Actions → General): keep **"Require approval for all
-   outside collaborators"** on. `deploy-infra.yml` triggers only on push to
-   `main` and `workflow_dispatch` — never on `pull_request` — so untrusted fork
+   outside collaborators"** on. `deploy-infra.yml` triggers only on a published
+   `release` and `workflow_dispatch` — never on `pull_request` — so untrusted fork
    code never runs on the Pi.
 
 ### Manual deploy / options
@@ -66,18 +70,23 @@ PI_SSH_USER=<user> ./scripts/sync_infra.sh            # in-place update
 PI_SSH_USER=<user> ./scripts/sync_infra.sh --pull     # pull images first
 ```
 
-> Bump `infra/VERSION` only when configs/topology change — a changed VERSION
-> forces `docker stack rm infra` + redeploy (Swarm configs are immutable).
+> `infra/VERSION` is **release-please-managed** — don't hand-edit it. It bumps
+> when the `infra` release is cut (a `feat`/`fix`/`refactor`/`perf` scoped to
+> `infra/**`), and a changed VERSION forces `docker stack rm infra` + redeploy
+> (Swarm configs are immutable). Use `chore(infra):`/`docs(infra):` to change
+> `infra/**` without a version bump (and so without a redeploy). See
+> [Releases](./releases.md).
 
 ---
 
 ## services/ — Portainer webhook from GitHub Actions
 
-`deploy-services.yml` detects which `services/<stack>/` changed in the push, then
-the `deploy` job runs on the **Pi self-hosted runner** and POSTs that stack's
-**Portainer GitOps webhook** locally (resolving the Portainer host to loopback,
-so the request hits nginx → Portainer without leaving the Pi). Portainer then
-git-pulls and redeploys only the changed stack(s).
+`deploy-services.yml` fires on a published **service release** (`<stack>-v*`),
+parses the stack name from the tag, then the `deploy` job runs on the **Pi
+self-hosted runner** and POSTs that stack's **Portainer GitOps webhook** locally
+(resolving the Portainer host to loopback, so the request hits nginx → Portainer
+without leaving the Pi). Portainer then git-pulls and redeploys that stack.
+Non-service releases (`infra`, `cloud`, `mcp-connector`) no-op.
 
 > Why local, not through Cloudflare: Cloudflare's WAF blocks GitHub's cloud
 > egress IPs with HTTP 403, so a `ubuntu-latest` runner cannot reach the webhook
