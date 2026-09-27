@@ -1,5 +1,5 @@
 {
-  "infra": "1.15.2",
+  "infra": "1.15.3",
   "cloud": "0.3.0",
   "workers/mcp-connector": "0.1.0",
   "services/adguard": "0.1.0",

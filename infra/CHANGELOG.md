@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.3](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.2...v1.15.3) (2026-09-27)
+
+
+### Bug Fixes
+
+* **infra:** pin homepage image to the v2 major tag ([#186](https://github.com/giocaizzi/rp5-homeserver/issues/186)) ([dd94671](https://github.com/giocaizzi/rp5-homeserver/commit/dd94671c2b1161a6dcb50385002f1de5f7ddd8d1))
+
 ## [1.15.2](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.1...v1.15.2) (2026-09-27)
 
 
