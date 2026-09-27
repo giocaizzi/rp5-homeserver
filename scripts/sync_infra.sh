@@ -32,6 +32,7 @@ RSYNC_EXCLUDES=()
 FILES_SYNCED=0
 FILES_DELETED=0
 SERVICES_TOTAL=0
+NGINX_CHANGED=false   # nginx/ is bind-mounted: content changes need an explicit reload
 
 # Colors
 RED='\033[0;31m'
@@ -230,6 +231,14 @@ sync_files() {
         remote "mkdir -p $PI_INFRA_PATH" 2>/dev/null
     fi
 
+    # Detect nginx/ content changes by checksum (mtimes differ on every fresh CI
+    # checkout). Match only changed/new files and deletions, not attribute-only lines.
+    local nginx_diff
+    nginx_diff=$(rsync -rcn --delete -i "$LOCAL_INFRA_PATH/nginx/" "${RSYNC_DEST}nginx/" 2>/dev/null || true)
+    if grep -qE '^\*deleting|^[<>]f[c+]' <<< "$nginx_diff"; then
+        NGINX_CHANGED=true
+    fi
+
     # Get rsync dry-run output to count changes
     local rsync_output
     rsync_output=$(rsync -avz --delete "${RSYNC_EXCLUDES[@]}" --dry-run "$LOCAL_INFRA_PATH/" "$RSYNC_DEST" 2>/dev/null | grep -E '^[<>ch.]|deleting' || true)
@@ -365,6 +374,7 @@ deploy_stack() {
             log_info "Would deploy new stack"
         else
             log_info "Would update existing stack (in-place)"
+            [ "$NGINX_CHANGED" = true ] && log_info "Would test + reload nginx config" || true
         fi
         
         # Parse compose file to show services (only under services: section)
@@ -393,35 +403,6 @@ deploy_stack() {
         return 0
     fi
     
-    # Check if configs need update (content changed) - requires full restart
-    local local_ver remote_config_exists needs_restart=false
-    local_ver=$(cat "$LOCAL_INFRA_PATH/VERSION" 2>/dev/null | tr -d '\n' || echo "")
-    remote_config_exists=$(remote "docker config ls --format '{{.Name}}' | grep -q '^infra_version_config$' && echo yes || echo no" 2>/dev/null)
-
-    if [ "$remote_config_exists" = "yes" ] && [ "$is_new" = false ]; then
-        local remote_ver
-        remote_ver=$(remote "docker config inspect infra_version_config --format '{{json .Spec.Data}}' 2>/dev/null | tr -d '\"' | base64 -d 2>/dev/null | tr -d '\n' || echo """)
-        if [ "$local_ver" != "$remote_ver" ]; then
-            log_warning "Config changed (v$remote_ver → v$local_ver) — requires restart"
-            needs_restart=true
-        fi
-    fi
-    
-    # If config changed, need to remove stack first to allow config update
-    if [ "$needs_restart" = true ]; then
-        log_info "Removing stack for config update..."
-        remote "docker stack rm infra" >/dev/null 2>&1 || true
-        # Wait for removal
-        local attempts=0
-        while stack_exists && [ $attempts -lt 30 ]; do
-            sleep 2
-            ((attempts++)) || true
-        done
-        # Remove the config
-        remote "docker config rm infra_version_config" >/dev/null 2>&1 || true
-        log_success "Stack removed"
-    fi
-    
     # Deploy (docker stack deploy handles both create and update)
     log_info "Deploying..."
     if remote "cd $PI_INFRA_PATH && docker stack deploy -c docker-compose.yml infra" >/dev/null 2>&1; then
@@ -435,7 +416,35 @@ deploy_stack() {
         return 1
     fi
     
+    # Bind-mounted nginx config isn't re-read by an in-place deploy
+    if [ "$is_new" = false ] && [ "$NGINX_CHANGED" = true ]; then
+        reload_nginx
+    fi
+    
     SERVICES_TOTAL=$(get_service_count)
+}
+
+# Validate and hot-reload nginx in the running proxy task
+reload_nginx() {
+    local cid output
+    cid=$(remote "docker ps -q --filter label=com.docker.swarm.service.name=infra_proxy | head -n1" 2>/dev/null || true)
+    if [ -z "$cid" ]; then
+        log_warning "Proxy container not found — nginx reload skipped"
+        return 0
+    fi
+
+    if ! output=$(remote "docker exec $cid nginx -t" 2>&1); then
+        log_error "nginx config test failed — running config kept"
+        echo "$output" >&2
+        return 1
+    fi
+
+    if remote "docker exec $cid nginx -s reload" >/dev/null 2>&1; then
+        log_success "nginx config reloaded"
+    else
+        log_error "nginx reload failed"
+        return 1
+    fi
 }
 
 # Check service health
