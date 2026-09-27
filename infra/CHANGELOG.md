@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.0...v1.15.1) (2026-09-27)
+
+
+### Bug Fixes
+
+* **infra:** point homepage healthcheck at 127.0.0.1/api/healthcheck ([#175](https://github.com/giocaizzi/rp5-homeserver/issues/175)) ([0502b87](https://github.com/giocaizzi/rp5-homeserver/commit/0502b87a48ba528ce6495eae18d3e603066cb3d6))
+
 ## [1.15.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.14.0...v1.15.0) (2026-09-27)
 
 
