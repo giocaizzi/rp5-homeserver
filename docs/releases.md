@@ -52,7 +52,7 @@ The runtime stacks deploy **when their release is published**, not on merge to `
 
 - The deploy workflows trigger on `release: [published]`. Because release-please authors the release with the **GitHub App** token (not `GITHUB_TOKEN`), the `release` event *does* fire downstream workflows.
 - A batched Release PR publishes **one release per changed component**, so each fires its own deploy; `deploy-services.yml` parses the stack from the tag and no-ops on non-service releases (`infra`, `cloud`, `mcp-connector`).
-- The release event checks out the **tagged commit**, so the deployed stack matches the released version. Cutting an `infra` release bumps `infra/VERSION`, which `sync_infra.sh` treats as the immutable-config redeploy trigger.
+- The release event checks out the **tagged commit**, so the deployed stack matches the released version. `sync_infra.sh` deploys in place and hot-reloads nginx (`nginx -t` + `nginx -s reload`) when files under `infra/nginx/` changed.
 - Both Pi deploys also accept **`workflow_dispatch`** for manual runs (infra: `pull`/`restart`; services: a single `stack`).
 - **Why `cloud/` is excluded:** Terraform is desired-state — release-gating it would let `main` diverge from applied infra until a release is cut. Its review gate is the plan (`ci.yml`), and merge applies it. release-please still versions `cloud` (`cloud-vX.Y.Z`) for the changelog/tag record.
 
@@ -66,7 +66,7 @@ The runtime stacks deploy **when their release is published**, not on merge to `
 
 ### `infra/VERSION` is release-managed
 
-`infra/VERSION` is the `infra` component's `version-file`: release-please rewrites it in place (kept as a bare `X.Y.Z` string, so `homepage` and `sync_infra.sh` read it unchanged). Because [`sync_infra.sh`](../scripts/sync_infra.sh) treats a changed `VERSION` as an immutable-config trigger, **cutting an `infra` release implies an infra stack redeploy on the next sync.** To change `infra/**` *without* a redeploy, use a non-releasing type (`chore(infra):` / `docs(infra):`).
+`infra/VERSION` is the `infra` component's `version-file`: release-please rewrites it in place (kept as a bare `X.Y.Z` string, so `homepage` and `sync_infra.sh` read it unchanged). Because the `infra` release fires `deploy-infra.yml`, **cutting an `infra` release implies an in-place infra deploy via [`sync_infra.sh`](../scripts/sync_infra.sh).** To change `infra/**` *without* a deploy, use a non-releasing type (`chore(infra):` / `docs(infra):`).
 
 ## Commit contract → bump
 
