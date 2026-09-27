@@ -160,7 +160,10 @@ get_compose_secrets() {
         return
     fi
 
-    grep -A1 "external: true" "$compose_file" 2>/dev/null | grep "name:" | sed 's/.*name: //' | tr -d ' ' | sort -u
+    # Only the top-level `secrets:` block (external networks/configs also use
+    # `external: true` + `name:`). `|| true`: no match must not trip set -e.
+    awk '/^secrets:/{f=1; next} /^[a-z]/{f=0} f' "$compose_file" \
+        | grep -A1 "external: true" | grep "name:" | sed 's/.*name: //' | tr -d ' ' | sort -u || true
 }
 
 # Get local secret file path for a secret name
