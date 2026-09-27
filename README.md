@@ -19,6 +19,7 @@ Raspberry Pi 5 Docker Swarm-based home server.
 | **[Ntfy](./services/ntfy/README.md)** | `https://ntfy.home` | Push notifications |
 | **[Observability](./services/observability/README.md)** | `https://grafana.home` | Grafana, Loki, Tempo, Prometheus |
 | **[Code](./services/code/README.md)** | `https://code.giocaizzi.xyz` | Remote Claude Code dev environment (CloudCLI) |
+| **[CRM](./services/crm/README.md)** | `https://crm.giocaizzi.xyz` | Twenty CRM (sales pipeline, API + MCP for Ticky/Claude) |
 
 **Infrastructure** (deployed with `infra/`):
 - **Portainer** — Docker management (`https://portainer.home`)
