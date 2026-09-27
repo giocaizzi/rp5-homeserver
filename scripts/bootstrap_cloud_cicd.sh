@@ -162,6 +162,7 @@ GitHub Actions repository variables (Settings → Variables → Actions):
   GRAFANA_USERS             <JSON array string>
   GREENHOUSE_USERS          <JSON array string>
   CODE_USERS                <JSON array string>
+  CRM_USERS                 <JSON array string>
   TF_VERSION                1.9.8 (optional override)
 
 GitHub Environments to create (Settings → Environments):

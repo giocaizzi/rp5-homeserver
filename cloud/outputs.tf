@@ -53,6 +53,11 @@ output "code_url" {
   value       = "https://code.${var.zone_name}"
 }
 
+output "crm_url" {
+  description = "The public URL for Twenty CRM (SERVER_URL)"
+  value       = "https://crm.${var.zone_name}"
+}
+
 # ============================================================================
 # GCP Outputs
 # ============================================================================
@@ -112,6 +117,28 @@ output "claude_greenhouse_mcp_client_id" {
 output "claude_greenhouse_mcp_client_secret" {
   description = "Client Secret for the greenhouse MCP service token (CF-Access-Client-Secret)"
   value       = cloudflare_zero_trust_access_service_token.claude_greenhouse_mcp.client_secret
+  sensitive   = true
+}
+
+output "claude_crm_mcp_client_id" {
+  description = "Client ID for the Twenty CRM MCP service token (CF-Access-Client-Id)"
+  value       = cloudflare_zero_trust_access_service_token.claude_crm_mcp.client_id
+}
+
+output "claude_crm_mcp_client_secret" {
+  description = "Client Secret for the Twenty CRM MCP service token (CF-Access-Client-Secret)"
+  value       = cloudflare_zero_trust_access_service_token.claude_crm_mcp.client_secret
+  sensitive   = true
+}
+
+output "ticky_crm_api_client_id" {
+  description = "Client ID for the Ticky -> Twenty CRM API service token (CF-Access-Client-Id)"
+  value       = cloudflare_zero_trust_access_service_token.ticky_crm_api.client_id
+}
+
+output "ticky_crm_api_client_secret" {
+  description = "Client Secret for the Ticky -> Twenty CRM API service token (CF-Access-Client-Secret)"
+  value       = cloudflare_zero_trust_access_service_token.ticky_crm_api.client_secret
   sensitive   = true
 }
 

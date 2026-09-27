@@ -91,6 +91,12 @@ variable "code_users" {
   default     = []
 }
 
+variable "crm_users" {
+  description = "List of email addresses allowed to access the Twenty CRM UI (owner + sales staff)"
+  type        = list(string)
+  default     = []
+}
+
 # ============================================================================
 # GCP Variables
 # ============================================================================
