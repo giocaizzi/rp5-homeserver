@@ -185,7 +185,7 @@ services:
     command: ["yarn", "worker:prod"]
     environment:
       <<: *twenty-env
-      NODE_OPTIONS: "--max-old-space-size=384"
+      NODE_OPTIONS: "--max-old-space-size=768"   # 384 OOMs during boot (~370M heap)
       DISABLE_DB_MIGRATIONS: "true"               # server runs migrations
       DISABLE_CRON_JOBS_REGISTRATION: "true"      # server registers crons
     secrets:
@@ -208,7 +208,7 @@ services:
         com.giocaizzi.tier: "extra"
       resources:
         limits:
-          memory: 512M
+          memory: 1024M
     logging:
       <<: *logging-base
 
