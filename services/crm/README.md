@@ -40,7 +40,7 @@ Cloudflare Access ─► nginx ─► crm-server ─┬─► crm-db
 | `/rest`, `/graphql` | CF Access service token `ticky-crm-api` + Twenty API key (Bearer) |
 | `/mcp` | CF Access service token `claude-crm-mcp` (injected by `workers/mcp-connector`) + Twenty API key (Bearer) |
 
-**Pi tuning:** memory limits server 1G / worker 512M / db 256M / redis 64M (~1.8G cap), Node heaps capped via `NODE_OPTIONS`, `PG_POOL_MAX_CONNECTIONS=5`, telemetry off. First boot (DB init + upgrade) is the memory peak — if `crm_server` is OOM-killed there, temporarily raise its limit.
+**Pi tuning:** memory limits server 1G / worker 1G / db 256M / redis 64M (~2.3G cap; Node heaps 768M each), Node heaps capped via `NODE_OPTIONS`, `PG_POOL_MAX_CONNECTIONS=5`, telemetry off. First boot (DB init + upgrade) is the memory peak — if `crm_server` is OOM-killed there, temporarily raise its limit.
 
 ---
 
