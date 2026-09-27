@@ -8,13 +8,13 @@
 #
 # Optional environment variables:
 #   PI_HOST - Pi hostname or IP (default: pi.local)
-#   PI_INFRA_PATH - Remote infra directory path
+#   PI_INFRA_PATH - Infra deploy path on the Pi (default: /home/$PI_SSH_USER/rp5-homeserver/infra)
 
 set -euo pipefail
 
 # Global configuration
 PI_HOST="${PI_HOST:-pi.local}"
-PI_INFRA_PATH=""
+PI_INFRA_PATH="${PI_INFRA_PATH:-}"
 LOCAL_INFRA_PATH="$(cd "$(dirname "$0")/../infra" && pwd)"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
@@ -74,7 +74,8 @@ Required environment variables:
 
 Optional environment variables:
   PI_HOST         Pi hostname or IP (default: pi.local)
-  PI_INFRA_PATH   Remote infra directory path
+  PI_INFRA_PATH   Infra deploy path on the Pi, also with --local
+                  (default: /home/\$PI_SSH_USER/rp5-homeserver/infra)
 
 Options:
   --dry-run       Show what would be done without executing
@@ -426,7 +427,22 @@ deploy_stack() {
 
 # Validate and hot-reload nginx in the running proxy task
 reload_nginx() {
-    local cid output
+    local cid output state waited=0
+    # The same deploy may be rolling the proxy (stop-first): wait for the rollout
+    # to settle so we never exec into a stopping task. Bounded; a still-rolling
+    # proxy is skipped since its new task loads the new config on start anyway.
+    while :; do
+        state=$(remote "docker service inspect infra_proxy --format '{{if .UpdateStatus}}{{.UpdateStatus.State}}{{end}}'" 2>/dev/null || true)
+        case "$state" in updating|rollback_started) ;; *) break ;; esac
+        if [ "$waited" -ge 60 ]; then
+            log_warning "Proxy rollout still in progress after 60s — nginx reload skipped"
+            return 0
+        fi
+        sleep 2
+        waited=$((waited + 2))
+    done
+
+    # docker ps lists newest first
     cid=$(remote "docker ps -q --filter label=com.docker.swarm.service.name=infra_proxy | head -n1" 2>/dev/null || true)
     if [ -z "$cid" ]; then
         log_warning "Proxy container not found — nginx reload skipped"
