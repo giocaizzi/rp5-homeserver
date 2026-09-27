@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.2](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.1...v1.15.2) (2026-09-27)
+
+
+### Bug Fixes
+
+* **infra:** stop rate-limiting Twenty CRM asset chunks ([#177](https://github.com/giocaizzi/rp5-homeserver/issues/177)) ([6138638](https://github.com/giocaizzi/rp5-homeserver/commit/61386384bd9e54f5dd35508ea41d1583bceb7dd5))
+
 ## [1.15.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.0...v1.15.1) (2026-09-27)
 
 
