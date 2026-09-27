@@ -134,6 +134,16 @@ resource "cloudflare_dns_record" "code" {
   proxied = true
 }
 
+# Creates the CNAME record that routes crm.${var.zone_name} to the tunnel.
+resource "cloudflare_dns_record" "crm" {
+  zone_id = var.zone_id
+  name    = "crm"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
 # Creates the CNAME record that routes otel.${var.zone_name} to the tunnel.
 # OTLP HTTP ingestion: CF Access bypass on /v1/* + Alloy bearer auth.
 resource "cloudflare_dns_record" "otel" {
@@ -242,6 +252,15 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
         }
       },
       {
+        hostname = "crm.${var.zone_name}"
+        service  = "https://infra-proxy:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "crm.${var.zone_name}"
+          origin_server_name = "crm.${var.zone_name}"
+        }
+      },
+      {
         service = "http_status:404"
       }
     ]
@@ -327,6 +346,15 @@ resource "cloudflare_zero_trust_access_policy" "code_users" {
   decision   = "allow"
   include = [
     for email in var.code_users : { email = { email = email } }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_policy" "crm_users" {
+  account_id = var.cloudflare_account_id
+  name       = "crm-users"
+  decision   = "allow"
+  include = [
+    for email in var.crm_users : { email = { email = email } }
   ]
 }
 
@@ -453,6 +481,21 @@ resource "cloudflare_zero_trust_access_application" "code_policy" {
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.code_users.id
+      precedence = 1
+    }
+  ]
+}
+
+# Twenty CRM UI. Whole-host email gate; machine paths (/rest, /graphql, /mcp)
+# get their own path-scoped apps below.
+resource "cloudflare_zero_trust_access_application" "crm_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "crm.${var.zone_name}"
+  domain     = "crm.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.crm_users.id
       precedence = 1
     }
   ]
@@ -651,6 +694,106 @@ resource "cloudflare_zero_trust_access_application" "greenhouse_mcp_policy" {
     },
     {
       id         = cloudflare_zero_trust_access_policy.greenhouse_users.id
+      precedence = 2
+    }
+  ]
+}
+
+# --- Twenty CRM MCP -------------------------------------------------------
+# Same shape as greenhouse: service-token bypass for the mcp-connector Worker,
+# email fallthrough so a browser session still works. Twenty API key (Bearer)
+# is the second factor.
+
+resource "cloudflare_zero_trust_access_service_token" "claude_crm_mcp" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-crm-mcp"
+}
+
+resource "cloudflare_zero_trust_access_policy" "claude_crm_mcp_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-crm-mcp-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.claude_crm_mcp.id
+      }
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "crm_mcp_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "crm-mcp.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "crm.${var.zone_name}/mcp"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.claude_crm_mcp_bypass.id
+      precedence = 1
+    },
+    {
+      id         = cloudflare_zero_trust_access_policy.crm_users.id
+      precedence = 2
+    }
+  ]
+}
+
+# --- Twenty CRM API (Ticky backend) ---------------------------------------
+# Ticky's Cloud Run services call /rest and /graphql server-to-server with this
+# service token + a Twenty API key. Email fallthrough (precedence 2) is required:
+# the Twenty UI itself calls /graphql from the browser.
+
+resource "cloudflare_zero_trust_access_service_token" "ticky_crm_api" {
+  account_id = var.cloudflare_account_id
+  name       = "ticky-crm-api"
+}
+
+resource "cloudflare_zero_trust_access_policy" "ticky_crm_api_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "ticky-crm-api-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.ticky_crm_api.id
+      }
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "crm_api_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "crm-api.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "crm.${var.zone_name}/rest"
+    },
+    {
+      type = "public"
+      uri  = "crm.${var.zone_name}/graphql"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.ticky_crm_api_bypass.id
+      precedence = 1
+    },
+    {
+      id         = cloudflare_zero_trust_access_policy.crm_users.id
       precedence = 2
     }
   ]
