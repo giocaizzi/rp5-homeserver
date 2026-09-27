@@ -289,7 +289,7 @@ services:
 
   # Homepage - Modern application dashboard
   dashboard:
-    image: ghcr.io/gethomepage/homepage:latest
+    image: ghcr.io/gethomepage/homepage:v2   # major-pinned: Shepherd tracks v2.x only (see #185)
     hostname: infra-dashboard
     expose:
       - "3000"
