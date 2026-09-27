@@ -11,5 +11,6 @@
   "services/ntfy": "0.1.0",
   "services/observability": "0.1.0",
   "services/openclaw": "0.1.0",
-  "services/code": "0.2.0"
+  "services/code": "0.2.0",
+  "services/crm": "0.1.0"
 }

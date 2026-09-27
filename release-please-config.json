@@ -43,6 +43,7 @@
     "services/ntfy": { "release-type": "simple", "component": "ntfy" },
     "services/observability": { "release-type": "simple", "component": "observability" },
     "services/openclaw": { "release-type": "simple", "component": "openclaw" },
-    "services/code": { "release-type": "simple", "component": "code" }
+    "services/code": { "release-type": "simple", "component": "code" },
+    "services/crm": { "release-type": "simple", "component": "crm" }
   }
 }
