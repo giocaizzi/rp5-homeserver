@@ -72,10 +72,10 @@ PI_SSH_USER=<user> ./scripts/sync_infra.sh --pull     # pull images first
 
 > `infra/VERSION` is **release-please-managed** — don't hand-edit it. It bumps
 > when the `infra` release is cut (a `feat`/`fix`/`refactor`/`perf` scoped to
-> `infra/**`), and a changed VERSION forces `docker stack rm infra` + redeploy
-> (Swarm configs are immutable). Use `chore(infra):`/`docs(infra):` to change
-> `infra/**` without a version bump (and so without a redeploy). See
-> [Releases](./releases.md).
+> `infra/**`), which fires the in-place deploy. Changed files under
+> `infra/nginx/` (bind-mounted) are applied with `nginx -t` + `nginx -s reload`.
+> Use `chore(infra):`/`docs(infra):` to change `infra/**` without a version bump
+> (and so without a deploy). See [Releases](./releases.md).
 
 ---
 
