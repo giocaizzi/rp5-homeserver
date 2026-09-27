@@ -51,6 +51,12 @@
             icon: n8n.png
             ping: http://n8n_app:5678
 
+      - CRM:
+            href: https://crm.{{HOMEPAGE_FILE_DOMAIN}}
+            description: Twenty CRM
+            icon: mdi-account-group-#6366f1
+            ping: http://crm_server:3000/healthz
+
       - ntfy:
             href: https://ntfy.home
             description: Push notification service
