@@ -1,0 +1,227 @@
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "crm"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
+# Shared by server + worker. Twenty has no *_FILE support, so the entrypoint
+# wrapper below builds PG_DATABASE_URL / ENCRYPTION_KEY from Swarm secrets.
+x-twenty-env: &twenty-env
+  SERVER_URL: "https://crm.giocaizzi.xyz"
+  REDIS_URL: "redis://crm-redis:6379"
+  STORAGE_TYPE: "local"
+  PG_POOL_MAX_CONNECTIONS: "5"
+  TELEMETRY_ENABLED: "false"
+
+# Wraps the original /app/entrypoint.sh (migrations + cron registration),
+# then execs the service command passed as args.
+x-twenty-entrypoint: &twenty-entrypoint
+  - /bin/sh
+  - -c
+  - |
+    export PG_DATABASE_URL="postgres://twenty:$$(cat /run/secrets/postgres_password)@crm-db:5432/twenty"
+    export ENCRYPTION_KEY="$$(cat /run/secrets/encryption_key)"
+    exec /app/entrypoint.sh "$$@"
+  - --
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  # Private network for crm stack
+  crm_network:
+    driver: overlay
+    name: rp5_crm
+
+  # External network to connect to nginx proxy
+  public_network:
+    external: true
+    name: rp5_public
+
+# =============================================================================
+# Services
+# =============================================================================
+services:
+  db:
+    image: postgres:16-alpine
+    hostname: crm-db
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    environment:
+      - POSTGRES_DB=twenty
+      - POSTGRES_USER=twenty
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    volumes:
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - crm_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U twenty -d twenty"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "db"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "postgres"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      <<: *logging-base
+
+  # BullMQ queue + cache. noeviction is required (evicted keys = lost jobs);
+  # no persistence — the queue is transient.
+  redis:
+    image: redis:7-alpine
+    hostname: crm-redis
+    command: ["redis-server", "--maxmemory-policy", "noeviction", "--save", "", "--appendonly", "no"]
+    expose:
+      - "6379"
+    networks:
+      - crm_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "redis"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "redis"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 64M
+    logging:
+      <<: *logging-base
+
+  server:
+    image: twentycrm/twenty:v2.43.0
+    hostname: crm-server
+    expose:
+      - "3000"
+    entrypoint: *twenty-entrypoint
+    command: ["node", "dist/main"]
+    environment:
+      <<: *twenty-env
+      NODE_PORT: "3000"
+      NODE_OPTIONS: "--max-old-space-size=768"
+    secrets:
+      - postgres_password
+      - encryption_key
+    volumes:
+      - storage_data:/app/packages/twenty-server/.local-storage
+    networks:
+      - crm_network
+      - public_network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s                # first boot runs DB init + upgrade
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "server"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "twenty"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 1024M
+    logging:
+      <<: *logging-base
+
+  worker:
+    image: twentycrm/twenty:v2.43.0
+    hostname: crm-worker
+    entrypoint: *twenty-entrypoint
+    command: ["yarn", "worker:prod"]
+    environment:
+      <<: *twenty-env
+      NODE_OPTIONS: "--max-old-space-size=384"
+      DISABLE_DB_MIGRATIONS: "true"               # server runs migrations
+      DISABLE_CRON_JOBS_REGISTRATION: "true"      # server registers crons
+    secrets:
+      - postgres_password
+      - encryption_key
+    volumes:
+      - storage_data:/app/packages/twenty-server/.local-storage
+    networks:
+      - crm_network
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "worker"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "twenty"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 512M
+    logging:
+      <<: *logging-base
+
+volumes:
+  postgres_data:
+    driver: local
+  storage_data:
+    driver: local
+
+secrets:
+  postgres_password:
+    external: true
+    name: crm_postgres_password
+  encryption_key:
+    external: true
+    name: crm_encryption_key

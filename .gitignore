@@ -31,3 +31,6 @@ Thumbs.db
 # Personal Claude Code settings (per-user hooks, permissions). The committed
 # .claude/settings.json holds shared config; this file is local-only.
 .claude/settings.local.json
+
+# Local secret values (never commit)
+services/*/secrets/*.txt
