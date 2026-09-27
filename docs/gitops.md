@@ -115,6 +115,12 @@ Repo **secrets**:
 - `WEBHOOK_ID_<STACK>` — the webhook id per stack
   (`WEBHOOK_ID_N8N`, `WEBHOOK_ID_FIREFLY`, `WEBHOOK_ID_ADGUARD`, …)
 
+> **On-demand stacks** (`ai`, `code`, `langfuse`, `openclaw`) are started/stopped
+> manually and have **no** `WEBHOOK_ID_<STACK>` secret. Their releases are
+> expected to log `No webhook secret … — skipping` and exit green without
+> redeploying; redeploy them from Portainer when started. To make one
+> auto-deploy, create its Portainer webhook and set the secret.
+
 Each service stack's GitOps auto-update must be set to **Webhook** (not Polling)
 in Portainer, so the Actions workflow is the single deploy trigger (no polling,
 no overlap). The old CF Access service-token webhook path (and its
