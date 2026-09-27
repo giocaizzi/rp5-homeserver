@@ -349,12 +349,14 @@ process_stack() {
 
     # Sync each secret
     log_section "Syncing secrets"
-    while IFS= read -r secret_name; do
+    # Read via fd 3: ssh calls inside sync_secret would otherwise consume
+    # stdin and silently skip every secret after the first.
+    while IFS= read -r secret_name <&3; do
         [ -z "$secret_name" ] && continue
         local local_file
         local_file=$(get_local_secret_file "$stack" "$secret_name")
         sync_secret "$stack" "$secret_name" "$local_file" || true
-    done <<< "$compose_secrets"
+    done 3<<< "$compose_secrets"
 
     # Prune if requested
     if [ "$PRUNE" = true ]; then
