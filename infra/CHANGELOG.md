@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.14.0...v1.15.0) (2026-09-27)
+
+
+### Features
+
+* **infra:** route crm.giocaizzi.xyz to Twenty CRM ([#168](https://github.com/giocaizzi/rp5-homeserver/issues/168)) ([445d08f](https://github.com/giocaizzi/rp5-homeserver/commit/445d08f402754de1bede4e83b606594461ddb5f2))
+
 ## [1.14.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.13.0...v1.14.0) (2026-06-24)
 
 
