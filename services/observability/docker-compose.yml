@@ -7,7 +7,7 @@
 x-labels-base: &labels-base
   com.giocaizzi.namespace: "observability"
   com.giocaizzi.env: "production"
-  com.giocaizzi.config-rev: "0.1.5" # x-release-please-version — bumped per release so tasks re-bind fresh Portainer clone
+  com.giocaizzi.config-rev: "0.1.6" # x-release-please-version — bumped per release so tasks re-bind fresh Portainer clone
 
 x-deploy-base: &deploy-base
   mode: replicated

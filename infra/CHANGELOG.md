@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.7](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.6...v1.15.7) (2026-10-03)
+
+
+### Bug Fixes
+
+* **infra:** raise netdata memory limit to 1280M ([#222](https://github.com/giocaizzi/rp5-homeserver/issues/222)) ([ac8cf14](https://github.com/giocaizzi/rp5-homeserver/commit/ac8cf1448c76de8e155c4d962cd809a255f67d60))
+
 ## [1.15.6](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.5...v1.15.6) (2026-10-03)
 
 

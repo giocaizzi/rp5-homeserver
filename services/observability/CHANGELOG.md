@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.5...observability-v0.1.6) (2026-10-03)
+
+
+### Bug Fixes
+
+* **observability:** raise tempo, loki and collector memory limits ([#219](https://github.com/giocaizzi/rp5-homeserver/issues/219)) ([dfba939](https://github.com/giocaizzi/rp5-homeserver/commit/dfba93942766de1063a97cf592ba076d0ebcef22))
+
 ## [0.1.5](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.4...observability-v0.1.5) (2026-10-03)
 
 
