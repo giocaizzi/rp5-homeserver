@@ -2,15 +2,15 @@
 
 > Self-hosted push notification service
 
-**URL**: `https://ntfy.home`
+**URL**: `https://ntfy.giocaizzi.xyz` (public via Cloudflare Tunnel, no CF Access — ntfy auth is the gate) · `https://ntfy.home` (LAN)
 
 ---
 
 ## 🚀 Quick Start
 
 1. Deploy via Portainer → Swarm mode
-2. Access `https://ntfy.home`
-3. Create admin user via CLI (see below)
+2. Create admin user via CLI (see below)
+3. Phone app: server `https://ntfy.giocaizzi.xyz`, log in as admin, subscribe to the [alert topics](#-alert-topics)
 
 ---
 
@@ -94,6 +94,25 @@ ntfy access everyone public ro    # anonymous read
 
 # UnifiedPush support
 ntfy access everyone "up*" write
+```
+
+---
+
+## 🚨 Alert Topics
+
+| Topic | Publisher | Token stored as (Secrets Manager) |
+|-------|-----------|-----------------------------------|
+| `grafana` | Grafana webhook (`?template=grafana`) | `observability_ntfy_token` |
+| `netdata` | Netdata `health_alarm_notify.conf` (critical only) | `infra_ntfy_token` |
+
+Both publish as user `alerts` (write-only), one token per source so each can be revoked alone:
+
+```bash
+ntfy user add alerts
+ntfy access alerts grafana wo
+ntfy access alerts netdata wo
+ntfy token add --label grafana alerts
+ntfy token add --label netdata alerts
 ```
 
 ---

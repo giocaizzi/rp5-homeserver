@@ -40,7 +40,7 @@
     "services/greenhouse": { "release-type": "simple", "component": "greenhouse" },
     "services/langfuse": { "release-type": "simple", "component": "langfuse", "extra-files": ["docker-compose.yml"] },
     "services/n8n": { "release-type": "simple", "component": "n8n" },
-    "services/ntfy": { "release-type": "simple", "component": "ntfy" },
+    "services/ntfy": { "release-type": "simple", "component": "ntfy", "extra-files": ["docker-compose.yml"] },
     "services/observability": { "release-type": "simple", "component": "observability", "extra-files": ["docker-compose.yml"] },
     "services/openclaw": { "release-type": "simple", "component": "openclaw" },
     "services/code": { "release-type": "simple", "component": "code" },
