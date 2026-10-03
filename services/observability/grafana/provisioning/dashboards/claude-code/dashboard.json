@@ -3082,67 +3082,8 @@
     },
     {
       "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [],
-          "unit": "currencyUSD",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 145
-      },
-      "id": 35,
-      "options": {
-        "displayMode": "gradient",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "showUnfilled": true
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum by (skill_name) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\", skill_name!=\"\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\", skill_name!=\"\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
-          "interval": "",
-          "legendFormat": "{{skill_name}}",
-          "refId": "A"
-        }
-      ],
-      "title": "Cost by Skill",
-      "type": "bargauge",
-      "description": "Cost per skill. Empty skill_name = non-skill / main-thread work."
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
+        "type": "loki",
+        "uid": "loki"
       },
       "fieldConfig": {
         "defaults": {
@@ -3165,11 +3106,11 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
-        "x": 8,
+        "w": 12,
+        "x": 0,
         "y": 145
       },
-      "id": 36,
+      "id": 35,
       "options": {
         "displayMode": "gradient",
         "orientation": "horizontal",
@@ -3185,18 +3126,18 @@
       "targets": [
         {
           "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
+            "type": "loki",
+            "uid": "loki"
           },
-          "expr": "sum by (skill_name) ((max_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\", skill_name!=\"\"}[$__range]) - min_over_time(claude_code_token_usage_tokens_total{job=~\".*/claude-code\", session_id=~\"$session_id\", skill_name!=\"\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
-          "interval": "",
+          "expr": "sum by (skill_name) (count_over_time({service_name=\"claude-code\"} | event_name=\"skill_activated\" | session_id=~\"$session_id\" [$__range]))",
           "legendFormat": "{{skill_name}}",
+          "queryType": "instant",
           "refId": "A"
         }
       ],
-      "title": "Token Usage by Skill",
+      "title": "Skill Activations",
       "type": "bargauge",
-      "description": "Tokens per skill. Empty skill_name = non-skill / main-thread work."
+      "description": "Times each skill was activated in the range (skill_activated events). Claude Code does not attribute cost/tokens to skills, so activations are the meaningful per-skill signal."
     },
     {
       "datasource": {
@@ -3224,8 +3165,8 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
-        "x": 16,
+        "w": 12,
+        "x": 12,
         "y": 145
       },
       "id": 37,
