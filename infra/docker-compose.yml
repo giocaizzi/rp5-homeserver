@@ -233,7 +233,7 @@ services:
         com.giocaizzi.tier: "critical"
       resources:
         limits:
-          memory: 384M
+          memory: 1024M
     logging:
       <<: *logging-base
 
