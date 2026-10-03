@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.4...observability-v0.1.5) (2026-10-03)
+
+
+### Bug Fixes
+
+* **observability:** replace empty skill cost panels with skill activations ([#214](https://github.com/giocaizzi/rp5-homeserver/issues/214)) ([fa13b79](https://github.com/giocaizzi/rp5-homeserver/commit/fa13b79210ddc16bede62f8ff94d3ecd4388aab0)), closes [#153](https://github.com/giocaizzi/rp5-homeserver/issues/153)
+
 ## [0.1.4](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.3...observability-v0.1.4) (2026-10-03)
 
 
