@@ -70,6 +70,8 @@ services:
       # startup optimizations (reduce CLI overhead on ARM64)
       - NODE_COMPILE_CACHE=/home/node/.openclaw/compile-cache
       - OPENCLAW_NO_RESPAWN=1
+      # V8 heap below the 512M limit (default ~2 GB) so GC runs before the cgroup OOM-kill
+      - NODE_OPTIONS=--max-old-space-size=384
     command:
       - node
       - /app/dist/index.js
