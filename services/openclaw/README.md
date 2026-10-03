@@ -48,7 +48,7 @@ Use the gateway token configured during onboarding.
 
 | Service   | Image                                    | Port  | Role    |
 |-----------|------------------------------------------|-------|---------|
-| `gateway` | `ghcr.io/openclaw/openclaw:2026.2.19`   | 18789 | Gateway + Control UI |
+| `gateway` | `ghcr.io/giocaizzi/openclaw-gateway:latest` (FROM `openclaw:2026.4.2`) | 18789 | Gateway + Control UI |
 
 **Security model:**
 - Runs directly as `node` (uid 1000) — never as root.
