@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.3...observability-v0.1.4) (2026-10-03)
+
+
+### Bug Fixes
+
+* **observability:** drop unattributed "Value" bar from skill/MCP cost panels ([#153](https://github.com/giocaizzi/rp5-homeserver/issues/153)) ([#201](https://github.com/giocaizzi/rp5-homeserver/issues/201)) ([67d5ee2](https://github.com/giocaizzi/rp5-homeserver/commit/67d5ee21948bd79ddacc6750ba4530ef49540ebc))
+
 ## [0.1.3](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.2...observability-v0.1.3) (2026-10-03)
 
 

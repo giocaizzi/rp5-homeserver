@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.15.5](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.4...v1.15.5) (2026-10-03)
+
+
+### Bug Fixes
+
+* **infra:** pin floating images to major tags ([#185](https://github.com/giocaizzi/rp5-homeserver/issues/185)) ([#207](https://github.com/giocaizzi/rp5-homeserver/issues/207)) ([aa9c989](https://github.com/giocaizzi/rp5-homeserver/commit/aa9c989d3d0bbdb0476f750d04aa115b940e2137))
+
+
+### Documentation
+
+* **repo:** update add-a-service guide ([#5](https://github.com/giocaizzi/rp5-homeserver/issues/5)) ([#203](https://github.com/giocaizzi/rp5-homeserver/issues/203)) ([52ec093](https://github.com/giocaizzi/rp5-homeserver/commit/52ec09369bcf63df43104f8ae449b78e834927c3))
+
 ## [1.15.4](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.3...v1.15.4) (2026-10-03)
 
 
