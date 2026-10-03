@@ -12,21 +12,46 @@
         <asynchronous_metrics>true</asynchronous_metrics>
     </prometheus>
 
-    <!-- Memory limits for ARM64 (Pi 5 with 8GB) -->
-    <max_server_memory_usage_to_ram_ratio>0.5</max_server_memory_usage_to_ram_ratio>
-    <max_concurrent_queries>10</max_concurrent_queries>
+    <!-- Unused MySQL/PostgreSQL wire-protocol listeners (Langfuse uses 8123/9000) -->
+    <mysql_port remove="1"/>
+    <postgresql_port remove="1"/>
 
-    <!-- Reduce caches (defaults are too large for Pi) -->
+    <!-- Memory: absolute cap (768 MiB) under the 1024M Swarm limit. Absolute rather than
+         a RAM ratio so it holds even when the memory cgroup is not enforced (ratio would
+         then apply to the host's 8 GB). Server takes min(this, 0.9 * detected RAM). -->
+    <max_server_memory_usage>805306368</max_server_memory_usage>
+    <max_concurrent_queries>10</max_concurrent_queries>
+    <!-- Don't mlock the ~500 MB binary into RAM; let the kernel page it -->
+    <mlock_executable>false</mlock_executable>
+
+    <!-- Reduce caches (defaults are 5 GB each) -->
     <mark_cache_size>134217728</mark_cache_size>
+    <index_mark_cache_size>67108864</index_mark_cache_size>
     <uncompressed_cache_size>67108864</uncompressed_cache_size>
 
-    <!-- Disable verbose logging to reduce I/O -->
+    <!-- Background pools: defaults (16 merge threads, 512 schedule threads) are sized for
+         big servers; Langfuse ingest on a homeserver needs a fraction of that -->
+    <background_pool_size>2</background_pool_size>
+    <background_merges_mutations_concurrency_ratio>2</background_merges_mutations_concurrency_ratio>
+    <background_common_pool_size>2</background_common_pool_size>
+    <background_schedule_pool_size>8</background_schedule_pool_size>
+    <background_move_pool_size>1</background_move_pool_size>
+    <background_fetches_pool_size>1</background_fetches_pool_size>
+    <background_buffer_flush_schedule_pool_size>1</background_buffer_flush_schedule_pool_size>
+    <background_distributed_schedule_pool_size>1</background_distributed_schedule_pool_size>
+    <background_message_broker_schedule_pool_size>1</background_message_broker_schedule_pool_size>
+
+    <!-- Disable system log tables (memory buffers + merge I/O); query_log stays but is
+         empty because log_queries=0 in users.xml; error_log/crash_log kept -->
     <asynchronous_metric_log remove="1"/>
     <metric_log remove="1"/>
+    <query_metric_log remove="1"/>
     <query_thread_log remove="1"/>
     <trace_log remove="1"/>
     <text_log remove="1"/>
     <part_log remove="1"/>
+    <processors_profile_log remove="1"/>
+    <opentelemetry_span_log remove="1"/>
 
     <!-- Compression settings -->
     <compression>
