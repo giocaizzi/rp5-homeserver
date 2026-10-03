@@ -36,7 +36,7 @@
     },
     "services/adguard": { "release-type": "simple", "component": "adguard" },
     "services/ai": { "release-type": "simple", "component": "ai" },
-    "services/firefly": { "release-type": "simple", "component": "firefly" },
+    "services/firefly": { "release-type": "simple", "component": "firefly", "extra-files": ["docker-compose.yml"] },
     "services/greenhouse": { "release-type": "simple", "component": "greenhouse" },
     "services/langfuse": { "release-type": "simple", "component": "langfuse" },
     "services/n8n": { "release-type": "simple", "component": "n8n" },
