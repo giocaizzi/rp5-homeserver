@@ -102,7 +102,7 @@ ntfy access everyone "up*" write
 
 | Topic | Publisher | Token stored as (Secrets Manager) |
 |-------|-----------|-----------------------------------|
-| `grafana` | Grafana webhook (`?template=grafana`) | `observability_ntfy_token` |
+| `grafana` | Grafana webhook (`?template=grafana-alert` — `templates/grafana-alert.yml`, priority from `severity`) | `observability_ntfy_token` |
 | `netdata` | Netdata `health_alarm_notify.conf` (critical only) | `infra_ntfy_token` |
 
 Both publish as user `alerts` (write-only), one token per source so each can be revoked alone:

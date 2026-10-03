@@ -57,6 +57,7 @@ services:
       - TZ=Europe/Rome
     volumes:
       - ./server.yml:/etc/ntfy/server.yml:ro
+      - ./templates:/etc/ntfy/templates:ro
       - ntfy_cache:/var/cache/ntfy
       - ntfy_data:/var/lib/ntfy
     networks:
