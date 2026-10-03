@@ -17,7 +17,7 @@ flowchart TB
         end
 
         subgraph Swarm["Docker Swarm"]
-            subgraph infra["infra/ (manual deploy)"]
+            subgraph infra["infra/ (infra release)"]
                 portainer[Portainer]
                 netdata[Netdata]
                 backrest[Backrest]
@@ -25,7 +25,7 @@ flowchart TB
                 cloudflared[Cloudflared]
             end
 
-            subgraph services["services/ (GitOps)"]
+            subgraph services["services/ (service release)"]
                 n8n[N8N]
                 firefly[Firefly III]
                 adguard[AdGuard]
@@ -50,10 +50,10 @@ flowchart TB
 
 | Directory | Deployment | Description |
 |-----------|------------|-------------|
-| `infra/` | `./scripts/sync_infra.sh` | Core infrastructure: nginx, portainer, backrest, homepage |
-| `services/` | Portainer GitOps | Application stacks deployed via webhook |
+| `infra/` | `infra` release → `deploy-infra.yml` (`sync_infra.sh --local`) | Core infrastructure: nginx, portainer, backrest, homepage |
+| `services/` | `<stack>` release → `deploy-services.yml` → Portainer webhook | Application stacks |
 | `docs/` | — | Architecture documentation |
-| `cloud/` | Terraform | Cloudflare, GCS resources |
+| `cloud/` | Terraform, apply on merge (`apply-cloud.yml`) | Cloudflare, GCS resources |
 
 ## Documentation
 
@@ -83,6 +83,10 @@ flowchart TB
 | Langfuse | `https://langfuse.home` | services/langfuse |
 | Ntfy | `https://ntfy.home` | services/ntfy |
 | Grafana | `https://grafana.home` | services/observability |
+| Greenhouse | `http://greenhouse.home` | services/greenhouse |
+| OpenClaw | `https://openclaw.home` | services/openclaw |
+| Code | `https://code.giocaizzi.xyz` | services/code |
+| CRM | `https://crm.giocaizzi.xyz` | services/crm |
 
 ## Quick Start
 
