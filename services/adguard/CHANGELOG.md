@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/giocaizzi/rp5-homeserver/compare/adguard-v0.2.0...adguard-v0.2.1) (2026-10-03)
+
+
+### Bug Fixes
+
+* **adguard:** publish dns ports in host mode and right-size memory ([#239](https://github.com/giocaizzi/rp5-homeserver/issues/239)) ([bfdf56f](https://github.com/giocaizzi/rp5-homeserver/commit/bfdf56f40b4d90ae69bc391bef207d1afe25c8a0))
+
 ## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/adguard-v0.1.2...adguard-v0.2.0) (2026-10-03)
 
 

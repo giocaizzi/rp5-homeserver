@@ -2,7 +2,7 @@
   "infra": "1.16.0",
   "cloud": "0.4.0",
   "workers/mcp-connector": "0.1.0",
-  "services/adguard": "0.2.0",
+  "services/adguard": "0.2.1",
   "services/ai": "0.1.1",
   "services/firefly": "0.2.1",
   "services/greenhouse": "0.1.0",
