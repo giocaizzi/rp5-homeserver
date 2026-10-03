@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/adguard-v0.1.2...adguard-v0.2.0) (2026-10-03)
+
+
+### Features
+
+* **repo:** materialise infra secrets from bitwarden secrets manager ([#230](https://github.com/giocaizzi/rp5-homeserver/issues/230)) ([2ceaf7d](https://github.com/giocaizzi/rp5-homeserver/commit/2ceaf7d2513f2386e317da8b8597ded88a55af0d))
+
 ## [0.1.2](https://github.com/giocaizzi/rp5-homeserver/compare/adguard-v0.1.1...adguard-v0.1.2) (2026-10-03)
 
 
