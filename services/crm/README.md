@@ -50,8 +50,10 @@ Twenty has no `*_FILE` support; the compose entrypoint wrapper exports `PG_DATAB
 
 | Secret | Generate |
 |--------|----------|
-| `crm_postgres_password` | `openssl rand -hex 32 > services/crm/secrets/postgres_password.txt` |
-| `crm_encryption_key` | `openssl rand -base64 32 > services/crm/secrets/encryption_key.txt` |
+| `crm_postgres_password` | `bws secret create crm_postgres_password "$(openssl rand -hex 32)" <project-id>` |
+| `crm_encryption_key` | `bws secret create crm_encryption_key "$(openssl rand -base64 32)" <project-id>` |
+
+Then sync them to Swarm: `./scripts/create_secrets.sh crm`.
 
 ```bash
 PI_SSH_USER=<user> ./scripts/create_secrets.sh crm

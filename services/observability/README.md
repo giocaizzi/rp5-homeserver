@@ -67,8 +67,10 @@ flowchart TB
 
 | Secret | Generate |
 |--------|----------|
-| `observability_grafana_admin_password` | `openssl rand -base64 32 \| docker secret create observability_grafana_admin_password -` |
-| `observability_alloy_otel_bearer_token` | `openssl rand -base64 48 \| tr -d '\n=' \| tr '+/' '-_' > services/observability/secrets/alloy_otel_bearer_token.txt` then `PI_SSH_USER=$USER ./scripts/create_secrets.sh observability` |
+| `observability_grafana_admin_password` | `bws secret create observability_grafana_admin_password "$(openssl rand -base64 32)" <project-id>` |
+| `observability_alloy_otel_bearer_token` | `bws secret create observability_alloy_otel_bearer_token "$(openssl rand -base64 48 \| tr -d '\n=' \| tr '+/' '-_')" <project-id>` |
+
+Then sync them to Swarm: `./scripts/create_secrets.sh observability` (needs `BWS_ACCESS_TOKEN`).
 
 The bearer token is the **inner** auth gate on the OTLP HTTP receiver (port 4318). It is enforced for **both** `otel.home` (LAN) and `otel.giocaizzi.xyz` (public via CF Access bypass) — the receiver does not distinguish between sources.
 

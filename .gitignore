@@ -32,5 +32,3 @@ Thumbs.db
 # .claude/settings.json holds shared config; this file is local-only.
 .claude/settings.local.json
 
-# Local secret values (never commit)
-services/*/secrets/*.txt
