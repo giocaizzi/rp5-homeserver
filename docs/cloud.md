@@ -46,13 +46,13 @@ terraform apply
 
 ```bash
 # Tunnel token for cloudflared
-terraform output -raw tunnel_token > ../infra/secrets/cloudflared_token.txt
+bws secret create infra_cloudflared_token "$(terraform output -raw tunnel_token)" <project-id>   # then sync_infra.sh
 
 # GCP service account for Backrest
-terraform output -raw backup_service_account_key | base64 -d > ../infra/secrets/gcp_service_account.json
+bws secret create infra_gcp_service_account "$(terraform output -raw backup_service_account_key | base64 -d)" <project-id>
 ```
 
-Then sync infra: `./scripts/sync_infra.sh`
+Then sync infra: `BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> ./scripts/sync_infra.sh`
 
 ## Details
 

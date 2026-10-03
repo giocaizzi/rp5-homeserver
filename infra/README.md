@@ -9,9 +9,9 @@
 ## 🚀 Quick Start
 
 ```bash
-# 1. Create secrets in ./secrets/
-# 2. Sync and deploy
-./scripts/sync_infra.sh
+# 1. Create the secrets in Secrets Manager (project rp5-homeserver, key infra_<file stem>)
+# 2. Sync and deploy (writes ./secrets/ on the Pi from Secrets Manager)
+BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> ./scripts/sync_infra.sh
 ```
 
 ---
@@ -45,7 +45,7 @@ Services join `rp5_public` to receive nginx routing without exposing ports.
 
 ## 🔐 Secrets
 
-File-based secrets in `./secrets/` (gitignored):
+File-based secrets in `./secrets/` on the Pi (gitignored). Source of truth: Secrets Manager project `rp5-homeserver`, key `infra_<file stem>`; `sync_infra.sh` writes the files (the Mac holds none).
 
 | Secret | File | Purpose |
 |--------|------|---------|
@@ -61,8 +61,8 @@ File-based secrets in `./secrets/` (gitignored):
 | `domain` | `domain.txt` | Production domain |
 
 ```bash
-# Generate random passwords
-openssl rand -base64 32 > ./secrets/backrest_admin_password.txt
+# Generate a random password straight into Secrets Manager, then run sync_infra.sh
+bws secret create infra_backrest_admin_password "$(openssl rand -base64 32)" <project-id>
 ```
 
 ---
@@ -86,7 +86,7 @@ Docker management at `https://portainer.home`.
 **API Key Setup** (for Homepage widget):
 1. Portainer → User account → API keys
 2. Generate new key
-3. Save to `./secrets/portainer_api_key.txt`
+3. Store it in Secrets Manager as `infra_portainer_api_key`, then run `sync_infra.sh`
 4. Re-sync: `./scripts/sync_infra.sh`
 
 ### Cloudflared

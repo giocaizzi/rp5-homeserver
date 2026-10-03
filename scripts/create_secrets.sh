@@ -18,8 +18,8 @@ set -euo pipefail
 # Global configuration
 PI_HOST="${PI_HOST:-pi.local}"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-BWS_PROJECT="${BWS_PROJECT:-rp5-homeserver}"
-BWS_SECRETS_JSON=""   # project secrets, held in memory only
+# shellcheck source=lib/bws.sh
+source "$(dirname "$0")/lib/bws.sh"
 
 # Feature flags
 DRY_RUN=false
@@ -151,16 +151,7 @@ validate_environment() {
         echo -e "${RED}Error: PI_SSH_USER environment variable required${NC}" >&2
         exit 1
     fi
-    if [ -z "${BWS_ACCESS_TOKEN:-}" ]; then
-        echo -e "${RED}Error: BWS_ACCESS_TOKEN environment variable required${NC}" >&2
-        exit 1
-    fi
-    for tool in bws jq; do
-        if ! command -v "$tool" >/dev/null 2>&1; then
-            echo -e "${RED}Error: $tool not found in PATH${NC}" >&2
-            exit 1
-        fi
-    done
+    check_bws_environment
 }
 
 test_ssh_connection() {
@@ -183,30 +174,6 @@ get_compose_secrets() {
     # `external: true` + `name:`). `|| true`: no match must not trip set -e.
     awk '/^secrets:/{f=1; next} /^[a-z]/{f=0} f' "$compose_file" \
         | grep -A1 "external: true" | grep "name:" | sed 's/.*name: //' | tr -d ' ' | sort -u || true
-}
-
-# Load the project's secrets once into memory (never written to disk)
-load_bws_secrets() {
-    local project_id
-    project_id=$(bws project list --color no --output json \
-        | jq -r --arg n "$BWS_PROJECT" '[.[] | select(.name == $n)][0].id // empty') || true
-    if [ -z "$project_id" ]; then
-        echo -e "${RED}Error: Secrets Manager project '$BWS_PROJECT' not found or not readable with this token${NC}" >&2
-        exit 1
-    fi
-    BWS_SECRETS_JSON=$(bws secret list "$project_id" --color no --output json) || {
-        echo -e "${RED}Error: cannot list secrets of project '$BWS_PROJECT'${NC}" >&2
-        exit 1
-    }
-}
-
-# Print the value of a secret (exactly one match required, no trailing newline)
-get_secret_value() {
-    local name="$1"
-    local count
-    count=$(jq --arg k "$name" '[.[] | select(.key == $k)] | length' <<< "$BWS_SECRETS_JSON")
-    [ "$count" = "1" ] || return 1
-    jq -j --arg k "$name" '.[] | select(.key == $k) | .value' <<< "$BWS_SECRETS_JSON"
 }
 
 # Get secret value from Pi (via temporary service)
