@@ -16,6 +16,9 @@ x-deploy-base: &deploy-base
     delay: 5s
     max_attempts: 3
     window: 120s
+  # Host-mode ports can't be bound twice: stop the old task before starting the new one.
+  update_config:
+    order: stop-first
 
 x-logging-base: &logging-base
   driver: "json-file"
@@ -49,16 +52,17 @@ services:
     image: adguard/adguardhome:latest
     hostname: adguard-dns
     ports:
-      # DNS ports (host network mode for DNS)
-      - "53:53/tcp"
-      - "53:53/udp"
-      # DNS-over-TLS
-      - "853:853/tcp"
-      # DNS-over-QUIC
-      - "853:853/udp"
+      # mode: host bypasses the ingress mesh so AdGuard sees real client IPs
+      # (per-client stats and ratelimit) instead of 10.0.0.2 for the whole LAN.
+      # DNS
+      - { target: 53, published: 53, protocol: tcp, mode: host }
+      - { target: 53, published: 53, protocol: udp, mode: host }
+      # DNS-over-TLS / DNS-over-QUIC
+      - { target: 853, published: 853, protocol: tcp, mode: host }
+      - { target: 853, published: 853, protocol: udp, mode: host }
       # DNSCrypt
-      - "5443:5443/tcp"
-      - "5443:5443/udp"
+      - { target: 5443, published: 5443, protocol: tcp, mode: host }
+      - { target: 5443, published: 5443, protocol: udp, mode: host }
     expose:
       # Web interface (proxied via nginx)
       - "3000"
@@ -91,7 +95,7 @@ services:
         com.giocaizzi.tier: "core"
       resources:
         limits:
-          memory: 1536M
+          memory: 512M
     logging:
       <<: *logging-base
 

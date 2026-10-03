@@ -21,11 +21,13 @@
 |-----------|-------|---------|
 | adguard | `adguard/adguardhome:latest` | DNS server + web UI |
 
-**Exposed Ports** (host-level for DNS):
+**Exposed Ports** (Swarm `mode: host`, bypassing the ingress mesh so AdGuard sees real client IPs for per-client stats and `ratelimit`):
 - `53/tcp`, `53/udp` — Plain DNS
 - `853/tcp` — DNS-over-TLS
 - `853/udp` — DNS-over-QUIC
 - `5443/tcp`, `5443/udp` — DNSCrypt
+
+Host-mode ports cannot be bound twice, so updates use `update_config.order: stop-first` (DNS is down for a few seconds per redeploy).
 
 ---
 
@@ -66,6 +68,21 @@ Create admin username and strong password.
 | Cloudflare | `1.1.1.1` |
 | Google | `8.8.8.8` |
 | Quad9 | `9.9.9.9` (privacy) |
+
+---
+
+## ⚙️ Configuration
+
+Runtime settings live in `AdGuardHome.yaml` (`adguard_conf` volume) and are managed via the UI/API, not the repo. Current baseline:
+
+| Setting | Value |
+|---------|-------|
+| Global protection | Enabled |
+| Blocklists (enabled) | **AdGuard DNS filter** (`filter_1`) + **HaGeZi's Pro** (`filter_48`), ~405k rules |
+| Blocklists (disabled) | All other registry lists (nested HaGeZi/OISD/1Hosts supersets and small overlapping hosts lists) — kept but disabled |
+| Query log retention | 7 days (`querylog.interval: 7d`) |
+
+Keep the blocklist set non-overlapping: stacking supersets multiplies memory use (16 lists / 2.5M rules peaked at ~865 MB RSS) without blocking much more. Memory limit (`512M`) is sized against the 2-list baseline (~165 MB steady).
 
 ---
 
