@@ -178,7 +178,7 @@ OTLP receiver → memory_limiter → batch → transform (defaults) → ┬─ P
 
 - `memory_limiter` caps the collector heap at **640MiB** with a **128MiB**
   spike headroom (soft limit 512MiB) — sized for the 768M container, with
-  `GOMEMLIMIT=520MiB`. Over the soft limit the processor refuses new data with
+  `GOMEMLIMIT=480MiB`. Over the soft limit the processor refuses new data with
   a retryable error so producers back off.
 - `batch` groups data points (10s / 1000 items) before export.
 - `transform` (resource context) fills missing resource attributes:

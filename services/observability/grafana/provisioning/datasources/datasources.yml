@@ -53,8 +53,6 @@ datasources:
         queries:
           - name: 'Request rate'
             query: 'sum(rate(http_server_request_duration_seconds_count{$$__tags}[5m]))'
-      serviceMap:
-        datasourceUid: 'prometheus'
       nodeGraph:
         enabled: true
       search:

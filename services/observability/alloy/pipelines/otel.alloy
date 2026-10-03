@@ -13,8 +13,8 @@
 //
 // Why memory_limiter first:
 //   Limits are Go heap (not RSS), sized to the 768M container: hard 640MiB,
-//   soft 512MiB (hard - spike 128MiB). GOMEMLIMIT=520MiB (compose) makes Go
-//   GC hard around the soft limit, so the limiter only refuses data
+//   soft 512MiB (hard - spike 128MiB). GOMEMLIMIT=480MiB (compose) makes Go
+//   GC before the soft limit, so the limiter only refuses data
 //   (retryable) on real spikes. Alloy's baseline heap is ~200-290MiB
 //   (docker log tailing + scrapes).
 //
