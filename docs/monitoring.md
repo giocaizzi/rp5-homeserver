@@ -219,10 +219,10 @@ Both sources push to ntfy (`https://ntfy.giocaizzi.xyz`, publisher user `alerts`
 
 | Source | Topic | Covers | Routing |
 |--------|-------|--------|---------|
-| Grafana | `grafana` | App/DB/exporter/observability rules (Prometheus) | `severity=critical` → `urgent` priority, rest default; 4h repeat |
+| Grafana | `grafana` | App/DB/exporter/observability rules (Prometheus) | Priority from `severity` via ntfy template `grafana-alert` (critical 5, warning 4, resolved 3); 4h repeat |
 | Netdata | `netdata` | Host + containers (temp, disk, RAM, OOM, `docker_container_unhealthy`) | Critical + clear only, no repeat |
 
-Grafana contact points and the root policy are provisioned in `grafana/provisioning/alerting/{contact-points,policies}.yaml`; Netdata's in `infra/netdata/health_alarm_notify.conf`.
+Grafana's contact point and root policy are provisioned in `grafana/provisioning/alerting/{contact-points,policies}.yaml`; Netdata's in `infra/netdata/health_alarm_notify.conf`.
 
 **Provisioned Alert Rules:**
 
