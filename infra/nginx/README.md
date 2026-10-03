@@ -11,16 +11,7 @@ nginx/
 │   ├── globals.conf        # Backend map + rate limits
 │   ├── defaults.conf       # Default server + HTTP redirect
 │   ├── infra.conf          # Infra services (always up)
-│   └── services/           # One file per service (may be down)
-│       ├── n8n.conf
-│       ├── ollama.conf
-│       ├── adguard.conf
-│       ├── grafana.conf
-│       ├── otel.conf
-│       ├── langfuse.conf
-│       ├── ntfy.conf
-│       ├── firefly.conf
-│       └── firefly-importer.conf
+│   └── services/           # One <service>.conf per service (may be down)
 └── snippets/
     ├── ssl-params.conf
     ├── proxy-headers.conf
@@ -35,19 +26,21 @@ nginx/
 
 | Category | Location | Error Handling | Behavior |
 |----------|----------|----------------|----------|
-| **Infra** | `10-infra.conf` | None | Nginx fails if these fail |
+| **Infra** | `infra.conf` | None | Nginx fails if these fail |
 | **Services** | `services/*.conf` | 503 page | Graceful degradation |
 
 **Infra services:** portainer, netdata, backrest, homepage
 
-**Dynamic services:** n8n, ollama, adguard, grafana, langfuse, ntfy, otel, firefly*
+**Dynamic services:** everything under `conf.d/services/`
 
 ## ➕ Adding a New Service
 
-1. Add backend mapping in `conf.d/00-globals.conf`
-2. Add hostname to HTTP redirect in `conf.d/01-defaults.conf`
-3. Create `conf.d/services/<service>.conf`
-4. Test with `nginx -t`
+1. Add backend mapping in `conf.d/globals.conf`
+2. Add hostname to HTTP redirect in `conf.d/defaults.conf`
+3. Create `conf.d/services/<service>.conf` (include `snippets/error-503.conf`)
+4. Ship as `feat(infra):`/`fix(infra):` and cut the `infra` release — `sync_infra.sh` runs `nginx -t` + `nginx -s reload`
+
+Full stack checklist (release-please, webhook, homepage, Cloudflare): [GitOps → Adding a new service stack](../../docs/gitops.md#adding-a-new-service-stack).
 
 ## 📝 Snippets
 

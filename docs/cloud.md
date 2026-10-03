@@ -46,14 +46,10 @@ terraform apply
 
 ```bash
 # Tunnel token for cloudflared
-terraform output -raw cloudflare_tunnel_token > ../infra/secrets/cloudflared_token.txt
+terraform output -raw tunnel_token > ../infra/secrets/cloudflared_token.txt
 
 # GCP service account for Backrest
 terraform output -raw backup_service_account_key | base64 -d > ../infra/secrets/gcp_service_account.json
-
-# GitOps service token (for GitHub Actions)
-terraform output cf_access_client_id
-terraform output cf_access_client_secret
 ```
 
 Then sync infra: `./scripts/sync_infra.sh`
