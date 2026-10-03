@@ -58,7 +58,7 @@ services:
       - OLLAMA_KEEP_ALIVE=5m
       - OLLAMA_MAX_LOADED_MODELS=1
       - OLLAMA_NUM_PARALLEL=1
-      # Raspberry Pi optimizations (CPU-only inference; model + KV cache live in the 4G limit)
+      # Raspberry Pi optimizations (CPU-only inference; model + KV cache live in the 3G limit)
       - OLLAMA_CONTEXT_LENGTH=4096       # pin default ctx; KV cache scales linearly with it
       - OLLAMA_FLASH_ATTENTION=1         # supported on the CPU backend; required for KV quantization
       - OLLAMA_KV_CACHE_TYPE=q8_0        # ~half the KV cache memory of f16, negligible quality loss
@@ -86,7 +86,7 @@ services:
         com.giocaizzi.tier: "core"
       resources:
         limits:
-          memory: 4G
+          memory: 3G
         reservations:
           memory: 2G
     tmpfs:
@@ -140,7 +140,7 @@ services:
         com.giocaizzi.tier: "core"
       resources:
         limits:
-          memory: 1G
+          memory: 1536M
     logging:
       <<: *logging-base
 
