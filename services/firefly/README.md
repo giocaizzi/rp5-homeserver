@@ -21,9 +21,9 @@
 
 | Container | Image | Purpose |
 |-----------|-------|---------|
-| firefly-db | `mariadb:lts` | Main database |
+| firefly-db | `mariadb:12.3` | Main database |
 | firefly-app | `fireflyiii/core:latest` | Finance app |
-| firefly-importer | `fireflyiii/data-importer:latest` | Bank imports |
+| firefly-importer | `fireflyiii/data-importer:version-2` | Bank imports |
 | firefly-cron | `alpine` | Scheduled jobs |
 
 ---
