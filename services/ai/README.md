@@ -41,6 +41,8 @@ Raspberry Pi 5 (8GB) limitations:
 | Flash attention + KV cache | Enabled, `q8_0` | Halves KV cache memory (CPU backend supports FA) |
 | Follow-up / tag generation | Disabled | Avoid extra generations per reply on CPU |
 | Concurrent models | 1 | Memory limits |
+| Ollama memory | 3G limit (2G reserved) | Fits next to the always-on stack; models up to ~3B params |
+| Open WebUI memory | 1.5G | Headroom for its in-process embedding model |
 | Model management | Manual | Pull models explicitly when needed |
 
 ---
