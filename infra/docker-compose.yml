@@ -52,7 +52,7 @@ networks:
 services:
   # Nginx Reverse Proxy
   proxy:
-    image: nginx:alpine
+    image: nginx:1-alpine   # major-pinned (see #185)
     hostname: infra-proxy
     ports:
       - "80:80"     # HTTP
@@ -95,7 +95,7 @@ services:
 
   # Nginx Prometheus Exporter
   proxy-exporter:
-    image: nginx/nginx-prometheus-exporter:latest
+    image: nginx/nginx-prometheus-exporter:1.5   # minor-pinned: upstream :1 tag is stale (see #185)
     hostname: infra-proxy-exporter
     command:
       - --nginx.scrape-uri=http://infra-proxy:80/stub_status
@@ -192,7 +192,7 @@ services:
 
   # Netdata - Real-time performance monitoring
   monitoring:
-    image: netdata/netdata:latest
+    image: netdata/netdata:v2   # major-pinned stable; :latest is nightly (see #185)
     hostname: infra-monitoring
     # pid: host  # UNSUPPORTED in Swarm - would be needed for per-container cgroups
     expose:
@@ -239,7 +239,7 @@ services:
 
   # Backrest - Restic backup with Web UI
   backup:
-    image: garethgeorge/backrest:latest
+    image: garethgeorge/backrest:v1   # major-pinned (see #185)
     hostname: infra-backup
     expose:
       - "9898"  # Web UI

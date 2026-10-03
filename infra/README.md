@@ -20,12 +20,12 @@
 
 | Container | Image | Purpose |
 |-----------|-------|---------|
-| nginx | `nginx:alpine` | Reverse proxy, SSL termination |
+| nginx | `nginx:1-alpine` | Reverse proxy, SSL termination |
 | portainer | `portainer/portainer-ee:latest` | Docker management UI |
 | cloudflared | `cloudflare/cloudflared:latest` | Secure tunnel (no port forwarding) |
-| netdata | `netdata/netdata:latest` | Real-time system monitoring |
-| backrest | `garethgeorge/backrest:latest` | Restic backup web UI |
-| homepage | `ghcr.io/gethomepage/homepage:latest` | Service dashboard |
+| netdata | `netdata/netdata:v2` | Real-time system monitoring |
+| backrest | `garethgeorge/backrest:v1` | Restic backup web UI |
+| homepage | `ghcr.io/gethomepage/homepage:v2` | Service dashboard |
 | shepherd | `containrrr/shepherd:latest` | Auto-update Swarm services every 24h |
 
 ---
