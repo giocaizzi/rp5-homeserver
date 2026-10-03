@@ -22,7 +22,7 @@ GCS bucket and service account are provisioned by Terraform. See [`cloud/README.
 
 After `terraform apply`:
 ```bash
-terraform output -raw backup_service_account_key | base64 -d > ../infra/secrets/gcp_service_account.json
+bws secret create infra_gcp_service_account "$(terraform output -raw backup_service_account_key | base64 -d)" <project-id>   # then sync_infra.sh
 ```
 
 ### 2. Configure Backrest

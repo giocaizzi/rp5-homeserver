@@ -4,11 +4,13 @@
 # Usage: PI_SSH_USER=username ./sync_infra.sh [options]
 #
 # Required environment variables:
-#   PI_SSH_USER - SSH username for the Pi
+#   PI_SSH_USER      - SSH username for the Pi
+#   BWS_ACCESS_TOKEN - Secrets Manager machine-account token (not needed with --local)
 #
 # Optional environment variables:
-#   PI_HOST - Pi hostname or IP (default: pi.local)
+#   PI_HOST       - Pi hostname or IP (default: pi.local)
 #   PI_INFRA_PATH - Infra deploy path on the Pi (default: /home/$PI_SSH_USER/rp5-homeserver/infra)
+#   BWS_PROJECT   - Secrets Manager project name (default: rp5-homeserver)
 
 set -euo pipefail
 
@@ -17,6 +19,8 @@ PI_HOST="${PI_HOST:-pi.local}"
 PI_INFRA_PATH="${PI_INFRA_PATH:-}"
 LOCAL_INFRA_PATH="$(cd "$(dirname "$0")/../infra" && pwd)"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# shellcheck source=lib/bws.sh
+source "$(dirname "$0")/lib/bws.sh"
 
 # Feature flags
 DRY_RUN=false
@@ -70,10 +74,12 @@ Sync and deploy infra stack on Raspberry Pi using Docker Swarm
 Usage: PI_SSH_USER=username $0 [options]
 
 Required environment variables:
-  PI_SSH_USER     SSH username for the Pi
+  PI_SSH_USER       SSH username for the Pi
+  BWS_ACCESS_TOKEN  Secrets Manager machine-account token (not needed with --local)
 
 Optional environment variables:
   PI_HOST         Pi hostname or IP (default: pi.local)
+  BWS_PROJECT     Secrets Manager project name (default: rp5-homeserver)
   PI_INFRA_PATH   Infra deploy path on the Pi, also with --local
                   (default: /home/\$PI_SSH_USER/rp5-homeserver/infra)
 
@@ -83,10 +89,13 @@ Options:
   --restart       Full stack restart (removes and redeploys)
                   Default behavior updates in-place via docker stack deploy
   --local         Run directly on the Pi (no SSH). For self-hosted CI runners.
-                  Skips the secrets/ dir from rsync (kept on the Pi out of git).
+                  Leaves the Pi's secrets/ files untouched (no Secrets Manager access).
   --help, -h      Show this help message
 
 Behavior:
+  Secrets:        Without --local, the file-based secrets/ on the Pi are written from
+                  Secrets Manager (key infra_<file stem>) when their hash differs;
+                  secrets/ is never rsynced, so the Mac holds no secret files.
   Default:        Syncs files and runs 'docker stack deploy' which:
                   - Updates changed services in-place
                   - Preserves running services with no changes
@@ -152,14 +161,14 @@ validate_environment() {
     fi
 
     # Resolve rsync destination + excludes once transport mode is known.
-    RSYNC_EXCLUDES=(--exclude='homepage/logs/')
+    # CRITICAL: never rsync (or --delete) secrets/ — the files live only on the Pi
+    # (gitignored); the Mac and the CI checkout have none, so syncing it with
+    # --delete would wipe them. Without --local they are written by sync_secret_files.
+    RSYNC_EXCLUDES=(--exclude='homepage/logs/' --exclude='secrets/')
     if [ "$LOCAL_MODE" = true ]; then
-        # On the Pi: write straight to the deploy path. CRITICAL: never --delete
-        # the secrets/ dir — secrets live only on the Pi (gitignored), the CI
-        # checkout has none, so syncing it with --delete would wipe them.
         RSYNC_DEST="$PI_INFRA_PATH/"
-        RSYNC_EXCLUDES+=(--exclude='secrets/')
     else
+        check_bws_environment
         RSYNC_DEST="$PI_SSH_USER@$PI_HOST:$PI_INFRA_PATH/"
     fi
 }
@@ -219,6 +228,46 @@ initialize_swarm() {
         log_error "Failed to initialize Swarm"
         return 1
     fi
+}
+
+# Write infra's file-based secrets on the Pi from Secrets Manager (not in --local mode).
+# Files are byte-exact with the ones Docker already holds as secrets: *.pem/*.json end
+# with a newline, the rest don't. A changed byte would make `docker stack deploy` try
+# to change an immutable secret, so a file is rewritten only when its hash differs.
+sync_secret_files() {
+    [ "$LOCAL_MODE" = true ] && return 0
+    log_section "Secrets"
+    load_bws_secrets
+
+    local files file key value want have dest updated=0 unchanged=0
+    files=$(awk '/^secrets:/{f=1; next} /^[a-z]/{f=0} f' "$LOCAL_INFRA_PATH/docker-compose.yml" \
+        | sed -n 's|^[[:space:]]*file:[[:space:]]*\./secrets/||p')
+    # Read via fd 3: ssh calls below would otherwise consume the loop's stdin.
+    while IFS= read -r file <&3; do
+        [ -z "$file" ] && continue
+        key="infra_${file%.*}"
+        if ! value=$(get_secret_value "$key"); then
+            log_error "$key — not found (or ambiguous) in Secrets Manager project '$BWS_PROJECT'"
+            return 1
+        fi
+        case "$file" in *.pem|*.json) value+=$'\n' ;; esac
+        want=$(printf %s "$value" | sha256sum | cut -d' ' -f1)
+        dest="$PI_INFRA_PATH/secrets/$file"
+        have=$(remote "sha256sum < $dest 2>/dev/null | cut -d' ' -f1" || true)
+        if [ "$want" = "$have" ]; then
+            unchanged=$((unchanged + 1))
+            [ "$DRY_RUN" = true ] || remote "chmod 600 $dest"
+            log_skip "$file — unchanged (hash: ${want:0:12})"
+        elif [ "$DRY_RUN" = true ]; then
+            updated=$((updated + 1))
+            log_info "$file — would write (hash: ${have:0:12} → ${want:0:12})"
+        else
+            printf %s "$value" | remote "umask 077; mkdir -p $PI_INFRA_PATH/secrets && cat > $dest.tmp && chmod 600 $dest.tmp && mv $dest.tmp $dest"
+            updated=$((updated + 1))
+            log_success "$file — ${YELLOW}written${NC} (hash: ${want:0:12})"
+        fi
+    done 3<<< "$files"
+    log_info "${DIM}$unchanged unchanged, $updated $([ "$DRY_RUN" = true ] && echo 'to write' || echo 'written')${NC}"
 }
 
 # Sync files using rsync
@@ -565,6 +614,7 @@ main() {
     log_section "Swarm"
     initialize_swarm
     
+    sync_secret_files
     sync_files
     fix_permissions
     

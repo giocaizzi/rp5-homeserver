@@ -19,10 +19,15 @@ Syncs the local infra directory to the Raspberry Pi and deploys the infrastructu
 
 **Flags:** `--dry-run`, `--pull`, `--restart`, `--local`, `--help`
 
+**Secrets:** without `--local`, the file-based infra secrets on the Pi are written from the
+Secrets Manager project (`BWS_ACCESS_TOKEN` required, plus `bws` and `jq`; key =
+`infra_<file stem>`). A file is rewritten only when its hash differs, with mode `600`.
+`secrets/` is never rsynced, so the workstation holds no secret files.
+
 `--local` runs directly on the Pi (no SSH) — used by the `deploy-infra.yml`
-self-hosted runner. In `--local` mode `secrets/` is excluded from the `rsync
---delete`, so the on-Pi secrets (gitignored, not in the CI checkout) are never
-wiped. `PI_SSH_USER` is still required (it derives `PI_INFRA_PATH`).
+self-hosted runner. It needs no Secrets Manager access and leaves the on-Pi
+secrets untouched (`secrets/` is excluded from the `rsync --delete`).
+`PI_SSH_USER` is still required (it derives `PI_INFRA_PATH`).
 
 **Usage:**
 ```bash

@@ -15,7 +15,7 @@ Deploy RP5 Home Server stacks via Docker Swarm and Portainer's remote repository
    - GCS bucket for backups
    - See [Cloud](./cloud.md) for Terraform setup
 
-2. **Create secrets** in `infra/secrets/`:
+2. **Create the infra secrets** in the Secrets Manager project `rp5-homeserver` (key `infra_<file stem>`, e.g. `infra_cert` for `cert.pem`); `sync_infra.sh` writes them to `infra/secrets/` on the Pi:
    - SSL certificate and key (`cert.pem`, `key.pem`)
    - Cloudflare tunnel token
    - Service passwords (backrest, adguard, grafana)
