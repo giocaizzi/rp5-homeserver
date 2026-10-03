@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.6](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.5...v1.15.6) (2026-10-03)
+
+
+### Bug Fixes
+
+* **infra:** restore homepage after VERSION gained a trailing newline ([#212](https://github.com/giocaizzi/rp5-homeserver/issues/212)) ([2ab4671](https://github.com/giocaizzi/rp5-homeserver/commit/2ab467103241b4c6fbc9f5e25f2397bbe64f543a))
+
 ## [1.15.5](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.4...v1.15.5) (2026-10-03)
 
 
