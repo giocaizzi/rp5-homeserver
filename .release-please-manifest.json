@@ -12,5 +12,5 @@
   "services/observability": "0.1.5",
   "services/openclaw": "0.1.0",
   "services/code": "0.2.0",
-  "services/crm": "0.2.0"
+  "services/crm": "0.2.1"
 }
