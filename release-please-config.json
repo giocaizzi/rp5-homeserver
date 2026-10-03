@@ -41,7 +41,7 @@
     "services/langfuse": { "release-type": "simple", "component": "langfuse" },
     "services/n8n": { "release-type": "simple", "component": "n8n" },
     "services/ntfy": { "release-type": "simple", "component": "ntfy" },
-    "services/observability": { "release-type": "simple", "component": "observability" },
+    "services/observability": { "release-type": "simple", "component": "observability", "extra-files": ["docker-compose.yml"] },
     "services/openclaw": { "release-type": "simple", "component": "openclaw" },
     "services/code": { "release-type": "simple", "component": "code" },
     "services/crm": { "release-type": "simple", "component": "crm" }
