@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.6...observability-v0.1.7) (2026-10-03)
+
+
+### Bug Fixes
+
+* **observability:** tune alloy, tempo, loki, prometheus and grafana for enforced memory limits ([#232](https://github.com/giocaizzi/rp5-homeserver/issues/232)) ([cf198e9](https://github.com/giocaizzi/rp5-homeserver/commit/cf198e9f66b86b6d91112d20d8236a349f8ee9ad))
+
 ## [0.1.6](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.5...observability-v0.1.6) (2026-10-03)
 
 
