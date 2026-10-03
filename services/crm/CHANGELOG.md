@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.0...crm-v0.2.1) (2026-10-03)
+
+
+### Bug Fixes
+
+* **crm:** raise server and worker memory limits to 1536M ([#216](https://github.com/giocaizzi/rp5-homeserver/issues/216)) ([a4e0f4f](https://github.com/giocaizzi/rp5-homeserver/commit/a4e0f4f9b35fe551e80a6a5c95709e6a94bc0782))
+
 ## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.1.0...crm-v0.2.0) (2026-09-27)
 
 
