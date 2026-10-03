@@ -37,8 +37,9 @@ Raspberry Pi 5 (8GB) limitations:
 
 | Setting | Value | Reason |
 |---------|-------|--------|
-| Max VRAM | 1GB | Shared memory |
-| Flash attention | Disabled | ARM compatibility |
+| Context length | 4096 | Bounds KV cache size |
+| Flash attention + KV cache | Enabled, `q8_0` | Halves KV cache memory (CPU backend supports FA) |
+| Follow-up / tag generation | Disabled | Avoid extra generations per reply on CPU |
 | Concurrent models | 1 | Memory limits |
 | Model management | Manual | Pull models explicitly when needed |
 
