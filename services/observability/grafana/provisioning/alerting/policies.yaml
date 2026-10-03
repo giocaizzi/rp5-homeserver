@@ -1,0 +1,11 @@
+apiVersion: 1
+
+# Replaces the default (email) root policy: everything to ntfy, critical at urgent priority.
+policies:
+  - orgId: 1
+    receiver: ntfy
+    group_by: [grafana_folder, alertname]
+    routes:
+      - receiver: ntfy-critical
+        object_matchers:
+          - ["severity", "=", "critical"]

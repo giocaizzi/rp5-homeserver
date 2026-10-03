@@ -211,7 +211,7 @@ groups:
               expression: B
               refId: C
               type: threshold
-        noDataState: NoData
+        noDataState: OK # no redis exporter scraped today; NoData would page forever
         execErrState: Error
         for: 2m
         annotations:
@@ -251,7 +251,7 @@ groups:
               expression: B
               refId: C
               type: threshold
-        noDataState: NoData
+        noDataState: OK # no redis exporter scraped today; NoData would page forever
         execErrState: Error
         for: 5m
         annotations:
@@ -278,7 +278,7 @@ groups:
               to: 0
             datasourceUid: prometheus
             model:
-              expr: up{job=~"postgres|mariadb|redis|nginx|clickhouse"}
+              expr: up{job!~"loki|tempo|alloy"} # every scraped target; those three have dedicated rules
               instant: true
               refId: A
           - refId: B
