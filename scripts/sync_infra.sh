@@ -281,7 +281,8 @@ sync_files() {
     else
         # Run rsync - status 23/24 are partial transfer (permission issues) which we handle with fix_permissions
         local rsync_status=0
-        rsync -avz --delete "${RSYNC_EXCLUDES[@]}" "$LOCAL_INFRA_PATH/" "$RSYNC_DEST" >/dev/null 2>&1 || rsync_status=$?
+        # --inplace keeps inodes so single-file bind mounts (homepage VERSION) see updates
+        rsync -avz --inplace --delete "${RSYNC_EXCLUDES[@]}" "$LOCAL_INFRA_PATH/" "$RSYNC_DEST" >/dev/null 2>&1 || rsync_status=$?
         
         if [ "$rsync_status" -eq 0 ] || [ "$rsync_status" -eq 23 ] || [ "$rsync_status" -eq 24 ]; then
             [ "$send_count" -gt 0 ] && log_success "Synced $send_count file(s)" || true
