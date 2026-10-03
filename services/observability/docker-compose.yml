@@ -7,6 +7,7 @@
 x-labels-base: &labels-base
   com.giocaizzi.namespace: "observability"
   com.giocaizzi.env: "production"
+  com.giocaizzi.config-rev: "0.1.1" # x-release-please-version — bumped per release so tasks re-bind fresh Portainer clone
 
 x-deploy-base: &deploy-base
   mode: replicated
@@ -206,6 +207,7 @@ services:
       - /etc/alloy/config.alloy
     environment:
       - DEPLOYMENT_ENV=production
+      - GOMEMLIMIT=300MiB # GC before memory_limiter trips; ~60% of container limit
     secrets:
       - alloy_otel_bearer_token
     volumes:
@@ -230,7 +232,7 @@ services:
         com.giocaizzi.tier: "core"
       resources:
         limits:
-          memory: 256M
+          memory: 512M
     logging:
       <<: *logging-base
 
