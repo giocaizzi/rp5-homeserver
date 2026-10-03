@@ -18,7 +18,7 @@
 
 | Container | Image | Purpose |
 |-----------|-------|---------|
-| ntfy | `binwiederhier/ntfy:latest` | Notification server |
+| ntfy | `binwiederhier/ntfy:v2` | Notification server |
 
 ---
 
