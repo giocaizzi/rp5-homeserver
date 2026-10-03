@@ -176,7 +176,12 @@ services:
       # Performance and features
       - N8N_LOG_LEVEL=info
       - N8N_LOG_OUTPUT=console
-      - N8N_RUNNERS_ENABLED=true
+      # Main heap bounded under the 1536M limit; the JS runner does not inherit
+      # NODE_OPTIONS (allowlisted env), it gets N8N_RUNNERS_MAX_OLD_SPACE_SIZE.
+      - NODE_OPTIONS=--max-old-space-size=896
+      - N8N_RUNNERS_MAX_OLD_SPACE_SIZE=256
+      - N8N_RUNNERS_TASK_TIMEOUT=300
+      - N8N_CONCURRENCY_PRODUCTION_LIMIT=3
       - EXECUTIONS_DATA_PRUNE=true
       - EXECUTIONS_DATA_MAX_AGE=168
       
