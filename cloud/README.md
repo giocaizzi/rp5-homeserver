@@ -90,7 +90,7 @@ terraform output -raw cloudflare_tunnel_credentials
 
 Extract Service Account Key:
 ```bash
-terraform output -raw backup_service_account_key | base64 -d > ../infra/secrets/gcp_service_account.json
+bws secret create infra_gcp_service_account "$(terraform output -raw backup_service_account_key | base64 -d)" <project-id>   # then sync_infra.sh
 ```
 
 ### 5. Re-start infrastructure
