@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/giocaizzi/rp5-homeserver/compare/n8n-v0.1.2...n8n-v0.1.3) (2026-10-03)
+
+
+### Bug Fixes
+
+* **n8n:** bound heap and runner memory and tune postgres ([#226](https://github.com/giocaizzi/rp5-homeserver/issues/226)) ([0d02dcf](https://github.com/giocaizzi/rp5-homeserver/commit/0d02dcf0b0411f56daf87ada45a6522fc26cd8d7))
+
 ## [0.1.2](https://github.com/giocaizzi/rp5-homeserver/compare/n8n-v0.1.1...n8n-v0.1.2) (2026-10-03)
 
 

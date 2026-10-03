@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.16.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.7...v1.16.0) (2026-10-03)
+
+
+### Features
+
+* **repo:** materialise infra secrets from bitwarden secrets manager ([#230](https://github.com/giocaizzi/rp5-homeserver/issues/230)) ([2ceaf7d](https://github.com/giocaizzi/rp5-homeserver/commit/2ceaf7d2513f2386e317da8b8597ded88a55af0d))
+
+
+### Bug Fixes
+
+* **infra:** trim netdata collectors and tune nginx/homepage ([#229](https://github.com/giocaizzi/rp5-homeserver/issues/229)) ([162693b](https://github.com/giocaizzi/rp5-homeserver/commit/162693bbe4374a12a80ac45e48c1d92f11433d17))
+
 ## [1.15.7](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.6...v1.15.7) (2026-10-03)
 
 

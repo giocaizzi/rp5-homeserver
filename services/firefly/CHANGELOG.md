@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.0...firefly-v0.2.1) (2026-10-03)
+
+
+### Bug Fixes
+
+* **firefly:** tune mariadb, php-fpm and scheduler for enforced memory limits ([#228](https://github.com/giocaizzi/rp5-homeserver/issues/228)) ([82d1d80](https://github.com/giocaizzi/rp5-homeserver/commit/82d1d80bcf16aa03cf5114f0dbf76e408998a848))
+
 ## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.1.3...firefly-v0.2.0) (2026-10-03)
 
 

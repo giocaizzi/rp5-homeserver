@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.3.0...cloud-v0.4.0) (2026-10-03)
+
+
+### Features
+
+* **repo:** materialise infra secrets from bitwarden secrets manager ([#230](https://github.com/giocaizzi/rp5-homeserver/issues/230)) ([2ceaf7d](https://github.com/giocaizzi/rp5-homeserver/commit/2ceaf7d2513f2386e317da8b8597ded88a55af0d))
+
 ## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.2.0...cloud-v0.3.0) (2026-09-27)
 
 

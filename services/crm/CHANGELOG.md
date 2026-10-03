@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.1...crm-v0.2.2) (2026-10-03)
+
+
+### Bug Fixes
+
+* **crm:** run worker without yarn wrappers and bound postgres/redis memory ([#227](https://github.com/giocaizzi/rp5-homeserver/issues/227)) ([117ac7d](https://github.com/giocaizzi/rp5-homeserver/commit/117ac7d13dde936c6856b92a4874825bc56c52e7))
+
 ## [0.2.1](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.0...crm-v0.2.1) (2026-10-03)
 
 
