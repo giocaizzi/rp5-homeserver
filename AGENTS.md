@@ -72,11 +72,12 @@ All scripts require `PI_SSH_USER`. `PI_HOST` defaults to `pi.local`.
 PI_SSH_USER=giorgiocaizzi ./scripts/sync_infra.sh
 PI_SSH_USER=giorgiocaizzi ./scripts/sync_infra.sh --pull   # pull latest images first
 
-# Create Swarm external secrets for a service stack (used before first Portainer deploy)
+# Sync Swarm external secrets for a service stack from Bitwarden Secrets Manager (project rp5-homeserver; used before first Portainer deploy)
+# Needs BWS_ACCESS_TOKEN (machine account with read access), bws and jq.
 PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack>             # n8n | firefly | langfuse | observability | ...
 PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh --all               # every stack under services/
 PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack> --dry-run
-PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack> --prune     # delete secrets on Pi not present locally
+PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack> --prune     # delete secrets on Pi not referenced by the compose file
 
 # Unstick Portainer/Docker (compose-unpacker hangs, blocking `docker stack rm`, etc.)
 PI_SSH_USER=giorgiocaizzi ./scripts/kill_stuck_processes.sh --dry-run
@@ -107,6 +108,7 @@ There is no application test/lint/build suite — this repo is configuration. "T
 
 - Minimal Swarm config: avoid unnecessary stacks, networks, wrappers, CRON containers.
 - Never embed secrets in YAML—use Swarm secrets or `.env` files (gitignored).
+- Source of truth for `services/` secrets: Bitwarden Secrets Manager project `rp5-homeserver` (key = Swarm secret name). Never keep them as local files. `infra/` secrets stay file-based on the Pi (`file:`), with their values also stored in the project as `infra_<name>`.
 - OpenClaw exception: prefer OpenClaw CLI-managed auth (gateway/config/auth profiles/channel tokens) persisted in `config_data` over custom entrypoint secret-export wrappers.
 - Use configs only for non-secret, user-level configuration.
 - ARM64 compatibility and optimization required for all images.
