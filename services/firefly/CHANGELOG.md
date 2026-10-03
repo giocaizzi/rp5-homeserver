@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.1.2...firefly-v0.1.3) (2026-10-03)
+
+
+### Bug Fixes
+
+* **firefly:** pin floating images to major tags ([#185](https://github.com/giocaizzi/rp5-homeserver/issues/185)) ([#208](https://github.com/giocaizzi/rp5-homeserver/issues/208)) ([96da371](https://github.com/giocaizzi/rp5-homeserver/commit/96da371bf10c3d685083237a326c423958265aa9))
+
 ## [0.1.2](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.1.1...firefly-v0.1.2) (2026-10-03)
 
 
