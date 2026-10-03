@@ -27,7 +27,7 @@
     cputemp: true
     uptime: true
     units: metric
-    refresh: 3000
+    refresh: 10000
     diskUnits: bytes
 
 # Date and time
