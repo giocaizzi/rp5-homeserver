@@ -136,19 +136,48 @@ required reviewers.
 
 ### Adding a new service stack
 
-1. Create `services/<stack>/` and deploy it once in Portainer (steps above).
-2. Add `WEBHOOK_ID_<STACK>` repo secret.
-3. Add `WEBHOOK_ID_<STACK>: ${{ secrets.WEBHOOK_ID_<STACK> }}` to the `deploy`
-   job env in `deploy-services.yml`.
+1. **Stack files** — create `services/<stack>/` with `docker-compose.yml`
+   (anchors, labels, `deploy.labels.com.giocaizzi.tier` per
+   [Docker Compose Standardization](../AGENTS.md#docker-compose-standardization)
+   and [Naming & Labels](./naming_labels.md)), a `secrets/` template if needed,
+   and a `README.md` with the required sections
+   ([Documentation](../AGENTS.md#documentation)). Validate:
+   `docker compose -f services/<stack>/docker-compose.yml config -q`.
+2. **Release-please package** — add `"services/<stack>": { "release-type": "simple", "component": "<stack>" }`
+   to `release-please-config.json` and `"services/<stack>": "0.1.0"` to
+   `.release-please-manifest.json` (seed only; never edit it afterwards). If
+   the stack bind-mounts repo files, also add `"extra-files": ["docker-compose.yml"]`
+   and `com.giocaizzi.config-rev: "0.1.0" # x-release-please-version` to
+   `x-labels-base`, so each release rolls the tasks onto the fresh Portainer
+   clone (see the Portainer re-clone trap in [AGENTS.md](../AGENTS.md#deployment)).
+3. **Secrets** — `PI_SSH_USER=<user> ./scripts/create_secrets.sh <stack>`.
+4. **Portainer** — create the Remote Stack with a **Webhook** GitOps update
+   ([Per-stack Portainer setup](#per-stack-portainer-setup-once-per-stack)).
+5. **Deploy wiring** — add the `WEBHOOK_ID_<STACK>` repo secret and
+   `WEBHOOK_ID_<STACK>: ${{ secrets.WEBHOOK_ID_<STACK> }}` to the `deploy` job
+   env in `deploy-services.yml` (`-` in the stack name becomes `_`). Skip for
+   on-demand stacks.
+6. **Routing** (if nginx-proxied) — attach the service to `rp5_public`, then
+   follow the [nginx guide](../infra/nginx/README.md#-adding-a-new-service).
+   For public access, also follow the Cloudflare/Terraform recipe
+   ("Adding a public service" in [AGENTS.md](../AGENTS.md#cicd)).
+7. **Dashboard** — add the tile to `infra/homepage/services.yaml` under a group
+   that has a matching `layout:` entry in `infra/homepage/settings.yaml`
+   ([Homepage](../AGENTS.md#homepage-dashboard)).
+8. **Docs** — add the stack to the service tables in the root
+   [README](../README.md) and [docs/README](./README.md).
+
+Land the stack as `feat(<stack>): …`; merging the Release PR then cuts
+`<stack>-v0.x` and fires the webhook. Steps 6–7 touch `infra/**` — ship them
+as a separate `feat(infra):`/`fix(infra):` PR and cut the `infra` release.
 
 ---
 
 ## Manual trigger (debug)
 
 ```bash
-# Re-fire a stack's Portainer webhook directly (through the tunnel)
-curl -X POST \
-  -H "CF-Access-Client-Id: $CF_ID" \
-  -H "CF-Access-Client-Secret: $CF_SECRET" \
-  "https://portainer.<zone>/api/stacks/webhooks/<webhook-id>"
+# Re-fire a stack's Portainer webhook from the Pi (same path as the workflow)
+ssh pi@pi.local 'curl -sk --resolve portainer.<zone>:443:127.0.0.1 -X POST \
+  "https://portainer.<zone>/api/stacks/webhooks/<webhook-id>"'
 ```
+Or run **Deploy services** from the Actions tab with a single `stack` input.

@@ -50,43 +50,12 @@ Access Portainer at `https://portainer.home` to manage all stacks.
 
 ### 2. Deploy service stacks
 
-Deploy services using Portainer's GitOps capabilities with Docker Swarm stacks for automated updates.
+Each `services/<stack>` is a Portainer Remote Stack (Swarm mode, **Webhook**
+GitOps updates). Deploys are release-gated: `deploy-services.yml` fires the
+stack's webhook from the Pi runner when its `<stack>-v*` release is published.
 
-#### GitOps Setup (Recommended)
+1. Create the stack's external secrets: `PI_SSH_USER=<user> ./scripts/create_secrets.sh <stack>`
+2. Create the Remote Stack and webhook: [GitOps → Per-stack Portainer setup](./gitops.md#per-stack-portainer-setup-once-per-stack)
+3. Set the `WEBHOOK_ID_<STACK>` repo secret: [GitOps → GitHub config](./gitops.md#github-config)
 
-Enable automated deployments with webhook integration using Docker Swarm:
-
-1. **Add Stack from Git Repository:**
-   - URL: `https://github.com/giocaizzi/rp5-homeserver`
-   - Branch: `refs/heads/main`
-   - Compose file: `services/{service}/docker-compose.yml`
-   - **Deploy Mode**: Select "Swarm" (not "Standalone")
-   - Authentication: Configure if private repo
-
-2. **Enable GitOps Updates:**
-   - Toggle **GitOps updates** ON
-   - Select **Webhook** mechanism
-   - Copy the generated webhook URL
-
-3. **Configure GitHub Webhook:**
-   - Repository Settings → Webhooks → Add webhook
-   - Payload URL: Use Portainer's webhook URL
-   - Events: Push events
-   - Content type: `application/json`
-
-4. **Test Workflow:**
-   - Make a small change to the service
-   - Push to main branch
-   - Verify automatic deployment in Portainer
-
-**Benefits:** Automatic updates, version control, audit trail, rollback capabilities, and Docker Swarm orchestration features.
-
-See [GitOps Documentation](./gitops.md) for complete setup guide.
-
-#### Manual Deployment (Alternative)
-
-For services that don't require frequent updates:
-1. **Stacks** → **Add stack** → **Git Repository**
-2. Configure repository URL and compose path
-3. Select **Swarm** deploy mode
-4. Deploy
+New stacks: [GitOps → Adding a new service stack](./gitops.md#adding-a-new-service-stack).
