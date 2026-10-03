@@ -16,14 +16,14 @@
 //
 // Extracted Labels (low cardinality):
 //   - vhost: Virtual host (server_name)
-//   - status: HTTP status code
-//   - method: HTTP method
 //   - level: Log level (info/warn/error based on status)
 //
 // Structured Metadata (high cardinality):
 //   - path: Request URI path
 //   - client_ip: Remote address
 //   - request_time: Request duration in seconds
+//   - status: HTTP status code (filter with `| status="..."`)
+//   - method: HTTP method (filter with `| method="..."`)
 //
 // Arguments:
 //   forward_to - Receiver to send processed logs
@@ -64,20 +64,21 @@ declare "nginx_logs" {
     // Add low-cardinality labels for filtering and grouping
     stage.labels {
       values = {
-        level  = "",
-        vhost  = "",
-        status = "",
-        method = "",
+        level = "",
+        vhost = "",
       }
     }
 
     // Add high-cardinality fields as structured metadata (Loki 3.0+)
-    // These are queryable but don't increase label cardinality
+    // These are queryable but don't increase label cardinality.
+    // status/method live here (not as labels) to avoid multiplying streams.
     stage.structured_metadata {
       values = {
         client_ip    = "",
         path         = "",
         request_time = "",
+        status       = "",
+        method       = "",
       }
     }
   }
