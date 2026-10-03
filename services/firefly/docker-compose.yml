@@ -138,7 +138,7 @@ services:
       <<: *logging-base
 
   db:
-    image: mariadb:lts
+    image: mariadb:12.3   # series-pinned: :lts jumps across major series (see #185)
     hostname: firefly-db
     environment:
       - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
@@ -216,7 +216,7 @@ services:
       <<: *logging-base
 
   importer:
-    image: fireflyiii/data-importer:latest
+    image: fireflyiii/data-importer:version-2   # major-pinned (see #185)
     hostname: firefly-importer
     expose:
       - "8080"
