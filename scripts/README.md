@@ -79,27 +79,31 @@ Re-running is safe (re-registers with `--replace`). See [docs/gitops.md](../docs
 
 ### create_secrets.sh
 
-Creates Docker Swarm external secrets for a specified service stack. Used for services deployed via Portainer Remote Stacks.
+Syncs Docker Swarm external secrets for a service stack from the **Bitwarden Secrets Manager** project `rp5-homeserver` (single source of truth; no local secret files). Used for services deployed via Portainer Remote Stacks.
 
 **Required Environment Variables:**
 - `PI_SSH_USER` - SSH username for the Pi
+- `BWS_ACCESS_TOKEN` - Secrets Manager machine-account token with read access to the project
 
 **Optional Environment Variables:**
 - `PI_HOST` - Pi hostname or IP (default: `pi.local`)
+- `BWS_PROJECT` - Secrets Manager project name (default: `rp5-homeserver`)
+
+**Requires:** `bws`, `jq`.
 
 **Arguments:**
-- `<stack>` - Stack name (e.g., `n8n`, `firefly`, `langfuse`, `observability`)
+- `<stack>` - Stack name (e.g., `n8n`, `firefly`, `langfuse`, `observability`), or `--all`
 
 **Usage:**
 ```bash
 # Create secrets for n8n stack
-PI_SSH_USER=pi ./create_secrets.sh n8n
+BWS_ACCESS_TOKEN=<token> PI_SSH_USER=pi ./create_secrets.sh n8n
 
 # Dry run - show what would be created
 PI_SSH_USER=pi ./create_secrets.sh firefly --dry-run
 
-# Force recreate existing secrets
-PI_SSH_USER=pi ./create_secrets.sh langfuse --force
+# Also remove secrets on the Pi that the compose file no longer references
+PI_SSH_USER=pi ./create_secrets.sh langfuse --prune
 
 # Show help
 ./create_secrets.sh --help
@@ -107,16 +111,20 @@ PI_SSH_USER=pi ./create_secrets.sh langfuse --force
 
 **What it does:**
 1. Parses external secrets from the stack's `docker-compose.yml`
-2. Maps secret names to local files in `services/<stack>/secrets/`
-3. Creates Docker Swarm secrets on the Pi via SSH
+2. Looks up each secret by name in the Secrets Manager project (loaded once, in memory only)
+3. Creates or updates Docker Swarm secrets on the Pi via SSH, labelling each with a hash of its value (unchanged ones are skipped)
 4. Follows naming convention: `<stack>_<secret_name>`
 
+Secrets created before the `hash` label existed (e.g. by hand with `docker secret create`) always report "would update"; Docker secrets are immutable, so an in-use one is left untouched.
+
 **Secret naming convention:**
-| Stack | Local File | Swarm Secret Name |
-|-------|------------|-------------------|
-| n8n | `secrets/postgres_password.txt` | `n8n_postgres_password` |
-| firefly | `secrets/app_key.txt` | `firefly_app_key` |
-| langfuse | `secrets/salt.txt` | `langfuse_salt` |
+| Stack | Secrets Manager key | Swarm Secret Name |
+|-------|---------------------|-------------------|
+| n8n | `n8n_postgres_password` | `n8n_postgres_password` |
+| firefly | `firefly_app_key` | `firefly_app_key` |
+| langfuse | `langfuse_salt` | `langfuse_salt` |
+
+The key is the Swarm secret name. Add a new secret with `bws secret create <stack>_<name> "$(openssl rand -hex 32)" <project-id>`, then run the script. `infra/` secrets stay file-based (see AGENTS.md).
 
 ---
 

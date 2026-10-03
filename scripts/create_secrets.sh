@@ -1,21 +1,25 @@
 #!/bin/bash
 
 # Sync Docker Swarm secrets for service stacks
-# Creates, updates, and prunes secrets based on local files
+# Creates, updates, and prunes secrets from the Bitwarden Secrets Manager project
 #
 # Usage: PI_SSH_USER=username ./create_secrets.sh <stack|--all> [options]
 #
 # Required environment variables:
-#   PI_SSH_USER - SSH username for the Pi
+#   PI_SSH_USER      - SSH username for the Pi
+#   BWS_ACCESS_TOKEN - Secrets Manager machine-account token (read access to the project)
 #
 # Optional environment variables:
-#   PI_HOST - Pi hostname or IP (default: pi.local)
+#   PI_HOST     - Pi hostname or IP (default: pi.local)
+#   BWS_PROJECT - Secrets Manager project name (default: rp5-homeserver)
 
 set -euo pipefail
 
 # Global configuration
 PI_HOST="${PI_HOST:-pi.local}"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+BWS_PROJECT="${BWS_PROJECT:-rp5-homeserver}"
+BWS_SECRETS_JSON=""   # project secrets, held in memory only
 
 # Feature flags
 DRY_RUN=false
@@ -60,10 +64,15 @@ Sync Docker Swarm secrets for service stacks
 Usage: PI_SSH_USER=username $0 <stack|--all> [options]
 
 Required environment variables:
-  PI_SSH_USER     SSH username for the Pi
+  PI_SSH_USER       SSH username for the Pi
+  BWS_ACCESS_TOKEN  Secrets Manager machine-account token (read access)
 
 Optional environment variables:
-  PI_HOST         Pi hostname or IP (default: pi.local)
+  PI_HOST           Pi hostname or IP (default: pi.local)
+  BWS_PROJECT       Secrets Manager project name (default: rp5-homeserver)
+
+Source of truth: secret <stack>_<name> is read from the Secrets Manager project
+under the same key; nothing is read from or written to local files.
 
 Arguments:
   <stack>         Stack name: n8n, firefly, langfuse, observability
@@ -71,7 +80,7 @@ Arguments:
 
 Options:
   --dry-run       Show what would be done without executing
-  --prune         Remove secrets on Pi not found in local files
+  --prune         Remove secrets on Pi not defined in the stack's compose file
   --help, -h      Show this help message
 
 Operations:
@@ -123,7 +132,7 @@ parse_arguments() {
     if [ "$ALL_STACKS" = true ]; then
         STACKS=()
         for dir in "$REPO_ROOT/services/"*/; do
-            if [ -d "${dir}secrets" ]; then
+            if [ -f "${dir}docker-compose.yml" ]; then
                 STACKS+=("$(basename "$dir")")
             fi
         done
@@ -138,10 +147,20 @@ parse_arguments() {
 }
 
 validate_environment() {
-    if [ -z "$PI_SSH_USER" ]; then
+    if [ -z "${PI_SSH_USER:-}" ]; then
         echo -e "${RED}Error: PI_SSH_USER environment variable required${NC}" >&2
         exit 1
     fi
+    if [ -z "${BWS_ACCESS_TOKEN:-}" ]; then
+        echo -e "${RED}Error: BWS_ACCESS_TOKEN environment variable required${NC}" >&2
+        exit 1
+    fi
+    for tool in bws jq; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            echo -e "${RED}Error: $tool not found in PATH${NC}" >&2
+            exit 1
+        fi
+    done
 }
 
 test_ssh_connection() {
@@ -166,23 +185,28 @@ get_compose_secrets() {
         | grep -A1 "external: true" | grep "name:" | sed 's/.*name: //' | tr -d ' ' | sort -u || true
 }
 
-# Get local secret file path for a secret name
-get_local_secret_file() {
-    local stack="$1"
-    local secret_name="$2"
-    local secrets_dir="$REPO_ROOT/services/$stack/secrets"
-    local local_name="${secret_name#${stack}_}"
+# Load the project's secrets once into memory (never written to disk)
+load_bws_secrets() {
+    local project_id
+    project_id=$(bws project list --color no --output json \
+        | jq -r --arg n "$BWS_PROJECT" '[.[] | select(.name == $n)][0].id // empty') || true
+    if [ -z "$project_id" ]; then
+        echo -e "${RED}Error: Secrets Manager project '$BWS_PROJECT' not found or not readable with this token${NC}" >&2
+        exit 1
+    fi
+    BWS_SECRETS_JSON=$(bws secret list "$project_id" --color no --output json) || {
+        echo -e "${RED}Error: cannot list secrets of project '$BWS_PROJECT'${NC}" >&2
+        exit 1
+    }
+}
 
-    for ext in txt json key pem; do
-        local file="$secrets_dir/${local_name}.$ext"
-        if [ -f "$file" ]; then
-            echo "$file"
-            return
-        fi
-    done
-    
-    # Return expected path even if not found (for error messages)
-    echo "$secrets_dir/${local_name}.txt"
+# Print the value of a secret (exactly one match required, no trailing newline)
+get_secret_value() {
+    local name="$1"
+    local count
+    count=$(jq --arg k "$name" '[.[] | select(.key == $k)] | length' <<< "$BWS_SECRETS_JSON")
+    [ "$count" = "1" ] || return 1
+    jq -j --arg k "$name" '.[] | select(.key == $k) | .value' <<< "$BWS_SECRETS_JSON"
 }
 
 # Get secret value from Pi (via temporary service)
@@ -211,19 +235,14 @@ get_remote_secrets() {
 
 # Create or update a secret
 sync_secret() {
-    local stack="$1"
-    local secret_name="$2"
-    local local_file="$3"
-    local local_name="${secret_name#${stack}_}"
+    local secret_name="$1"
 
-    if [ ! -f "$local_file" ]; then
-        log_warning "$secret_name — missing file: ${local_name}.txt"
+    local local_value
+    if ! local_value=$(get_secret_value "$secret_name"); then
+        log_warning "$secret_name — not found (or ambiguous) in Secrets Manager project '$BWS_PROJECT'"
         incr_failed
         return 1
     fi
-
-    local local_value
-    local_value=$(cat "$local_file")
     
     # Calculate local hash
     local local_hash
@@ -328,12 +347,11 @@ prune_orphan_secrets() {
 # Process a single stack
 process_stack() {
     local stack="$1"
-    local secrets_dir="$REPO_ROOT/services/$stack/secrets"
 
     echo -e "${BLUE}┌─${NC} ${CYAN}Stack: $stack${NC}"
 
-    if [ ! -d "$secrets_dir" ]; then
-        log_warning "No secrets directory"
+    if [ ! -f "$REPO_ROOT/services/$stack/docker-compose.yml" ]; then
+        log_warning "No docker-compose.yml for stack '$stack'"
         log_end "Skipped"
         echo
         return
@@ -356,9 +374,7 @@ process_stack() {
     # stdin and silently skip every secret after the first.
     while IFS= read -r secret_name <&3; do
         [ -z "$secret_name" ] && continue
-        local local_file
-        local_file=$(get_local_secret_file "$stack" "$secret_name")
-        sync_secret "$stack" "$secret_name" "$local_file" || true
+        sync_secret "$secret_name" || true
     done 3<<< "$compose_secrets"
 
     # Prune if requested
@@ -380,7 +396,7 @@ display_summary() {
     [ $TOTAL_UPDATED -gt 0 ]   && echo -e "  ${YELLOW}Updated:${NC}   $TOTAL_UPDATED"
     [ $TOTAL_UNCHANGED -gt 0 ] && echo -e "  ${DIM}Unchanged:${NC} $TOTAL_UNCHANGED"
     [ $TOTAL_PRUNED -gt 0 ]    && echo -e "  ${RED}Pruned:${NC}    $TOTAL_PRUNED"
-    [ $TOTAL_FAILED -gt 0 ]    && echo -e "  ${RED}Missing:${NC}   $TOTAL_FAILED ${DIM}(local files not found)${NC}"
+    [ $TOTAL_FAILED -gt 0 ]    && echo -e "  ${RED}Missing:${NC}   $TOTAL_FAILED ${DIM}(not found in Secrets Manager)${NC}"
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
 
     if [ "$DRY_RUN" = true ]; then
@@ -400,6 +416,7 @@ main() {
     echo
 
     test_ssh_connection
+    load_bws_secrets
 
     for stack in "${STACKS[@]}"; do
         process_stack "$stack"

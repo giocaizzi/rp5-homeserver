@@ -30,12 +30,14 @@
 
 ## 🔐 Secrets
 
-| Secret | Generate |
+Secrets live in the Secrets Manager project `rp5-homeserver`; `scripts/create_secrets.sh firefly` syncs them to Swarm.
+
+| Secret | Generate (`<pid>` = project id) |
 |--------|----------|
-| `firefly_app_key` | `echo "base64:$(openssl rand -base64 32)" \| docker secret create firefly_app_key -` |
-| `firefly_db_password` | `openssl rand -base64 32 \| docker secret create firefly_db_password -` |
-| `firefly_static_cron_token` | `openssl rand -hex 32 \| docker secret create firefly_static_cron_token -` |
-| `firefly_auto_import_secret` | `openssl rand -hex 16 \| docker secret create firefly_auto_import_secret -` |
+| `firefly_app_key` | `bws secret create firefly_app_key "base64:$(openssl rand -base64 32)" <pid>` |
+| `firefly_db_password` | `bws secret create firefly_db_password "$(openssl rand -base64 32)" <pid>` |
+| `firefly_static_cron_token` | `bws secret create firefly_static_cron_token "$(openssl rand -hex 32)" <pid>` |
+| `firefly_auto_import_secret` | `bws secret create firefly_auto_import_secret "$(openssl rand -hex 16)" <pid>` |
 
 **After deployment** (from Firefly UI):
 | Secret | Source |
@@ -52,10 +54,10 @@ Naive `docker secret rm` + `create` crash-loops the scheduler container, because
 
 ```bash
 # 1. Generate a new token in the Firefly UI (Profile → OAuth → Personal Access Tokens)
-#    and place it in services/firefly/secrets/firefly_access_token.txt (gitignored).
+#    and store it in Secrets Manager: bws secret edit <firefly_access_token id> --value '<token>'.
 
 # 2. Rotate the Swarm secret in three steps from the Pi.
-NEW_TOKEN=$(cat services/firefly/secrets/firefly_access_token.txt)
+NEW_TOKEN=$(bws secret list <project-id> --output json | jq -j '.[] | select(.key=="firefly_access_token") | .value')
 ssh pi@pi.local "TOKEN=$(printf %q "$NEW_TOKEN") bash -s" <<'EOF'
 set -euo pipefail
 docker service update --secret-rm firefly_access_token firefly_scheduler >/dev/null

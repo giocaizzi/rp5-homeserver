@@ -54,7 +54,7 @@ Each `services/<stack>` is a Portainer Remote Stack (Swarm mode, **Webhook**
 GitOps updates). Deploys are release-gated: `deploy-services.yml` fires the
 stack's webhook from the Pi runner when its `<stack>-v*` release is published.
 
-1. Create the stack's external secrets: `PI_SSH_USER=<user> ./scripts/create_secrets.sh <stack>`
+1. Create the stack's external secrets from Secrets Manager: `BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> ./scripts/create_secrets.sh <stack>`
 2. Create the Remote Stack and webhook: [GitOps → Per-stack Portainer setup](./gitops.md#per-stack-portainer-setup-once-per-stack)
 3. Set the `WEBHOOK_ID_<STACK>` repo secret: [GitOps → GitHub config](./gitops.md#github-config)
 
