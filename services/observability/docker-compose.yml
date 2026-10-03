@@ -151,7 +151,7 @@ services:
         com.giocaizzi.tier: "core"
       resources:
         limits:
-          memory: 512M
+          memory: 640M
     logging:
       <<: *logging-base
 
@@ -186,7 +186,7 @@ services:
         com.giocaizzi.tier: "core"
       resources:
         limits:
-          memory: 512M
+          memory: 1024M
     logging:
       <<: *logging-base
 
