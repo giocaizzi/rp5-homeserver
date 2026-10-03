@@ -179,7 +179,7 @@ Key labels applied by Alloy (OTEL-compliant names):
 
 | Volume | Purpose |
 |--------|---------|
-| `prometheus_data` | Metrics TSDB (30d retention) |
+| `prometheus_data` | Metrics TSDB (30d / 3GB retention) |
 | `loki_data` | Log storage (30d retention) |
 | `tempo_data` | Trace storage (30d retention) |
 | `grafana_data` | Dashboards, plugins |

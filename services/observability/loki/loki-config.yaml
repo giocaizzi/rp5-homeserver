@@ -56,6 +56,9 @@ limits_config:
   # RAM — the right lever for a memory-constrained Pi.
   split_queries_by_interval: 24h
   max_cache_freshness_per_query: 10m
+  # Frontend fan-out caps (defaults 32/128) sized to the 640M container.
+  max_query_parallelism: 8
+  tsdb_max_query_parallelism: 16
   otlp_config:
     resource_attributes:
       attributes_config:
@@ -67,14 +70,55 @@ limits_config:
             - component
             - host.name
 
+ingester:
+  wal:
+    # Default 4GB would OOM the 640M container on WAL replay after a restart;
+    # past this ceiling Loki flushes to storage before continuing.
+    replay_memory_ceiling: 400MB
+
+# Embedded caches default to 100MB each (chunks + 5 results caches); shrink
+# them so their sum fits the 640M container.
+chunk_store_config:
+  chunk_cache_config:
+    embedded_cache:
+      enabled: true
+      max_size_mb: 32
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 16
+  index_stats_results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 16
+  volume_results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 16
+  series_results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 16
+  label_results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 16
+
 querier:
-  max_concurrent: 4
+  max_concurrent: 2
 
 query_scheduler:
   # Headroom for dashboard load (many panels) + TSDB shard fan-out on top of the
   # ~30 time splits. Queue holds lightweight request descriptors, not query
   # state, so 256 adds negligible RAM; actual memory stays bounded by
-  # querier.max_concurrent (4), which we deliberately leave untouched.
+  # querier.max_concurrent.
   max_outstanding_requests_per_tenant: 256
 
 frontend:

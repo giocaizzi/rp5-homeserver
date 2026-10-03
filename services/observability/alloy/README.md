@@ -176,10 +176,11 @@ OTLP receiver → memory_limiter → batch → transform (defaults) → ┬─ P
                                                                 └─ Tempo OTLP gRPC (traces)
 ```
 
-- `memory_limiter` caps the collector at **200MiB** resident with a **50MiB**
-  spike headroom — sized for a Pi 5 (8GB). Over the soft limit the processor
-  refuses new data with a retryable error so producers back off.
-- `batch` groups data points (5s / 100 items) before export.
+- `memory_limiter` caps the collector heap at **640MiB** with a **128MiB**
+  spike headroom (soft limit 512MiB) — sized for the 768M container, with
+  `GOMEMLIMIT=480MiB`. Over the soft limit the processor refuses new data with
+  a retryable error so producers back off.
+- `batch` groups data points (10s / 1000 items) before export.
 - `transform` (resource context) fills missing resource attributes:
   `deployment.environment.name=production`, `source=otel`, `tier=core`.
   `service.namespace` is **not** defaulted — senders own it; missing values
