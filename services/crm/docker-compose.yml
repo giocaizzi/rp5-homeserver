@@ -108,7 +108,7 @@ services:
   redis:
     image: redis:7-alpine
     hostname: crm-redis
-    command: ["redis-server", "--maxmemory-policy", "noeviction", "--save", "", "--appendonly", "no"]
+    command: ["redis-server", "--maxmemory", "48mb", "--maxmemory-policy", "noeviction", "--save", "", "--appendonly", "no"]
     expose:
       - "6379"
     networks:
@@ -182,7 +182,7 @@ services:
     image: twentycrm/twenty:v2.43.0
     hostname: crm-worker
     entrypoint: *twenty-entrypoint
-    command: ["yarn", "worker:prod"]
+    command: ["node", "dist/queue-worker/queue-worker"]   # = yarn worker:prod, minus yarn
     environment:
       <<: *twenty-env
       NODE_OPTIONS: "--max-old-space-size=768"   # 384 OOMs during boot (~370M heap)
