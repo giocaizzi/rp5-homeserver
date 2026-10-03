@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.2...observability-v0.1.3) (2026-10-03)
+
+
+### Bug Fixes
+
+* **observability:** raise grafana memory limit to 384M ([#196](https://github.com/giocaizzi/rp5-homeserver/issues/196)) ([759715e](https://github.com/giocaizzi/rp5-homeserver/commit/759715e38e1e5e3d757a0a16b8ed72044ffd43af))
+
 ## [0.1.2](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.1...observability-v0.1.2) (2026-10-03)
 
 
