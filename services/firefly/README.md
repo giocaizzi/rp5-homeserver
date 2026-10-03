@@ -36,7 +36,7 @@ Secrets live in the Secrets Manager project `rp5-homeserver`; `scripts/create_se
 |--------|----------|
 | `firefly_app_key` | `bws secret create firefly_app_key "base64:$(openssl rand -base64 32)" <pid>` |
 | `firefly_db_password` | `bws secret create firefly_db_password "$(openssl rand -base64 32)" <pid>` |
-| `firefly_static_cron_token` | `bws secret create firefly_static_cron_token "$(openssl rand -hex 32)" <pid>` |
+| `firefly_static_cron_token` | `bws secret create firefly_static_cron_token "$(openssl rand -hex 16)" <pid>` (must be exactly 32 chars) |
 | `firefly_auto_import_secret` | `bws secret create firefly_auto_import_secret "$(openssl rand -hex 16)" <pid>` |
 
 **After deployment** (from Firefly UI):
@@ -143,12 +143,13 @@ See [Data Importer docs](https://docs.firefly-iii.org/how-to/data-importer/impor
 
 ## ⏰ Cron Jobs
 
-| Time (UTC) | Job | Purpose |
+| Time (Europe/Rome) | Job | Purpose |
 |------------|-----|---------|
-| 3:00 AM | Firefly cron | Recurring transactions, auto-budgets, exchange rates |
-| 2:40 AM | Auto-import | Import from Lunch Flow via config.json |
+| 06:00 daily | Firefly web cron (`/api/v1/cron/<STATIC_CRON_TOKEN>`) | Recurring transactions, auto-budgets, exchange rates |
+| 06:00 daily | Auto-import | Import from Lunch Flow via config.json |
+| 04:00 on the 11th | `cc_monthly_reconcile.py` | Credit-card monthly reconciliation |
 
-Both run in the `firefly-cron` Alpine container.
+All run in the `scheduler` Alpine container over HTTP — no Docker socket.
 
 ---
 

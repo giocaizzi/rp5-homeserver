@@ -98,6 +98,10 @@ services:
       # Feature flags
       - DISABLE_FRAME_HEADER=false
       - DISABLE_CSP_HEADER=false
+
+      # php-fpm / OPcache (serversideup/php env spec; image defaults 20 / 1)
+      - PHP_FPM_PM_MAX_CHILDREN=4
+      - PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
     secrets:
       - app_key
       - db_password
@@ -245,6 +249,10 @@ services:
       - CAN_POST_AUTOIMPORT=true
       - CAN_POST_FILES=true
       - IGNORE_DUPLICATE_ERRORS=false
+
+      # php-fpm / OPcache (serversideup/php env spec; image defaults 20 / 1)
+      - PHP_FPM_PM_MAX_CHILDREN=2
+      - PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
     secrets:
       - firefly_client_id
       - lunch_flow_api_key
@@ -299,23 +307,24 @@ services:
     secrets:
       - auto_import_secret
       - firefly_access_token
+      - static_cron_token
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
       - ./scripts/cc_monthly_reconcile.py:/usr/local/bin/cc_monthly_reconcile.py:ro
     command: >
-      sh -c "apk add --no-cache tzdata wget docker-cli &&
+      sh -c "apk add --no-cache tzdata wget &&
       ln -sf /usr/share/zoneinfo/Europe/Rome /etc/localtime &&
       echo 'Waiting for Firefly to be ready...' &&
       until wget -q --spider http://firefly-app:8080/health; do echo 'Waiting...'; sleep 30; done &&
       echo 'Firefly is ready, setting up cron jobs...' &&
       AUTO_IMPORT_SECRET=\$$(cat /run/secrets/auto_import_secret) &&
       FIREFLY_ACCESS_TOKEN=\$$(cat /run/secrets/firefly_access_token) &&
-      echo '0 6 * * * docker exec \$$(docker ps --filter "label=com.docker.swarm.service.name=firefly_app" --format "{{.Names}}") php artisan firefly-iii:cron' > /tmp/crontab &&
+      STATIC_CRON_TOKEN=\$$(cat /run/secrets/static_cron_token) &&
+      echo '0 6 * * * wget -qO- http://firefly-app:8080/api/v1/cron/'$$STATIC_CRON_TOKEN > /tmp/crontab &&
       echo '0 6 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer '$$FIREFLY_ACCESS_TOKEN'\" http://firefly-importer:8080/autoimport?directory=/var/www/html/import\\&secret='$$AUTO_IMPORT_SECRET >> /tmp/crontab &&
       echo '0 4 11 * * python3 /usr/local/bin/cc_monthly_reconcile.py >> /proc/1/fd/1 2>&1' >> /tmp/crontab &&
       crontab /tmp/crontab &&
       rm /tmp/crontab &&
-      echo 'Cron jobs configured (not printed: entries embed the access token)' &&
+      echo 'Cron jobs configured (not printed: entries embed secrets)' &&
       crond -f -L /dev/stdout"
     networks:
       - firefly_network
