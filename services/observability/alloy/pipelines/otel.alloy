@@ -12,7 +12,7 @@
 //                                                └─ logs    → Loki (OTLP HTTP)
 //
 // Why memory_limiter first:
-//   On a Pi 5 (8GB) we cap the collector at 200MiB resident with a 50MiB
+//   On a Pi 5 (8GB) we cap the collector at 230MiB resident with a 40MiB
 //   spike headroom. When over the soft limit the processor starts refusing
 //   new data with a retryable error, protecting the rest of the host before
 //   the runtime OOMs.
@@ -112,8 +112,8 @@ declare "otlp_receivers" {
 
   otelcol.processor.memory_limiter "default" {
     check_interval = "1s"
-    limit          = "200MiB"
-    spike_limit    = "50MiB"
+    limit          = "230MiB"
+    spike_limit    = "40MiB"
 
     output {
       metrics = [otelcol.processor.batch.default.input]
