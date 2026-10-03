@@ -12,10 +12,11 @@
 //                                                └─ logs    → Loki (OTLP HTTP)
 //
 // Why memory_limiter first:
-//   Limits are Go heap (not RSS), sized to the 512M container: hard 410MiB,
-//   soft 310MiB. GOMEMLIMIT=300MiB (compose) makes Go GC before the soft
-//   limit, so the limiter only refuses data (retryable) on real spikes.
-//   Alloy's idle heap is ~150MiB (docker log tailing + scrapes).
+//   Limits are Go heap (not RSS), sized to the 768M container: hard 640MiB,
+//   soft 512MiB (hard - spike 128MiB). GOMEMLIMIT=480MiB (compose) makes Go
+//   GC before the soft limit, so the limiter only refuses data
+//   (retryable) on real spikes. Alloy's baseline heap is ~200-290MiB
+//   (docker log tailing + scrapes).
 //
 // Loki ingest:
 //   Logs go to Loki's native OTLP endpoint (/otlp) via otelcol.exporter.otlphttp.
@@ -112,8 +113,8 @@ declare "otlp_receivers" {
 
   otelcol.processor.memory_limiter "default" {
     check_interval = "1s"
-    limit          = "410MiB"
-    spike_limit    = "100MiB"
+    limit          = "640MiB"
+    spike_limit    = "128MiB"
 
     output {
       metrics = [otelcol.processor.batch.default.input]
@@ -128,8 +129,8 @@ declare "otlp_receivers" {
   // Batches telemetry data before export for efficiency
 
   otelcol.processor.batch "default" {
-    timeout         = "5s"
-    send_batch_size = 100
+    timeout         = "10s"
+    send_batch_size = 1000
 
     output {
       metrics = [otelcol.processor.transform.defaults.input]

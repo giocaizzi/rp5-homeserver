@@ -106,5 +106,20 @@ declare "prometheus_scrape" {
       regex         = "(.+)"
       target_label  = "job"
     }
+
+    // Drop per-table postgres stats (~4.1k series, unused by dashboards).
+    rule {
+      source_labels = ["__name__"]
+      regex         = "pg_stat_user_tables_.*|pg_statio_user_tables_.*"
+      action        = "drop"
+    }
+
+    // Drop histogram buckets from the observability components (~3.6k series,
+    // unused by dashboards). Must follow the `job` derivation rule above.
+    rule {
+      source_labels = ["job", "__name__"]
+      regex         = "(loki|tempo|alloy|prometheus);.+_bucket"
+      action        = "drop"
+    }
   }
 }
