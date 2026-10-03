@@ -38,7 +38,7 @@
     "services/ai": { "release-type": "simple", "component": "ai" },
     "services/firefly": { "release-type": "simple", "component": "firefly", "extra-files": ["docker-compose.yml"] },
     "services/greenhouse": { "release-type": "simple", "component": "greenhouse" },
-    "services/langfuse": { "release-type": "simple", "component": "langfuse" },
+    "services/langfuse": { "release-type": "simple", "component": "langfuse", "extra-files": ["docker-compose.yml"] },
     "services/n8n": { "release-type": "simple", "component": "n8n" },
     "services/ntfy": { "release-type": "simple", "component": "ntfy" },
     "services/observability": { "release-type": "simple", "component": "observability", "extra-files": ["docker-compose.yml"] },

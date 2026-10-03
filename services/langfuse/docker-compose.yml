@@ -8,6 +8,7 @@
 x-labels-base: &labels-base
   com.giocaizzi.namespace: "langfuse"
   com.giocaizzi.env: "production"
+  com.giocaizzi.config-rev: "0.1.0" # x-release-please-version — bumped per release so tasks re-bind fresh Portainer clone
 
 x-deploy-base: &deploy-base
   mode: replicated
@@ -146,6 +147,8 @@ services:
     command: -c 'mkdir -p /data/langfuse && export MINIO_ROOT_PASSWORD=$$(cat /run/secrets/langfuse_minio_password) && minio server --address ":9000" --console-address ":9001" /data'
     environment:
       MINIO_ROOT_USER: "minio"
+      # Soft Go heap target under the 256M limit (GC harder before the cgroup OOM-kills)
+      GOMEMLIMIT: "200MiB"
     secrets:
       - langfuse_minio_password
     expose:
@@ -182,7 +185,7 @@ services:
   # ClickHouse - OLAP database
   # ========================================
   analytics:
-    image: clickhouse/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:25.8  # LTS line
     hostname: langfuse-analytics
     user: "101:101"
     environment:
@@ -368,7 +371,7 @@ services:
   # PostgreSQL Exporter - Metrics for Prometheus/Alloy
   # ========================================
   db-exporter:
-    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    image: quay.io/prometheuscommunity/postgres-exporter:v0
     hostname: langfuse-db-exporter
     expose:
       - "9187"
@@ -413,11 +416,16 @@ services:
   # Langfuse Worker - Async event processing
   # ========================================
   worker:
-    image: langfuse/langfuse-worker:latest
+    image: langfuse/langfuse-worker:3
     hostname: langfuse-worker
     environment:
       <<: *langfuse-env
       NEXTAUTH_URL: "https://langfuse.home"
+      # V8 heap below the 512M limit (default ~2 GB) so GC runs before the cgroup OOM-kill
+      NODE_OPTIONS: "--max-old-space-size=384"
+      # Defaults 20 / 25 concurrent jobs target multi-GB workers; homeserver volume is tiny
+      LANGFUSE_INGESTION_QUEUE_PROCESSING_CONCURRENCY: "5"
+      LANGFUSE_TRACE_UPSERT_WORKER_CONCURRENCY: "5"
     secrets:
       - langfuse_salt
       - langfuse_encryption_key
@@ -464,13 +472,15 @@ services:
   # Langfuse Web - Main application
   # ========================================
   app:
-    image: langfuse/langfuse:latest
+    image: langfuse/langfuse:3
     hostname: langfuse-app
     environment:
       <<: *langfuse-env
       NEXTAUTH_URL: "https://langfuse.home"
       HOSTNAME: "0.0.0.0"
       PORT: "3000"
+      # V8 heap below the 512M limit (default ~2 GB) so GC runs before the cgroup OOM-kill
+      NODE_OPTIONS: "--max-old-space-size=384"
       # Init configuration
       LANGFUSE_INIT_ORG_ID: "default"
       LANGFUSE_INIT_ORG_NAME: "Home Server"
