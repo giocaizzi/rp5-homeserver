@@ -69,6 +69,7 @@ flowchart TB
 |--------|----------|
 | `observability_grafana_admin_password` | `bws secret create observability_grafana_admin_password "$(openssl rand -base64 32)" <project-id>` |
 | `observability_alloy_otel_bearer_token` | `bws secret create observability_alloy_otel_bearer_token "$(openssl rand -base64 48 \| tr -d '\n=' \| tr '+/' '-_')" <project-id>` |
+| `observability_ntfy_token` | ntfy token for user `alerts` (`ntfy token add --label grafana alerts`, see [ntfy](../ntfy/README.md#-alert-topics)) |
 
 Then sync them to Swarm: `./scripts/create_secrets.sh observability` (needs `BWS_ACCESS_TOKEN`).
 
