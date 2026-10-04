@@ -37,6 +37,11 @@ FILES_SYNCED=0
 FILES_DELETED=0
 SERVICES_TOTAL=0
 NGINX_CHANGED=false   # nginx/ is bind-mounted: content changes need an explicit reload
+# Single-file bind mounts the container only reads at start (rsync may swap the inode;
+# an unchanged service spec means `stack deploy` won't restart it). Keep in sync with
+# the `./netdata/*.conf` mounts of the `monitoring` service in docker-compose.yml.
+NETDATA_CONF_RE='netdata/(netdata|health_alarm_notify)\.conf$'
+NETDATA_CHANGED=false
 
 # Colors
 RED='\033[0;31m'
@@ -289,9 +294,13 @@ sync_files() {
         NGINX_CHANGED=true
     fi
 
-    # Get rsync dry-run output to count changes
+    # Get rsync dry-run output to count changes. Explicit -i: macOS openrsync prints
+    # plain filenames without it. -c: compare by checksum, not mtime (fresh CI checkouts).
     local rsync_output
-    rsync_output=$(rsync -avz --delete "${RSYNC_EXCLUDES[@]}" --dry-run "$LOCAL_INFRA_PATH/" "$RSYNC_DEST" 2>/dev/null | grep -E '^[<>ch.]|deleting' || true)
+    rsync_output=$(rsync -rcn --delete -i "${RSYNC_EXCLUDES[@]}" "$LOCAL_INFRA_PATH/" "$RSYNC_DEST" 2>/dev/null | grep -E '^\*deleting|^[<>]f[c+]' | sed 's/^\*//' || true)
+    if grep -qE "$NETDATA_CONF_RE" <<< "$rsync_output"; then
+        NETDATA_CHANGED=true
+    fi
     
     if [ -z "$rsync_output" ]; then
         log_skip "No file changes detected"
@@ -426,6 +435,7 @@ deploy_stack() {
         else
             log_info "Would update existing stack (in-place)"
             [ "$NGINX_CHANGED" = true ] && log_info "Would test + reload nginx config" || true
+            [ "$NETDATA_CHANGED" = true ] && log_info "Would restart netdata (config changed)" || true
         fi
         
         # Parse compose file to show services (only under services: section)
@@ -470,6 +480,15 @@ deploy_stack() {
     # Bind-mounted nginx config isn't re-read by an in-place deploy
     if [ "$is_new" = false ] && [ "$NGINX_CHANGED" = true ]; then
         reload_nginx
+    fi
+
+    if [ "$is_new" = false ] && [ "$NETDATA_CHANGED" = true ]; then
+        log_info "Netdata config changed, restarting service..."
+        if remote "docker service update --force --quiet infra_monitoring" >/dev/null 2>&1; then
+            log_success "Netdata restarted"
+        else
+            log_warning "Netdata restart failed"
+        fi
     fi
     
     SERVICES_TOTAL=$(get_service_count)
