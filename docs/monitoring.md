@@ -219,7 +219,7 @@ Both sources push to ntfy (`https://ntfy.giocaizzi.xyz`, publisher user `alerts`
 
 | Source | Topic | Covers | Routing |
 |--------|-------|--------|---------|
-| Grafana | `grafana` | App/DB/exporter/observability rules (Prometheus) | Priority from `severity` via ntfy template `grafana-alert` (critical 5, warning 4, resolved 3); 4h repeat |
+| Grafana | `grafana` | App/DB/exporter/observability rules (Prometheus), HTTP 5xx + container error logs (Loki) | Priority from `severity` via ntfy template `grafana-alert` (critical 5, warning 4, resolved 3); 4h repeat |
 | Netdata | `netdata` | Host + containers (temp, disk, RAM, OOM, `docker_container_unhealthy`) | Critical + clear only, no repeat |
 
 Grafana's contact point and root policy are provisioned in `grafana/provisioning/alerting/{contact-points,policies}.yaml`; Netdata's in `infra/netdata/health_alarm_notify.conf`.
@@ -232,6 +232,9 @@ Grafana's contact point and root policy are provisioned in `grafana/provisioning
 | Redis Alerts | Redis Down, Redis High Memory |
 | Exporter Health | Metrics Exporter Down |
 | Observability Stack | Loki Down, Tempo Down, Alloy Down |
+| HTTP Errors (Loki) | Nginx 5xx Error Ratio High (per vhost, >5% and ≥5 errors over 5m), Nginx Access Logs Silent (no lines for 15m), Container Error Logs Burst (>20 error lines/10m per service) |
+
+The container-error rule relies on Alloy's regex-guessed `level` label, so it excludes noisy technologies (`grafana`, `alloy`, `netdata`, `*-exporter`) in its query. Container health/restarts are covered by Netdata, not Grafana.
 
 Alert rules are provisioned via `grafana/provisioning/alerting/rules.yaml`.
 

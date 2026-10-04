@@ -435,3 +435,143 @@ groups:
           description: The Alloy telemetry collector is unreachable.
         labels:
           severity: critical
+
+  # ===========================================
+  # HTTP / Log Error Alerts (Loki)
+  # ===========================================
+  # nginx logs: level="error" <=> status >= 500 (see alloy/modules/nginx_logs.alloy).
+  # Instant LogQL queries; an empty result (no breach) is NoData -> OK.
+  - orgId: 1
+    name: HTTP Errors
+    folder: Alerts
+    interval: 1m
+    rules:
+      - uid: nginx-5xx-ratio
+        title: Nginx 5xx Error Ratio High
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: >-
+                (
+                  sum by (vhost) (count_over_time({technology="nginx", level="error"}[5m]))
+                  / sum by (vhost) (count_over_time({technology="nginx", vhost!=""}[5m]))
+                ) * 100 > 5
+                and sum by (vhost) (count_over_time({technology="nginx", level="error"}[5m])) >= 5
+              queryType: instant
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 5
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: 5xx responses on {{ $labels.vhost }}
+          description: '{{ $values.B | printf "%.1f" }}% of requests returned 5xx over the last 5m (threshold 5%, min 5 errors).'
+        labels:
+          severity: critical
+
+      - uid: nginx-no-logs
+        title: Nginx Access Logs Silent
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: sum(count_over_time({technology="nginx"}[15m]))
+              queryType: instant
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: Alerting
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: No nginx access logs reaching Loki
+          description: No nginx log lines in 15m. The proxy, Alloy or Loki pipeline is broken, so 5xx alerts are blind.
+        labels:
+          severity: critical
+
+      - uid: container-error-logs
+        title: Container Error Logs Burst
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki
+            model:
+              # Excludes services whose `level` is a regex guess and floods errors
+              # (grafana, alloy, netdata, *-exporter). Re-tune from the 24h count.
+              expr: >-
+                sum by (service_namespace, service_name) (
+                  count_over_time({source="docker", technology!~"nginx|grafana|alloy|netdata|.*-exporter", level=~"error|critical|alert|fatal"}[10m])
+                )
+              queryType: instant
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 20
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: Error log burst in {{ $labels.service_namespace }}/{{ $labels.service_name }}
+          description: '{{ $values.B | printf "%.0f" }} error-level log lines in the last 10m (threshold 20).'
+        labels:
+          severity: warning
