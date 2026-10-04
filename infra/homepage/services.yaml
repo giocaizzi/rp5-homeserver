@@ -58,7 +58,7 @@
             ping: http://crm_server:3000/healthz
 
       - ntfy:
-            href: https://ntfy.home
+            href: https://ntfy.{{HOMEPAGE_FILE_DOMAIN}}
             description: Push notification service
             icon: ntfy.png
             ping: http://ntfy_app:80/v1/health
