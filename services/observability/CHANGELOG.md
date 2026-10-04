@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.7...observability-v0.2.0) (2026-10-04)
+
+
+### Features
+
+* **observability:** route grafana alerts to ntfy ([#244](https://github.com/giocaizzi/rp5-homeserver/issues/244)) ([3a2238a](https://github.com/giocaizzi/rp5-homeserver/commit/3a2238a54a11a5b402c18180beafca0b8bd1cadc))
+
 ## [0.1.7](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.6...observability-v0.1.7) (2026-10-03)
 
 
