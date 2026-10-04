@@ -4,9 +4,9 @@
 #   - terraform         — provider + module versions in cloud/
 #   - npm               — workers/mcp-connector (Cloudflare Worker)
 #
-# Groups: one PR for minor/patch, one for majors, one for security fixes per
-# ecosystem. Security PRs ignore version-update groups unless a group sets
-# `applies-to: security-updates`.
+# Groups: one PR per ecosystem for all version updates (each ecosystem maps to
+# one release-please component), plus one for npm security fixes. Security PRs
+# ignore version-update groups unless a group sets `applies-to: security-updates`.
 #
 # We pin actions to a major (e.g. @v6); Dependabot opens a PR only when a NEW
 # major lands, so day-to-day patch/minor updates flow through transparently
@@ -26,10 +26,8 @@ updates:
       - dependencies
       - github-actions
     groups:
-      actions-minor-patch:
-        update-types: [minor, patch]
-      actions-major:
-        update-types: [major]
+      actions:
+        patterns: ["*"]
 
   - package-ecosystem: terraform
     directory: /cloud
@@ -44,10 +42,8 @@ updates:
       - dependencies
       - terraform
     groups:
-      terraform-minor-patch:
-        update-types: [minor, patch]
-      terraform-major:
-        update-types: [major]
+      terraform:
+        patterns: ["*"]
 
   - package-ecosystem: npm
     directory: /workers/mcp-connector
@@ -62,10 +58,8 @@ updates:
       - dependencies
       - npm
     groups:
-      npm-minor-patch:
-        update-types: [minor, patch]
-      npm-major:
-        update-types: [major]
+      npm:
+        patterns: ["*"]
       npm-security:
         applies-to: security-updates
         patterns: ["*"]
