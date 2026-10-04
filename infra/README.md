@@ -59,6 +59,7 @@ File-based secrets in `./secrets/` on the Pi (gitignored). Source of truth: Secr
 | `adguard_password` | `adguard_password.txt` | Homepage widget |
 | `grafana_admin_password` | `grafana_admin_password.txt` | Homepage widget |
 | `domain` | `domain.txt` | Production domain |
+| `ntfy_token` | `ntfy_token.txt` | Netdata → ntfy publisher token |
 
 ```bash
 # Generate a random password straight into Secrets Manager, then run sync_infra.sh
@@ -96,6 +97,8 @@ Secure external access without port forwarding. Requires tunnel token from Cloud
 ### Netdata
 
 Real-time monitoring at `https://netdata.home`. Metrics, alerts, dashboards.
+
+Critical health alarms (and their clear) push to ntfy topic `netdata` via `./netdata/health_alarm_notify.conf`. Test: `docker exec $(docker ps -qf name=infra_monitoring) /usr/libexec/netdata/plugins.d/alarm-notify.sh test`.
 
 ### Backrest
 
