@@ -51,7 +51,7 @@ jobs:
     runs-on: [self-hosted, rp5]
     environment: pi-production
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Deploy infra stack (local mode)
         env:
