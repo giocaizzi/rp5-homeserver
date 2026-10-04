@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.17.0...v1.17.1) (2026-10-04)
+
+
+### Bug Fixes
+
+* **infra:** filter netdata ntfy alerts to critical in the notify config ([#246](https://github.com/giocaizzi/rp5-homeserver/issues/246)) ([2d42d6e](https://github.com/giocaizzi/rp5-homeserver/commit/2d42d6e7f576da21046c9a6ea6cb295756494129))
+
 ## [1.17.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.16.0...v1.17.0) (2026-10-04)
 
 
