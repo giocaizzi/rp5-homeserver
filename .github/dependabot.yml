@@ -57,6 +57,10 @@ updates:
     labels:
       - dependencies
       - npm
+    ignore:
+      # 1.x needs a per-env canonical resource; held at 0.8.x until #254.
+      - dependency-name: "@cloudflare/workers-oauth-provider"
+        versions: [">= 0.9.0"]
     groups:
       npm:
         patterns: ["*"]
