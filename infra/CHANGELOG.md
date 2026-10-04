@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.16.0...v1.17.0) (2026-10-04)
+
+
+### Features
+
+* **infra:** push netdata critical alerts to ntfy and serve public ntfy host ([#243](https://github.com/giocaizzi/rp5-homeserver/issues/243)) ([87e39c2](https://github.com/giocaizzi/rp5-homeserver/commit/87e39c2b8f9aba9467f4d08b083c361c659e03de))
+
 ## [1.16.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.15.7...v1.16.0) (2026-10-03)
 
 
