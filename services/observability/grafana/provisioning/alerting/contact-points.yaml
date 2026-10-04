@@ -1,0 +1,16 @@
+apiVersion: 1
+
+# ntfy via webhook (no native ntfy integration in Grafana 11). The ntfy-side
+# template services/ntfy/templates/grafana-alert.yml sets priority from `severity`.
+# $NTFY_TOKEN is exported from the ntfy_token secret by the dashboard entrypoint.
+contactPoints:
+  - orgId: 1
+    name: ntfy
+    receivers:
+      - uid: ntfy
+        type: webhook
+        settings:
+          url: http://ntfy_app/grafana?template=grafana-alert
+          httpMethod: POST
+          authorization_scheme: Bearer
+          authorization_credentials: $NTFY_TOKEN

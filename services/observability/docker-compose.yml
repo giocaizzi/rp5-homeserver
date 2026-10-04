@@ -71,6 +71,9 @@ secrets:
   alloy_otel_bearer_token:
     external: true
     name: observability_alloy_otel_bearer_token
+  ntfy_token:
+    external: true
+    name: observability_ntfy_token
 
 # =============================================================================
 # Services
@@ -264,6 +267,15 @@ services:
       - GF_LOG_LEVEL=warn
     secrets:
       - grafana_admin_password
+      - ntfy_token
+    # Alerting provisioning only interpolates env vars, so export the ntfy token
+    # for contact-points.yaml, then exec the image's original entrypoint.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export NTFY_TOKEN="$$(cat /run/secrets/ntfy_token)"
+        exec /run.sh
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana_data:/var/lib/grafana

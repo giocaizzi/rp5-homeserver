@@ -215,10 +215,14 @@ Shared dashboards (PostgreSQL, Redis) use both variables for multi-instance supp
 
 ## Alerting
 
-Alerting is handled via Grafana alerting rules, with notifications sent to ntfy.
+Both sources push to ntfy (`https://ntfy.giocaizzi.xyz`, publisher user `alerts`):
 
-**Alert Channels:**
-- ntfy: `https://ntfy.home/alerts`
+| Source | Topic | Covers | Routing |
+|--------|-------|--------|---------|
+| Grafana | `grafana` | App/DB/exporter/observability rules (Prometheus) | Priority from `severity` via ntfy template `grafana-alert` (critical 5, warning 4, resolved 3); 4h repeat |
+| Netdata | `netdata` | Host + containers (temp, disk, RAM, OOM, `docker_container_unhealthy`) | Critical + clear only, no repeat |
+
+Grafana's contact point and root policy are provisioned in `grafana/provisioning/alerting/{contact-points,policies}.yaml`; Netdata's in `infra/netdata/health_alarm_notify.conf`.
 
 **Provisioned Alert Rules:**
 
