@@ -146,10 +146,19 @@ declare "docker_logs" {
       expression = "(?i)(?:level[=:\"]\\s*\"?(?P<level>\\w+)|\\[(?P<level_bracket>DEBUG|INFO|WARN|WARNING|ERROR|FATAL|TRACE)\\]|^(?P<level_prefix>DEBUG|INFO|WARN|WARNING|ERROR|FATAL|TRACE):)"
     }
 
+    // Fallback formats the pattern above misses (case-sensitive, uppercase levels):
+    //   cloudflared  `2026-10-03T22:46:47Z ERR ...` / `WRN`
+    //   monolog      `[2026-10-04 00:15:48] production.ERROR: ...` (firefly)
+    //   NestJS       `... <ESC>[31m  ERROR<ESC>[39m ...` (twenty crm, ANSI-coloured)
+    //   ntfy         `2026/10/04 00:04:32 WARN ...`
+    stage.regex {
+      expression = "(?:\\s(?P<level_short>ERR|WRN)\\s|\\.(?P<level_monolog>ERROR|CRITICAL|ALERT|EMERGENCY|WARNING):|\\s(?P<level_nest>ERROR|WARN|FATAL)\\x1b\\[|^\\d{4}/\\d\\d/\\d\\d \\d\\d:\\d\\d:\\d\\d (?P<level_ts>WARN|ERROR))"
+    }
+
     // Set detected_level from whichever capture group matched
     stage.template {
       source   = "detected_level"
-      template = "{{ or .level .level_bracket .level_prefix \"\" }}"
+      template = "{{ or .level .level_bracket .level_prefix .level_short .level_monolog .level_nest .level_ts \"\" }}"
     }
 
     // Normalize level values to lowercase
@@ -161,6 +170,19 @@ declare "docker_logs" {
     // Normalize "warning" to "warn"
     stage.replace {
       expression = "warning"
+      source     = "detected_level"
+      replace    = "warn"
+    }
+
+    // Normalize cloudflared short levels
+    stage.replace {
+      expression = "^err$"
+      source     = "detected_level"
+      replace    = "error"
+    }
+
+    stage.replace {
+      expression = "^wrn$"
       source     = "detected_level"
       replace    = "warn"
     }
