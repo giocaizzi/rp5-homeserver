@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.4.0...cloud-v0.5.0) (2026-10-04)
+
+
+### Features
+
+* **cloud:** expose ntfy through the tunnel ([#241](https://github.com/giocaizzi/rp5-homeserver/issues/241)) ([374f793](https://github.com/giocaizzi/rp5-homeserver/commit/374f793b0d7d6383d223b4eadcc8e5f2a874ec6d))
+
 ## [0.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.3.0...cloud-v0.4.0) (2026-10-03)
 
 
