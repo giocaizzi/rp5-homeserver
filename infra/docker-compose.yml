@@ -210,11 +210,15 @@ services:
       - /etc/passwd:/host/etc/passwd:ro     # optional for user mapping
       - /etc/group:/host/etc/group:ro       # optional
       - ./netdata/netdata.conf:/etc/netdata/netdata.conf:ro  # custom config
+      - ./netdata/health_alarm_notify.conf:/etc/netdata/health_alarm_notify.conf:ro  # ntfy alerts
       - netdata_config:/etc/netdata         # config directory
       - netdata_cache:/var/cache/netdata    # persistent cache
       - netdata_lib:/var/lib/netdata        # persistent data
+    secrets:
+      - ntfy_token
     networks:
       - infra_network
+      - public_network                      # reach ntfy_app for alert delivery
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:19999/api/v1/info"]
       interval: 30s
@@ -483,3 +487,5 @@ secrets:
     file: ./secrets/cert.pem
   ssl_key:
     file: ./secrets/key.pem
+  ntfy_token:
+    file: ./secrets/ntfy_token.txt
