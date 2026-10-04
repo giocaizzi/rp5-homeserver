@@ -43,6 +43,11 @@ output "grafana_url" {
   value       = "https://grafana.${var.zone_name}"
 }
 
+output "ntfy_url" {
+  description = "The public URL for ntfy"
+  value       = "https://ntfy.${var.zone_name}"
+}
+
 output "greenhouse_url" {
   description = "The public URL for Greenhouse"
   value       = "https://greenhouse.${var.zone_name}"

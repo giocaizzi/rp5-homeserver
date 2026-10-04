@@ -155,6 +155,18 @@ resource "cloudflare_dns_record" "otel" {
   proxied = true
 }
 
+# Creates the CNAME record that routes ntfy.${var.zone_name} to the tunnel.
+# Deliberately no Access app: the ntfy mobile apps can't complete CF Access, so
+# ntfy's own auth (auth-default-access: deny-all + per-publisher tokens) is the gate.
+resource "cloudflare_dns_record" "ntfy" {
+  zone_id = var.zone_id
+  name    = "ntfy"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
 # Configures tunnel with a published application for clientless access.
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
@@ -258,6 +270,15 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
           no_tls_verify      = true
           http_host_header   = "crm.${var.zone_name}"
           origin_server_name = "crm.${var.zone_name}"
+        }
+      },
+      {
+        hostname = "ntfy.${var.zone_name}"
+        service  = "https://infra-proxy:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "ntfy.${var.zone_name}"
+          origin_server_name = "ntfy.${var.zone_name}"
         }
       },
       {
