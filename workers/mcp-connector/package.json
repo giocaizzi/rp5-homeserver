@@ -13,11 +13,11 @@
     "tail:greenhouse": "wrangler tail --env greenhouse"
   },
   "dependencies": {
-    "@cloudflare/workers-oauth-provider": "^0.8.0"
+    "@cloudflare/workers-oauth-provider": "^1.2.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250601.0",
-    "typescript": "^5.5.0",
-    "wrangler": "^4.0.0"
+    "@cloudflare/workers-types": "^5.20260930.2",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.145.0"
   }
 }
