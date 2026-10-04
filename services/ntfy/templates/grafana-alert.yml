@@ -1,0 +1,17 @@
+# Built-in `grafana` template + priority from the alert severity label
+# (the built-in ignores ?priority=). Used by Grafana: ?template=grafana-alert
+title: |
+  {{- if eq .status "firing" }}
+  🚨 {{ .title | default "Alert firing" }}
+  {{- else if eq .status "resolved" }}
+  ✅ {{ .title | default "Alert resolved" }}
+  {{- else }}
+  ⚠️ Unknown alert: {{ .title | default "Alert" }}
+  {{- end }}
+message: |
+  {{ .message | trunc 2000 }}
+priority: |
+  {{- if ne .status "firing" }}3
+  {{- else if eq (dig "commonLabels" "severity" "" .) "critical" }}5
+  {{- else }}4
+  {{- end }}

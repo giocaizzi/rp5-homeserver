@@ -4,6 +4,7 @@
 x-labels-base: &labels-base
   com.giocaizzi.namespace: "ntfy"
   com.giocaizzi.env: "production"
+  com.giocaizzi.config-rev: "0.1.1" # x-release-please-version — bumped per release so tasks re-bind fresh Portainer clone
 
 x-deploy-base: &deploy-base
   mode: replicated
@@ -56,6 +57,7 @@ services:
       - TZ=Europe/Rome
     volumes:
       - ./server.yml:/etc/ntfy/server.yml:ro
+      - ./templates:/etc/ntfy/templates:ro
       - ntfy_cache:/var/cache/ntfy
       - ntfy_data:/var/lib/ntfy
     networks:

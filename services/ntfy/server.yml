@@ -3,8 +3,9 @@
 # https://docs.ntfy.sh/config/
 # =============================================================================
 
-# Base URL (externally visible URL)
-base-url: "https://ntfy.home"
+# Base URL (externally visible URL) — must match the URL the apps subscribe to
+# (iOS instant delivery keys the upstream poll request on it). ntfy.home still works on LAN.
+base-url: "https://ntfy.giocaizzi.xyz"
 
 # Listen address
 listen-http: ":80"
