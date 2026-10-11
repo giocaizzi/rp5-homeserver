@@ -546,7 +546,7 @@ groups:
               # (firefly 401s, cloudflared client aborts).
               expr: >-
                 sum by (service_namespace, service_name) (
-                  count_over_time({source="docker", technology!~"nginx|grafana|alloy|netdata|.*-exporter", level=~"error|critical|alert|fatal"} !~ "Unauthenticated|context canceled" [10m])
+                  count_over_time({source="docker", technology!~"nginx|grafana|alloy|netdata|.*-exporter", level=~"error|critical|alert|fatal"} !~ "Unauthenticated|context canceled|unexpected EOF" [10m])
                 )
               queryType: instant
               refId: A
