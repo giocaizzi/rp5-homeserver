@@ -55,11 +55,11 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 | `services/<stack>/` | One folder per service stack (n8n, firefly, adguard, ai, langfuse, ntfy, observability, openclaw, greenhouse, code, crm). Each ships a `docker-compose.yml` and a README; secrets come from Secrets Manager (project `rp5-homeserver`), never from files in the stack folder. |
 | `scripts/` | Operational scripts — see Common Commands. |
 | `cloud/` | Terraform for Cloudflare Tunnel + GCS backup bucket. |
-| `docs/` | Architecture, networking, backup, gitops, monitoring, naming/labels. |
+| `docs/` | Documentation (source of truth): see "Where to find what". |
 | `.claude/skills/` | Repo-local agent skills (e.g. `firefly`, `openclaw-cli`). |
-| `.github/workflows/` | CI/CD. **`ci.yml`** (PR → `main`): `terraform fmt`/`validate`/`plan` for `cloud/**`, sticky plan comment, single `gate` required check. **`pr-title.yml`** (PR): scoped Conventional-Commit title lint. **`release-please.yml`** (push `main`): versioning/changelogs/tags only (App-token; no deploys). **`apply-cloud.yml`** (push `cloud/**`): `terraform apply` via `cloud-production` env (GCS state + GCP WIF) — Terraform stays plan-reviewed-on-merge. **`deploy-infra.yml`** (on **`infra` release**): self-hosted Pi runner, `sync_infra.sh --local`, env `pi-production`. **`deploy-services.yml`** (on **service release**): per-released-stack Portainer webhook on the Pi runner, env `pi-services`. **`deploy-workers.yml`** (on **`mcp-connector` release**): GitHub-hosted runner, `npm ci` + `typecheck` + `wrangler deploy --env` matrix over the 7 Worker envs, env `cloudflare-workers`. **`swarm-health.yml`** (cron */10): Pi runner, ntfy `swarm` alert for services below desired replicas ≥10 min (secret `NTFY_SWARM_TOKEN`). Deploy envs expose the Deployments-tab audit + optional "Required reviewers" gate. Full flow: [Releases](docs/releases.md). |
+| `.github/workflows/` | CI/CD. Workflow list and triggers: [docs/ci_cd.md](docs/ci_cd.md). |
 
-**Branch protection:** commits to `main` are blocked. All changes go through feature branches + PRs. **Every PR title and commit subject MUST be `type(scope): description`** — a Conventional Commit with a mandatory scope — because release-please parses them to version + changelog each component. The exact format, scope vocabulary, and enforcement layers are in [Pull requests & commit titles](#pull-requests--commit-titles--mandatory-format).
+**Branch protection:** commits to `main` are blocked. All changes go through feature branches + PRs. **Every PR title and commit subject MUST be `type(scope): description`** — a Conventional Commit with a mandatory scope (release-please parses it; `main` is squash-only with title = PR title; `pr-title.yml` lints it). Format, scope vocabulary and bump rules: [docs/releases.md](docs/releases.md#pull-requests--commit-titles-mandatory-format). Never hand-edit `.release-please-manifest.json`, `infra/VERSION`, or any generated `CHANGELOG.md`.
 
 ---
 
@@ -112,206 +112,8 @@ There is no application test/lint/build suite — this repo is configuration. "T
 - OpenClaw exception: prefer OpenClaw CLI-managed auth (gateway/config/auth profiles/channel tokens) persisted in `config_data` over custom entrypoint secret-export wrappers.
 - Use configs only for non-secret, user-level configuration.
 - ARM64 compatibility and optimization required for all images.
----
-
-# Docker Compose Standardization
-
-Use YAML anchors for common configuration:
-
-```yaml
-x-labels-base: &labels-base
-  com.giocaizzi.namespace: "<stack-name>"
-  com.giocaizzi.env: "production"
-
-x-deploy-base: &deploy-base
-  mode: replicated
-  replicas: 1
-  placement:
-    constraints:
-      - node.role == manager
-  restart_policy:
-    condition: any
-    delay: 5s
-    max_attempts: 3
-    window: 120s
-
-x-logging-base: &logging-base
-  driver: "json-file"
-  options:
-    max-size: "10m"
-    max-file: "3"
-
-x-security-base: &security-base
-  security_opt:
-    - no-new-privileges:true
-```
-
-**Service template:**
-```yaml
-service-name:
-  image: <image>
-  hostname: <hostname>
-  # depends_on: [<services>]
-  # ports:                              # host-exposed only (DNS, HTTP ingress)
-  #   - "<host>:<container>"
-  expose:
-    - "<port>"
-  # command: [...]
-  environment:
-    - KEY=value
-    # - KEY_FILE=/run/secrets/<secret>  # if image supports _FILE suffix
-  secrets:
-    - <secret_name>
-  volumes:
-    - <volume>:<path>
-    # - ./<config>:<path>:ro            # bind mount for local configs
-  # configs:
-  #   - source: <config_name>
-  #     target: <path>
-  #     mode: 0444
-  # entrypoint:                         # wrap secrets into env vars
-  #   - /bin/sh
-  #   - -c
-  #   - |
-  #     export VAR=$$(cat /run/secrets/<secret>)
-  #     exec <original-entrypoint>
-  networks:
-    - <stack>_network
-    # - rp5_public                       # required for nginx-proxied services
-  healthcheck:
-    test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:<port>/<path>"]
-    interval: 30s
-    timeout: 10s
-    retries: 3
-    start_period: 30s                   # adjust per service startup time
-  labels:
-    <<: *labels-base
-    com.giocaizzi.service: "<service>"      # matches compose service key
-    com.giocaizzi.component: "<component>"  # app | data | worker | gateway
-    com.giocaizzi.tier: "<tier>"            # critical | core | extra
-    com.giocaizzi.technology: "<tech>"      # image/tool name (postgres, redis, nginx...)
-  <<: *security-base
-  # user: "<uid>:<gid>"
-  deploy:
-    <<: *deploy-base
-    labels:
-      com.giocaizzi.tier: "<tier>"        # service-level — required for Shepherd filter
-    resources:
-      limits:
-        memory: <limit>M                # required for ARM64
-      # reservations:
-      #   memory: <reserve>M            # memory-critical services only
-  logging:
-    <<: *logging-base
-```
-
-> **Tier label must appear in both blocks.** `labels:` (top-level) sets container labels; Shepherd filters on **service** labels via `docker service ls --filter` and needs `deploy.labels.com.giocaizzi.tier`. Omitting the deploy-level tier silently disables Shepherd auto-updates for that service.
-
-**Component values:** `app`, `data`, `worker`, `gateway`.
-
-**Naming patterns:**
-
-| Element | Pattern | Example |
-|---------|---------|--------|
-| Service key | `<function>` | `db`, `app`, `db-exporter` |
-| Hostname | `<stack>-<service>` | `n8n-db`, `infra-proxy` |
-| Network | `<stack>_network` | `n8n_network` |
-| Volume | `<purpose>_data` | `postgres_data` |
-| Secret | `<name>` | `postgres_password` |
-
-See [Naming & Labeling Standards](docs/naming_labels.md) for complete reference.
 
 ---
-
-# Swarm Guidelines
-
-1. Minimal stack files with clear separation of concerns.
-2. Always use `deploy:` blocks (healthchecks, restart policies, placement, resources).
-3. Use Swarm secrets for credentials.
-4. Named overlay networks only for required inter-service communication.
-5. Named volumes for persistent data; absolute host paths only for backup targets (`/home/pi/`, `/var/lib/docker/volumes`).
-6. Preserve original entrypoints when wrapping secrets.
-
----
-
-# Deployment
-
-| Component | Workflow |
-|-----------|----------|
-| `infra/`  | **`infra` release** (`v*`) → `deploy-infra.yml` (Pi runner, `sync_infra.sh --local`). Manual: `workflow_dispatch`, or `PI_SSH_USER=<user> ./scripts/sync_infra.sh` |
-| `services/` | **service release** (`<stack>-v*`) → `deploy-services.yml` fires that stack's Portainer webhook |
-| `workers/mcp-connector/` | **`mcp-connector` release** (`mcp-connector-v*`) → `deploy-workers.yml` (`wrangler deploy --env`, 7 envs). Manual: `workflow_dispatch`, or `./deploy.sh` (bootstrap/secrets only) |
-| `cloud/` | Push `cloud/**` → `apply-cloud.yml` (`terraform apply`, plan-reviewed-on-merge) |
-
-**Portainer Remote Stacks:** Portainer clones repo, enabling relative bind mounts (`./config`), Swarm configs (`file:`), and named volumes. Secrets must be external (pre-created on Pi).
-
-> Portainer services use local mount cloning the repo at `/mnt`.
-
-> **No symlinks in the repo.** Portainer's git unpacker rejects any tracked symlink (`exit 255: repository contains a symlink, which is not allowed for security reasons`), blocking every Remote Stack deploy. Local-only agent shims (e.g. `CLAUDE.md` → `AGENTS.md`) must stay untracked via `.gitignore` — never `git add` a symlink.
-
-| Mount Type | `infra/` | `services/` |
-|------------|----------|-------------|
-| **Secrets** | File-based (`file:`) | External (pre-create on Pi) |
-| **Configs** | File-based (`file:`) | File-based (`file:`) — repo-relative (static only) |
-| **Volumes** | Named volumes | Named volumes for data + runtime-modified configs |
-| **Bind mounts** | Relative (`./path`) | Relative (`./path`) — repo-relative (static only) |
-
-**Config mount decision:**
-- Static configs (nginx, ntfy): Bind mount from repo
-- Runtime-modified configs (openclaw): Named volume, edit via SSH
-
-> **Portainer re-clone trap.** A Portainer redeploy deletes and re-clones the repo; tasks whose spec didn't change keep the old (deleted) bind-mount inode — directories go empty, files stay stale. Stacks with repo bind mounts carry `com.giocaizzi.config-rev: "<ver>" # x-release-please-version` in `x-labels-base`, listed under that package's `extra-files` in `release-please-config.json`, so every release changes the container spec and rolls the tasks. Out-of-band redeploys still need `docker service update --force <stack>_<svc>`.
-
-**`infra/VERSION`** — the infra stack's version, now **owned by release-please** (it is the `infra` package's `version-file`, the bare `vX.Y.Z` main line, seeded at `1.13.0`). **Do not hand-edit it** — release-please overwrites it from `.release-please-manifest.json`. It bumps when an **infra Release PR merges**, i.e. when a releasing-type commit (`feat`/`fix`/`refactor`/`perf`) scoped to `infra/**` lands. It is bind-mounted into homepage (no Swarm config), so a bump alone restarts nothing. `sync_infra.sh` does an in-place `docker stack deploy`; since `infra/nginx/` is bind-mounted, it runs `nginx -t` + `nginx -s reload` in the proxy task whenever nginx file content changed, and force-restarts `infra_monitoring` when a bind-mounted netdata `.conf` changed (spec unchanged ⇒ no restart otherwise). Adding another single-file bind mount to `infra/` means adding it to that list in the script. Deploys are release-gated, so to stage an `infra/**` change *without* cutting an infra release, use a non-releasing type — `chore(infra):` / `docs(infra):`.
-
----
-
-# Homepage (dashboard)
-
-Two-file pairing in `infra/homepage/`: **sections live in `settings.yaml`** (`layout:` — order, columns, icon), **components reference a section by name in another file** (`services.yaml`, `bookmarks.yaml`). A group used in `services.yaml`/`bookmarks.yaml` **must** have a matching `layout:` entry, or it renders orphaned (no icon, dumped at the end). Adding a service = add the tile under its group **and** ensure that group exists in the layout.
-
----
-
-# CI/CD
-
-Seven GitHub Actions workflows. Versioning/tagging (`release-please.yml`, `pr-title.yml`) and the PR gate (`ci.yml`) run off PRs/`main`; the **runtime deploys are release-gated** (`deploy-infra.yml`, `deploy-services.yml`, `deploy-workers.yml`), while `cloud/` Terraform stays apply-on-merge (`apply-cloud.yml`). Full release/versioning flow: **[docs/releases.md](docs/releases.md)**; deploy setup: [docs/gitops.md](docs/gitops.md).
-
-**`cloud/` (apply-on-merge).** `ci.yml` runs on every PR → `main` and short-circuits via `paths-filter` when `cloud/**` didn't change. When it did: `terraform fmt -check → init (GCS backend) → validate → plan`, then posts a sticky plan comment on the PR. The single required status check is the `gate` job (always runs, asserts no upstream job failed) — robust to skipped jobs and renames. `apply-cloud.yml` (formerly `cd.yml`) runs on push to `main` touching `cloud/**` and does `terraform apply -auto-approve` from the `cloud-production` environment. Terraform stays **plan-reviewed-on-merge, not release-gated** (release-gating IaC would let `main` diverge from applied infra). Flip "Required reviewers" on that environment to add a human gate.
-
-**`infra/` (release-gated).** `deploy-infra.yml` fires when release-please publishes the **`infra` release** (the bare `v*` tag), on a **self-hosted runner on the Pi** (label `rp5`, installed via `scripts/setup_pi_runner.sh`). It runs `sync_infra.sh --local` (no SSH — already on the Pi). `--local` mode excludes `secrets/` from the `rsync --delete` (secrets are gitignored, live only on the Pi) and never writes them, so a **new** `infra/` secret file makes the release deploy fail (`Stack deployment failed`) until a non-local `PI_SSH_USER=<user> ./scripts/sync_infra.sh` has written it from Secrets Manager — run that once before cutting the release that adds the secret. Env `pi-production`; needs repo var `PI_DEPLOY_USER`. Triggers only on `release`/`workflow_dispatch`, never `pull_request`, so fork code never runs on the Pi.
-
-**`services/` (release-gated).** `deploy-services.yml` fires when release-please publishes a **service release** (`<stack>-v*`): a `detect` job parses the stack name from the tag, then a matrix `deploy` job runs on the **Pi self-hosted runner** and POSTs that stack's Portainer GitOps webhook **locally** (resolves the Portainer host to loopback → nginx → Portainer, never leaving the Pi). This sidesteps Cloudflare's WAF, which 403s GitHub's cloud egress IPs even with a valid CF Access service token. Non-service releases (`infra`, `cloud`, `mcp-connector`) no-op.
-
-**`workers/mcp-connector/` (release-gated).** `deploy-workers.yml` fires on the **`mcp-connector` release** (`mcp-connector-v*`; other releases skip) and runs `npm ci`, `npm run typecheck`, then `wrangler deploy --env <env>` as a matrix over the 7 envs (`greenhouse firefly n8n grafana netdata portainer langfuse`; keep in sync with `wrangler.jsonc`). Code-only: per-env Worker secrets and KV were created once by `workers/mcp-connector/deploy.sh` and persist. Env `cloudflare-workers` needs secrets `CLOUDFLARE_API_TOKEN` (Account → Workers Scripts:Edit, scoped to the account; use a dedicated token, not the Terraform one) and `CLOUDFLARE_ACCOUNT_ID`. Adding an env: add it to `wrangler.jsonc`, the workflow matrix + dispatch options, and bootstrap its secrets with `deploy.sh`. Terraform is deliberately not used for Workers (it would need a prebuilt bundle and own bindings/secrets). Env `pi-services`; needs secrets `PORTAINER_URL` and `WEBHOOK_ID_<STACK>` per stack. Each service stack must be set to **Webhook** (not Polling) GitOps auto-update in Portainer. Adding a stack: add the secret **and** a `WEBHOOK_ID_<STACK>` line to the deploy job env.
-
-**Auth (cloud/).** GCP via Workload Identity Federation — no SA key in GitHub; Actions exchanges its OIDC token for a short-lived credential, restricted to this repo by the WIF provider's attribute-condition. Cloudflare via API token stored as a GH **secret** (`CLOUDFLARE_API_TOKEN`). Tunnel secret stored as `TUNNEL_SECRET`. State backend: GCS, bucket name in repo var `TF_STATE_BUCKET`, prefix hardcoded in `cloud/backend.tf`.
-
-**Variable wiring.** Both workflows declare a `TF_VAR_*` env block under the plan/apply step that maps GH variables/secrets to terraform inputs. Variables (non-secret) live at **repo level** (`gh variable list`); secrets at repo level too. The `cloud-plan` / `cloud-production` environments exist for the Deployments-tab audit trail and the optional approval gate — they hold no variables of their own today (env-level vars/secrets would override repo-level if added). Adding a new terraform variable means: add `variable "..."` to `cloud/variables.tf`, add `TF_VAR_<name>: ${{ vars.<NAME> }}` (or `secrets.<NAME>`) to **both** `ci.yml` and `apply-cloud.yml` plan/apply steps, set the GH var (`gh variable set <NAME> --body '...'`), and append it to the bootstrap script's printed checklist so future bootstraps stay accurate. List-typed terraform vars must be JSON-encoded strings (e.g. `'["a@x.com","b@y.com"]'`); **user-list vars use `${{ vars.<NAME> || '[]' }}`** so an unset GH variable defaults to an empty list (Access locked, no users) instead of crashing `terraform plan` with "Missing expression".
-
-**Adding a public service (the recipe).** (1) nginx: `server_name` + `globals.conf` backend map + `defaults.conf` HTTP→HTTPS redirect. (2) terraform: CNAME, tunnel ingress entry (host-correct `http_host_header` and `origin_server_name`), `<svc>_users` variable, Access policy + self-hosted Access app, `<svc>_url` output. (3) GH: set `<SVC>_USERS` repo variable (JSON array) and add `TF_VAR_<svc>_users` to both `ci.yml` and `apply-cloud.yml`. (4) Land the nginx change as `feat(infra):`/`fix(infra):` and **cut the infra release** — that fires `deploy-infra.yml` (`sync_infra.sh`), which tests and reloads nginx for the changed config. Do not hand-edit VERSION. Bootstrap script (`scripts/bootstrap_cloud_cicd.sh`) prints the canonical variable/secret/environment checklist when re-run.
-
----
-
-# Pull requests & commit titles — MANDATORY format
-
-**Every PR title and every commit subject MUST be `type(scope): description`** — a [Conventional Commit](https://www.conventionalcommits.org) **with a mandatory scope**. This is not optional. `main` is **squash-only** with `squash_merge_commit_title=PR_TITLE`, so **the PR title becomes the commit subject release-please parses on `main`**. A malformed or unscoped title silently misattributes — or drops — the release.
-
-- **`type`** ∈ `feat` · `fix` · `perf` · `refactor` · `revert` · `docs` · `style` · `test` · `build` · `ci` · `chore`. The type drives the bump: `feat` → MINOR, `fix`/`perf`/`refactor`/`revert` → PATCH, `feat!` or a `BREAKING CHANGE:` footer → MAJOR; `docs`/`style`/`test`/`build`/`ci`/`chore` → no bump.
-- **`scope`** (REQUIRED) — any lowercase token (`[a-z][a-z0-9-]*`); **not an allowlist** (release-please attributes releases by file **path**, not scope, so the scope is advisory). Pick it to communicate *what changed*:
-  - a **release-please component** when the PR touches that path — `infra` (the **main `vX.Y.Z` line**, `infra/VERSION`), `cloud`, `mcp-connector` (`workers/`), or a service (`greenhouse`, `n8n`, …). Keep each PR to a **single** component so the version + changelog land on the right one.
-  - a **meta scope** for cross-cutting work that touches no component → no release: `cicd` (`.github/workflows/**`, deploy scripts), `repo` (root docs, `scripts/`, tooling), `deps` (dependency bumps), etc.
-- **`description`** — imperative, lowercase first word, no trailing period.
-- Breaking change: add `!` after the scope (`feat(greenhouse)!: …`) and/or a `BREAKING CHANGE:` footer.
-
-Examples: `feat(greenhouse): add humidity sensor` · `fix(infra): correct nginx healthcheck` · `ci(repo): add pr-title lint` · `chore(openclaw)!: drop legacy auth`.
-
-Enforced on **three** layers: the **`pr-title.yml`** workflow (a plain regex — no third-party action) validates every PR title; the **`conventional-commit-guard.sh`** `PreToolUse` hook (wired per-developer in the gitignored `.claude/settings.local.json`) blocks any agent commit whose subject doesn't match; and the squash-merge setting makes the validated PR title the commit of record. release-please's own Release PRs (branch `release-please--*`, titled `chore(repo): release …`) are already compliant and additionally skipped by the lint as a safety net.
-
-## Releases (release-please)
-
-`release-please.yml` watches `main`, parses these commits, and maintains **one batched Release PR** (`release-please-config.json` + `.release-please-manifest.json`); merging it bumps each changed component's version + `CHANGELOG.md` and publishes the tag(s) — `vX.Y.Z` for `infra` (which writes `infra/VERSION`), `<component>-v0.x` for the `0.x` config tracks (`cloud`, `mcp-connector`, the services). **The runtime deploys are release-gated off those tags:** the `infra` release fires `deploy-infra.yml`, a service release fires `deploy-services.yml` (`cloud/` Terraform stays apply-on-merge via `apply-cloud.yml`). So merging a feature PR *stages* a change; merging the Release PR *ships* it. release-please authenticates via a **GitHub App** (`RELEASE_PLEASE_APP_ID` + `RELEASE_PLEASE_APP_PRIVATE_KEY`) so its Release PR triggers the required `gate` check — and so the published `release` events trigger the deploy workflows.
-
-**Full flow, components, versioning policy, and required GitHub config: [docs/releases.md](docs/releases.md).** Never hand-edit `.release-please-manifest.json`, `infra/VERSION`, or any generated `CHANGELOG.md`.
 
 # Security
 
@@ -322,39 +124,21 @@ Enforced on **three** layers: the **`pr-title.yml`** workflow (a plain regex —
 - No `privileged: true`.
 
 ---
-
-# Documentation
-
-- Technical, direct, no filler.
-- Always keep docs updated with architecture changes.
-- Follow current structure and style.
-- Explain only what's needed to execute or maintain.
-- Use `pi@pi.local` and `/home/pi/rp5-homeserver` (no personal info).
-- Use Mermaid diagrams for architecture, STRICTLY when helpful.
-
-**README structure (required sections):**
-1. Title with emoji + one-line description
-2. 🚀 Quick Start
-3. 📦 Architecture — container table
-4. 🔐 Secrets — with generation commands
-5. ⚙️ Configuration — if needed
-6. 💾 Volumes
-
-Add service-specific sections as needed.
-
 ---
 
-# File Management
+# Where to find what
 
-- No unused configs, networks, or stale stack definitions.
-- No duplicate environment sources.
-- No secret values in repo—only templates or references.
+| Topic | Document |
+|-------|----------|
+| Compose anchors, service template, Swarm guidelines | [docs/compose_standards.md](docs/compose_standards.md) |
+| Naming and labels | [docs/naming_labels.md](docs/naming_labels.md) |
+| Deployment mapping, Portainer mounts, re-clone trap, no-symlink rule, `infra/VERSION`, Homepage | [docs/deployment.md](docs/deployment.md) |
+| CI/CD workflows, cloud/ auth and variable wiring, adding a public service | [docs/ci_cd.md](docs/ci_cd.md) |
+| Releases, versioning, PR/commit title contract | [docs/releases.md](docs/releases.md) |
+| GitOps / Portainer webhooks | [docs/gitops.md](docs/gitops.md) |
+| Setup, networking, backup, cloud, monitoring | [docs/setup.md](docs/setup.md), [docs/networking.md](docs/networking.md), [docs/backup.md](docs/backup.md), [docs/cloud.md](docs/cloud.md), [docs/monitoring.md](docs/monitoring.md) |
+| Documentation and README conventions, file management | [docs/README.md](docs/README.md#documentation-conventions) |
+| OpenClaw runbook | `.claude/skills/openclaw-cli/SKILL.md` (auth gateway, channel tokens, `openclaw.sh pull-config` / `push-config`) |
+| Firefly runbook | `.claude/skills/firefly/SKILL.md` (not present in this checkout; referenced as before) |
 
----
-
-# Stack-specific runbooks
-
-Detailed operational procedures live in skill files — load them before touching the stack:
-
-- **OpenClaw**: `.claude/skills/openclaw-cli/SKILL.md` (auth gateway, channel tokens, `openclaw.sh pull-config` / `push-config`).
-- **Firefly**: `.claude/skills/firefly/SKILL.md`.
+Key gotchas (details in docs/deployment.md): no tracked symlinks in the repo (Portainer rejects them); Tier label must be set in both `labels:` and `deploy.labels:` or Shepherd silently skips the service; Portainer redeploy re-clones the repo, so use `docker service update --force <stack>_<svc>` for out-of-band redeploys; a new `infra/` secret file needs a non-local `sync_infra.sh` run before the infra release.
