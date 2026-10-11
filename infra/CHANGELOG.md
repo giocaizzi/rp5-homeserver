@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.19.0...v1.19.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **infra:** mount netdata pi_temp alarm as a file, not a read-only directory ([#310](https://github.com/giocaizzi/rp5-homeserver/issues/310)) ([2789e7c](https://github.com/giocaizzi/rp5-homeserver/commit/2789e7c5c92ca4f7e50417b7bebb014abba63d7c))
+
 ## [1.19.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.18.1...v1.19.0) (2026-10-11)
 
 
