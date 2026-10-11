@@ -128,7 +128,7 @@ groups:
         for: 10m
         annotations:
           summary: PostgreSQL cache hit ratio is low for {{ $labels.service_namespace }}/{{ $labels.service_name }}
-          description: Cache hit ratio is {{ $value | printf "%.1f" }}% (threshold 90%).
+          description: Cache hit ratio is {{ $values.B.Value | printf "%.1f" }}% (threshold 90%).
         labels:
           severity: warning
 
@@ -256,7 +256,7 @@ groups:
         for: 5m
         annotations:
           summary: Redis memory usage is high for {{ $labels.service_namespace }}/{{ $labels.service_name }}
-          description: Memory usage is at {{ $value | printf "%.1f" }}% (threshold 80%).
+          description: Memory usage is at {{ $values.B.Value | printf "%.1f" }}% (threshold 80%).
         labels:
           severity: warning
 
@@ -487,7 +487,7 @@ groups:
         for: 2m
         annotations:
           summary: 5xx responses on {{ $labels.vhost }}
-          description: '{{ $values.B | printf "%.1f" }}% of requests returned 5xx over the last 5m (threshold 5%, min 5 errors).'
+          description: '{{ $values.B.Value | printf "%.1f" }}% of requests returned 5xx over the last 5m (threshold 5%, min 5 errors).'
         labels:
           severity: critical
 
@@ -573,7 +573,7 @@ groups:
         for: 0s
         annotations:
           summary: Error log burst in {{ $labels.service_namespace }}/{{ $labels.service_name }}
-          description: '{{ $values.B | printf "%.0f" }} error-level log lines in the last 10m (threshold 15).'
+          description: '{{ $values.B.Value | printf "%.0f" }} error-level log lines in the last 10m (threshold 15).'
         labels:
           severity: warning
 
@@ -614,6 +614,6 @@ groups:
         for: 0s
         annotations:
           summary: Cloudflared cannot reach infra-proxy
-          description: '{{ $values.B | printf "%.0f" }} origin-unreachable errors in the last 5m. Public hostnames are returning 502.'
+          description: '{{ $values.B.Value | printf "%.0f" }} origin-unreachable errors in the last 5m. Public hostnames are returning 502.'
         labels:
           severity: critical
