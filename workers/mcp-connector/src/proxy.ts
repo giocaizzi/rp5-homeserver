@@ -25,6 +25,9 @@ const FORWARD_REQUEST_HEADERS = [
   "accept",
   "mcp-session-id",
   "mcp-protocol-version",
+  // MCP 2026-07-28: servers reject bodies whose Mcp-Method/Mcp-Name header is missing (#314)
+  "mcp-method",
+  "mcp-name",
   "last-event-id",
 ];
 
