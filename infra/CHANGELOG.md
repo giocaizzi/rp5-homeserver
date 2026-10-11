@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.2](https://github.com/giocaizzi/rp5-homeserver/compare/v1.19.1...v1.19.2) (2026-10-11)
+
+
+### Bug Fixes
+
+* **infra:** run shepherd under an init so it stops on SIGTERM ([#321](https://github.com/giocaizzi/rp5-homeserver/issues/321)) ([5805410](https://github.com/giocaizzi/rp5-homeserver/commit/58054109f73279d4245638bf130ea26dd599c6d8)), closes [#316](https://github.com/giocaizzi/rp5-homeserver/issues/316)
+
 ## [1.19.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.19.0...v1.19.1) (2026-10-11)
 
 

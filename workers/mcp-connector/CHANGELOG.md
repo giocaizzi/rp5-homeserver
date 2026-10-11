@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.2.1...mcp-connector-v0.2.2) (2026-10-11)
+
+
+### Bug Fixes
+
+* **mcp-connector:** forward Mcp-Method and Mcp-Name headers upstream ([#318](https://github.com/giocaizzi/rp5-homeserver/issues/318)) ([9ccd54f](https://github.com/giocaizzi/rp5-homeserver/commit/9ccd54fcccd1bd3b0eeb5b5bc4a4d91c41f2b258)), closes [#314](https://github.com/giocaizzi/rp5-homeserver/issues/314)
+
 ## [0.2.1](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.2.0...mcp-connector-v0.2.1) (2026-10-11)
 
 
