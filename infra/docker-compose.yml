@@ -403,6 +403,7 @@ services:
   shepherd-critical:
     image: containrrr/shepherd:latest
     hostname: infra-shepherd-critical
+    init: true  # shepherd's bash loop is PID 1 and ignores SIGTERM while sleeping -> SIGKILL (137) on stop (#316)
     environment:
       - SLEEP_TIME=24h
       - FILTER_SERVICES=label=com.giocaizzi.tier=critical
@@ -434,6 +435,7 @@ services:
   shepherd-core:
     image: containrrr/shepherd:latest
     hostname: infra-shepherd-core
+    init: true
     environment:
       - SLEEP_TIME=48h
       - FILTER_SERVICES=label=com.giocaizzi.tier=core
@@ -465,6 +467,7 @@ services:
   shepherd-extra:
     image: containrrr/shepherd:latest
     hostname: infra-shepherd-extra
+    init: true
     environment:
       - SLEEP_TIME=72h
       - FILTER_SERVICES=label=com.giocaizzi.tier=extra
