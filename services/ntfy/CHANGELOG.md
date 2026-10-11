@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/giocaizzi/rp5-homeserver/compare/ntfy-v0.2.0...ntfy-v0.2.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **observability:** fix malformed grafana ntfy notifications ([#285](https://github.com/giocaizzi/rp5-homeserver/issues/285)) ([e08ba2a](https://github.com/giocaizzi/rp5-homeserver/commit/e08ba2a6ca9e6ea1497e5e196e5c958c62d43769)), closes [#280](https://github.com/giocaizzi/rp5-homeserver/issues/280)
+
 ## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/ntfy-v0.1.1...ntfy-v0.2.0) (2026-10-04)
 
 

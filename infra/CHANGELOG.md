@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.18.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.18.0...v1.18.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **infra:** return 429 on nginx rate limit and raise homepage burst ([#284](https://github.com/giocaizzi/rp5-homeserver/issues/284)) ([0fa1140](https://github.com/giocaizzi/rp5-homeserver/commit/0fa11400ea5cf2dd3b7e53723f54c830612bd7cb))
+* **infra:** unquote version in homepage greeting widget ([#294](https://github.com/giocaizzi/rp5-homeserver/issues/294)) ([d4162d6](https://github.com/giocaizzi/rp5-homeserver/commit/d4162d61c72483438215f4348109ff2f65f938b7)), closes [#185](https://github.com/giocaizzi/rp5-homeserver/issues/185)
+
 ## [1.18.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.17.1...v1.18.0) (2026-10-11)
 
 

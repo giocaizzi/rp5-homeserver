@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/giocaizzi/rp5-homeserver/compare/langfuse-v0.2.0...langfuse-v0.2.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **langfuse:** replace MinIO with SeaweedFS ([#293](https://github.com/giocaizzi/rp5-homeserver/issues/293)) ([92a93b6](https://github.com/giocaizzi/rp5-homeserver/commit/92a93b6285e87769abb75631a3053d7063131b44))
+
 ## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/langfuse-v0.1.1...langfuse-v0.2.0) (2026-10-11)
 
 

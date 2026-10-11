@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.2](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.4.1...observability-v0.4.2) (2026-10-11)
+
+
+### Bug Fixes
+
+* **crm:** scrape crm-redis and alert on missing redis metrics ([#287](https://github.com/giocaizzi/rp5-homeserver/issues/287)) ([a24364c](https://github.com/giocaizzi/rp5-homeserver/commit/a24364c91b1f73e1d1ddbf939bc01d6ab7918194))
+* **observability:** drop log lines older than Loki's 7d write window ([#286](https://github.com/giocaizzi/rp5-homeserver/issues/286)) ([499da64](https://github.com/giocaizzi/rp5-homeserver/commit/499da64a3262118b1419ee23654aeba9c63d1ba4))
+* **observability:** exclude unexpected EOF from container error burst alert ([#283](https://github.com/giocaizzi/rp5-homeserver/issues/283)) ([b268f4f](https://github.com/giocaizzi/rp5-homeserver/commit/b268f4f083143c530750abad02738fca5e78a71b))
+* **observability:** extend tempo stop grace period to 90s ([#295](https://github.com/giocaizzi/rp5-homeserver/issues/295)) ([ecfff34](https://github.com/giocaizzi/rp5-homeserver/commit/ecfff349d556e578516638bb995d2c94255f5035)), closes [#290](https://github.com/giocaizzi/rp5-homeserver/issues/290)
+* **observability:** fix malformed grafana ntfy notifications ([#285](https://github.com/giocaizzi/rp5-homeserver/issues/285)) ([e08ba2a](https://github.com/giocaizzi/rp5-homeserver/commit/e08ba2a6ca9e6ea1497e5e196e5c958c62d43769)), closes [#280](https://github.com/giocaizzi/rp5-homeserver/issues/280)
+* **observability:** require caller token on mcp-grafana ([#298](https://github.com/giocaizzi/rp5-homeserver/issues/298)) ([5eca84d](https://github.com/giocaizzi/rp5-homeserver/commit/5eca84d0cbcb5edcba63eae353a215d2932b752f))
+* **observability:** set GRAFANA_ORG_ID on mcp-grafana ([#301](https://github.com/giocaizzi/rp5-homeserver/issues/301)) ([606f0d5](https://github.com/giocaizzi/rp5-homeserver/commit/606f0d5e5b484452c1b226e6f636a76576773128))
+* **observability:** shorten alloy docker discovery refresh to drop stale tailers ([#297](https://github.com/giocaizzi/rp5-homeserver/issues/297)) ([ab98a58](https://github.com/giocaizzi/rp5-homeserver/commit/ab98a5821dbc8993852db155183a091eabf5133c)), closes [#288](https://github.com/giocaizzi/rp5-homeserver/issues/288)
+
 ## [0.4.1](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.4.0...observability-v0.4.1) (2026-10-11)
 
 
