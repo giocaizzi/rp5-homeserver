@@ -22,6 +22,7 @@ BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> ./scripts/sync_infra.sh
 |-----------|-------|---------|
 | nginx | `nginx:1-alpine` | Reverse proxy, SSL termination |
 | portainer | `portainer/portainer-ee:latest` | Docker management UI |
+| management-mcp | `portainer/portainer-mcp:2.45` | Portainer MCP (full access) for the [mcp-connector](../workers/mcp-connector/README.md) |
 | cloudflared | `cloudflare/cloudflared:latest` | Secure tunnel (no port forwarding) |
 | netdata | `netdata/netdata:v2` | Real-time system monitoring |
 | backrest | `garethgeorge/backrest:v1` | Restic backup web UI |
@@ -58,6 +59,7 @@ File-based secrets in `./secrets/` on the Pi (gitignored). Source of truth: Secr
 | `firefly_api_token` | `firefly_api_token.txt` | Homepage widget |
 | `adguard_password` | `adguard_password.txt` | Homepage widget |
 | `grafana_admin_password` | `grafana_admin_password.txt` | Homepage widget |
+| `portainer_mcp_auth_token` | `portainer_mcp_auth_token.txt` | Portainer MCP gate token (`openssl rand -hex 32`; key `infra_portainer_mcp_auth_token`) |
 | `domain` | `domain.txt` | Production domain |
 | `ntfy_token` | `ntfy_token.txt` | Netdata → ntfy publisher token |
 
@@ -89,6 +91,14 @@ Docker management at `https://portainer.home`.
 2. Generate new key
 3. Store it in Secrets Manager as `infra_portainer_api_key`, then run `sync_infra.sh`
 4. Re-sync: `./scripts/sync_infra.sh`
+
+### Portainer MCP
+
+`management-mcp` serves MCP at `https://portainer.<domain>/mcp` (public host only), reached through the Worker connector. **Full Portainer access**: the Worker sends the gate token (`Authorization`, `UPSTREAM_BEARER`) and a dedicated Portainer access token (`X-Portainer-API-Key`, `UPSTREAM_EXTRA_HEADERS`). Create that token under a separate Portainer user so it can be revoked on its own. The upstream project is unsupported and its image minor must match Portainer's (`2.45` ↔ 2.45.x) — bump the tag with Portainer.
+
+### Netdata MCP
+
+Netdata ≥ 2.7.2 serves MCP natively on `/mcp`. `https://netdata-mcp.<domain>/mcp` is an MCP-only public host (nginx 404s everything else; the Netdata UI stays on `netdata.home`). Worker bearer = the agent's key in `/var/lib/netdata/mcp_dev_preview_api_key`.
 
 ### Cloudflared
 

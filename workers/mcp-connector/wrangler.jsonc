@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	// Single-origin OAuth + MCP reverse-proxy. One codebase, deployed three times
+	// Single-origin OAuth + MCP reverse-proxy. One codebase, deployed once per upstream
 	// (one Worker per upstream MCP server) via wrangler environments.
 	//
 	// Each env gets its own workers.dev hostname, its own KV namespace, and its
@@ -53,6 +53,63 @@
 				{
 					"binding": "OAUTH_KV",
 					"id": "20c5002a26414d7d94cace25ddbf637a"
+				}
+			]
+		},
+		"grafana": {
+			"name": "mcp-connector-grafana",
+			"vars": {
+				"SERVICE_NAME": "Grafana",
+				"UPSTREAM_URL": "https://grafana.<domain>/mcp",
+				"ALLOWED_EMAILS": "<email>"
+			},
+			"kv_namespaces": [
+				{
+					"binding": "OAUTH_KV",
+					"id": "REPLACE_WITH_GRAFANA_KV_ID"
+				}
+			]
+		},
+		"netdata": {
+			"name": "mcp-connector-netdata",
+			"vars": {
+				"SERVICE_NAME": "Netdata",
+				"UPSTREAM_URL": "https://netdata-mcp.<domain>/mcp",
+				"ALLOWED_EMAILS": "<email>"
+			},
+			"kv_namespaces": [
+				{
+					"binding": "OAUTH_KV",
+					"id": "REPLACE_WITH_NETDATA_KV_ID"
+				}
+			]
+		},
+		"portainer": {
+			"name": "mcp-connector-portainer",
+			"vars": {
+				"SERVICE_NAME": "Portainer",
+				"UPSTREAM_URL": "https://portainer.<domain>/mcp",
+				"ALLOWED_EMAILS": "<email>"
+			},
+			"kv_namespaces": [
+				{
+					"binding": "OAUTH_KV",
+					"id": "REPLACE_WITH_PORTAINER_KV_ID"
+				}
+			]
+		},
+		"langfuse": {
+			"name": "mcp-connector-langfuse",
+			"vars": {
+				"SERVICE_NAME": "Langfuse",
+				"UPSTREAM_URL": "https://langfuse-mcp.<domain>/api/public/mcp",
+				"UPSTREAM_AUTH_SCHEME": "Basic",
+				"ALLOWED_EMAILS": "<email>"
+			},
+			"kv_namespaces": [
+				{
+					"binding": "OAUTH_KV",
+					"id": "REPLACE_WITH_LANGFUSE_KV_ID"
 				}
 			]
 		}

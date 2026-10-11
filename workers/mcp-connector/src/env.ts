@@ -24,6 +24,8 @@ export interface Env {
   SERVICE_NAME: string;
   /** Full upstream MCP endpoint, e.g. https://greenhouse.<domain>/mcp */
   UPSTREAM_URL: string;
+  /** Authorization scheme for UPSTREAM_BEARER; defaults to "Bearer" (Langfuse: "Basic"). */
+  UPSTREAM_AUTH_SCHEME?: string;
   /** Comma-separated email allowlist that may complete the OAuth login. */
   ALLOWED_EMAILS: string;
 
@@ -32,6 +34,8 @@ export interface Env {
   GOOGLE_CLIENT_SECRET: string;
   /** App-level bearer the upstream MCP server validates (injected server-side). */
   UPSTREAM_BEARER: string;
+  /** Optional JSON object of extra upstream headers, e.g. {"X-Portainer-API-Key":"ptr_…"}. */
+  UPSTREAM_EXTRA_HEADERS?: string;
   /** Cloudflare Access service-token credentials to traverse CF Access to the origin. */
   CF_ACCESS_CLIENT_ID: string;
   CF_ACCESS_CLIENT_SECRET: string;
