@@ -21,7 +21,7 @@
 | langfuse-db | `postgres:16-alpine` | Main database |
 | langfuse-cache | `redis:7-alpine` | Cache & queues |
 | langfuse-analytics | `clickhouse/clickhouse-server` | Analytics OLAP |
-| langfuse-storage | `minio/minio` | Object storage |
+| langfuse-storage | `chrislusf/seaweedfs` | Object storage |
 | langfuse-app | `langfuse/langfuse` | Web application |
 | langfuse-worker | `langfuse/langfuse-worker` | Event processor |
 
@@ -48,7 +48,7 @@ Create all before deployment:
 |--------|----------|
 | `langfuse_postgres_password` | `openssl rand -base64 24 \| docker secret create langfuse_postgres_password -` |
 | `langfuse_clickhouse_password` | `openssl rand -base64 24 \| docker secret create langfuse_clickhouse_password -` |
-| `langfuse_minio_password` | `openssl rand -base64 24 \| docker secret create langfuse_minio_password -` |
+| `langfuse_minio_password` (SeaweedFS S3 secret key; name kept from MinIO, access key is `langfuse`) | `openssl rand -base64 24 \| docker secret create langfuse_minio_password -` |
 | `langfuse_redis_password` | `openssl rand -base64 24 \| docker secret create langfuse_redis_password -` |
 
 ---
@@ -105,4 +105,4 @@ trace = langfuse.trace(name="my-trace")
 | `langfuse_postgres_data` | PostgreSQL database |
 | `langfuse_redis_data` | Redis persistence |
 | `langfuse_clickhouse_data` | ClickHouse analytics |
-| `langfuse_minio_data` | Object storage |
+| `langfuse_storage_data` | Object storage |
