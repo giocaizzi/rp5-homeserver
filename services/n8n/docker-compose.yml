@@ -176,6 +176,8 @@ services:
       # Performance and features
       - N8N_LOG_LEVEL=info
       - N8N_LOG_OUTPUT=console
+      # Telemetry host (telemetry.n8n.io) is DNS-blocked (0.0.0.0) -> ECONNREFUSED 0.0.0.0:443 spam
+      - N8N_DIAGNOSTICS_ENABLED=false
       # Main heap bounded under the 1536M limit; the JS runner does not inherit
       # NODE_OPTIONS (allowlisted env), it gets N8N_RUNNERS_MAX_OLD_SPACE_SIZE.
       - NODE_OPTIONS=--max-old-space-size=896
