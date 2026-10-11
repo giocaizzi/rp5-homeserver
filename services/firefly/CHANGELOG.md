@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.2...firefly-v0.2.3) (2026-10-11)
+
+
+### Bug Fixes
+
+* **firefly:** stop scheduler, app and importer cleanly on update ([#320](https://github.com/giocaizzi/rp5-homeserver/issues/320)) ([bcd4e38](https://github.com/giocaizzi/rp5-homeserver/commit/bcd4e38869d6994c048ab4bd5beb2cd524e992cb)), closes [#316](https://github.com/giocaizzi/rp5-homeserver/issues/316)
+
 ## [0.2.2](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.1...firefly-v0.2.2) (2026-10-11)
 
 
