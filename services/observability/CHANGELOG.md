@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.2.0...observability-v0.3.0) (2026-10-11)
+
+
+### Features
+
+* **observability:** alert on nginx 5xx ratio, silent nginx logs and container error bursts ([#256](https://github.com/giocaizzi/rp5-homeserver/issues/256)) ([cde8a6f](https://github.com/giocaizzi/rp5-homeserver/commit/cde8a6f45bcef8ac7116047d28c950b391a2d69f))
+* **observability:** detect more log levels and alert on tunnel outages ([#258](https://github.com/giocaizzi/rp5-homeserver/issues/258)) ([188f51d](https://github.com/giocaizzi/rp5-homeserver/commit/188f51d671b9b4445ba103f0e1356da29e295c5e))
+
 ## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.1.7...observability-v0.2.0) (2026-10-04)
 
 
