@@ -12,6 +12,7 @@ release-please cuts versions, changelogs, and tags. **The runtime deploys are re
 | **PR title** | `pr-title.yml` | PR opened/edited/reopened/synced | Validates the PR title is a Conventional Commit with a mandatory scope. Skips `release-please--*` PRs. |
 | **Deploy infra** | `deploy-infra.yml` | **`infra` release** (`v*`) + manual | Self-hosted Pi runner runs `sync_infra.sh --local`. |
 | **Deploy services** | `deploy-services.yml` | **service release** (`<stack>-v*`) + manual | Parses the stack from the tag, POSTs its Portainer webhook on the Pi. |
+| **Deploy workers** | `deploy-workers.yml` | **`mcp-connector` release** (`mcp-connector-v*`) + manual | GitHub-hosted runner: `wrangler deploy --env` for each Worker env. |
 | **Apply cloud** | `apply-cloud.yml` | push `main` ∩ `cloud/**` | `terraform apply` — plan-reviewed-on-merge, **not** release-gated. |
 
 ```mermaid
@@ -48,10 +49,11 @@ The runtime stacks deploy **when their release is published**, not on merge to `
 |---|---|---|---|
 | `infra/` stack | `deploy-infra.yml` | `infra` release (bare `v*` tag) | self-hosted Pi runner → `sync_infra.sh --local` |
 | `services/<stack>` | `deploy-services.yml` | service release (`<stack>-v*` tag) | Pi runner → that stack's Portainer webhook (local, bypasses CF WAF) |
+| `workers/mcp-connector` | `deploy-workers.yml` | `mcp-connector` release (`mcp-connector-v*` tag) | GitHub-hosted runner → `npm ci`, typecheck, `wrangler deploy --env` per env (env `cloudflare-workers`) |
 | `cloud/` Terraform | `apply-cloud.yml` | **push** `main` ∩ `cloud/**` | `terraform apply` (plan-reviewed-on-merge — **not** release-gated) |
 
 - The deploy workflows trigger on `release: [published]`. Because release-please authors the release with the **GitHub App** token (not `GITHUB_TOKEN`), the `release` event *does* fire downstream workflows.
-- A batched Release PR publishes **one release per changed component**, so each fires its own deploy; `deploy-services.yml` parses the stack from the tag and no-ops on non-service releases (`infra`, `cloud`, `mcp-connector`).
+- A batched Release PR publishes **one release per changed component**, so each fires its own deploy; `deploy-services.yml` parses the stack from the tag and no-ops on non-service releases (`infra`, `cloud`, `mcp-connector`); `mcp-connector` is deployed by `deploy-workers.yml`.
 - The release event checks out the **tagged commit**, so the deployed stack matches the released version. `sync_infra.sh` deploys in place and hot-reloads nginx (`nginx -t` + `nginx -s reload`) when files under `infra/nginx/` changed.
 - Both Pi deploys also accept **`workflow_dispatch`** for manual runs (infra: `pull`/`restart`; services: a single `stack`).
 - **Why `cloud/` is excluded:** Terraform is desired-state — release-gating it would let `main` diverge from applied infra until a release is cut. Its review gate is the plan (`ci.yml`), and merge applies it. release-please still versions `cloud` (`cloud-vX.Y.Z`) for the changelog/tag record.
