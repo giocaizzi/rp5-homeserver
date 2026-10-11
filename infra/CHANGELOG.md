@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.18.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.17.1...v1.18.0) (2026-10-11)
+
+
+### Features
+
+* **infra:** route calibre.<domain> ([#263](https://github.com/giocaizzi/rp5-homeserver/issues/263)) ([9d564b6](https://github.com/giocaizzi/rp5-homeserver/commit/9d564b69e7c63b00c6e627d816e23226413d65c0))
+* **repo:** add grafana, netdata, portainer and langfuse MCP connectors ([#265](https://github.com/giocaizzi/rp5-homeserver/issues/265)) ([501b368](https://github.com/giocaizzi/rp5-homeserver/commit/501b368ec3ded859387df863fa7d57c8b623fa7d))
+
 ## [1.17.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.17.0...v1.17.1) (2026-10-04)
 
 
