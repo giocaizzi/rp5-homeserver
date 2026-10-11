@@ -101,6 +101,7 @@ jobs:
           WEBHOOK_ID_OPENCLAW: ${{ secrets.WEBHOOK_ID_OPENCLAW }}
           WEBHOOK_ID_CODE: ${{ secrets.WEBHOOK_ID_CODE }}
           WEBHOOK_ID_CRM: ${{ secrets.WEBHOOK_ID_CRM }}
+          WEBHOOK_ID_CALIBRE: ${{ secrets.WEBHOOK_ID_CALIBRE }}
         run: |
           set -euo pipefail
           stack="${{ matrix.stack }}"
