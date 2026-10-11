@@ -196,7 +196,10 @@ services:
         export MYSQLD_EXPORTER_PASSWORD=$$(cat /run/secrets/db_password)
         exec /bin/mysqld_exporter \
           --mysqld.address=firefly-db:3306 \
-          --mysqld.username=firefly
+          --mysqld.username=firefly \
+          --no-collect.slave_status \
+          --no-collect.info_schema.innodb_cmp \
+          --no-collect.info_schema.innodb_cmpmem
     networks:
       - firefly_network
       - observability_network
