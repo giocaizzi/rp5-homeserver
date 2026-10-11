@@ -254,7 +254,7 @@ services:
       - /etc/group:/host/etc/group:ro       # optional
       - ./netdata/netdata.conf:/etc/netdata/netdata.conf:ro  # custom config
       - ./netdata/health_alarm_notify.conf:/etc/netdata/health_alarm_notify.conf:ro  # ntfy alerts
-      - ./netdata/health.d:/etc/netdata/health.d:ro  # custom alarms
+      - ./netdata/health.d/pi_temp.conf:/etc/netdata/health.d/pi_temp.conf:ro  # custom alarm (file mount: a :ro dir mount breaks the entrypoint's stock-config copy)
       - netdata_config:/etc/netdata         # config directory
       - netdata_cache:/var/cache/netdata    # persistent cache
       - netdata_lib:/var/lib/netdata        # persistent data
