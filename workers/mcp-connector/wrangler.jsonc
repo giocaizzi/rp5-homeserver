@@ -66,7 +66,7 @@
 			"kv_namespaces": [
 				{
 					"binding": "OAUTH_KV",
-					"id": "REPLACE_WITH_GRAFANA_KV_ID"
+					"id": "e840096a5eaf4a29b50281f26839a0ac"
 				}
 			]
 		},
@@ -80,7 +80,7 @@
 			"kv_namespaces": [
 				{
 					"binding": "OAUTH_KV",
-					"id": "REPLACE_WITH_NETDATA_KV_ID"
+					"id": "625257f9839343d9b9108984608afe18"
 				}
 			]
 		},
@@ -94,7 +94,7 @@
 			"kv_namespaces": [
 				{
 					"binding": "OAUTH_KV",
-					"id": "REPLACE_WITH_PORTAINER_KV_ID"
+					"id": "25a0d84ba6b24637bb081fec7618ee25"
 				}
 			]
 		},
@@ -109,7 +109,7 @@
 			"kv_namespaces": [
 				{
 					"binding": "OAUTH_KV",
-					"id": "REPLACE_WITH_LANGFUSE_KV_ID"
+					"id": "455059d989a441d88fe2e1556d6ea435"
 				}
 			]
 		}
