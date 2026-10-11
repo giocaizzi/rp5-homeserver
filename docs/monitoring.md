@@ -232,7 +232,7 @@ Grafana's contact point and root policy are provisioned in `grafana/provisioning
 | Redis Alerts | Redis Down, Redis High Memory |
 | Exporter Health | Metrics Exporter Down |
 | Observability Stack | Loki Down, Tempo Down, Alloy Down |
-| HTTP Errors (Loki) | Nginx 5xx Error Ratio High (per vhost, >5% and ≥5 errors over 5m), Nginx Access Logs Silent (no lines for 15m), Container Error Logs Burst (>15 error lines/10m per service), Cloudflare Tunnel Origin Unreachable (>3 in 5m) |
+| HTTP Errors (Loki) | Nginx 5xx Error Ratio High (per vhost, >5% and ≥20 errors over 5m), Nginx Access Logs Silent (no lines for 15m), Container Error Logs Burst (>15 error lines/10m per service), Cloudflare Tunnel Origin Unreachable (>3 in 5m) |
 
 The container-error rule relies on Alloy's regex-derived `level` label (`alloy/pipelines/logs.alloy`: `level=`, `[ERROR]`, cloudflared `ERR`, monolog `.ERROR:`, NestJS and ntfy formats). Add a pattern there when a new service logs in another format. The query excludes noisy technologies (`grafana`, `alloy`, `netdata`, `*-exporter`) and benign lines (`Unauthenticated`, `context canceled`, `unexpected EOF`). Container health/restarts are covered by Netdata, not Grafana.
 
