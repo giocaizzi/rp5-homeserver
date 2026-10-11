@@ -156,6 +156,49 @@ services:
     logging:
       <<: *logging-base
 
+  # Portainer MCP - HTTP MCP server for Portainer (full access, via mcp-connector Worker)
+  # Unsupported upstream project (see portainer/portainer-mcp README); the image minor
+  # must track the Portainer minor (portainer-ee:latest, currently 2.45.x).
+  # Gate token (Authorization) + caller's Portainer key (X-Portainer-API-Key) are both
+  # injected by the Worker; nothing Portainer-side is stored here.
+  management-mcp:
+    image: portainer/portainer-mcp:2.45
+    hostname: infra-management-mcp
+    environment:
+      - PORTAINER_URL=http://infra-management:9000
+      - PORTAINER_MCP_ALLOWED_HOSTS=portainer.giocaizzi.xyz
+      - PORTAINER_MCP_TRUST_PROXY_TLS=1
+      - PORTAINER_MCP_FORWARDED_ALLOW_IPS=10.0.2.0/24   # rp5_infra subnet (nginx)
+    secrets:
+      - portainer_mcp_auth_token
+    # Image runs HTTP by default; wrap the gate token into env, keep the original entrypoint.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export PORTAINER_MCP_AUTH_TOKEN="$$(cat /run/secrets/portainer_mcp_auth_token)"
+        exec mcp-portainer
+    expose:
+      - "17717"
+    networks:
+      - infra_network
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "management-mcp"
+      com.giocaizzi.component: "gateway"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "portainer-mcp"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      <<: *logging-base
+
   # Cloudflare Tunnel
   tunnel:
     image: cloudflare/cloudflared:latest
@@ -489,3 +532,5 @@ secrets:
     file: ./secrets/key.pem
   ntfy_token:
     file: ./secrets/ntfy_token.txt
+  portainer_mcp_auth_token:
+    file: ./secrets/portainer_mcp_auth_token.txt

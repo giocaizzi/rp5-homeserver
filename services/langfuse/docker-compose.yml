@@ -477,6 +477,8 @@ services:
     environment:
       <<: *langfuse-env
       NEXTAUTH_URL: "https://langfuse.home"
+      # Native MCP endpoint 403s unknown Hosts; allow the public MCP-only host
+      LANGFUSE_MCP_ALLOWED_HOSTS: "langfuse-mcp.giocaizzi.xyz"
       HOSTNAME: "0.0.0.0"
       PORT: "3000"
       # V8 heap below the 512M limit (default ~2 GB) so GC runs before the cgroup OOM-kill
