@@ -166,3 +166,47 @@ output "otel_ingest_client_secret" {
   value       = cloudflare_zero_trust_access_service_token.otel_ingest.client_secret
   sensitive   = true
 }
+
+output "claude_grafana_mcp_client_id" {
+  description = "Client ID for the Grafana MCP service token (CF-Access-Client-Id)"
+  value       = cloudflare_zero_trust_access_service_token.claude_grafana_mcp.client_id
+}
+
+output "claude_grafana_mcp_client_secret" {
+  description = "Client Secret for the Grafana MCP service token (CF-Access-Client-Secret)"
+  value       = cloudflare_zero_trust_access_service_token.claude_grafana_mcp.client_secret
+  sensitive   = true
+}
+
+output "claude_netdata_mcp_client_id" {
+  description = "Client ID for the Netdata MCP service token (CF-Access-Client-Id)"
+  value       = cloudflare_zero_trust_access_service_token.claude_netdata_mcp.client_id
+}
+
+output "claude_netdata_mcp_client_secret" {
+  description = "Client Secret for the Netdata MCP service token (CF-Access-Client-Secret)"
+  value       = cloudflare_zero_trust_access_service_token.claude_netdata_mcp.client_secret
+  sensitive   = true
+}
+
+output "claude_portainer_mcp_client_id" {
+  description = "Client ID for the Portainer MCP service token (CF-Access-Client-Id)"
+  value       = cloudflare_zero_trust_access_service_token.claude_portainer_mcp.client_id
+}
+
+output "claude_portainer_mcp_client_secret" {
+  description = "Client Secret for the Portainer MCP service token (CF-Access-Client-Secret)"
+  value       = cloudflare_zero_trust_access_service_token.claude_portainer_mcp.client_secret
+  sensitive   = true
+}
+
+output "claude_langfuse_mcp_client_id" {
+  description = "Client ID for the Langfuse MCP service token (CF-Access-Client-Id)"
+  value       = cloudflare_zero_trust_access_service_token.claude_langfuse_mcp.client_id
+}
+
+output "claude_langfuse_mcp_client_secret" {
+  description = "Client Secret for the Langfuse MCP service token (CF-Access-Client-Secret)"
+  value       = cloudflare_zero_trust_access_service_token.claude_langfuse_mcp.client_secret
+  sensitive   = true
+}
