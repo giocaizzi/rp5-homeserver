@@ -4,7 +4,8 @@
 # `<stack>-vX.Y.Z`. The released stack is parsed from the tag, so merging a feature
 # PR STAGES the change and merging the Release PR SHIPS it. A batched Release PR
 # cuts one release (event) per changed component; non-service releases (infra
-# `vX.Y.Z`, `cloud-*`, `mcp-connector-*`) resolve to no stack and no-op here.
+# `vX.Y.Z`, `cloud-*`, `mcp-connector-*`) resolve to no stack and no-op here
+# (`mcp-connector-*` is deployed by deploy-workers.yml).
 # See docs/releases.md.
 #
 # Flow: derive the stack from the release tag -> POST that stack's Portainer GitOps

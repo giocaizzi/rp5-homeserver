@@ -143,6 +143,13 @@ grants/tokens. KV ids are committed in `wrangler.jsonc`; create new ones with
 
 ## 🚢 Deployment
 
+**Routine deploys are automatic:** publishing an `mcp-connector` release
+(`mcp-connector-v*`, via the release-please PR) runs `deploy-workers.yml`, which
+typechecks and runs `wrangler deploy --env` for every env (secrets persist). It
+needs the `cloudflare-workers` GitHub environment with `CLOUDFLARE_API_TOKEN`
+(Workers Scripts:Edit) and `CLOUDFLARE_ACCOUNT_ID`. Use the manual flow below for
+bootstrap (KV, secrets) or a one-off deploy.
+
 ```bash
 cd workers/mcp-connector
 npm install
