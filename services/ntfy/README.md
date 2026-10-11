@@ -104,15 +104,18 @@ ntfy access everyone "up*" write
 |-------|-----------|-----------------------------------|
 | `grafana` | Grafana webhook (`?template=grafana-alert` — `templates/grafana-alert.yml`, priority from `severity`) | `observability_ntfy_token` |
 | `netdata` | Netdata `health_alarm_notify.conf` (critical only) | `infra_ntfy_token` |
+| `swarm` | `swarm-health.yml` workflow (service below desired replicas ≥10 min) | GitHub repo secret `NTFY_SWARM_TOKEN` |
 
-Both publish as user `alerts` (write-only), one token per source so each can be revoked alone:
+All publish as user `alerts` (write-only), one token per source so each can be revoked alone:
 
 ```bash
 ntfy user add alerts
 ntfy access alerts grafana wo
 ntfy access alerts netdata wo
+ntfy access alerts swarm wo
 ntfy token add --label grafana alerts
 ntfy token add --label netdata alerts
+ntfy token add --label swarm alerts
 ```
 
 ---
