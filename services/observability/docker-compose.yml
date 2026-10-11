@@ -327,7 +327,7 @@ services:
       - -c
       - |
         export GRAFANA_SERVICE_ACCOUNT_TOKEN="$$(cat /run/secrets/grafana_mcp_token)"
-        exec /app/mcp-grafana --transport streamable-http --address 0.0.0.0:8000 --disable-write
+        exec /app/mcp-grafana --transport streamable-http --address 0.0.0.0:8000 --allowed-hosts grafana.<domain> --disable-write
     expose:
       - "8000"
     networks:
