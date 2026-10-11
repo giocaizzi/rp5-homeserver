@@ -63,6 +63,11 @@ output "crm_url" {
   value       = "https://crm.${var.zone_name}"
 }
 
+output "calibre_url" {
+  description = "The public URL for Calibre-Web-Automated"
+  value       = "https://calibre.${var.zone_name}"
+}
+
 # ============================================================================
 # GCP Outputs
 # ============================================================================
