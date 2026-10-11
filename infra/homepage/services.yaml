@@ -57,6 +57,12 @@
             icon: mdi-account-group-#6366f1
             ping: http://crm_server:3000/healthz
 
+      - Calibre:
+            href: https://calibre.{{HOMEPAGE_FILE_DOMAIN}}
+            description: Ebook library
+            icon: calibre-web.png
+            ping: http://calibre_app:8083
+
       - ntfy:
             href: https://ntfy.{{HOMEPAGE_FILE_DOMAIN}}
             description: Push notification service
