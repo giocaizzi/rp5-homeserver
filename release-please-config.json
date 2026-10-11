@@ -44,6 +44,7 @@
     "services/observability": { "release-type": "simple", "component": "observability", "extra-files": ["docker-compose.yml"] },
     "services/openclaw": { "release-type": "simple", "component": "openclaw" },
     "services/code": { "release-type": "simple", "component": "code" },
-    "services/crm": { "release-type": "simple", "component": "crm" }
+    "services/crm": { "release-type": "simple", "component": "crm" },
+    "services/calibre": { "release-type": "simple", "component": "calibre" }
   }
 }
