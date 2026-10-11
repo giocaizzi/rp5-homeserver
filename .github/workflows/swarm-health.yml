@@ -1,0 +1,51 @@
+# Alert (ntfy) when a Swarm service runs fewer replicas than desired for >=10 min,
+# e.g. a Shepherd update that crash-loops the new image (#185, #211).
+#
+# Why a workflow: no existing metric source (Netdata, Alloy/Prometheus) exposes
+# Swarm desired-vs-running replicas, so the check reads `docker service ls`
+# on the Pi runner. The "10 min" is stateless: a service whose spec was updated
+# <10 min ago (UpdatedAt) is still converging and is skipped.
+#
+# Needs repo secret NTFY_SWARM_TOKEN (write-only token for topic `swarm`, see
+# services/ntfy/README.md#-alert-topics). Re-alerts every run while degraded.
+name: swarm-health
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: swarm-health
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: [self-hosted, rp5]
+    steps:
+      - name: Report degraded services
+        env:
+          NTFY_SWARM_TOKEN: ${{ secrets.NTFY_SWARM_TOKEN }}
+        run: |
+          set -euo pipefail
+          now=$(date +%s)
+          degraded=""
+          while read -r name replicas; do
+            running="${replicas%%/*}"; desired="${replicas#*/}"; desired="${desired%% *}"
+            [ "$running" -lt "$desired" ] || continue
+            updated=$(docker service inspect "$name" --format '{{.UpdatedAt.Unix}}')
+            [ $((now - updated)) -ge 600 ] || continue
+            degraded="${degraded}${name} ${running}/${desired}"$'\n'
+          done < <(docker service ls --filter mode=replicated --format '{{.Name}} {{.Replicas}}')
+
+          [ -n "$degraded" ] || { echo "All services at desired replicas"; exit 0; }
+          printf 'Degraded:\n%s' "$degraded"
+
+          # Resolve ntfy.home to loopback -> nginx (same pattern as deploy-services.yml).
+          curl -sSfk --resolve ntfy.home:443:127.0.0.1 \
+            -H "Authorization: Bearer ${NTFY_SWARM_TOKEN}" \
+            -H "Title: Swarm service degraded" -H "Priority: high" -H "Tags: warning" \
+            -d "$degraded" https://ntfy.home/swarm
