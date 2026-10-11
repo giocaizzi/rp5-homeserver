@@ -69,6 +69,7 @@ flowchart TB
 |--------|----------|
 | `observability_grafana_admin_password` | `bws secret create observability_grafana_admin_password "$(openssl rand -base64 32)" <project-id>` |
 | `observability_alloy_otel_bearer_token` | `bws secret create observability_alloy_otel_bearer_token "$(openssl rand -base64 48 \| tr -d '\n=' \| tr '+/' '-_')" <project-id>` |
+| `observability_grafana_mcp_token` | Grafana service-account token, **Viewer** role (Grafana → Administration → Service accounts); use the same token as the Worker's `UPSTREAM_BEARER` for grafana (the sidecar may read credentials from the request `Authorization` header, so they must match) |
 | `observability_ntfy_token` | ntfy token for user `alerts` (`ntfy token add --label grafana alerts`, see [ntfy](../ntfy/README.md#-alert-topics)) |
 
 Then sync them to Swarm: `./scripts/create_secrets.sh observability` (needs `BWS_ACCESS_TOKEN`).
@@ -76,6 +77,12 @@ Then sync them to Swarm: `./scripts/create_secrets.sh observability` (needs `BWS
 The bearer token is the **inner** auth gate on the OTLP HTTP receiver (port 4318). It is enforced for **both** `otel.home` (LAN) and `otel.giocaizzi.xyz` (public via CF Access bypass) — the receiver does not distinguish between sources.
 
 > The matching CF service-token credentials (`CF-Access-Client-Id` / `CF-Access-Client-Secret`) for the public path live in Terraform outputs `otel_ingest_client_id` / `otel_ingest_client_secret` (see `cloud/outputs.tf`).
+
+---
+
+## 🔌 MCP
+
+`mcp` (`grafana/mcp-grafana`, streamable-HTTP, `--disable-write`) serves `https://grafana.giocaizzi.xyz/mcp` for the [mcp-connector](../../workers/mcp-connector/README.md). Read-only: dashboards, Prometheus/Loki/Tempo queries via Grafana datasources. It has no inbound auth, so nginx exposes it on the public host only (CF Access + Worker OAuth gate it); `grafana.home/mcp` returns 404.
 
 ---
 

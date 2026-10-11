@@ -12,6 +12,10 @@ Live connectors:
 | Greenhouse | `https://mcp-connector-greenhouse.giocaizzi.workers.dev/mcp`   | `https://greenhouse.giocaizzi.xyz/mcp`            |
 | Firefly III| `https://mcp-connector-firefly.giocaizzi.workers.dev/mcp`      | `https://firefly.giocaizzi.xyz/api/v1/mcp`        |
 | n8n        | `https://mcp-connector-n8n.giocaizzi.workers.dev/mcp`          | `https://n8n.giocaizzi.xyz/mcp-server/http`       |
+| Grafana    | `https://mcp-connector-grafana.giocaizzi.workers.dev/mcp`      | `https://grafana.giocaizzi.xyz/mcp` (sidecar, read-only) |
+| Netdata    | `https://mcp-connector-netdata.giocaizzi.workers.dev/mcp`  | `https://netdata-mcp.giocaizzi.xyz/mcp` (native)  |
+| Portainer  | `https://mcp-connector-portainer.giocaizzi.workers.dev/mcp`    | `https://portainer.giocaizzi.xyz/mcp` (sidecar, full access) |
+| Langfuse   | `https://mcp-connector-langfuse.giocaizzi.workers.dev/mcp`     | `https://langfuse-mcp.giocaizzi.xyz/api/public/mcp` (native) |
 
 ---
 
@@ -93,7 +97,7 @@ never in `wrangler.jsonc`, never in argv with the value inline):
 
 | Secret                  | Value                                                                  |
 |-------------------------|------------------------------------------------------------------------|
-| `GOOGLE_CLIENT_ID`      | Google OAuth "Web application" client id (shared across all three).    |
+| `GOOGLE_CLIENT_ID`      | Google OAuth "Web application" client id (shared across all envs).    |
 | `GOOGLE_CLIENT_SECRET`  | …its secret (shared).                                                  |
 | `UPSTREAM_BEARER`       | App-level bearer the upstream validates (per service — see below).      |
 | `CF_ACCESS_CLIENT_ID`   | `terraform -chdir=cloud output -raw claude_<svc>_mcp_client_id`.        |
@@ -103,13 +107,21 @@ never in `wrangler.jsonc`, never in argv with the value inline):
 - **firefly** — a Firefly III Personal Access Token (Profile → OAuth → Personal Access Tokens).
 - **n8n** — the bearer of the n8n MCP Server Trigger node.
 - **greenhouse** — the greenhouse `MCP_TOKEN`.
+- **grafana** — a Grafana service account token (Viewer role); the sidecar is also started `--disable-write`.
+- **netdata** — the agent's MCP key: `docker exec $(docker ps -qf name=infra_monitoring) cat /var/lib/netdata/mcp_dev_preview_api_key`.
+- **portainer** — the `infra_portainer_mcp_auth_token` gate token (the sidecar's `PORTAINER_MCP_AUTH_TOKEN`). Also set `UPSTREAM_EXTRA_HEADERS` (secret, JSON) to `{"X-Portainer-API-Key":"ptr_…"}` — a dedicated Portainer access token (My Account → Access tokens); it carries the full Portainer permissions of that user.
+- **langfuse** — `base64(public_key:secret_key)` of the project key pair (`langfuse_public_key` / `langfuse_secret_key`), sent as `Authorization: Basic …` (`UPSTREAM_AUTH_SCHEME=Basic` in `wrangler.jsonc`). Langfuse MCP exposes write tools too.
 
-**Google OAuth client** — one "Web application" client, with all three callback
-URLs registered as Authorized redirect URIs:
+**Google OAuth client** — one "Web application" client, with every callback
+URL registered as Authorized redirect URIs (one per env, `https://mcp-connector-<env>.giocaizzi.workers.dev/callback`):
 ```
 https://mcp-connector-greenhouse.giocaizzi.workers.dev/callback
 https://mcp-connector-firefly.giocaizzi.workers.dev/callback
 https://mcp-connector-n8n.giocaizzi.workers.dev/callback
+https://mcp-connector-grafana.giocaizzi.workers.dev/callback
+https://mcp-connector-netdata.giocaizzi.workers.dev/callback
+https://mcp-connector-portainer.giocaizzi.workers.dev/callback
+https://mcp-connector-langfuse.giocaizzi.workers.dev/callback
 ```
 
 ---
@@ -121,6 +133,7 @@ Non-secret, per-service `vars` live in `wrangler.jsonc`:
 - `SERVICE_NAME` — display/log label.
 - `UPSTREAM_URL` — the **full** upstream MCP endpoint (path included).
 - `ALLOWED_EMAILS` — comma-separated login allowlist.
+- `UPSTREAM_AUTH_SCHEME` — optional; scheme for `UPSTREAM_BEARER` (default `Bearer`, Langfuse `Basic`).
 
 Each env also binds a dedicated **KV namespace** (`OAUTH_KV`) that stores OAuth
 grants/tokens. KV ids are committed in `wrangler.jsonc`; create new ones with
@@ -139,7 +152,7 @@ npx wrangler login
 ./deploy.sh
 
 # or per service
-npx wrangler deploy --env <greenhouse|firefly|n8n>
+npx wrangler deploy --env <greenhouse|firefly|n8n|grafana|netdata|portainer|langfuse>
 npm run typecheck
 ```
 

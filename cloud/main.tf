@@ -177,6 +177,26 @@ resource "cloudflare_dns_record" "ntfy" {
   proxied = true
 }
 
+# Creates the CNAME record that routes netdata-mcp.${var.zone_name} to the tunnel (MCP-only host).
+resource "cloudflare_dns_record" "netdata_mcp" {
+  zone_id = var.zone_id
+  name    = "netdata-mcp"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
+# Creates the CNAME record that routes langfuse-mcp.${var.zone_name} to the tunnel (MCP-only host).
+resource "cloudflare_dns_record" "langfuse_mcp" {
+  zone_id = var.zone_id
+  name    = "langfuse-mcp"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
 # Configures tunnel with a published application for clientless access.
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
@@ -280,6 +300,24 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
           no_tls_verify      = true
           http_host_header   = "crm.${var.zone_name}"
           origin_server_name = "crm.${var.zone_name}"
+        }
+      },
+      {
+        hostname = "netdata-mcp.${var.zone_name}"
+        service  = "https://infra-proxy:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "netdata-mcp.${var.zone_name}"
+          origin_server_name = "netdata-mcp.${var.zone_name}"
+        }
+      },
+      {
+        hostname = "langfuse-mcp.${var.zone_name}"
+        service  = "https://infra-proxy:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "langfuse-mcp.${var.zone_name}"
+          origin_server_name = "langfuse-mcp.${var.zone_name}"
         }
       },
       {
@@ -965,4 +1003,177 @@ resource "google_storage_bucket_iam_member" "backup_admin" {
 # Create service account key
 resource "google_service_account_key" "backup_key" {
   service_account_id = google_service_account.backup.name
+}
+
+# --- Grafana MCP -------------------------------------------------------
+# grafana.<zone> is gated whole-host by grafana_policy (email); this path-scoped app lets the
+# mcp-connector Worker reach /mcp (grafana-mcp sidecar) with a service token.
+
+resource "cloudflare_zero_trust_access_service_token" "claude_grafana_mcp" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-grafana-mcp"
+}
+
+resource "cloudflare_zero_trust_access_policy" "claude_grafana_mcp_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-grafana-mcp-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.claude_grafana_mcp.id
+      }
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "grafana_mcp_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "grafana-mcp.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "grafana.${var.zone_name}/mcp"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.claude_grafana_mcp_bypass.id
+      precedence = 1
+    }
+  ]
+}
+
+# --- Netdata MCP -------------------------------------------------------
+# netdata-mcp.<zone> is an MCP-only host (nginx 404s everything but /mcp); the Netdata UI is
+# not exposed publicly. Netdata's own MCP key is the app-layer factor.
+
+resource "cloudflare_zero_trust_access_service_token" "claude_netdata_mcp" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-netdata-mcp"
+}
+
+resource "cloudflare_zero_trust_access_policy" "claude_netdata_mcp_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-netdata-mcp-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.claude_netdata_mcp.id
+      }
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "netdata_mcp_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "netdata-mcp.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "netdata-mcp.${var.zone_name}/mcp"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.claude_netdata_mcp_bypass.id
+      precedence = 1
+    }
+  ]
+}
+
+# --- Portainer MCP -------------------------------------------------------
+# portainer.<zone> is gated whole-host by portainer_policy (email); this path-scoped app lets
+# the Worker reach /mcp (portainer-mcp sidecar) with a service token. Full Portainer access sits
+# behind it: the sidecar gate token + the Portainer API key are the app-layer factors.
+
+resource "cloudflare_zero_trust_access_service_token" "claude_portainer_mcp" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-portainer-mcp"
+}
+
+resource "cloudflare_zero_trust_access_policy" "claude_portainer_mcp_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-portainer-mcp-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.claude_portainer_mcp.id
+      }
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "portainer_mcp_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "portainer-mcp.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "portainer.${var.zone_name}/mcp"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.claude_portainer_mcp_bypass.id
+      precedence = 1
+    }
+  ]
+}
+
+# --- Langfuse MCP -------------------------------------------------------
+# langfuse-mcp.<zone> is an MCP-only host (nginx 404s everything but the MCP endpoint); the
+# Langfuse project key (Basic auth) is the app-layer factor.
+
+resource "cloudflare_zero_trust_access_service_token" "claude_langfuse_mcp" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-langfuse-mcp"
+}
+
+resource "cloudflare_zero_trust_access_policy" "claude_langfuse_mcp_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-langfuse-mcp-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.claude_langfuse_mcp.id
+      }
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "langfuse_mcp_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "langfuse-mcp.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "langfuse-mcp.${var.zone_name}/api/public/mcp"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.claude_langfuse_mcp_bypass.id
+      precedence = 1
+    }
+  ]
 }

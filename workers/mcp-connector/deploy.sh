@@ -19,18 +19,26 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 CLOUD_DIR="../../cloud"
-ENVS=(greenhouse firefly n8n)
+ENVS=(greenhouse firefly n8n grafana netdata portainer langfuse)
 
 # terraform output name of each service's CF Access service-token id/secret
 declare -A CF_ID=(
   [greenhouse]=claude_greenhouse_mcp_client_id
   [firefly]=claude_firefly_mcp_client_id
   [n8n]=claude_n8n_mcp_client_id
+  [grafana]=claude_grafana_mcp_client_id
+  [netdata]=claude_netdata_mcp_client_id
+  [portainer]=claude_portainer_mcp_client_id
+  [langfuse]=claude_langfuse_mcp_client_id
 )
 declare -A CF_SECRET=(
   [greenhouse]=claude_greenhouse_mcp_client_secret
   [firefly]=claude_firefly_mcp_client_secret
   [n8n]=claude_n8n_mcp_client_secret
+  [grafana]=claude_grafana_mcp_client_secret
+  [netdata]=claude_netdata_mcp_client_secret
+  [portainer]=claude_portainer_mcp_client_secret
+  [langfuse]=claude_langfuse_mcp_client_secret
 )
 
 wr() { npx wrangler "$@"; }
@@ -66,10 +74,14 @@ for env in "${ENVS[@]}"; do
   [ -n "$GOOGLE_SECRET" ] && put_secret GOOGLE_CLIENT_SECRET "$GOOGLE_SECRET" "$env"
   read -rsp "  UPSTREAM_BEARER for $env (Enter to skip): " bearer; echo
   [ -n "$bearer" ] && put_secret UPSTREAM_BEARER "$bearer" "$env"
+  if [ "$env" = portainer ]; then
+    read -rsp '  UPSTREAM_EXTRA_HEADERS JSON {"X-Portainer-API-Key":"ptr_..."} (Enter to skip): ' extra; echo
+    [ -n "$extra" ] && put_secret UPSTREAM_EXTRA_HEADERS "$extra" "$env"
+  fi
 done
 
 echo
-echo "=== Google OAuth client → Authorized redirect URIs (add all three) ==="
+echo "=== Google OAuth client → Authorized redirect URIs (add all) ==="
 for env in "${ENVS[@]}"; do echo "  https://mcp-connector-$env.<your-subdomain>.workers.dev/callback"; done
 echo "=== Claude.ai → Settings → Connectors → Add custom connector (URL) ==="
 for env in "${ENVS[@]}"; do echo "  https://mcp-connector-$env.<your-subdomain>.workers.dev/mcp"; done

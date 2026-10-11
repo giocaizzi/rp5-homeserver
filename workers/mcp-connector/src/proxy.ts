@@ -4,7 +4,10 @@
  * self-hosted upstream, swapping Claude's bearer for the credentials the origin
  * expects:
  *   - CF-Access-Client-Id / CF-Access-Client-Secret  → traverse Cloudflare Access
- *   - Authorization: Bearer <app token>               → satisfy the MCP server
+ *   - Authorization: <scheme> <app token>             → satisfy the MCP server
+ *     (scheme defaults to Bearer; Langfuse uses Basic)
+ *   - UPSTREAM_EXTRA_HEADERS (JSON secret, optional)  → extra upstream auth
+ *     headers (Portainer MCP also wants X-Portainer-API-Key)
  *
  * The upstream origin (Pi via tunnel) is never reachable without these, so it is
  * never exposed unauthenticated. The streamed response (JSON or SSE) is piped back
@@ -40,7 +43,15 @@ export const proxyHandler = {
       const v = request.headers.get(h);
       if (v) headers.set(h, v);
     }
-    headers.set("authorization", `Bearer ${env.UPSTREAM_BEARER}`);
+    headers.set(
+      "authorization",
+      `${env.UPSTREAM_AUTH_SCHEME ?? "Bearer"} ${env.UPSTREAM_BEARER}`,
+    );
+    if (env.UPSTREAM_EXTRA_HEADERS) {
+      for (const [k, v] of Object.entries(JSON.parse(env.UPSTREAM_EXTRA_HEADERS))) {
+        headers.set(k, String(v));
+      }
+    }
     headers.set("cf-access-client-id", env.CF_ACCESS_CLIENT_ID);
     headers.set("cf-access-client-secret", env.CF_ACCESS_CLIENT_SECRET);
     // Stable, benign User-Agent so the origin's WAF sees a predictable client.

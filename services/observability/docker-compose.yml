@@ -74,6 +74,9 @@ secrets:
   ntfy_token:
     external: true
     name: observability_ntfy_token
+  grafana_mcp_token:
+    external: true
+    name: observability_grafana_mcp_token
 
 # =============================================================================
 # Services
@@ -302,5 +305,48 @@ services:
       resources:
         limits:
           memory: 384M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # Grafana MCP - read-only MCP server for Grafana (+ Prometheus/Loki/Tempo datasources)
+  # ========================================
+  # Reached via nginx at grafana.<zone>/mcp (public host only: the server has no inbound
+  # auth, CF Access + the mcp-connector Worker gate it). Viewer-role service account.
+  mcp:
+    image: grafana/mcp-grafana:latest
+    hostname: observability-mcp
+    environment:
+      - GRAFANA_URL=http://observability-dashboard:3000
+    secrets:
+      - grafana_mcp_token
+    # Original entrypoint is the image's /app/mcp-grafana (default transport: sse), so
+    # restate it with streamable-http and the token read from the secret.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export GRAFANA_SERVICE_ACCOUNT_TOKEN="$$(cat /run/secrets/grafana_mcp_token)"
+        exec /app/mcp-grafana --transport streamable-http --address 0.0.0.0:8000 --disable-write
+    expose:
+      - "8000"
+    networks:
+      - observability_network
+      - public_network
+    # No healthcheck: the image ships no wget/curl and the server has no health flag.
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "mcp"
+      com.giocaizzi.component: "gateway"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "mcp-grafana"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 128M
     logging:
       <<: *logging-base

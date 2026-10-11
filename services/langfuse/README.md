@@ -53,6 +53,12 @@ Create all before deployment:
 
 ---
 
+## 🔌 MCP
+
+Langfuse's native MCP endpoint is exposed at `https://langfuse-mcp.giocaizzi.xyz/api/public/mcp` (MCP-only public host; UI stays on `langfuse.home`) for the [mcp-connector](../../workers/mcp-connector/README.md). Auth: Basic with the project key pair (`langfuse_public_key:langfuse_secret_key`). Write tools are enabled by default upstream. The host must be listed in `LANGFUSE_MCP_ALLOWED_HOSTS` (set on `app`).
+
+---
+
 ## ⚙️ Configuration
 
 Default admin user: `admin@langfuse.local`
