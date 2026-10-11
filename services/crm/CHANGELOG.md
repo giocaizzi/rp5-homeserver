@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.2...crm-v0.2.3) (2026-10-11)
+
+
+### Bug Fixes
+
+* **crm:** scrape crm-redis and alert on missing redis metrics ([#287](https://github.com/giocaizzi/rp5-homeserver/issues/287)) ([a24364c](https://github.com/giocaizzi/rp5-homeserver/commit/a24364c91b1f73e1d1ddbf939bc01d6ab7918194))
+
 ## [0.2.2](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.1...crm-v0.2.2) (2026-10-03)
 
 
