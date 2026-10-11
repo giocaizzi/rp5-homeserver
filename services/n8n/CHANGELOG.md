@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/giocaizzi/rp5-homeserver/compare/n8n-v0.1.3...n8n-v0.1.4) (2026-10-11)
+
+
+### Bug Fixes
+
+* **n8n:** disable diagnostics to stop ECONNREFUSED 0.0.0.0:443 ([#282](https://github.com/giocaizzi/rp5-homeserver/issues/282)) ([bc35666](https://github.com/giocaizzi/rp5-homeserver/commit/bc35666ef200b9a5b7327f9bac54ffcef7a17328))
+
 ## [0.1.3](https://github.com/giocaizzi/rp5-homeserver/compare/n8n-v0.1.2...n8n-v0.1.3) (2026-10-03)
 
 

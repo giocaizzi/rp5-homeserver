@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.2](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.1...firefly-v0.2.2) (2026-10-11)
+
+
+### Bug Fixes
+
+* **firefly:** disable db-exporter collectors lacking privileges ([#281](https://github.com/giocaizzi/rp5-homeserver/issues/281)) ([f5a8269](https://github.com/giocaizzi/rp5-homeserver/commit/f5a82697e5797d49e83d63c8a90896f1e21bbffd))
+* **firefly:** ignore duplicate errors in scheduled importer runs ([#302](https://github.com/giocaizzi/rp5-homeserver/issues/302)) ([051a11c](https://github.com/giocaizzi/rp5-homeserver/commit/051a11cf05c066dd582a9aaf690c4c266a37db6d))
+
 ## [0.2.1](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.0...firefly-v0.2.1) (2026-10-03)
 
 
