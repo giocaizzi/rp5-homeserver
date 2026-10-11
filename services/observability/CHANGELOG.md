@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.4.2...observability-v0.4.3) (2026-10-11)
+
+
+### Bug Fixes
+
+* **observability:** raise nginx 5xx alert min error count to 20 ([#307](https://github.com/giocaizzi/rp5-homeserver/issues/307)) ([20bf99a](https://github.com/giocaizzi/rp5-homeserver/commit/20bf99a1c0c06b71e17792ec3f3f30c69f967e43))
+
 ## [0.4.2](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.4.1...observability-v0.4.2) (2026-10-11)
 
 
