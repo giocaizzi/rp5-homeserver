@@ -24,6 +24,7 @@
 | crm-worker | `twentycrm/twenty:v2.43.0` | BullMQ background jobs (webhooks, workflows, imports, timeline) |
 | crm-db | `postgres:16-alpine` | Primary data store |
 | crm-redis | `redis:7-alpine` | Queue + cache (`noeviction`, no persistence) |
+| crm-redis-exporter | `oliver006/redis_exporter:alpine` | Redis metrics, scraped by Alloy |
 
 Worker and Redis are mandatory: the queue driver is hardcoded to BullMQ upstream.
 

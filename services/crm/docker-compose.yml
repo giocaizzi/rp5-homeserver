@@ -56,6 +56,11 @@ networks:
     driver: overlay
     name: rp5_crm
 
+  # External network for observability (Alloy scraping)
+  observability_network:
+    external: true
+    name: rp5_observability
+
   # External network to connect to nginx proxy
   public_network:
     external: true
@@ -125,6 +130,40 @@ services:
       com.giocaizzi.component: "data"
       com.giocaizzi.tier: "extra"
       com.giocaizzi.technology: "redis"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 64M
+    logging:
+      <<: *logging-base
+
+  # Redis metrics for Alloy (scraped via the observability network).
+  redis-exporter:
+    image: oliver006/redis_exporter:alpine
+    hostname: crm-redis-exporter
+    environment:
+      - REDIS_ADDR=redis://crm-redis:6379
+    expose:
+      - "9121"
+    networks:
+      - crm_network
+      - observability_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9121/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "redis-exporter"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "redis-exporter"
     <<: *security-base
     deploy:
       <<: *deploy-base
