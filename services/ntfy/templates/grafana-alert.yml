@@ -1,4 +1,4 @@
-# Built-in `grafana` template + priority from the alert severity label
+# Plain-text message from annotations (Grafana's .message is markdown, ntfy shows it raw) + priority from the alert severity label
 # (the built-in ignores ?priority=). Used by Grafana: ?template=grafana-alert
 title: |
   {{- if eq .status "firing" }}
@@ -9,7 +9,10 @@ title: |
   ⚠️ Unknown alert: {{ .title | default "Alert" }}
   {{- end }}
 message: |
-  {{ .message | trunc 2000 }}
+  {{- range .alerts }}
+  {{ .annotations.summary | default .labels.alertname }}{{ if and (eq .status "firing") .annotations.description }}
+  {{ .annotations.description }}{{ end }}
+  {{ end }}
 priority: |
   {{- if ne .status "firing" }}3
   {{- else if eq (dig "commonLabels" "severity" "" .) "critical" }}5
