@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.4](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.4.3...observability-v0.4.4) (2026-10-11)
+
+
+### Bug Fixes
+
+* **observability:** add empty grafana provisioning/plugins dir ([#319](https://github.com/giocaizzi/rp5-homeserver/issues/319)) ([83ab924](https://github.com/giocaizzi/rp5-homeserver/commit/83ab924f7cab539bfd1856a75a7bf3b3a78fec63)), closes [#313](https://github.com/giocaizzi/rp5-homeserver/issues/313)
+* **observability:** drop netdata cgroup-network PID resolution noise ([#322](https://github.com/giocaizzi/rp5-homeserver/issues/322)) ([19e6e99](https://github.com/giocaizzi/rp5-homeserver/commit/19e6e99fdd2ecbbb34d29043b0a622f8a6ae3794)), closes [#292](https://github.com/giocaizzi/rp5-homeserver/issues/292)
+
 ## [0.4.3](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.4.2...observability-v0.4.3) (2026-10-11)
 
 
