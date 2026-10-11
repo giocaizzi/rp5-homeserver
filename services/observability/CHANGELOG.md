@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.4.0...observability-v0.4.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **observability:** allow public host in grafana-mcp host check ([#270](https://github.com/giocaizzi/rp5-homeserver/issues/270)) ([0b08a20](https://github.com/giocaizzi/rp5-homeserver/commit/0b08a2092c7b582f72a18a42bc447916f0ce82d2))
+
 ## [0.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.3.0...observability-v0.4.0) (2026-10-11)
 
 
