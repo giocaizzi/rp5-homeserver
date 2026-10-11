@@ -97,6 +97,12 @@ variable "crm_users" {
   default     = []
 }
 
+variable "calibre_users" {
+  description = "List of email addresses allowed to access the Calibre-Web-Automated UI"
+  type        = list(string)
+  default     = []
+}
+
 # ============================================================================
 # GCP Variables
 # ============================================================================
