@@ -54,6 +54,7 @@ services:
   app:
     image: ghcr.io/giocaizzi/firefly-iii:mcp
     hostname: firefly-app
+    stop_grace_period: 30s # default 10s SIGKILLs (exit 137) in-flight requests on update (#316)
     expose:
       - "8080"
     environment:
@@ -225,6 +226,7 @@ services:
   importer:
     image: fireflyiii/data-importer:version-2   # major-pinned (see #185)
     hostname: firefly-importer
+    stop_grace_period: 30s # default 10s SIGKILLs (exit 137) in-flight imports on update (#316)
     expose:
       - "8080"
     environment:
@@ -328,7 +330,7 @@ services:
       crontab /tmp/crontab &&
       rm /tmp/crontab &&
       echo 'Cron jobs configured (not printed: entries embed secrets)' &&
-      crond -f -L /dev/stdout"
+      exec crond -f -L /dev/stdout"
     networks:
       - firefly_network
     labels:
