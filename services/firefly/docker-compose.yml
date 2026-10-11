@@ -251,7 +251,7 @@ services:
       - IMPORT_DIR_ALLOWLIST=/var/www/html/import
       - CAN_POST_AUTOIMPORT=true
       - CAN_POST_FILES=true
-      - IGNORE_DUPLICATE_ERRORS=false
+      - IGNORE_DUPLICATE_ERRORS=true   # duplicates still skipped; only stops a115 being reported as error (#300)
 
       # php-fpm / OPcache (serversideup/php env spec; image defaults 20 / 1)
       - PHP_FPM_PM_MAX_CHILDREN=2
