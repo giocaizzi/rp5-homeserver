@@ -101,3 +101,24 @@ Deploys are keyless (WIF) / Portainer; the only release-automation secrets are t
 ## First run — clean slate
 
 `bootstrap-sha` in the config pins the adoption commit, so the first Release PR contains only commits landed **after** release-please was adopted — earlier history is not back-filled. Once that first Release PR merges, `bootstrap-sha` is ignored and can be removed.
+
+## Pull requests & commit titles (mandatory format)
+
+**Every PR title and every commit subject MUST be `type(scope): description`** — a [Conventional Commit](https://www.conventionalcommits.org) **with a mandatory scope**. This is not optional. `main` is **squash-only** with `squash_merge_commit_title=PR_TITLE`, so **the PR title becomes the commit subject release-please parses on `main`**. A malformed or unscoped title silently misattributes — or drops — the release.
+
+- **`type`** ∈ `feat` · `fix` · `perf` · `refactor` · `revert` · `docs` · `style` · `test` · `build` · `ci` · `chore`. The type drives the bump: `feat` → MINOR, `fix`/`perf`/`refactor`/`revert` → PATCH, `feat!` or a `BREAKING CHANGE:` footer → MAJOR; `docs`/`style`/`test`/`build`/`ci`/`chore` → no bump.
+- **`scope`** (REQUIRED) — any lowercase token (`[a-z][a-z0-9-]*`); **not an allowlist** (release-please attributes releases by file **path**, not scope, so the scope is advisory). Pick it to communicate *what changed*:
+  - a **release-please component** when the PR touches that path — `infra` (the **main `vX.Y.Z` line**, `infra/VERSION`), `cloud`, `mcp-connector` (`workers/`), or a service (`greenhouse`, `n8n`, …). Keep each PR to a **single** component so the version + changelog land on the right one.
+  - a **meta scope** for cross-cutting work that touches no component → no release: `cicd` (`.github/workflows/**`, deploy scripts), `repo` (root docs, `scripts/`, tooling), `deps` (dependency bumps), etc.
+- **`description`** — imperative, lowercase first word, no trailing period.
+- Breaking change: add `!` after the scope (`feat(greenhouse)!: …`) and/or a `BREAKING CHANGE:` footer.
+
+Examples: `feat(greenhouse): add humidity sensor` · `fix(infra): correct nginx healthcheck` · `ci(repo): add pr-title lint` · `chore(openclaw)!: drop legacy auth`.
+
+Enforced on **three** layers: the **`pr-title.yml`** workflow (a plain regex — no third-party action) validates every PR title; the **`conventional-commit-guard.sh`** `PreToolUse` hook (wired per-developer in the gitignored `.claude/settings.local.json`) blocks any agent commit whose subject doesn't match; and the squash-merge setting makes the validated PR title the commit of record. release-please's own Release PRs (branch `release-please--*`, titled `chore(repo): release …`) are already compliant and additionally skipped by the lint as a safety net.
+
+### Releases (release-please)
+
+`release-please.yml` watches `main`, parses these commits, and maintains **one batched Release PR** (`release-please-config.json` + `.release-please-manifest.json`); merging it bumps each changed component's version + `CHANGELOG.md` and publishes the tag(s) — `vX.Y.Z` for `infra` (which writes `infra/VERSION`), `<component>-v0.x` for the `0.x` config tracks (`cloud`, `mcp-connector`, the services). **The runtime deploys are release-gated off those tags:** the `infra` release fires `deploy-infra.yml`, a service release fires `deploy-services.yml` (`cloud/` Terraform stays apply-on-merge via `apply-cloud.yml`). So merging a feature PR *stages* a change; merging the Release PR *ships* it. release-please authenticates via a **GitHub App** (`RELEASE_PLEASE_APP_ID` + `RELEASE_PLEASE_APP_PRIVATE_KEY`) so its Release PR triggers the required `gate` check — and so the published `release` events trigger the deploy workflows.
+
+**Full flow, components, versioning policy, and required GitHub config: this document.** Never hand-edit `.release-please-manifest.json`, `infra/VERSION`, or any generated `CHANGELOG.md`.

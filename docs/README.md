@@ -67,6 +67,9 @@ flowchart TB
 | [Releases](./releases.md) | release-please versioning, tags, changelogs, commit/PR-title contract |
 | [Monitoring](./monitoring.md) | Observability stack (Grafana, Loki, Tempo, Prometheus) |
 | [Naming and Labels](./naming_labels.md) | Docker label schema for service identification |
+| [Compose Standards](./compose_standards.md) | YAML anchors, service template, Swarm guidelines |
+| [Deployment Reference](./deployment.md) | Component→workflow map, Portainer mounts, infra VERSION, Homepage |
+| [CI/CD](./ci_cd.md) | Workflows, cloud/ Terraform auth and wiring, adding a public service |
 
 ## Services
 
@@ -103,3 +106,28 @@ ssh pi@pi.local "docker swarm init"
 ```
 
 See [Setup](./setup.md) for complete instructions.
+
+## Documentation conventions
+
+- Technical, direct, no filler.
+- Always keep docs updated with architecture changes.
+- Follow current structure and style.
+- Explain only what's needed to execute or maintain.
+- Use `pi@pi.local` and `/home/pi/rp5-homeserver` (no personal info).
+- Use Mermaid diagrams for architecture, STRICTLY when helpful.
+
+**README structure (required sections):**
+1. Title with emoji + one-line description
+2. 🚀 Quick Start
+3. 📦 Architecture — container table
+4. 🔐 Secrets — with generation commands
+5. ⚙️ Configuration — if needed
+6. 💾 Volumes
+
+Add service-specific sections as needed.
+
+### File management
+
+- No unused configs, networks, or stale stack definitions.
+- No duplicate environment sources.
+- No secret values in repo—only templates or references.
