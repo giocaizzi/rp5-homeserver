@@ -42,7 +42,7 @@ import.file "pipelines" {
 
 discovery.docker "containers" {
   host                = "unix:///var/run/docker.sock"
-  refresh_interval    = "43s"  // Staggered to avoid sync with other polls
+  refresh_interval    = "11s"  // Short: stale log tailers retry every 5s until discovery drops the target (#288)
   match_first_network = false  // Required for multi-network exporters
 
   filter {
