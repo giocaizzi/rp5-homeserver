@@ -318,6 +318,7 @@ services:
     hostname: observability-mcp
     environment:
       - GRAFANA_URL=http://observability-dashboard:3000
+      - GRAFANA_ORG_ID=1
     secrets:
       - grafana_mcp_token
     # Original entrypoint is the image's /app/mcp-grafana (default transport: sse), so
