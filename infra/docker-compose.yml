@@ -254,6 +254,7 @@ services:
       - /etc/group:/host/etc/group:ro       # optional
       - ./netdata/netdata.conf:/etc/netdata/netdata.conf:ro  # custom config
       - ./netdata/health_alarm_notify.conf:/etc/netdata/health_alarm_notify.conf:ro  # ntfy alerts
+      - ./netdata/health.d:/etc/netdata/health.d:ro  # custom alarms
       - netdata_config:/etc/netdata         # config directory
       - netdata_cache:/var/cache/netdata    # persistent cache
       - netdata_lib:/var/lib/netdata        # persistent data
