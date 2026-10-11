@@ -461,7 +461,7 @@ groups:
                   sum by (vhost) (count_over_time({technology="nginx", level="error"}[5m]))
                   / sum by (vhost) (count_over_time({technology="nginx", vhost!=""}[5m]))
                 ) * 100 > 5
-                and sum by (vhost) (count_over_time({technology="nginx", level="error"}[5m])) >= 5
+                and sum by (vhost) (count_over_time({technology="nginx", level="error"}[5m])) >= 20
               queryType: instant
               refId: A
           - refId: B
@@ -487,7 +487,7 @@ groups:
         for: 2m
         annotations:
           summary: 5xx responses on {{ $labels.vhost }}
-          description: '{{ $values.B.Value | printf "%.1f" }}% of requests returned 5xx over the last 5m (threshold 5%, min 5 errors).'
+          description: '{{ $values.B.Value | printf "%.1f" }}% of requests returned 5xx over the last 5m (threshold 5%, min 20 errors).'
         labels:
           severity: critical
 
