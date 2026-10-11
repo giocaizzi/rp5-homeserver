@@ -44,7 +44,7 @@ x-langfuse-env: &langfuse-env
   CLICKHOUSE_URL: "http://langfuse-analytics:8123"
   CLICKHOUSE_USER: "clickhouse"
   CLICKHOUSE_CLUSTER_ENABLED: "false"
-  # S3 (MinIO) - credentials injected via entrypoint
+  # S3 (SeaweedFS) - credentials injected via entrypoint
   LANGFUSE_S3_EVENT_UPLOAD_BUCKET: "langfuse"
   LANGFUSE_S3_EVENT_UPLOAD_REGION: "auto"
   LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: "http://langfuse-storage:9000"
@@ -89,7 +89,7 @@ networks:
 volumes:
   langfuse_db:
     driver: local
-  minio_data:
+  storage_data:
     driver: local
   clickhouse_data:
     driver: local
@@ -138,38 +138,39 @@ secrets:
 # =============================================================================
 services:
   # ========================================
-  # MinIO - S3-compatible object storage
+  # SeaweedFS - S3-compatible object storage (single-process master+volume+filer+S3)
   # ========================================
+  # AWS_* env = admin identity; the `langfuse` bucket is auto-created on first upload.
   storage:
-    image: minio/minio:latest
+    image: chrislusf/seaweedfs:4.48
     hostname: langfuse-storage
-    entrypoint: sh
-    command: -c 'mkdir -p /data/langfuse && export MINIO_ROOT_PASSWORD=$$(cat /run/secrets/langfuse_minio_password) && minio server --address ":9000" --console-address ":9001" /data'
-    environment:
-      MINIO_ROOT_USER: "minio"
-      # Soft Go heap target under the 256M limit (GC harder before the cgroup OOM-kills)
-      GOMEMLIMIT: "200MiB"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export AWS_ACCESS_KEY_ID=langfuse
+        export AWS_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password)
+        exec /entrypoint.sh server -dir=/data -s3 -s3.port=9000 -s3.port.iceberg=0 -s3.port.lance=0 -master.volumeSizeLimitMB=1024
     secrets:
       - langfuse_minio_password
     expose:
       - "9000"  # S3 API
-      - "9001"  # Console
     volumes:
-      - minio_data:/data
+      - storage_data:/data
     networks:
       - langfuse_network
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9333/cluster/status"]
       interval: 30s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 30s
     labels:
       <<: *labels-base
       com.giocaizzi.service: "storage"
       com.giocaizzi.component: "data"
       com.giocaizzi.tier: "core"
-      com.giocaizzi.technology: "minio"
+      com.giocaizzi.technology: "seaweedfs"
     <<: *security-base
     deploy:
       <<: *deploy-base
@@ -177,7 +178,7 @@ services:
         com.giocaizzi.tier: "core"
       resources:
         limits:
-          memory: 256M
+          memory: 512M
     logging:
       <<: *logging-base
 
@@ -441,9 +442,9 @@ services:
         export ENCRYPTION_KEY=$$(cat /run/secrets/langfuse_encryption_key)
         export DATABASE_URL="postgresql://langfuse:$$(cat /run/secrets/langfuse_postgres_password)@langfuse-db:5432/langfuse"
         export CLICKHOUSE_PASSWORD=$$(cat /run/secrets/langfuse_clickhouse_password)
-        export LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID="minio"
+        export LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID="langfuse"
         export LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password)
-        export LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID="minio"
+        export LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID="langfuse"
         export LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password)
         export REDIS_AUTH=$$(cat /run/secrets/langfuse_redis_password)
         exec dumb-init -- ./worker/entrypoint.sh node worker/dist/index.js
@@ -513,9 +514,9 @@ services:
         LANGFUSE_INIT_PROJECT_SECRET_KEY=$$(cat /run/secrets/langfuse_secret_key) \
         DATABASE_URL="postgresql://langfuse:$$(cat /run/secrets/langfuse_postgres_password)@langfuse-db:5432/langfuse" \
         CLICKHOUSE_PASSWORD=$$(cat /run/secrets/langfuse_clickhouse_password) \
-        LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID="minio" \
+        LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID="langfuse" \
         LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password) \
-        LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID="minio" \
+        LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID="langfuse" \
         LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY=$$(cat /run/secrets/langfuse_minio_password) \
         REDIS_AUTH=$$(cat /run/secrets/langfuse_redis_password) \
         exec dumb-init -- ./web/entrypoint.sh node ./web/server.js --keepAliveTimeout 110000
