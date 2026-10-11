@@ -79,6 +79,14 @@ declare "docker_logs" {
     // Docker-specific log parsing
     stage.docker {}
 
+    // Drop lines Loki would reject (reject_old_samples_max_age defaults to 7d).
+    // New/recreated containers are tailed from the start of their log file, so
+    // after redeploys Alloy re-ships week-old lines.
+    stage.drop {
+      older_than          = "156h"
+      drop_counter_reason = "too_old"
+    }
+
     // Add source label
     stage.static_labels {
       values = {
