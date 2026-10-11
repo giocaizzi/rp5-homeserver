@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.18.1...v1.19.0) (2026-10-11)
+
+
+### Features
+
+* **infra:** add netdata pi cpu temperature alert ([#308](https://github.com/giocaizzi/rp5-homeserver/issues/308)) ([ebb8f9e](https://github.com/giocaizzi/rp5-homeserver/commit/ebb8f9eee11e63ff96babb3b1a79334b6cfbccb9))
+
 ## [1.18.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.18.0...v1.18.1) (2026-10-11)
 
 
