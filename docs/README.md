@@ -87,6 +87,7 @@ flowchart TB
 | OpenClaw | `https://openclaw.home` | services/openclaw |
 | Code | `https://code.giocaizzi.xyz` | services/code |
 | CRM | `https://crm.giocaizzi.xyz` | services/crm |
+| Calibre | `https://calibre.giocaizzi.xyz` | services/calibre |
 
 ## Quick Start
 
