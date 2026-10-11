@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.5.0...cloud-v0.6.0) (2026-10-11)
+
+
+### Features
+
+* **cloud:** add calibre public hostname and Access app ([#264](https://github.com/giocaizzi/rp5-homeserver/issues/264)) ([de9c62c](https://github.com/giocaizzi/rp5-homeserver/commit/de9c62caad7dcca63de74ce62f71d4408064c289))
+* **repo:** add grafana, netdata, portainer and langfuse MCP connectors ([#265](https://github.com/giocaizzi/rp5-homeserver/issues/265)) ([501b368](https://github.com/giocaizzi/rp5-homeserver/commit/501b368ec3ded859387df863fa7d57c8b623fa7d))
+
 ## [0.5.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.4.0...cloud-v0.5.0) (2026-10-04)
 
 

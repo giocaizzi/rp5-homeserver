@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.3.0...observability-v0.4.0) (2026-10-11)
+
+
+### Features
+
+* **repo:** add grafana, netdata, portainer and langfuse MCP connectors ([#265](https://github.com/giocaizzi/rp5-homeserver/issues/265)) ([501b368](https://github.com/giocaizzi/rp5-homeserver/commit/501b368ec3ded859387df863fa7d57c8b623fa7d))
+
 ## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.2.0...observability-v0.3.0) (2026-10-11)
 
 
