@@ -148,6 +148,13 @@ declare "docker_logs" {
       action   = "drop"
     }
 
+    // Netdata (no SYS_ADMIN / pid: host in Swarm) logs one error per container
+    // scope it cannot resolve to a PID, every collection cycle. Known, harmless (#292).
+    stage.drop {
+      expression          = "comm=cgroup-network .*Cannot find a cgroup PID from cgroup"
+      drop_counter_reason = "netdata_cgroup_pid_noise"
+    }
+
     // Extract log level from common patterns
     // Matches: level=info, level="info", "level":"info", [INFO], INFO:, etc.
     stage.regex {
