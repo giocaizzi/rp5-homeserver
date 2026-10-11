@@ -1,0 +1,100 @@
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "calibre"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# CWA's s6 init starts as root and drops to PUID/PGID, so no-new-privileges
+# is the only hardening we can apply (no `user:`).
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  calibre_network:
+    driver: overlay
+    name: rp5_calibre
+
+  # External network to connect to nginx proxy
+  public_network:
+    external: true
+    name: rp5_public
+
+# =============================================================================
+# Services
+# =============================================================================
+services:
+
+  app:
+    image: crocodilestick/calibre-web-automated:latest
+    hostname: calibre-app
+    expose:
+      - "8083"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Rome
+      # Local named volumes: keep SQLite WAL enabled.
+      - NETWORK_SHARE_MODE=false
+    volumes:
+      - config_data:/config
+      - library_data:/calibre-library
+      - ingest_data:/cwa-book-ingest
+    networks:
+      - calibre_network
+      - public_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8083/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "app"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "calibre-web-automated"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 1024M
+    logging:
+      <<: *logging-base
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  config_data:
+    driver: local
+  library_data:
+    driver: local
+  ingest_data:
+    driver: local
