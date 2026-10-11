@@ -541,11 +541,12 @@ groups:
               to: 0
             datasourceUid: loki
             model:
-              # Excludes services whose `level` is a regex guess and floods errors
-              # (grafana, alloy, netdata, *-exporter). Re-tune from the 24h count.
+              # Excludes technologies whose errors are too noisy to page on
+              # (grafana, alloy, netdata, *-exporter) and known benign lines
+              # (firefly 401s, cloudflared client aborts).
               expr: >-
                 sum by (service_namespace, service_name) (
-                  count_over_time({source="docker", technology!~"nginx|grafana|alloy|netdata|.*-exporter", level=~"error|critical|alert|fatal"}[10m])
+                  count_over_time({source="docker", technology!~"nginx|grafana|alloy|netdata|.*-exporter", level=~"error|critical|alert|fatal"} !~ "Unauthenticated|context canceled" [10m])
                 )
               queryType: instant
               refId: A
@@ -562,7 +563,7 @@ groups:
               conditions:
                 - evaluator:
                     params:
-                      - 20
+                      - 15
                     type: gt
               expression: B
               refId: C
@@ -572,6 +573,47 @@ groups:
         for: 0s
         annotations:
           summary: Error log burst in {{ $labels.service_namespace }}/{{ $labels.service_name }}
-          description: '{{ $values.B | printf "%.0f" }} error-level log lines in the last 10m (threshold 20).'
+          description: '{{ $values.B | printf "%.0f" }} error-level log lines in the last 10m (threshold 15).'
         labels:
           severity: warning
+
+      - uid: tunnel-origin-unreachable
+        title: Cloudflare Tunnel Origin Unreachable
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              # Line match, independent of the parsed `level` label.
+              expr: sum(count_over_time({service_namespace="infra", service_name="tunnel"} |= "Unable to reach the origin service" [5m]))
+              queryType: instant
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 3
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: Cloudflared cannot reach infra-proxy
+          description: '{{ $values.B | printf "%.0f" }} origin-unreachable errors in the last 5m. Public hostnames are returning 502.'
+        labels:
+          severity: critical
