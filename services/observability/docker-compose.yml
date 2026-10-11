@@ -77,6 +77,9 @@ secrets:
   grafana_mcp_token:
     external: true
     name: observability_grafana_mcp_token
+  grafana_mcp_server_token:
+    external: true
+    name: observability_grafana_mcp_server_token
 
 # =============================================================================
 # Services
@@ -314,8 +317,9 @@ services:
   # ========================================
   # Grafana MCP - read-only MCP server for Grafana (+ Prometheus/Loki/Tempo datasources)
   # ========================================
-  # Reached via nginx at grafana.<zone>/mcp (public host only: the server has no inbound
-  # auth, CF Access + the mcp-connector Worker gate it). Viewer-role service account.
+  # Reached via nginx at grafana.<zone>/mcp (public host only; CF Access + the mcp-connector
+  # Worker gate it, and callers must send Authorization: Bearer <server token>). Viewer-role
+  # service account.
   mcp:
     image: grafana/mcp-grafana:latest
     hostname: observability-mcp
@@ -323,13 +327,15 @@ services:
       - GRAFANA_URL=http://observability-dashboard:3000
     secrets:
       - grafana_mcp_token
+      - grafana_mcp_server_token
     # Original entrypoint is the image's /app/mcp-grafana (default transport: sse), so
-    # restate it with streamable-http and the token read from the secret.
+    # restate it with streamable-http and the tokens read from the secrets.
     entrypoint:
       - /bin/sh
       - -c
       - |
         export GRAFANA_SERVICE_ACCOUNT_TOKEN="$$(cat /run/secrets/grafana_mcp_token)"
+        export MCP_GRAFANA_SERVER_TOKEN="$$(cat /run/secrets/grafana_mcp_server_token)"
         exec /app/mcp-grafana --transport streamable-http --address 0.0.0.0:8000 --allowed-hosts grafana.<domain> --disable-write
     expose:
       - "8000"

@@ -107,7 +107,7 @@ never in `wrangler.jsonc`, never in argv with the value inline):
 - **firefly** — a Firefly III Personal Access Token (Profile → OAuth → Personal Access Tokens).
 - **n8n** — the bearer of the n8n MCP Server Trigger node.
 - **greenhouse** — the greenhouse `MCP_TOKEN`.
-- **grafana** — a Grafana service account token (Viewer role); the sidecar is also started `--disable-write`.
+- **grafana** — the sidecar's caller token (`observability_grafana_mcp_server_token`, `MCP_GRAFANA_SERVER_TOKEN`), **not** the Grafana service-account token (that one stays inside the sidecar); the sidecar is also started `--disable-write`.
 - **netdata** — the agent's MCP key: `docker exec $(docker ps -qf name=infra_monitoring) cat /var/lib/netdata/mcp_dev_preview_api_key`.
 - **portainer** — the `infra_portainer_mcp_auth_token` gate token (the sidecar's `PORTAINER_MCP_AUTH_TOKEN`). Also set `UPSTREAM_EXTRA_HEADERS` (secret, JSON) to `{"X-Portainer-API-Key":"ptr_…"}` — a dedicated Portainer access token (My Account → Access tokens); it carries the full Portainer permissions of that user.
 - **langfuse** — `base64(public_key:secret_key)` of the project key pair (`langfuse_public_key` / `langfuse_secret_key`), sent as `Authorization: Basic …` (`UPSTREAM_AUTH_SCHEME=Basic` in `wrangler.jsonc`). Langfuse MCP exposes write tools too.
