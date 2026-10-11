@@ -4,7 +4,8 @@
 # Greeting widget for personalization
 - greeting:
     text_size: xl
-    text: "RP5 Homeserver v{{HOMEPAGE_FILE_VERSION}}"
+    # Unquoted on purpose: the VERSION file ends in a newline, which breaks a quoted scalar (#289)
+    text: RP5 Homeserver v{{HOMEPAGE_FILE_VERSION}}
 
 # Weather widget (no API key required)
 - openmeteo:
