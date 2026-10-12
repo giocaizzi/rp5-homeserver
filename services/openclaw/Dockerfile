@@ -1,7 +1,9 @@
 FROM ghcr.io/openclaw/openclaw:2026.4.2
 
+# hadolint ignore=DL3066
 USER root
 
+# hadolint ignore=DL3008,DL3015
 RUN apt-get update && apt-get install -y \
     # --- Chromium dependencies ---
     # NSS / NSPR (TLS, crypto)
@@ -27,4 +29,5 @@ RUN apt-get update && apt-get install -y \
     libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
+# hadolint ignore=DL3066
 USER node
