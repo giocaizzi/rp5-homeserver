@@ -46,7 +46,7 @@ jobs:
     needs: detect
     if: github.event_name == 'pull_request' && needs.detect.outputs.cloud == 'true'
     runs-on: ubuntu-latest
-    environment: cloud-plan
+    environment: cloud-plan   # holds the cloud/ secrets (environment-scoped, never repo-wide)
     defaults:
       run:
         working-directory: cloud
