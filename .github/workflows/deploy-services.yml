@@ -113,7 +113,7 @@ jobs:
             echo "::error::Secret PORTAINER_URL is not set"; exit 1
           fi
           if [ -z "$id" ]; then
-            echo "::warning::No webhook secret ($key) for stack '$stack' — skipping. Add it to deploy env + repo secrets."
+            echo "::warning::No webhook secret ($key) for stack '$stack' — skipping. Add it to deploy env + pi-services environment secrets."
             exit 0
           fi
 

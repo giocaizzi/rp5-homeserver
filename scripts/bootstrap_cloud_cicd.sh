@@ -159,7 +159,8 @@ GitHub Environments to create (Settings → Environments):
   cloud-production  — same variables/secrets; toggle Required reviewers
                       if you want a human approval gate before apply.
 
-GitHub Actions repository SECRETS (Settings → Secrets → Actions):
+GitHub Actions ENVIRONMENT SECRETS on cloud-plan AND cloud-production
+(gh secret set <NAME> -e cloud-plan; same for cloud-production):
   CLOUDFLARE_API_TOKEN      <your CF API token>
   TUNNEL_SECRET             <openssl rand -base64 32 of the existing tunnel>
   CLOUDFLARE_ZONE_NAME      <copy from cloud/terraform.tfvars>

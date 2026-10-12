@@ -9,7 +9,7 @@
 #
 # The `cloud-production` environment is what gives us:
 #   - GitHub Deployments tab visibility (audit trail of every apply)
-#   - Per-env secrets (CLOUDFLARE_API_TOKEN scoped to this env only)
+#   - Per-env secrets (every cloud/ secret lives here and on cloud-plan, never repo-wide)
 #   - Optional human approval — enable "Required reviewers" in env settings
 #     to gate applies; no workflow change needed.
 name: Apply cloud

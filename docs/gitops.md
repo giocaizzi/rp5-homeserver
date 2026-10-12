@@ -49,12 +49,12 @@ hop. In `--local` mode the script **excludes `secrets/` from the rsync** so the
    This registers a runner with the `rp5` label and installs it as a systemd
    service. Verify it shows **Idle** under Settings → Actions → Runners.
 
-2. **Repo secrets / variable** (Settings → Secrets and variables → Actions):
+2. **Environment secrets** on `pi-production` (Settings → Environments → `pi-production`) and a repo variable:
    - secret `PI_DEPLOY_USER` — the Pi user owning the deploy path (e.g. the runner user); a secret so the log masks it
    - secret `CLOUDFLARE_ZONE_NAME` — the public zone, passed as `DOMAIN` to `infra/docker-compose.yml`
    - variable `PI_INFRA_PATH` — *optional* override; default `/home/<PI_DEPLOY_USER>/rp5-homeserver/infra`
 
-3. **Environment** `pi-production` (Settings → Environments): create it; toggle
+3. **Environment** `pi-production` (Settings → Environments): create it before step 2; toggle
    **Required reviewers** if you want a manual gate before each deploy.
 
 4. **Security** (Settings → Actions → General): keep **"Require approval for all
@@ -103,8 +103,8 @@ Non-service releases (`infra`, `cloud`, `mcp-connector`) no-op.
    - **Compose path**: `services/<stack>/docker-compose.yml`
    - **Mode**: Swarm
    - **Relative path volumes**: enable, base path `/mnt/`
-   - **Environment variables**: `DOMAIN` = the public zone (same value as repo
-     secret `CLOUDFLARE_ZONE_NAME`) for every stack whose compose file uses `${DOMAIN}`
+   - **Environment variables**: `DOMAIN` = the public zone (same value as the
+     `CLOUDFLARE_ZONE_NAME` environment secret) for every stack whose compose file uses `${DOMAIN}`
      (`git grep -l 'DOMAIN:?' services/`). The value is never committed; a missing
      value fails the deploy (`set DOMAIN in the stack env`) and leaves the running
      services untouched.
@@ -117,7 +117,7 @@ Non-service releases (`infra`, `cloud`, `mcp-connector`) no-op.
 
 ### GitHub config
 
-Repo **secrets**:
+**Environment secrets** on `pi-services` (never repository-wide):
 - `PORTAINER_URL` — e.g. `https://portainer.<domain>` (host is resolved to
   loopback on the Pi runner; only the hostname is used, for nginx server_name).
 - `WEBHOOK_ID_<STACK>` — the webhook id per stack
@@ -161,7 +161,8 @@ required reviewers.
 3. **Secrets** — `PI_SSH_USER=<user> ./scripts/create_secrets.sh <stack>`.
 4. **Portainer** — create the Remote Stack with a **Webhook** GitOps update
    ([Per-stack Portainer setup](#per-stack-portainer-setup-once-per-stack)).
-5. **Deploy wiring** — add the `WEBHOOK_ID_<STACK>` repo secret and
+5. **Deploy wiring** — add the `WEBHOOK_ID_<STACK>` secret to environment `pi-services`
+   (`gh secret set WEBHOOK_ID_<STACK> -e pi-services`) and
    `WEBHOOK_ID_<STACK>: ${{ secrets.WEBHOOK_ID_<STACK> }}` to the `deploy` job
    env in `deploy-services.yml` (`-` in the stack name becomes `_`). Skip for
    on-demand stacks.
