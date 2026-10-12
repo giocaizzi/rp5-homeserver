@@ -100,7 +100,7 @@ cd cloud && terraform plan
 cd cloud && terraform apply
 ```
 
-There is no application test/lint/build suite — this repo is configuration. "Tests" = `docker compose config` + post-deploy health checks via `docker service ps` / service health endpoints (`https://<service>.home`).
+There is no application test/lint/build suite — this repo is configuration. "Tests" = `make check` (`docker compose config` + `shellcheck`, also the CI `check` job) + post-deploy health checks via `docker service ps` / service health endpoints (`https://<service>.home`).
 
 ---
 
