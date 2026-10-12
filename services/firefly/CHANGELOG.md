@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.7](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.6...firefly-v0.2.7) (2026-10-12)
+
+
+### Bug Fixes
+
+* **firefly:** keep cron and auto-import secrets out of access logs ([#353](https://github.com/giocaizzi/rp5-homeserver/issues/353)) ([9b543db](https://github.com/giocaizzi/rp5-homeserver/commit/9b543dbd66d653beb4d0e235e7303fcfd0b022a3))
+
 ## [0.2.6](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.5...firefly-v0.2.6) (2026-10-12)
 
 
