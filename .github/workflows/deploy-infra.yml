@@ -56,14 +56,17 @@ jobs:
       - name: Deploy infra stack (local mode)
         env:
           # User that owns /home/<user>/rp5-homeserver/infra on the Pi (the
-          # deploy path that holds the gitignored secrets/). Set as a repo var.
-          PI_SSH_USER: ${{ vars.PI_DEPLOY_USER }}
+          # deploy path that holds the gitignored secrets/). Repo secret, not a
+          # variable: secret values are masked in the log (including this env header).
+          PI_SSH_USER: ${{ secrets.PI_DEPLOY_USER }}
+          # Public zone, interpolated into infra/docker-compose.yml.
+          DOMAIN: ${{ secrets.CLOUDFLARE_ZONE_NAME }}
           # Optional override of the deploy path; default is derived from the user.
           PI_INFRA_PATH: ${{ vars.PI_INFRA_PATH }}
         run: |
           set -euo pipefail
           if [ -z "${PI_SSH_USER:-}" ]; then
-            echo "::error::Repository variable PI_DEPLOY_USER is not set"
+            echo "::error::Repository secret PI_DEPLOY_USER is not set"
             exit 1
           fi
           chmod +x scripts/sync_infra.sh

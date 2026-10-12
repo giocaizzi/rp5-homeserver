@@ -38,7 +38,7 @@ No deployment secrets required. Admin credentials set during setup wizard.
 For Homepage integration, add to infra secrets after setup:
 ```bash
 bws secret create infra_adguard_password "your-admin-password" <project-id>
-BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> ./scripts/sync_infra.sh
+BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> DOMAIN=<domain> ./scripts/sync_infra.sh
 ```
 
 ---
