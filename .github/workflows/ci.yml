@@ -73,25 +73,46 @@ jobs:
       - name: terraform validate
         run: terraform validate
 
+      - name: Mask private inputs
+        # Secrets are masked as whole strings only; mask each email of the JSON-array
+        # user lists so plan/apply output never shows one.
+        env:
+          N8N_USERS: ${{ secrets.N8N_USERS }}
+          PORTAINER_USERS: ${{ secrets.PORTAINER_USERS }}
+          BACKREST_USERS: ${{ secrets.BACKREST_USERS }}
+          FIREFLY_USERS: ${{ secrets.FIREFLY_USERS }}
+          HOMEPAGE_USERS: ${{ secrets.HOMEPAGE_USERS }}
+          OPENCLAW_USERS: ${{ secrets.OPENCLAW_USERS }}
+          GRAFANA_USERS: ${{ secrets.GRAFANA_USERS }}
+          GREENHOUSE_USERS: ${{ secrets.GREENHOUSE_USERS }}
+          CODE_USERS: ${{ secrets.CODE_USERS }}
+          CRM_USERS: ${{ secrets.CRM_USERS }}
+          CALIBRE_USERS: ${{ secrets.CALIBRE_USERS }}
+        run: |
+          for n in N8N_USERS PORTAINER_USERS BACKREST_USERS FIREFLY_USERS HOMEPAGE_USERS OPENCLAW_USERS GRAFANA_USERS GREENHOUSE_USERS CODE_USERS CRM_USERS CALIBRE_USERS; do
+            [ -n "${!n:-}" ] || continue
+            jq -r '.[]' <<< "${!n}" | while IFS= read -r e; do [ -n "$e" ] && echo "::add-mask::$e"; done
+          done
+
       - name: terraform plan
         id: plan
         env:
           TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          TF_VAR_zone_name: ${{ vars.CLOUDFLARE_ZONE_NAME }}
+          TF_VAR_zone_name: ${{ secrets.CLOUDFLARE_ZONE_NAME }}
           TF_VAR_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
           TF_VAR_tunnel_secret: ${{ secrets.TUNNEL_SECRET }}
-          TF_VAR_n8n_users: ${{ vars.N8N_USERS || '[]' }}
-          TF_VAR_portainer_users: ${{ vars.PORTAINER_USERS || '[]' }}
-          TF_VAR_backrest_users: ${{ vars.BACKREST_USERS || '[]' }}
-          TF_VAR_firefly_users: ${{ vars.FIREFLY_USERS || '[]' }}
-          TF_VAR_homepage_users: ${{ vars.HOMEPAGE_USERS || '[]' }}
-          TF_VAR_openclaw_users: ${{ vars.OPENCLAW_USERS || '[]' }}
-          TF_VAR_grafana_users: ${{ vars.GRAFANA_USERS || '[]' }}
-          TF_VAR_greenhouse_users: ${{ vars.GREENHOUSE_USERS || '[]' }}
-          TF_VAR_code_users: ${{ vars.CODE_USERS || '[]' }}
-          TF_VAR_crm_users: ${{ vars.CRM_USERS || '[]' }}
-          TF_VAR_calibre_users: ${{ vars.CALIBRE_USERS || '[]' }}
+          TF_VAR_n8n_users: ${{ secrets.N8N_USERS || '[]' }}
+          TF_VAR_portainer_users: ${{ secrets.PORTAINER_USERS || '[]' }}
+          TF_VAR_backrest_users: ${{ secrets.BACKREST_USERS || '[]' }}
+          TF_VAR_firefly_users: ${{ secrets.FIREFLY_USERS || '[]' }}
+          TF_VAR_homepage_users: ${{ secrets.HOMEPAGE_USERS || '[]' }}
+          TF_VAR_openclaw_users: ${{ secrets.OPENCLAW_USERS || '[]' }}
+          TF_VAR_grafana_users: ${{ secrets.GRAFANA_USERS || '[]' }}
+          TF_VAR_greenhouse_users: ${{ secrets.GREENHOUSE_USERS || '[]' }}
+          TF_VAR_code_users: ${{ secrets.CODE_USERS || '[]' }}
+          TF_VAR_crm_users: ${{ secrets.CRM_USERS || '[]' }}
+          TF_VAR_calibre_users: ${{ secrets.CALIBRE_USERS || '[]' }}
           TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
           TF_VAR_gcp_region: ${{ vars.GCP_REGION }}
           TF_VAR_gcp_backup_bucket_name: ${{ vars.GCP_BACKUP_BUCKET_NAME }}
