@@ -1,13 +1,24 @@
+<div align="center">
+
 # RP5 Home Server
 
-Raspberry Pi 5 Docker Swarm-based home server.
+**Raspberry Pi 5 Docker Swarm-based home server.**
 
-## 🚀 Quick Start
+[![CI](https://github.com/giocaizzi/rp5-homeserver/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/giocaizzi/rp5-homeserver/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+</div>
+
+---
+
+Infrastructure and services for a single-node home server: reverse proxy, monitoring, backups and self-hosted apps, deployed through Portainer and GitHub Actions.
+
+## Quickstart
 
 1. Deploy the [infrastructure stack](infra/README.md) with Docker Swarm
 2. Access Portainer at `https://portainer.home` to deploy services
 
-## 🧩 Services
+## Services
 
 | Service | URL | Description |
 |---------|-----|-------------|
@@ -33,6 +44,10 @@ Raspberry Pi 5 Docker Swarm-based home server.
 - **Homepage** — Dashboard (`https://homepage.home`)
 - **Shepherd** — Auto-updates Swarm services every 24h
 
-## 📚 Documentation
+## Documentation
 
 See [docs/](./docs/README.md) for architecture, networking, backup, and deployment guides.
+
+## License
+
+[MIT](LICENSE)
