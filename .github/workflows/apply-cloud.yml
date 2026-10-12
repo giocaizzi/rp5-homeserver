@@ -52,6 +52,27 @@ jobs:
       - name: terraform init
         run: terraform init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
 
+      - name: Mask private inputs
+        # Secrets are masked as whole strings only; mask each email of the JSON-array
+        # user lists so plan/apply output never shows one.
+        env:
+          N8N_USERS: ${{ secrets.N8N_USERS }}
+          PORTAINER_USERS: ${{ secrets.PORTAINER_USERS }}
+          BACKREST_USERS: ${{ secrets.BACKREST_USERS }}
+          FIREFLY_USERS: ${{ secrets.FIREFLY_USERS }}
+          HOMEPAGE_USERS: ${{ secrets.HOMEPAGE_USERS }}
+          OPENCLAW_USERS: ${{ secrets.OPENCLAW_USERS }}
+          GRAFANA_USERS: ${{ secrets.GRAFANA_USERS }}
+          GREENHOUSE_USERS: ${{ secrets.GREENHOUSE_USERS }}
+          CODE_USERS: ${{ secrets.CODE_USERS }}
+          CRM_USERS: ${{ secrets.CRM_USERS }}
+          CALIBRE_USERS: ${{ secrets.CALIBRE_USERS }}
+        run: |
+          for n in N8N_USERS PORTAINER_USERS BACKREST_USERS FIREFLY_USERS HOMEPAGE_USERS OPENCLAW_USERS GRAFANA_USERS GREENHOUSE_USERS CODE_USERS CRM_USERS CALIBRE_USERS; do
+            [ -n "${!n:-}" ] || continue
+            jq -r '.[]' <<< "${!n}" | while IFS= read -r e; do [ -n "$e" ] && echo "::add-mask::$e"; done
+          done
+
       - name: terraform apply
         env:
           TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -59,7 +80,7 @@ jobs:
           TF_VAR_zone_name: ${{ secrets.CLOUDFLARE_ZONE_NAME }}
           TF_VAR_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
           TF_VAR_tunnel_secret: ${{ secrets.TUNNEL_SECRET }}
-          TF_VAR_n8n_users: ${{ vars.N8N_USERS || '[]' }}
+          TF_VAR_n8n_users: ${{ secrets.N8N_USERS || '[]' }}
           TF_VAR_portainer_users: ${{ secrets.PORTAINER_USERS || '[]' }}
           TF_VAR_backrest_users: ${{ secrets.BACKREST_USERS || '[]' }}
           TF_VAR_firefly_users: ${{ secrets.FIREFLY_USERS || '[]' }}
