@@ -13,6 +13,8 @@
 # `terraform output` (cloud/), so you never handle them. You are prompted only
 # for the Google client creds (shared) and each service's UPSTREAM_BEARER.
 #
+# Needs gh (authenticated) for the domain and KV id variables.
+#
 # Idempotent: re-runnable. KV namespaces are created once; secrets you skip
 # (press Enter) are left unchanged.
 set -euo pipefail
@@ -41,11 +43,11 @@ declare -A CF_SECRET=(
   [langfuse]=claude_langfuse_mcp_client_secret
 )
 
-wr() { npx wrangler "$@"; }
+wr() { npx wrangler -c wrangler.deploy.jsonc "$@"; }
 tf_out() { terraform -chdir="$CLOUD_DIR" output -raw "$1"; }
 put_secret() { printf '%s' "$2" | wr secret put "$1" --env "$3" >/dev/null; echo "    set $1"; }
 
-wr whoami >/dev/null 2>&1 || { echo "Not logged in — run: npx wrangler login"; exit 1; }
+npx wrangler whoami >/dev/null 2>&1 || { echo "Not logged in — run: npx wrangler login"; exit 1; }
 
 read -rp "Google OAuth Client ID (Enter to skip): " GOOGLE_ID
 GOOGLE_SECRET=""
@@ -53,17 +55,27 @@ if [ -n "$GOOGLE_ID" ]; then
   read -rsp "Google OAuth Client secret: " GOOGLE_SECRET; echo
 fi
 
+# Placeholders in wrangler.jsonc: the domain comes from the repo variable
+# CLOUDFLARE_ZONE_NAME, each KV id from KV_ID_<ENV> on the cloudflare-workers
+# environment (created here on first run). Values are never printed.
+export DOMAIN="${DOMAIN:-$(gh variable get CLOUDFLARE_ZONE_NAME)}"
+for env in "${ENVS[@]}"; do
+  var="KV_ID_$(echo "$env" | tr '[:lower:]' '[:upper:]')"
+  [ -n "${!var:-}" ] || printf -v "$var" '%s' "$(gh variable get "$var" --env cloudflare-workers 2>/dev/null || true)"
+  if [ -z "${!var}" ]; then
+    echo "=== $env: creating KV namespace..."
+    id=$(npx wrangler kv namespace create OAUTH_KV --env "$env" 2>&1 | grep -oiE '[a-f0-9]{32}' | head -1)
+    [ -n "$id" ] || { echo "  KV create failed"; exit 1; }
+    printf '%s' "$id" | gh variable set "$var" --env cloudflare-workers >/dev/null
+    printf -v "$var" '%s' "$id"
+    echo "  stored as $var on the cloudflare-workers environment"
+  fi
+  export "${var?}"
+done
+./render-config.sh
+
 for env in "${ENVS[@]}"; do
   echo "=== $env ==="
-  ph="REPLACE_WITH_$(echo "$env" | tr '[:lower:]' '[:upper:]')_KV_ID"
-  if grep -q "$ph" wrangler.jsonc; then
-    echo "  creating KV namespace..."
-    id=$(wr kv namespace create OAUTH_KV --env "$env" 2>&1 | grep -oiE '[a-f0-9]{32}' | head -1)
-    [ -n "$id" ] || { echo "  KV create failed"; exit 1; }
-    sed -i '' "s/$ph/$id/" wrangler.jsonc
-    echo "  KV id: $id"
-  fi
-
   echo "  deploying..."
   wr deploy --env "$env"
 

@@ -66,7 +66,8 @@ sequenceDiagram
 | `src/google-handler.ts` | `/authorize` → Google; `/callback` → email allowlist → complete auth.   |
 | `src/proxy.ts`      | Token-gated `/mcp` reverse proxy; injects upstream auth; streams response.  |
 | `src/env.ts`        | Typed bindings (vars + secrets + KV + OAuthProvider).                       |
-| `wrangler.jsonc`    | One `env.<service>` per upstream (name, vars, KV id).                       |
+| `wrangler.jsonc`    | One `env.<service>` per upstream (name, vars, KV id placeholder).           |
+| `render-config.sh`  | Fills the `${DOMAIN}` / `${KV_ID_<ENV>}` placeholders into `wrangler.deploy.jsonc`. |
 | `deploy.sh`         | Idempotent deploy + secret-setting helper (pulls CF Access creds from TF).  |
 
 ---
@@ -136,8 +137,19 @@ Non-secret, per-service `vars` live in `wrangler.jsonc`:
 - `UPSTREAM_AUTH_SCHEME` — optional; scheme for `UPSTREAM_BEARER` (default `Bearer`, Langfuse `Basic`).
 
 Each env also binds a dedicated **KV namespace** (`OAUTH_KV`) that stores OAuth
-grants/tokens. KV ids are committed in `wrangler.jsonc`; create new ones with
-`wrangler kv namespace create OAUTH_KV --env <service>`.
+grants/tokens.
+
+`wrangler.jsonc` holds placeholders, never real values: `${DOMAIN}` in the
+`UPSTREAM_URL`s and `${KV_ID_<ENV>}` for each KV id. `render-config.sh` fills them
+from the environment into the gitignored `wrangler.deploy.jsonc` and fails if one
+is missing; every deploy uses `-c wrangler.deploy.jsonc`. Sources:
+
+| Placeholder | GitHub variable |
+|-------------|-----------------|
+| `DOMAIN` | repo variable `CLOUDFLARE_ZONE_NAME` |
+| `KV_ID_<ENV>` | `KV_ID_<ENV>` on the `cloudflare-workers` environment |
+
+`deploy.sh` creates a missing KV namespace and stores its id as that variable.
 
 ---
 
@@ -145,9 +157,10 @@ grants/tokens. KV ids are committed in `wrangler.jsonc`; create new ones with
 
 **Routine deploys are automatic:** publishing an `mcp-connector` release
 (`mcp-connector-v*`, via the release-please PR) runs `deploy-workers.yml`, which
-typechecks and runs `wrangler deploy --env` for every env (secrets persist). It
-needs the `cloudflare-workers` GitHub environment with `CLOUDFLARE_API_TOKEN`
-(Workers Scripts:Edit) and `CLOUDFLARE_ACCOUNT_ID`. Use the manual flow below for
+typechecks, renders the config (values masked in the logs) and runs
+`wrangler deploy --env` for every env (secrets persist). It needs the
+`cloudflare-workers` GitHub environment with `CLOUDFLARE_API_TOKEN` (Workers
+Scripts:Edit), `CLOUDFLARE_ACCOUNT_ID` and the `KV_ID_<ENV>` variables. Use the manual flow below for
 bootstrap (KV, secrets) or a one-off deploy.
 
 ```bash
@@ -155,11 +168,16 @@ cd workers/mcp-connector
 npm install
 npx wrangler login
 
-# guided: creates KV (if needed), deploys each env, sets secrets
+# guided: creates KV (if needed), deploys each env, sets secrets (needs gh)
 ./deploy.sh
 
-# or per service
-npx wrangler deploy --env <greenhouse|firefly|n8n|grafana|netdata|portainer|langfuse>
+# or per service: render, then deploy the rendered config
+export DOMAIN="$(gh variable get CLOUDFLARE_ZONE_NAME)"
+for e in GREENHOUSE FIREFLY N8N GRAFANA NETDATA PORTAINER LANGFUSE; do
+  export "KV_ID_$e=$(gh variable get "KV_ID_$e" --env cloudflare-workers)"
+done
+./render-config.sh
+npx wrangler deploy -c wrangler.deploy.jsonc --env <greenhouse|firefly|n8n|grafana|netdata|portainer|langfuse>
 npm run typecheck
 ```
 
