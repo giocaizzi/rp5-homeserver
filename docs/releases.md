@@ -94,9 +94,9 @@ Deploys are keyless (WIF) / Portainer; the only release-automation secrets are t
 | `RELEASE_PLEASE_APP_ID` | `release-please.yml` (`actions/create-github-app-token@v2`) | Numeric App ID of the release-please GitHub App. |
 | `RELEASE_PLEASE_APP_PRIVATE_KEY` | same | The App's `.pem`. Mints a short-lived installation token so the Release PR is **not** authored by `GITHUB_TOKEN`. |
 
-**Why the App:** `main` requires the `gate` status check, and a PR opened by `GITHUB_TOKEN` does **not** trigger `on: pull_request` CI — so `gate` would never report and the Release PR could never merge. An App-authored PR triggers CI normally. App repo permissions: **Contents: R/W** + **Pull requests: R/W**, installed on this repo.
+**Why the App:** `main` requires the `check` status check, and a PR opened by `GITHUB_TOKEN` does **not** trigger `on: pull_request` CI — so `check` would never report and the Release PR could never merge. An App-authored PR triggers CI normally. App repo permissions: **Contents: R/W** + **Pull requests: R/W**, installed on this repo.
 
-**Branch protection (`main`):** require both `gate` (from `ci.yml`) and `Validate PR title` (from `pr-title.yml`); squash-only merge with commit title = PR title.
+**Branch protection (`main`):** require both `check` (from `ci.yml`) and `Validate PR title` (from `pr-title.yml`); squash-only merge with commit title = PR title.
 
 ## First run — clean slate
 
@@ -119,6 +119,6 @@ Enforced on **three** layers: the **`pr-title.yml`** workflow (a plain regex —
 
 ### Releases (release-please)
 
-`release-please.yml` watches `main`, parses these commits, and maintains **one batched Release PR** (`release-please-config.json` + `.release-please-manifest.json`); merging it bumps each changed component's version + `CHANGELOG.md` and publishes the tag(s) — `vX.Y.Z` for `infra` (which writes `infra/VERSION`), `<component>-v0.x` for the `0.x` config tracks (`cloud`, `mcp-connector`, the services). **The runtime deploys are release-gated off those tags:** the `infra` release fires `deploy-infra.yml`, a service release fires `deploy-services.yml` (`cloud/` Terraform stays apply-on-merge via `apply-cloud.yml`). So merging a feature PR *stages* a change; merging the Release PR *ships* it. release-please authenticates via a **GitHub App** (`RELEASE_PLEASE_APP_ID` + `RELEASE_PLEASE_APP_PRIVATE_KEY`) so its Release PR triggers the required `gate` check — and so the published `release` events trigger the deploy workflows.
+`release-please.yml` watches `main`, parses these commits, and maintains **one batched Release PR** (`release-please-config.json` + `.release-please-manifest.json`); merging it bumps each changed component's version + `CHANGELOG.md` and publishes the tag(s) — `vX.Y.Z` for `infra` (which writes `infra/VERSION`), `<component>-v0.x` for the `0.x` config tracks (`cloud`, `mcp-connector`, the services). **The runtime deploys are release-gated off those tags:** the `infra` release fires `deploy-infra.yml`, a service release fires `deploy-services.yml` (`cloud/` Terraform stays apply-on-merge via `apply-cloud.yml`). So merging a feature PR *stages* a change; merging the Release PR *ships* it. release-please authenticates via a **GitHub App** (`RELEASE_PLEASE_APP_ID` + `RELEASE_PLEASE_APP_PRIVATE_KEY`) so its Release PR triggers the required `check` check — and so the published `release` events trigger the deploy workflows.
 
 **Full flow, components, versioning policy, and required GitHub config: this document.** Never hand-edit `.release-please-manifest.json`, `infra/VERSION`, or any generated `CHANGELOG.md`.
