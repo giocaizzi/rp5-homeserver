@@ -93,13 +93,13 @@
             ping: http://ai_chat:8080
 
       - OpenClaw:
-            href: https://openclaw.giocaizzi.xyz
+            href: https://openclaw.{{HOMEPAGE_VAR_DOMAIN}}
             description: Personal AI assistant
             icon: https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQxt1l_gNERueMEr2kTmbkbCe0mSzSjBgbIRQ&s
             ping: http://openclaw-gateway:18789
 
       - Code:
-            href: https://code.giocaizzi.xyz
+            href: https://code.{{HOMEPAGE_VAR_DOMAIN}}
             description: Remote Claude Code dev environment
             icon: mdi-robot-happy-#a855f7
             ping: http://code_app:3001

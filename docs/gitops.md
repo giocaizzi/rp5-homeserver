@@ -49,9 +49,10 @@ hop. In `--local` mode the script **excludes `secrets/` from the rsync** so the
    This registers a runner with the `rp5` label and installs it as a systemd
    service. Verify it shows **Idle** under Settings → Actions → Runners.
 
-2. **Repo variable** (Settings → Variables → Actions):
-   - `PI_DEPLOY_USER` — the Pi user owning the deploy path (e.g. the runner user)
-   - `PI_INFRA_PATH` — *optional* override; default `/home/<PI_DEPLOY_USER>/rp5-homeserver/infra`
+2. **Repo secrets / variable** (Settings → Secrets and variables → Actions):
+   - secret `PI_DEPLOY_USER` — the Pi user owning the deploy path (e.g. the runner user); a secret so the log masks it
+   - secret `CLOUDFLARE_ZONE_NAME` — the public zone, passed as `DOMAIN` to `infra/docker-compose.yml`
+   - variable `PI_INFRA_PATH` — *optional* override; default `/home/<PI_DEPLOY_USER>/rp5-homeserver/infra`
 
 3. **Environment** `pi-production` (Settings → Environments): create it; toggle
    **Required reviewers** if you want a manual gate before each deploy.
@@ -66,8 +67,8 @@ hop. In `--local` mode the script **excludes `secrets/` from the rsync** so the
 ```bash
 # From the Actions tab: "Deploy infra" → Run workflow (pull / restart toggles)
 # Or still locally over SSH from your workstation:
-PI_SSH_USER=<user> ./scripts/sync_infra.sh            # in-place update
-PI_SSH_USER=<user> ./scripts/sync_infra.sh --pull     # pull images first
+PI_SSH_USER=<user> DOMAIN=<domain> ./scripts/sync_infra.sh            # in-place update
+PI_SSH_USER=<user> DOMAIN=<domain> ./scripts/sync_infra.sh --pull     # pull images first
 ```
 
 > `infra/VERSION` is **release-please-managed** — don't hand-edit it. It bumps

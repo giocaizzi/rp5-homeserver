@@ -121,6 +121,8 @@ jobs:
           # request never leaves the Pi and never touches Cloudflare's WAF. The
           # GitOps webhook endpoint is unauthenticated and LAN-reachable here.
           host="$(echo "${PORTAINER_URL#*://}" | sed 's#/.*##')"
+          # Only the full PORTAINER_URL secret is masked; mask the derived host too.
+          echo "::add-mask::$host"
           echo "Redeploying '$stack' via local Portainer webhook ($host)..."
           code="$(curl -sS -k --resolve "$host:443:127.0.0.1" -o /dev/null -w '%{http_code}' -X POST \
             "https://$host/api/stacks/webhooks/$id")"
