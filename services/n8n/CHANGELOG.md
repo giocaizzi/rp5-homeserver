@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/giocaizzi/rp5-homeserver/compare/n8n-v0.1.4...n8n-v0.1.5) (2026-10-12)
+
+
+### Code Refactoring
+
+* **repo:** read the public domain from the stack env in service stacks ([#337](https://github.com/giocaizzi/rp5-homeserver/issues/337)) ([56f387a](https://github.com/giocaizzi/rp5-homeserver/commit/56f387af39ba8012fb18708f5ba874eb6d327818))
+
 ## [0.1.4](https://github.com/giocaizzi/rp5-homeserver/compare/n8n-v0.1.3...n8n-v0.1.4) (2026-10-11)
 
 

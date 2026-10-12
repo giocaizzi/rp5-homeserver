@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.1](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.6.0...cloud-v0.6.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* **cloud:** keep private terraform inputs out of public logs ([#342](https://github.com/giocaizzi/rp5-homeserver/issues/342)) ([dad0b72](https://github.com/giocaizzi/rp5-homeserver/commit/dad0b7243613ec4e0cae2e2890ec39a9a335a93e))
+
+
+### Code Refactoring
+
+* **cloud:** give the crm api service token a generic name ([#336](https://github.com/giocaizzi/rp5-homeserver/issues/336)) ([6e7f131](https://github.com/giocaizzi/rp5-homeserver/commit/6e7f1312ce8642b8af854ccc10d4588991e8e4b2))
+
 ## [0.6.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.5.0...cloud-v0.6.0) (2026-10-11)
 
 

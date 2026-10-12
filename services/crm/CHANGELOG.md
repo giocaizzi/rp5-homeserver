@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.4](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.3...crm-v0.2.4) (2026-10-12)
+
+
+### Code Refactoring
+
+* **cloud:** give the crm api service token a generic name ([#336](https://github.com/giocaizzi/rp5-homeserver/issues/336)) ([6e7f131](https://github.com/giocaizzi/rp5-homeserver/commit/6e7f1312ce8642b8af854ccc10d4588991e8e4b2))
+* **repo:** read the public domain from the stack env in service stacks ([#337](https://github.com/giocaizzi/rp5-homeserver/issues/337)) ([56f387a](https://github.com/giocaizzi/rp5-homeserver/commit/56f387af39ba8012fb18708f5ba874eb6d327818))
+
 ## [0.2.3](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.2...crm-v0.2.3) (2026-10-11)
 
 
