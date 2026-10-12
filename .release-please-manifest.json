@@ -9,7 +9,7 @@
   "services/langfuse": "0.2.2",
   "services/n8n": "0.1.5",
   "services/ntfy": "0.2.2",
-  "services/observability": "0.4.7",
+  "services/observability": "0.5.0",
   "services/openclaw": "0.1.1",
   "services/code": "0.2.0",
   "services/crm": "0.2.4",
