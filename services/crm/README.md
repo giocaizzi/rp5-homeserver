@@ -1,6 +1,6 @@
 # 🤝 CRM (Twenty)
 
-> Self-hosted [Twenty](https://github.com/twentyhq/twenty) CRM — sales pipeline UI, REST/GraphQL API for Ticky, native MCP endpoint for Claude.
+> Self-hosted [Twenty](https://github.com/twentyhq/twenty) CRM — sales pipeline UI, REST/GraphQL API for an external backend, native MCP endpoint for Claude.
 
 **URL**: `https://crm.<domain>` · **Production instance** — dev/test environments must never write to it.
 
@@ -12,7 +12,7 @@
 2. Deploy via Portainer → Swarm mode (Remote Stack from this repo, stack name `crm`, GitOps **Webhook**).
 3. Wait for first-boot migrations (`docker service logs -f crm_server`), then open `https://crm.<domain>`, create the owner account + workspace.
 4. Invite sales users from Settings → Members (they also need to be in the `CRM_USERS` CF Access list).
-5. Create API keys in Settings → APIs & Webhooks (one per consumer: Ticky backend, MCP connector).
+5. Create API keys in Settings → APIs & Webhooks (one per consumer: external backend, MCP connector).
 
 ---
 
@@ -38,7 +38,7 @@ Cloudflare Access ─► nginx ─► crm-server ─┬─► crm-db
 | Path | Gate |
 |------|------|
 | `/` (UI) | CF Access email allowlist (`CRM_USERS`) + Twenty login |
-| `/rest`, `/graphql` | CF Access service token `ticky-crm-api` + Twenty API key (Bearer) |
+| `/rest`, `/graphql` | CF Access service token `external-crm-api` + Twenty API key (Bearer) |
 | `/mcp` | CF Access service token `claude-crm-mcp` (injected by `workers/mcp-connector`) + Twenty API key (Bearer) |
 
 **Pi tuning:** memory limits server 1G / worker 1G / db 256M / redis 64M (~2.3G cap; Node heaps 768M each), Node heaps capped via `NODE_OPTIONS`, `PG_POOL_MAX_CONNECTIONS=5`, telemetry off. First boot (DB init + upgrade) is the memory peak — if `crm_server` is OOM-killed there, temporarily raise its limit.

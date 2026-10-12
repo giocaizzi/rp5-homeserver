@@ -141,14 +141,14 @@ output "claude_crm_mcp_client_secret" {
   sensitive   = true
 }
 
-output "ticky_crm_api_client_id" {
-  description = "Client ID for the Ticky -> Twenty CRM API service token (CF-Access-Client-Id)"
-  value       = cloudflare_zero_trust_access_service_token.ticky_crm_api.client_id
+output "external_crm_api_client_id" {
+  description = "Client ID for the external backend -> Twenty CRM API service token (CF-Access-Client-Id)"
+  value       = cloudflare_zero_trust_access_service_token.external_crm_api.client_id
 }
 
-output "ticky_crm_api_client_secret" {
-  description = "Client Secret for the Ticky -> Twenty CRM API service token (CF-Access-Client-Secret)"
-  value       = cloudflare_zero_trust_access_service_token.ticky_crm_api.client_secret
+output "external_crm_api_client_secret" {
+  description = "Client Secret for the external backend -> Twenty CRM API service token (CF-Access-Client-Secret)"
+  value       = cloudflare_zero_trust_access_service_token.external_crm_api.client_secret
   sensitive   = true
 }
 
