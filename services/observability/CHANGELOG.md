@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.6](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.4.5...observability-v0.4.6) (2026-10-12)
+
+
+### Code Refactoring
+
+* **observability:** neutral name for the website dashboards ([#347](https://github.com/giocaizzi/rp5-homeserver/issues/347)) ([f1ff420](https://github.com/giocaizzi/rp5-homeserver/commit/f1ff420b117c8839bc9f913c70cad9a7e2cf3f36))
+
 ## [0.4.5](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.4.4...observability-v0.4.5) (2026-10-12)
 
 
