@@ -110,8 +110,8 @@ services:
     volumes:
       - ./scripts/load-secrets.sh:/etc/cont-init.d/00-load-secrets:ro
       # Keep the web cron token (URL path) out of the access log
-      - ./config/nginx-log-map.conf:/etc/nginx/conf.d/firefly-log-map.conf:ro
-      - ./config/nginx-access-log.conf:/etc/nginx/server-opts.d/firefly-access-log.conf:ro
+      - ./nginx/log-map.conf:/etc/nginx/conf.d/firefly-log-map.conf:ro
+      - ./nginx/access-log.conf:/etc/nginx/server-opts.d/firefly-access-log.conf:ro
       # Persist the entire Laravel storage tree — most importantly
       # storage/oauth-{public,private}.key. Without this, container recreate
       # regenerates the keys and invalidates every Personal Access Token.

@@ -151,7 +151,7 @@ See [Data Importer docs](https://docs.firefly-iii.org/how-to/data-importer/impor
 
 All run in the `scheduler` Alpine container over HTTP — no Docker socket.
 
-No secret reaches a log: the crontab holds `$(cat /run/secrets/...)` (expanded only when the job runs), the auto-import secret travels in the POST body, and the app's nginx skips `/api/v1/cron/*` in its access log (`config/nginx-log-map.conf` + `config/nginx-access-log.conf`, bind-mounted into `conf.d` and `server-opts.d`).
+No secret reaches a log: the crontab holds `$(cat /run/secrets/...)` (expanded only when the job runs), the auto-import secret travels in the POST body, and the app's nginx skips `/api/v1/cron/*` in its access log (`nginx/log-map.conf` + `nginx/access-log.conf`, bind-mounted into `conf.d` and `server-opts.d`).
 
 ---
 
