@@ -146,10 +146,12 @@ See [Data Importer docs](https://docs.firefly-iii.org/how-to/data-importer/impor
 | Time (Europe/Rome) | Job | Purpose |
 |------------|-----|---------|
 | 06:00 daily | Firefly web cron (`/api/v1/cron/<STATIC_CRON_TOKEN>`) | Recurring transactions, auto-budgets, exchange rates |
-| 06:00 daily | Auto-import | Import from the bank-data provider via config.json |
+| 06:00 daily | Auto-import (`POST /autoimport`, directory and secret in the form body) | Import from the bank-data provider via config.json |
 | 04:00 on the 11th | `cc_monthly_reconcile.py` | Credit-card monthly reconciliation (account ids from stack env `CC_ACCOUNT_ID`, `CC_SETTLEMENT_SOURCE_ID`) |
 
 All run in the `scheduler` Alpine container over HTTP — no Docker socket.
+
+No secret reaches a log: the crontab holds `$(cat /run/secrets/...)` (expanded only when the job runs), the auto-import secret travels in the POST body, and the app's nginx skips `/api/v1/cron/*` in its access log (`nginx/log-map.conf` + `nginx/access-log.conf`, bind-mounted into `conf.d` and `server-opts.d`).
 
 ---
 
