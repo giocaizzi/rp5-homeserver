@@ -109,6 +109,9 @@ services:
       - static_cron_token
     volumes:
       - ./scripts/load-secrets.sh:/etc/cont-init.d/00-load-secrets:ro
+      # Keep the web cron token (URL path) out of the access log
+      - ./config/nginx-log-map.conf:/etc/nginx/conf.d/firefly-log-map.conf:ro
+      - ./config/nginx-access-log.conf:/etc/nginx/server-opts.d/firefly-access-log.conf:ro
       # Persist the entire Laravel storage tree — most importantly
       # storage/oauth-{public,private}.key. Without this, container recreate
       # regenerates the keys and invalidates every Personal Access Token.
@@ -325,7 +328,7 @@ services:
       until wget -q --spider http://firefly-app:8080/health; do echo 'Waiting...'; sleep 30; done &&
       echo 'Firefly is ready, setting up cron jobs...' &&
       echo '0 6 * * * wget -qO- http://firefly-app:8080/api/v1/cron/\$$(cat /run/secrets/static_cron_token)' > /tmp/crontab &&
-      echo '0 6 * * * wget -qO- --post-data=\"\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer \$$(cat /run/secrets/firefly_access_token)\" http://firefly-importer:8080/autoimport?directory=/var/www/html/import\\&secret=\$$(cat /run/secrets/auto_import_secret)' >> /tmp/crontab &&
+      echo '0 6 * * * wget -qO- --post-data=\"directory=/var/www/html/import&secret=\$$(cat /run/secrets/auto_import_secret)\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer \$$(cat /run/secrets/firefly_access_token)\" http://firefly-importer:8080/autoimport' >> /tmp/crontab &&
       echo '0 4 11 * * CC_ACCOUNT_ID='$$CC_ACCOUNT_ID' CC_SETTLEMENT_SOURCE_ID='$$CC_SETTLEMENT_SOURCE_ID' python3 /usr/local/bin/cc_monthly_reconcile.py >> /proc/1/fd/1 2>&1' >> /tmp/crontab &&
       crontab /tmp/crontab &&
       rm /tmp/crontab &&
