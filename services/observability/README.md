@@ -5,7 +5,7 @@
 **URLs**:
 - Grafana: `https://grafana.home`
 - OTLP HTTP (LAN): `https://otel.home`
-- OTLP HTTP (public): `https://otel.giocaizzi.xyz` — CF Access bypass on `/v1/*` + Alloy bearer auth
+- OTLP HTTP (public): `https://otel.<domain>` — CF Access bypass on `/v1/*` + Alloy bearer auth
 
 ---
 
@@ -75,7 +75,7 @@ flowchart TB
 
 Then sync them to Swarm: `./scripts/create_secrets.sh observability` (needs `BWS_ACCESS_TOKEN`).
 
-The bearer token is the **inner** auth gate on the OTLP HTTP receiver (port 4318). It is enforced for **both** `otel.home` (LAN) and `otel.giocaizzi.xyz` (public via CF Access bypass) — the receiver does not distinguish between sources.
+The bearer token is the **inner** auth gate on the OTLP HTTP receiver (port 4318). It is enforced for **both** `otel.home` (LAN) and `otel.<domain>` (public via CF Access bypass) — the receiver does not distinguish between sources.
 
 > The matching CF service-token credentials (`CF-Access-Client-Id` / `CF-Access-Client-Secret`) for the public path live in Terraform outputs `otel_ingest_client_id` / `otel_ingest_client_secret` (see `cloud/outputs.tf`).
 
@@ -83,7 +83,7 @@ The bearer token is the **inner** auth gate on the OTLP HTTP receiver (port 4318
 
 ## 🔌 MCP
 
-`mcp` (`grafana/mcp-grafana`, streamable-HTTP, `--disable-write`) serves `https://grafana.giocaizzi.xyz/mcp` for the [mcp-connector](../../workers/mcp-connector/README.md). Read-only: dashboards, Prometheus/Loki/Tempo queries via Grafana datasources. Callers must send `Authorization: Bearer <observability_grafana_mcp_server_token>` (the Worker injects it as `UPSTREAM_BEARER`); the header is stripped before reaching Grafana, which uses the Viewer token. nginx still exposes it on the public host only (CF Access + Worker OAuth in front); `grafana.home/mcp` returns 404.
+`mcp` (`grafana/mcp-grafana`, streamable-HTTP, `--disable-write`) serves `https://grafana.<domain>/mcp` for the [mcp-connector](../../workers/mcp-connector/README.md). Read-only: dashboards, Prometheus/Loki/Tempo queries via Grafana datasources. Callers must send `Authorization: Bearer <observability_grafana_mcp_server_token>` (the Worker injects it as `UPSTREAM_BEARER`); the header is stripped before reaching Grafana, which uses the Viewer token. nginx still exposes it on the public host only (CF Access + Worker OAuth in front); `grafana.home/mcp` returns 404.
 
 ---
 
@@ -132,7 +132,7 @@ alloy/
 | OTLP gRPC | `observability-collector:4317` (overlay only) | none — Swarm-internal |
 | OTLP HTTP | `http://observability-collector:4318` (overlay) | bearer token |
 | OTLP HTTP | `https://otel.home` (LAN) | bearer token |
-| OTLP HTTP | `https://otel.giocaizzi.xyz` (public) | CF Access service token (outer) + bearer token (inner) |
+| OTLP HTTP | `https://otel.<domain>` (public) | CF Access service token (outer) + bearer token (inner) |
 
 ### Environment Variables
 
@@ -150,7 +150,7 @@ Public client (HTTP, CF Access bypass + bearer):
 
 ```yaml
 environment:
-  - OTEL_EXPORTER_OTLP_ENDPOINT=https://otel.giocaizzi.xyz
+  - OTEL_EXPORTER_OTLP_ENDPOINT=https://otel.<domain>
   - OTEL_EXPORTER_OTLP_HEADERS=CF-Access-Client-Id=${CF_ID},CF-Access-Client-Secret=${CF_SECRET},Authorization=Bearer ${BEARER}
 ```
 

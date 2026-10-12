@@ -24,7 +24,7 @@ Enterprise-level senior AI coding assistant for **Raspberry Pi 5 home-server**. 
 
 When needed, run commands directly on the Pi via SSH:
 ```
-ssh giorgiocaizzi@pi.local
+ssh pi.local   # user comes from ~/.ssh/config (Host pi.local)
 ```
 
 ---
@@ -40,8 +40,8 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 
 **Workflow:**
 - Edit locally on macOS → sync/push → deploy.
-- SSH target: `giorgiocaizzi@pi.local` (use in operations only; in docs use `pi@pi.local`).
-- `infra/` deployed to `/home/giorgiocaizzi/rp5-homeserver/infra` on Pi.
+- SSH target: `pi.local`; the real user is set in `~/.ssh/config` and `PI_SSH_USER`, never committed. Examples use the placeholder user `pi` (`pi@pi.local`, `PI_SSH_USER=pi`).
+- `infra/` deployed to `/home/<user>/rp5-homeserver/infra` on Pi.
 - Sync entire `infra/` folder (contains `VERSION` file).
 - Reuse scripts in `/scripts`; propose new ones only if essential.
 
@@ -69,27 +69,27 @@ All scripts require `PI_SSH_USER`. `PI_HOST` defaults to `pi.local`.
 
 ```bash
 # Deploy / update the infra stack (rsync infra/ → deploy stack)
-PI_SSH_USER=giorgiocaizzi ./scripts/sync_infra.sh
-PI_SSH_USER=giorgiocaizzi ./scripts/sync_infra.sh --pull   # pull latest images first
+PI_SSH_USER=pi ./scripts/sync_infra.sh
+PI_SSH_USER=pi ./scripts/sync_infra.sh --pull   # pull latest images first
 
 # Sync Swarm external secrets for a service stack from Bitwarden Secrets Manager (project rp5-homeserver; used before first Portainer deploy)
 # Needs BWS_ACCESS_TOKEN (machine account with read access), bws and jq.
-PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack>             # n8n | firefly | langfuse | observability | ...
-PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh --all               # every stack under services/
-PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack> --dry-run
-PI_SSH_USER=giorgiocaizzi ./scripts/create_secrets.sh <stack> --prune     # delete secrets on Pi not referenced by the compose file
+PI_SSH_USER=pi ./scripts/create_secrets.sh <stack>             # n8n | firefly | langfuse | observability | ...
+PI_SSH_USER=pi ./scripts/create_secrets.sh --all               # every stack under services/
+PI_SSH_USER=pi ./scripts/create_secrets.sh <stack> --dry-run
+PI_SSH_USER=pi ./scripts/create_secrets.sh <stack> --prune     # delete secrets on Pi not referenced by the compose file
 
 # Unstick Portainer/Docker (compose-unpacker hangs, blocking `docker stack rm`, etc.)
-PI_SSH_USER=giorgiocaizzi ./scripts/kill_stuck_processes.sh --dry-run
-PI_SSH_USER=giorgiocaizzi ./scripts/kill_stuck_processes.sh --force
+PI_SSH_USER=pi ./scripts/kill_stuck_processes.sh --dry-run
+PI_SSH_USER=pi ./scripts/kill_stuck_processes.sh --force
 
 # Validate a stack locally before pushing (catches anchor / interpolation errors)
 docker compose -f services/<stack>/docker-compose.yml config -q
 
 # Inspect Swarm state on the Pi
-ssh giorgiocaizzi@pi.local 'docker stack ls'
-ssh giorgiocaizzi@pi.local 'docker stack services <stack>'
-ssh giorgiocaizzi@pi.local 'docker service logs --tail 200 -f <stack>_<service>'
+ssh pi@pi.local 'docker stack ls'
+ssh pi@pi.local 'docker stack services <stack>'
+ssh pi@pi.local 'docker service logs --tail 200 -f <stack>_<service>'
 
 # OpenClaw (auth gateway) — always sync before editing config
 ./services/openclaw/openclaw.sh pull-config

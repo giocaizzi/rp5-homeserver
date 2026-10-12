@@ -2,7 +2,7 @@
 
 > Self-hosted push notification service
 
-**URL**: `https://ntfy.giocaizzi.xyz` (public via Cloudflare Tunnel, no CF Access — ntfy auth is the gate) · `https://ntfy.home` (LAN)
+**URL**: `https://ntfy.<domain>` (public via Cloudflare Tunnel, no CF Access — ntfy auth is the gate) · `https://ntfy.home` (LAN)
 
 ---
 
@@ -10,7 +10,7 @@
 
 1. Deploy via Portainer → Swarm mode
 2. Create admin user via CLI (see below)
-3. Phone app: server `https://ntfy.giocaizzi.xyz`, log in as admin, subscribe to the [alert topics](#-alert-topics)
+3. Phone app: server `https://ntfy.<domain>`, log in as admin, subscribe to the [alert topics](#-alert-topics)
 
 ---
 

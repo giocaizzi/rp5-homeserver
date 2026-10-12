@@ -74,7 +74,7 @@ Since upstream **v3.0.0** every `/api/v1` route (except `/auth/login` and
 
 > **Cookie is non-secure on purpose.** The LAN serves plain HTTP at
 > `greenhouse.home`, so a `Secure` cookie would never be sent there and would
-> break LAN login. Public access (`greenhouse.giocaizzi.xyz`) is HTTPS via the
+> break LAN login. Public access (`greenhouse.<domain>`) is HTTPS via the
 > Cloudflare tunnel + CF Access, and the non-secure cookie still rides that
 > encrypted path. Public browser users therefore see **two** prompts: the CF
 > Access email gate, then the app login.
@@ -114,7 +114,7 @@ UID 1000). Include `greenhouse_data` in your backup target.
 ### Inspect the SQLite archive
 
 ```bash
-ssh giorgiocaizzi@pi.local
+ssh pi@pi.local
 docker exec -it $(docker ps -qf name=greenhouse_app) \
   sqlite3 /app/data/irrigation.db ".tables"
 ```

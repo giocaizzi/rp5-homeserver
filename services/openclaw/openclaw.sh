@@ -5,7 +5,7 @@
 #
 # Environment variables:
 #   PI_HOST     - Pi hostname or IP (default: pi.local)
-#   PI_SSH_USER - SSH username (default: giorgiocaizzi)
+#   PI_SSH_USER - SSH username (default: the User set for PI_HOST in ~/.ssh/config)
 
 set -euo pipefail
 
@@ -14,7 +14,7 @@ set -euo pipefail
 # =============================================================================
 
 readonly PI_HOST="${PI_HOST:-pi.local}"
-readonly PI_SSH_USER="${PI_SSH_USER:-giorgiocaizzi}"
+readonly PI_TARGET="${PI_SSH_USER:+${PI_SSH_USER}@}${PI_HOST}"
 readonly CONTAINER_NAME="openclaw_gateway"
 readonly SERVICE_NAME="openclaw_gateway"
 readonly CONFIG_PATH="/home/node/.openclaw/openclaw.json"
@@ -62,7 +62,7 @@ EOF
 }
 
 get_container_id() {
-  ssh -q "${PI_SSH_USER}@${PI_HOST}" \
+  ssh -q "${PI_TARGET}" \
     "docker ps -q -f name=${CONTAINER_NAME} | head -1" 2>/dev/null || {
       echo "Error: Cannot find container '${CONTAINER_NAME}' on ${PI_HOST}" >&2
       exit 1
@@ -72,10 +72,10 @@ get_container_id() {
 ensure_vim() {
   local container_id="$1"
   
-  if ! ssh -q "${PI_SSH_USER}@${PI_HOST}" \
+  if ! ssh -q "${PI_TARGET}" \
        "docker exec ${container_id} command -v vim >/dev/null 2>&1"; then
     echo "Installing vim in container..."
-    ssh -q "${PI_SSH_USER}@${PI_HOST}" \
+    ssh -q "${PI_TARGET}" \
       "docker exec -u root ${container_id} sh -c 'apt-get update -qq && apt-get install -y -qq vim'" \
       || {
         echo "Error: Failed to install vim" >&2
@@ -86,7 +86,7 @@ ensure_vim() {
 
 exec_pull_config() {
   echo "Downloading config from Pi..."
-  ssh -q "${PI_SSH_USER}@${PI_HOST}" \
+  ssh -q "${PI_TARGET}" \
     "docker exec \$(docker ps -q -f name=${CONTAINER_NAME}) cat ${CONFIG_PATH}" \
     > "${LOCAL_CONFIG}" || {
       echo "Error: Failed to download config" >&2
@@ -113,14 +113,14 @@ exec_push_config() {
   local container_id
   container_id=$(get_container_id)
   
-  cat "${LOCAL_CONFIG}" | ssh -q "${PI_SSH_USER}@${PI_HOST}" \
+  cat "${LOCAL_CONFIG}" | ssh -q "${PI_TARGET}" \
     "docker exec -i ${container_id} sh -c 'cat > ${CONFIG_PATH}'" || {
       echo "Error: Failed to upload config" >&2
       exit 1
     }
   
   echo "Config uploaded successfully. Restart service if needed:"
-  echo "  ssh ${PI_SSH_USER}@${PI_HOST} 'docker service update --force openclaw_gateway'"
+  echo "  ssh ${PI_TARGET} 'docker service update --force openclaw_gateway'"
 }
 
 exec_upload_skill() {
@@ -153,7 +153,7 @@ exec_upload_skill() {
   local remote_skill_dir="/home/node/.openclaw/workspace/skills/${skill_name}"
   
   # Create remote skill directory
-  ssh -q "${PI_SSH_USER}@${PI_HOST}" \
+  ssh -q "${PI_TARGET}" \
     "docker exec ${container_id} mkdir -p ${remote_skill_dir}" || {
       echo "Error: Failed to create remote directory" >&2
       exit 1
@@ -164,7 +164,7 @@ exec_upload_skill() {
     if [[ -f "${file}" ]]; then
       local filename=$(basename "${file}")
       echo "  Uploading ${filename}..."
-      cat "${file}" | ssh -q "${PI_SSH_USER}@${PI_HOST}" \
+      cat "${file}" | ssh -q "${PI_TARGET}" \
         "docker exec -i ${container_id} sh -c 'cat > ${remote_skill_dir}/${filename}'" || {
           echo "Error: Failed to upload ${filename}" >&2
           exit 1
@@ -184,7 +184,7 @@ exec_edit_config() {
   
   ensure_vim "${container_id}"
   
-  ssh -t "${PI_SSH_USER}@${PI_HOST}" \
+  ssh -t "${PI_TARGET}" \
     "docker exec -it ${container_id} vim ${CONFIG_PATH}"
 }
 
@@ -192,14 +192,14 @@ exec_shell() {
   local container_id
   container_id=$(get_container_id)
   
-  ssh -t "${PI_SSH_USER}@${PI_HOST}" \
+  ssh -t "${PI_TARGET}" \
     "docker exec -it ${container_id} sh"
 }
 
 exec_restart() {
   echo "Restarting OpenClaw service '${SERVICE_NAME}' on ${PI_HOST}..."
 
-  ssh -q "${PI_SSH_USER}@${PI_HOST}" \
+  ssh -q "${PI_TARGET}" \
     "docker service inspect ${SERVICE_NAME} >/dev/null 2>&1 && docker service update --force ${SERVICE_NAME}" || {
       echo "Error: Failed to restart service '${SERVICE_NAME}'" >&2
       exit 1
@@ -219,7 +219,7 @@ exec_openclaw_cli() {
   local container_id
   container_id=$(get_container_id)
   
-  ssh -t "${PI_SSH_USER}@${PI_HOST}" \
+  ssh -t "${PI_TARGET}" \
     "docker exec -it ${container_id} node /app/dist/index.js ${remote_args}"
 }
 

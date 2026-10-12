@@ -34,7 +34,7 @@
 
 ### Features
 
-* **infra:** route calibre.giocaizzi.xyz ([#263](https://github.com/giocaizzi/rp5-homeserver/issues/263)) ([9d564b6](https://github.com/giocaizzi/rp5-homeserver/commit/9d564b69e7c63b00c6e627d816e23226413d65c0))
+* **infra:** route calibre.<domain> ([#263](https://github.com/giocaizzi/rp5-homeserver/issues/263)) ([9d564b6](https://github.com/giocaizzi/rp5-homeserver/commit/9d564b69e7c63b00c6e627d816e23226413d65c0))
 * **repo:** add grafana, netdata, portainer and langfuse MCP connectors ([#265](https://github.com/giocaizzi/rp5-homeserver/issues/265)) ([501b368](https://github.com/giocaizzi/rp5-homeserver/commit/501b368ec3ded859387df863fa7d57c8b623fa7d))
 
 ## [1.17.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.17.0...v1.17.1) (2026-10-04)
@@ -122,7 +122,7 @@
 
 ### Features
 
-* **infra:** route crm.giocaizzi.xyz to Twenty CRM ([#168](https://github.com/giocaizzi/rp5-homeserver/issues/168)) ([445d08f](https://github.com/giocaizzi/rp5-homeserver/commit/445d08f402754de1bede4e83b606594461ddb5f2))
+* **infra:** route crm.<domain> to Twenty CRM ([#168](https://github.com/giocaizzi/rp5-homeserver/issues/168)) ([445d08f](https://github.com/giocaizzi/rp5-homeserver/commit/445d08f402754de1bede4e83b606594461ddb5f2))
 
 ## [1.14.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.13.0...v1.14.0) (2026-06-24)
 

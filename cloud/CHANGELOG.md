@@ -27,7 +27,7 @@
 
 ### Features
 
-* **cloud:** expose Twenty CRM at crm.giocaizzi.xyz ([#169](https://github.com/giocaizzi/rp5-homeserver/issues/169)) ([7b3fb4c](https://github.com/giocaizzi/rp5-homeserver/commit/7b3fb4cdd2e99c9a52b6381d2ceb1aa6b3c2161d))
+* **cloud:** expose Twenty CRM at crm.<domain> ([#169](https://github.com/giocaizzi/rp5-homeserver/issues/169)) ([7b3fb4c](https://github.com/giocaizzi/rp5-homeserver/commit/7b3fb4cdd2e99c9a52b6381d2ceb1aa6b3c2161d))
 
 ## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.1.0...cloud-v0.2.0) (2026-06-24)
 
