@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.4.7...observability-v0.5.0) (2026-10-12)
+
+
+### Features
+
+* **observability:** add a Guard row to the Claude Code dashboard ([#355](https://github.com/giocaizzi/rp5-homeserver/issues/355)) ([5c0f97c](https://github.com/giocaizzi/rp5-homeserver/commit/5c0f97c29445a9f04be9c72ee724b1d7dec616b3))
+
 ## [0.4.7](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.4.6...observability-v0.4.7) (2026-10-12)
 
 
