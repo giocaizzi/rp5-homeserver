@@ -9,13 +9,13 @@ Live connectors:
 
 | Service    | Connector URL (add this in Claude.ai)                          | Upstream MCP endpoint (on the Pi)                  |
 |------------|----------------------------------------------------------------|---------------------------------------------------|
-| Greenhouse | `https://mcp-connector-greenhouse.giocaizzi.workers.dev/mcp`   | `https://greenhouse.<domain>/mcp`            |
-| Firefly III| `https://mcp-connector-firefly.giocaizzi.workers.dev/mcp`      | `https://firefly.<domain>/api/v1/mcp`        |
-| n8n        | `https://mcp-connector-n8n.giocaizzi.workers.dev/mcp`          | `https://n8n.<domain>/mcp-server/http`       |
-| Grafana    | `https://mcp-connector-grafana.giocaizzi.workers.dev/mcp`      | `https://grafana.<domain>/mcp` (sidecar, read-only) |
-| Netdata    | `https://mcp-connector-netdata.giocaizzi.workers.dev/mcp`  | `https://netdata-mcp.<domain>/mcp` (native)  |
-| Portainer  | `https://mcp-connector-portainer.giocaizzi.workers.dev/mcp`    | `https://portainer.<domain>/mcp` (sidecar, full access) |
-| Langfuse   | `https://mcp-connector-langfuse.giocaizzi.workers.dev/mcp`     | `https://langfuse-mcp.<domain>/api/public/mcp` (native) |
+| Greenhouse | `https://mcp-connector-greenhouse.<account>.workers.dev/mcp`   | `https://greenhouse.<domain>/mcp`            |
+| Firefly III| `https://mcp-connector-firefly.<account>.workers.dev/mcp`      | `https://firefly.<domain>/api/v1/mcp`        |
+| n8n        | `https://mcp-connector-n8n.<account>.workers.dev/mcp`          | `https://n8n.<domain>/mcp-server/http`       |
+| Grafana    | `https://mcp-connector-grafana.<account>.workers.dev/mcp`      | `https://grafana.<domain>/mcp` (sidecar, read-only) |
+| Netdata    | `https://mcp-connector-netdata.<account>.workers.dev/mcp`  | `https://netdata-mcp.<domain>/mcp` (native)  |
+| Portainer  | `https://mcp-connector-portainer.<account>.workers.dev/mcp`    | `https://portainer.<domain>/mcp` (sidecar, full access) |
+| Langfuse   | `https://mcp-connector-langfuse.<account>.workers.dev/mcp`     | `https://langfuse-mcp.<domain>/api/public/mcp` (native) |
 
 ---
 
@@ -113,15 +113,15 @@ never in `wrangler.jsonc`, never in argv with the value inline):
 - **langfuse** — `base64(public_key:secret_key)` of the project key pair (`langfuse_public_key` / `langfuse_secret_key`), sent as `Authorization: Basic …` (`UPSTREAM_AUTH_SCHEME=Basic` in `wrangler.jsonc`). Langfuse MCP exposes write tools too.
 
 **Google OAuth client** — one "Web application" client, with every callback
-URL registered as Authorized redirect URIs (one per env, `https://mcp-connector-<env>.giocaizzi.workers.dev/callback`):
+URL registered as Authorized redirect URIs (one per env, `https://mcp-connector-<env>.<account>.workers.dev/callback`):
 ```
-https://mcp-connector-greenhouse.giocaizzi.workers.dev/callback
-https://mcp-connector-firefly.giocaizzi.workers.dev/callback
-https://mcp-connector-n8n.giocaizzi.workers.dev/callback
-https://mcp-connector-grafana.giocaizzi.workers.dev/callback
-https://mcp-connector-netdata.giocaizzi.workers.dev/callback
-https://mcp-connector-portainer.giocaizzi.workers.dev/callback
-https://mcp-connector-langfuse.giocaizzi.workers.dev/callback
+https://mcp-connector-greenhouse.<account>.workers.dev/callback
+https://mcp-connector-firefly.<account>.workers.dev/callback
+https://mcp-connector-n8n.<account>.workers.dev/callback
+https://mcp-connector-grafana.<account>.workers.dev/callback
+https://mcp-connector-netdata.<account>.workers.dev/callback
+https://mcp-connector-portainer.<account>.workers.dev/callback
+https://mcp-connector-langfuse.<account>.workers.dev/callback
 ```
 
 ---

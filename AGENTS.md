@@ -24,7 +24,7 @@ Enterprise-level senior AI coding assistant for **Raspberry Pi 5 home-server**. 
 
 When needed, run commands directly on the Pi via SSH:
 ```
-ssh pi@pi.local
+ssh pi.local   # user comes from ~/.ssh/config (Host pi.local)
 ```
 
 ---
@@ -40,8 +40,8 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 
 **Workflow:**
 - Edit locally on macOS → sync/push → deploy.
-- SSH target: `pi@pi.local` (use in operations only; in docs use `pi@pi.local`).
-- `infra/` deployed to `/home/pi/rp5-homeserver/infra` on Pi.
+- SSH target: `pi.local`; the real user is set in `~/.ssh/config` and `PI_SSH_USER`, never committed. Examples use the placeholder user `pi` (`pi@pi.local`, `PI_SSH_USER=pi`).
+- `infra/` deployed to `/home/<user>/rp5-homeserver/infra` on Pi.
 - Sync entire `infra/` folder (contains `VERSION` file).
 - Reuse scripts in `/scripts`; propose new ones only if essential.
 
