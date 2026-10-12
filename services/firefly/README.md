@@ -44,7 +44,7 @@ Secrets live in the Secrets Manager project `rp5-homeserver`; `scripts/create_se
 |--------|--------|
 | `firefly_client_id` | Profile → OAuth → Create Personal Access Client |
 | `firefly_access_token` | Profile → OAuth → Personal Access Tokens |
-| `firefly_lunch_flow_api_key` | External: [lunchflow.app](https://www.lunchflow.app/) |
+| `firefly_lunch_flow_api_key` | External: the bank-data provider's API key (Data Importer provider) |
 
 ### Rotating `firefly_access_token`
 
@@ -107,11 +107,11 @@ Navigate to `https://firefly.home` and create your account (first user = admin).
 
 ---
 
-## 🔄 Data Importer & Lunch Flow
+## 🔄 Data Importer & bank-data provider
 
-### Lunch Flow Integration
+### Bank-data provider
 
-1. Sign up at [lunchflow.app](https://www.lunchflow.app/)
+1. Sign up with a bank-data provider supported by the Firefly Data Importer
 2. Connect your bank accounts
 3. Destinations → Add Destination → API → Firefly III
 4. Copy API key → create secret:
@@ -146,8 +146,8 @@ See [Data Importer docs](https://docs.firefly-iii.org/how-to/data-importer/impor
 | Time (Europe/Rome) | Job | Purpose |
 |------------|-----|---------|
 | 06:00 daily | Firefly web cron (`/api/v1/cron/<STATIC_CRON_TOKEN>`) | Recurring transactions, auto-budgets, exchange rates |
-| 06:00 daily | Auto-import | Import from Lunch Flow via config.json |
-| 04:00 on the 11th | `cc_monthly_reconcile.py` | Credit-card monthly reconciliation |
+| 06:00 daily | Auto-import | Import from the bank-data provider via config.json |
+| 04:00 on the 11th | `cc_monthly_reconcile.py` | Credit-card monthly reconciliation (account ids from stack env `CC_ACCOUNT_ID`, `CC_SETTLEMENT_SOURCE_ID`) |
 
 All run in the `scheduler` Alpine container over HTTP — no Docker socket.
 
