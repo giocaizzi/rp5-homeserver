@@ -1,21 +1,21 @@
-# Pull-request CI.
-#
-# Currently scoped to cloud/ Terraform; structured so other PR checks can be
-# added as additional jobs without changing the required-check contract.
+# CI: `make check` (compose/shell lint), gitleaks, and cloud/ Terraform plan
+# (PRs only). Add jobs to `check.needs` without changing the required check.
 #
 # Design notes:
-#   - Workflow always triggers on PRs (no top-level path filter) so the `gate`
-#     job is guaranteed to report a status on every PR. The required check is
-#     therefore stable across PRs that don't touch cloud/**.
+#   - Workflow always triggers on PRs and pushes to main (no top-level path
+#     filter) so the `check` job always reports a status. The required check
+#     is therefore stable across PRs that don't touch cloud/**.
 #   - `detect` decides whether cloud/** actually changed; downstream jobs use
 #     that output to decide whether to do real work or short-circuit.
-#   - `gate` runs after all other jobs with `if: always()` and asserts that
-#     none of them failed. That single job name (`gate`) is what you add to
+#   - `check` runs after all other jobs with `if: always()` and asserts that
+#     none of them failed. That single job name (`check`) is what you add to
 #     the branch ruleset as the required status check.
 name: CI
 
 on:
   pull_request:
+    branches: [main]
+  push:
     branches: [main]
 
 permissions:
@@ -44,7 +44,7 @@ jobs:
 
   tf-checks:
     needs: detect
-    if: needs.detect.outputs.cloud == 'true'
+    if: github.event_name == 'pull_request' && needs.detect.outputs.cloud == 'true'
     runs-on: ubuntu-latest
     environment: cloud-plan
     defaults:
@@ -143,13 +143,31 @@ jobs:
               });
             }
 
+  # `make check`: docker compose config + shellcheck (see Makefile).
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: make check
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   # Single required status check. Set THIS one in the branch ruleset.
   # Robust to:
-  #   - skipped jobs (no cloud/** changes → tf-checks is skipped, gate still passes)
-  #   - new jobs added later (just add to `needs:` and the gate keeps gating)
-  #   - job renames (rename here too; the public check name `gate` is stable)
-  gate:
-    needs: [detect, tf-checks]
+  #   - skipped jobs (no cloud/** changes → tf-checks is skipped, check still passes)
+  #   - new jobs added later (just add to `needs:` and check keeps gating)
+  #   - job renames (rename here too; the public check name `check` is stable)
+  # lint and secrets must succeed (skipped fails); detect/tf-checks may skip.
+  check:
+    needs: [detect, tf-checks, lint, secrets]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -162,5 +180,8 @@ jobs:
               success|skipped) ;;
               *) echo "Upstream result: $r"; fail=1 ;;
             esac
+          done
+          for r in "${{ needs.lint.result }}" "${{ needs.secrets.result }}"; do
+            [ "$r" = success ] || { echo "Upstream result: $r"; fail=1; }
           done
           exit $fail
