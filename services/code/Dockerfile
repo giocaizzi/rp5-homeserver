@@ -10,6 +10,7 @@ FROM node:22-bookworm-slim
 #   build     build-essential python3 pip venv pipx  native modules / scripts
 #   archive   unzip zip                          packages, artifacts
 #   edit/ops  vim nano less tmux procps sqlite3 netcat-openbsd dnsutils iputils-ping
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
@@ -54,11 +55,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # --- Agent CLI + web UI (global installs, owned by root, runnable by node) ---
 #   @anthropic-ai/claude-code : the official Claude Code CLI (cloudcli auto-detects it on PATH)
 #   @cloudcli-ai/cloudcli     : the self-hosted web/mobile UI (CloudCLI / Claude Code UI)
+# hadolint ignore=DL3016
 RUN npm install -g \
         @anthropic-ai/claude-code \
         @cloudcli-ai/cloudcli \
     && npm cache clean --force
 
+# hadolint ignore=DL3066
 USER node
 WORKDIR /home/node/workspace
 
