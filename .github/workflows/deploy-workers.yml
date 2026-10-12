@@ -7,8 +7,10 @@
 # Flow: npm ci -> typecheck -> `wrangler deploy --env <env>` for each of the Worker
 # envs (one Worker `mcp-connector-<env>` each). Code-only deploy: per-env secrets
 # (UPSTREAM_BEARER, CF_ACCESS_*, Google OAuth) were set once by
-# workers/mcp-connector/deploy.sh and persist across deploys; KV ids live in
-# wrangler.jsonc. Runs on GitHub-hosted runners (Cloudflare API, not the Pi).
+# workers/mcp-connector/deploy.sh and persist across deploys. wrangler.jsonc holds
+# placeholders: the domain (repo var CLOUDFLARE_ZONE_NAME) and the KV ids (vars
+# KV_ID_<ENV> on this environment) are rendered in by render-config.sh and masked
+# in the logs. Runs on GitHub-hosted runners (Cloudflare API, not the Pi).
 #
 # The `cloudflare-workers` environment holds secrets CLOUDFLARE_API_TOKEN
 # (Workers Scripts:Edit, scoped to the account) and CLOUDFLARE_ACCOUNT_ID, and
@@ -60,10 +62,26 @@ jobs:
 
       - run: npm run typecheck
 
+      - name: Render wrangler config
+        env:
+          DOMAIN: ${{ vars.CLOUDFLARE_ZONE_NAME }}
+          KV_ID_GREENHOUSE: ${{ vars.KV_ID_GREENHOUSE }}
+          KV_ID_FIREFLY: ${{ vars.KV_ID_FIREFLY }}
+          KV_ID_N8N: ${{ vars.KV_ID_N8N }}
+          KV_ID_GRAFANA: ${{ vars.KV_ID_GRAFANA }}
+          KV_ID_NETDATA: ${{ vars.KV_ID_NETDATA }}
+          KV_ID_PORTAINER: ${{ vars.KV_ID_PORTAINER }}
+          KV_ID_LANGFUSE: ${{ vars.KV_ID_LANGFUSE }}
+        run: |
+          for n in DOMAIN KV_ID_GREENHOUSE KV_ID_FIREFLY KV_ID_N8N KV_ID_GRAFANA KV_ID_NETDATA KV_ID_PORTAINER KV_ID_LANGFUSE; do
+            [ -n "${!n}" ] && echo "::add-mask::${!n}"
+          done
+          ./render-config.sh
+
       - name: Deploy Worker
         # Single-env manual runs skip the other matrix legs.
         if: github.event_name != 'workflow_dispatch' || inputs.env == 'all' || inputs.env == matrix.env
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx wrangler deploy --env ${{ matrix.env }}
+        run: npx wrangler deploy -c wrangler.deploy.jsonc --env ${{ matrix.env }}
