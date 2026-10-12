@@ -52,7 +52,7 @@ bws secret create infra_cloudflared_token "$(terraform output -raw tunnel_token)
 bws secret create infra_gcp_service_account "$(terraform output -raw backup_service_account_key | base64 -d)" <project-id>
 ```
 
-Then sync infra: `BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> ./scripts/sync_infra.sh`
+Then sync infra: `BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> DOMAIN=<domain> ./scripts/sync_infra.sh`
 
 ## Details
 

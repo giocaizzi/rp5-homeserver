@@ -11,7 +11,7 @@
 ```bash
 # 1. Create the secrets in Secrets Manager (project rp5-homeserver, key infra_<file stem>)
 # 2. Sync and deploy (writes ./secrets/ on the Pi from Secrets Manager)
-BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> ./scripts/sync_infra.sh
+BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> DOMAIN=<domain> ./scripts/sync_infra.sh
 ```
 
 ---

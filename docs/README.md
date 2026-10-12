@@ -99,7 +99,7 @@ flowchart TB
 ssh pi@pi.local "docker swarm init"
 
 # 2. Create secrets, copy infra, deploy
-./scripts/sync_infra.sh
+PI_SSH_USER=pi DOMAIN=<domain> ./scripts/sync_infra.sh
 
 # 3. Deploy services via Portainer GitOps
 # Access https://portainer.home → Stacks → Git Repository
