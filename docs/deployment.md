@@ -11,7 +11,7 @@ Component → workflow mapping, Portainer Remote Stack mounts, infra versioning 
 | `workers/mcp-connector/` | **`mcp-connector` release** (`mcp-connector-v*`) → `deploy-workers.yml` (`wrangler deploy --env`, 7 envs). Manual: `workflow_dispatch`, or `./deploy.sh` (bootstrap/secrets only) |
 | `cloud/` | Push `cloud/**` → `apply-cloud.yml` (`terraform apply`, plan-reviewed-on-merge) |
 
-**Portainer Remote Stacks:** Portainer clones repo, enabling relative bind mounts (`./config`), Swarm configs (`file:`), and named volumes. Secrets must be external (pre-created on Pi).
+**Portainer Remote Stacks:** Portainer clones repo, enabling relative bind mounts (`./config`), Swarm configs (`file:`), and named volumes. Secrets must be external (pre-created on Pi). The public domain is not in the repo: compose files use `${DOMAIN:?…}`, filled from the stack's Portainer environment variable `DOMAIN` ([GitOps → Per-stack Portainer setup](./gitops.md#per-stack-portainer-setup-once-per-stack)).
 
 > Portainer services use local mount cloning the repo at `/mnt`.
 

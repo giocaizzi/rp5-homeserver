@@ -61,7 +61,7 @@ services:
       # Application configuration
       - APP_ENV=production
       - APP_DEBUG=false
-      - APP_URL=https://firefly.giocaizzi.xyz
+      - APP_URL=https://firefly.${DOMAIN:?set DOMAIN in the stack env}
       - SITE_OWNER=admin@firefly.home
       - DEFAULT_LANGUAGE=en_US
       - DEFAULT_LOCALE=equal
@@ -232,7 +232,7 @@ services:
     environment:
       # Firefly III connection
       - FIREFLY_III_URL=http://firefly-app:8080
-      - VANITY_URL=https://firefly.giocaizzi.xyz
+      - VANITY_URL=https://firefly.${DOMAIN:?set DOMAIN in the stack env}
       
       # Timezone and Locale
       - TZ=Europe/Rome
