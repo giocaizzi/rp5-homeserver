@@ -32,7 +32,7 @@ Infrastructure and services for a single-node home server: reverse proxy, monito
 | **[Greenhouse](./services/greenhouse/README.md)** | `http://greenhouse.home` | Smart plant irrigation |
 | **[OpenClaw](./services/openclaw/README.md)** | `https://openclaw.home` | Personal AI assistant gateway |
 | **[Code](./services/code/README.md)** | `https://code.<domain>` | Remote Claude Code dev environment (CloudCLI) |
-| **[CRM](./services/crm/README.md)** | `https://crm.<domain>` | Twenty CRM (sales pipeline, API + MCP for Ticky/Claude) |
+| **[CRM](./services/crm/README.md)** | `https://crm.<domain>` | Twenty CRM (sales pipeline, API + MCP for an external backend and Claude) |
 | **[Calibre](./services/calibre/README.md)** | `https://calibre.<domain>` | Ebook library (Send-to-Kindle, OPDS, reader sync) |
 
 **Infrastructure** (deployed with `infra/`):
