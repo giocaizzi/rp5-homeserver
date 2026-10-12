@@ -2,7 +2,7 @@
 
 Self-hosted, always-on sandbox for running **Claude Code** on the Pi, driven from a
 web/mobile UI ([CloudCLI](https://github.com/siteboon/claudecodeui)) at
-`code.giocaizzi.xyz`. Spawn sessions against any git repo cloned into the
+`code.<domain>`. Spawn sessions against any git repo cloned into the
 environment, then keep controlling them from the official Claude app via
 `/remote-control`. Replaces a personal laptop as the place where Claude Code runs.
 
@@ -24,7 +24,7 @@ docker buildx build --platform linux/arm64 \
 
 ```sh
 # Drop into the container
-ssh giorgiocaizzi@pi.local 'docker exec -it $(docker ps -q -f name=code_app) bash'
+ssh pi@pi.local 'docker exec -it $(docker ps -q -f name=code_app) bash'
 
 # Authenticate Claude Code with your Max subscription (opens a login URL to paste a code)
 claude            # then run /login, or just follow the first-run prompt
@@ -35,7 +35,7 @@ gh auth login
 Both credentials land in `home_data` and survive restarts. The subscription login
 (not a headless token) is what enables **Remote Control** from the official app.
 
-**4. Open the UI:** `https://code.giocaizzi.xyz` (gated by Cloudflare Access — your email only).
+**4. Open the UI:** `https://code.<domain>` (gated by Cloudflare Access — your email only).
 
 ---
 
@@ -49,7 +49,7 @@ Both credentials land in `home_data` and survive restarts. The subscription logi
 flowchart LR
     HP[Homepage tile] --> CF
     Phone[Claude app] -. /remote-control .-> CC
-    CF["code.giocaizzi.xyz<br/>(CF Tunnel + Access)"] --> NX[nginx] --> CC
+    CF["code.<domain><br/>(CF Tunnel + Access)"] --> NX[nginx] --> CC
 
     subgraph code_app
       CC[CloudCLI :3001]
@@ -92,7 +92,7 @@ and no tokens in the repo.
 
 ### Spawn a new session for a repo
 
-1. Open `https://code.giocaizzi.xyz` (or the Claude app).
+1. Open `https://code.<domain>` (or the Claude app).
 2. Clone the repo — either:
    - in CloudCLI's **Web Terminal** (full bash): `gh repo clone owner/name ~/workspace/name`, or
    - let Claude do it: start a session and instruct *"clone `owner/name` and start"* (Claude clones via Bash).
@@ -115,7 +115,7 @@ Confirm the UI binds on all interfaces so nginx can reach it over the overlay:
 
 ```sh
 # From the nginx container, the upstream must answer
-ssh giorgiocaizzi@pi.local \
+ssh pi@pi.local \
   'docker exec $(docker ps -q -f name=infra_proxy) wget -qO- http://code_app:3001/ >/dev/null && echo OK'
 ```
 

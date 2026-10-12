@@ -103,7 +103,7 @@ services:
       # — it keeps its own GREENHOUSE_MCP_TOKEN bearer (require_user also
       # accepts that token). Cookie stays NON-secure: the LAN serves plain HTTP
       # at greenhouse.home, so a Secure cookie would never be sent there and
-      # would break LAN login. Public access (greenhouse.giocaizzi.xyz) is HTTPS
+      # would break LAN login. Public access (greenhouse.<domain>) is HTTPS
       # via the Cloudflare tunnel + CF Access; the non-secure cookie still rides
       # that encrypted path fine.
       - IRRIGATION_AUTH_ENABLED=true

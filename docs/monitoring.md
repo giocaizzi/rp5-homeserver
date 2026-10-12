@@ -215,7 +215,7 @@ Shared dashboards (PostgreSQL, Redis) use both variables for multi-instance supp
 
 ## Alerting
 
-Both sources push to ntfy (`https://ntfy.giocaizzi.xyz`, publisher user `alerts`):
+Both sources push to ntfy (`https://ntfy.<domain>`, publisher user `alerts`):
 
 | Source | Topic | Covers | Routing |
 |--------|-------|--------|---------|

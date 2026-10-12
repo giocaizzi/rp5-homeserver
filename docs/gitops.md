@@ -110,7 +110,7 @@ Non-service releases (`infra`, `cloud`, `mcp-connector`) no-op.
 ### GitHub config
 
 Repo **secrets**:
-- `PORTAINER_URL` — e.g. `https://portainer.giocaizzi.xyz` (host is resolved to
+- `PORTAINER_URL` — e.g. `https://portainer.<domain>` (host is resolved to
   loopback on the Pi runner; only the hostname is used, for nginx server_name).
 - `WEBHOOK_ID_<STACK>` — the webhook id per stack
   (`WEBHOOK_ID_N8N`, `WEBHOOK_ID_FIREFLY`, `WEBHOOK_ID_ADGUARD`, …)

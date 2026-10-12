@@ -44,7 +44,7 @@
 //
 // Auth:
 //   HTTP (port 4318) requires `Authorization: Bearer <token>`. Same enforcement
-//   applies to LAN traffic (otel.home) and public traffic (otel.giocaizzi.xyz
+//   applies to LAN traffic (otel.home) and public traffic (otel.<domain>
 //   behind CF Access bypass) — the bearer is validated by Alloy regardless of
 //   source.
 //   gRPC (port 4317) is unauthenticated; the port is bound to the

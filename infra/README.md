@@ -94,11 +94,11 @@ Docker management at `https://portainer.home`.
 
 ### Portainer MCP
 
-`management-mcp` serves MCP at `https://portainer.giocaizzi.xyz/mcp` (public host only), reached through the Worker connector. **Full Portainer access**: the Worker sends the gate token (`Authorization`, `UPSTREAM_BEARER`) and a dedicated Portainer access token (`X-Portainer-API-Key`, `UPSTREAM_EXTRA_HEADERS`). Create that token under a separate Portainer user so it can be revoked on its own. The upstream project is unsupported and its image minor must match Portainer's (`2.45` ↔ 2.45.x) — bump the tag with Portainer.
+`management-mcp` serves MCP at `https://portainer.<domain>/mcp` (public host only), reached through the Worker connector. **Full Portainer access**: the Worker sends the gate token (`Authorization`, `UPSTREAM_BEARER`) and a dedicated Portainer access token (`X-Portainer-API-Key`, `UPSTREAM_EXTRA_HEADERS`). Create that token under a separate Portainer user so it can be revoked on its own. The upstream project is unsupported and its image minor must match Portainer's (`2.45` ↔ 2.45.x) — bump the tag with Portainer.
 
 ### Netdata MCP
 
-Netdata ≥ 2.7.2 serves MCP natively on `/mcp`. `https://netdata-mcp.giocaizzi.xyz/mcp` is an MCP-only public host (nginx 404s everything else; the Netdata UI stays on `netdata.home`). Worker bearer = the agent's key in `/var/lib/netdata/mcp_dev_preview_api_key`.
+Netdata ≥ 2.7.2 serves MCP natively on `/mcp`. `https://netdata-mcp.<domain>/mcp` is an MCP-only public host (nginx 404s everything else; the Netdata UI stays on `netdata.home`). Worker bearer = the agent's key in `/var/lib/netdata/mcp_dev_preview_api_key`.
 
 ### Cloudflared
 
