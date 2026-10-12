@@ -2204,7 +2204,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (status_code) (rate({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.api_error\" | json | session_id=~\"$session_id\" | __error__ = \"\" [$__interval]))",
+          "expr": "sum by (status_code) (rate({service_name=\"claude-code\", host_name=~\"$host_name\"} |= \"claude_code.api_error\" | session_id=~\"$session_id\" [$__interval]))",
           "interval": "",
           "legendFormat": "HTTP {{status_code}}",
           "refId": "A"
