@@ -12,16 +12,16 @@ providers:
     options:
       path: /etc/grafana/provisioning/dashboards/observability
 
-  # giocaizzi-xyz stack dashboards (personal website)
-  - name: 'giocaizzi-xyz'
+  # Website stack dashboards
+  - name: 'website'
     orgId: 1
-    folder: 'giocaizzi-xyz'
-    folderUid: 'giocaizzi-xyz'
+    folder: 'Website'
+    folderUid: 'website'
     type: file
     disableDeletion: false
     editable: true
     options:
-      path: /etc/grafana/provisioning/dashboards/giocaizzi-xyz
+      path: /etc/grafana/provisioning/dashboards/website
 
   # Shared technology dashboards (PostgreSQL, MariaDB, Redis, Nginx)
   - name: 'shared'
