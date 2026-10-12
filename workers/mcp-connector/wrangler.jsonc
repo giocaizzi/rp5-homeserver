@@ -4,7 +4,10 @@
 	// (one Worker per upstream MCP server) via wrangler environments.
 	//
 	// Each env gets its own workers.dev hostname, its own KV namespace, and its
-	// own secrets. Fill the KV `id`s after `wrangler kv namespace create` (see README).
+	// own secrets. ${DOMAIN} and ${KV_ID_<ENV>} are placeholders, rendered at deploy
+	// time from GitHub variables (CLOUDFLARE_ZONE_NAME; KV_ID_<ENV> on the
+	// cloudflare-workers environment) by deploy-workers.yml or deploy.sh. Never deploy
+	// this file unrendered.
 	"name": "mcp-connector",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-06-01",
@@ -18,13 +21,13 @@
 			"name": "mcp-connector-greenhouse",
 			"vars": {
 				"SERVICE_NAME": "Greenhouse",
-				"UPSTREAM_URL": "https://greenhouse.<domain>/mcp",
+				"UPSTREAM_URL": "https://greenhouse.${DOMAIN}/mcp",
 				"ALLOWED_EMAILS": "<email>"
 			},
 			"kv_namespaces": [
 				{
 					"binding": "OAUTH_KV",
-					"id": "07a2c01840b44f96966e2691dbac4d9e"
+					"id": "${KV_ID_GREENHOUSE}"
 				}
 			]
 		},
@@ -32,13 +35,13 @@
 			"name": "mcp-connector-firefly",
 			"vars": {
 				"SERVICE_NAME": "Firefly III",
-				"UPSTREAM_URL": "https://firefly.<domain>/api/v1/mcp",
+				"UPSTREAM_URL": "https://firefly.${DOMAIN}/api/v1/mcp",
 				"ALLOWED_EMAILS": "<email>"
 			},
 			"kv_namespaces": [
 				{
 					"binding": "OAUTH_KV",
-					"id": "90e16176346a472d8375b4c310868f40"
+					"id": "${KV_ID_FIREFLY}"
 				}
 			]
 		},
@@ -46,13 +49,13 @@
 			"name": "mcp-connector-n8n",
 			"vars": {
 				"SERVICE_NAME": "n8n",
-				"UPSTREAM_URL": "https://n8n.<domain>/mcp-server/http",
+				"UPSTREAM_URL": "https://n8n.${DOMAIN}/mcp-server/http",
 				"ALLOWED_EMAILS": "<email>"
 			},
 			"kv_namespaces": [
 				{
 					"binding": "OAUTH_KV",
-					"id": "20c5002a26414d7d94cace25ddbf637a"
+					"id": "${KV_ID_N8N}"
 				}
 			]
 		},
@@ -60,13 +63,13 @@
 			"name": "mcp-connector-grafana",
 			"vars": {
 				"SERVICE_NAME": "Grafana",
-				"UPSTREAM_URL": "https://grafana.<domain>/mcp",
+				"UPSTREAM_URL": "https://grafana.${DOMAIN}/mcp",
 				"ALLOWED_EMAILS": "<email>"
 			},
 			"kv_namespaces": [
 				{
 					"binding": "OAUTH_KV",
-					"id": "e840096a5eaf4a29b50281f26839a0ac"
+					"id": "${KV_ID_GRAFANA}"
 				}
 			]
 		},
@@ -74,13 +77,13 @@
 			"name": "mcp-connector-netdata",
 			"vars": {
 				"SERVICE_NAME": "Netdata",
-				"UPSTREAM_URL": "https://netdata-mcp.<domain>/mcp",
+				"UPSTREAM_URL": "https://netdata-mcp.${DOMAIN}/mcp",
 				"ALLOWED_EMAILS": "<email>"
 			},
 			"kv_namespaces": [
 				{
 					"binding": "OAUTH_KV",
-					"id": "625257f9839343d9b9108984608afe18"
+					"id": "${KV_ID_NETDATA}"
 				}
 			]
 		},
@@ -88,13 +91,13 @@
 			"name": "mcp-connector-portainer",
 			"vars": {
 				"SERVICE_NAME": "Portainer",
-				"UPSTREAM_URL": "https://portainer.<domain>/mcp",
+				"UPSTREAM_URL": "https://portainer.${DOMAIN}/mcp",
 				"ALLOWED_EMAILS": "<email>"
 			},
 			"kv_namespaces": [
 				{
 					"binding": "OAUTH_KV",
-					"id": "25a0d84ba6b24637bb081fec7618ee25"
+					"id": "${KV_ID_PORTAINER}"
 				}
 			]
 		},
@@ -102,14 +105,14 @@
 			"name": "mcp-connector-langfuse",
 			"vars": {
 				"SERVICE_NAME": "Langfuse",
-				"UPSTREAM_URL": "https://langfuse-mcp.<domain>/api/public/mcp",
+				"UPSTREAM_URL": "https://langfuse-mcp.${DOMAIN}/api/public/mcp",
 				"UPSTREAM_AUTH_SCHEME": "Basic",
 				"ALLOWED_EMAILS": "<email>"
 			},
 			"kv_namespaces": [
 				{
 					"binding": "OAUTH_KV",
-					"id": "455059d989a441d88fe2e1556d6ea435"
+					"id": "${KV_ID_LANGFUSE}"
 				}
 			]
 		}
