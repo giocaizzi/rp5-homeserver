@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.0...observability-v0.5.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* **observability:** show data in the API Error Rate panel ([#357](https://github.com/giocaizzi/rp5-homeserver/issues/357)) ([c27e4c9](https://github.com/giocaizzi/rp5-homeserver/commit/c27e4c9efa5b5c3c023f95e11e629ad43cd75f16))
+
 ## [0.5.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.4.7...observability-v0.5.0) (2026-10-12)
 
 
