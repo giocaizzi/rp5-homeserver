@@ -116,7 +116,7 @@ Verify:  GitHub -> Settings -> Actions -> Runners  (status: Idle)
 Logs:    sudo journalctl -u 'actions.runner.*' -f
 Service: cd $RUNNER_DIR && sudo ./svc.sh status
 
-Next: set repo variable PI_DEPLOY_USER=$USER and create the
+Next: set repo secret PI_DEPLOY_USER to this user (gh secret set PI_DEPLOY_USER) and create the
 'pi-production' environment, then push a change under infra/.
 ────────────────────────────────────────────────────────────
 EOF

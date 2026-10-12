@@ -6,7 +6,7 @@ Component → workflow mapping, Portainer Remote Stack mounts, infra versioning 
 
 | Component | Workflow |
 |-----------|----------|
-| `infra/`  | **`infra` release** (`v*`) → `deploy-infra.yml` (Pi runner, `sync_infra.sh --local`). Manual: `workflow_dispatch`, or `PI_SSH_USER=<user> ./scripts/sync_infra.sh` |
+| `infra/`  | **`infra` release** (`v*`) → `deploy-infra.yml` (Pi runner, `sync_infra.sh --local`). Manual: `workflow_dispatch`, or `PI_SSH_USER=<user> DOMAIN=<domain> ./scripts/sync_infra.sh` |
 | `services/` | **service release** (`<stack>-v*`) → `deploy-services.yml` fires that stack's Portainer webhook |
 | `workers/mcp-connector/` | **`mcp-connector` release** (`mcp-connector-v*`) → `deploy-workers.yml` (`wrangler deploy --env`, 7 envs). Manual: `workflow_dispatch`, or `./deploy.sh` (bootstrap/secrets only) |
 | `cloud/` | Push `cloud/**` → `apply-cloud.yml` (`terraform apply`, plan-reviewed-on-merge) |

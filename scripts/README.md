@@ -11,7 +11,8 @@ All scripts require environment variables for configuration. No sensitive defaul
 Syncs the local infra directory to the Raspberry Pi and deploys the infrastructure stack using Docker Swarm.
 
 **Required Environment Variables:**
-- `PI_SSH_USER` - SSH username for the Pi
+- `PI_SSH_USER` - SSH username for the Pi (also the backed-up home directory)
+- `DOMAIN` - Public zone; `infra/docker-compose.yml` reads it (`${DOMAIN:?}`), so it is never committed
 
 **Optional Environment Variables:**
 - `PI_HOST` - Pi hostname or IP (default: `pi.local`)
@@ -32,19 +33,19 @@ secrets untouched (`secrets/` is excluded from the `rsync --delete`).
 **Usage:**
 ```bash
 # Basic usage (SSH from your workstation)
-PI_SSH_USER=pi ./sync_infra.sh
+PI_SSH_USER=pi DOMAIN=<domain> ./sync_infra.sh
 
 # With image pull
-PI_SSH_USER=pi ./sync_infra.sh --pull
+PI_SSH_USER=pi DOMAIN=<domain> ./sync_infra.sh --pull
 
 # On the Pi itself (what CI runs)
-PI_SSH_USER=pi ./sync_infra.sh --local
+PI_SSH_USER=pi DOMAIN=<domain> ./sync_infra.sh --local
 
 # Show help
 ./sync_infra.sh --help
 
 # With custom host
-PI_SSH_USER=pi PI_HOST=192.168.1.100 ./sync_infra.sh
+PI_SSH_USER=pi PI_HOST=192.168.1.100 DOMAIN=<domain> ./sync_infra.sh
 ```
 
 **What it does:**

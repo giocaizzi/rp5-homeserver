@@ -69,8 +69,8 @@ All scripts require `PI_SSH_USER`. `PI_HOST` defaults to `pi.local`.
 
 ```bash
 # Deploy / update the infra stack (rsync infra/ → deploy stack)
-PI_SSH_USER=pi ./scripts/sync_infra.sh
-PI_SSH_USER=pi ./scripts/sync_infra.sh --pull   # pull latest images first
+PI_SSH_USER=pi DOMAIN=<domain> ./scripts/sync_infra.sh
+PI_SSH_USER=pi DOMAIN=<domain> ./scripts/sync_infra.sh --pull   # pull latest images first
 
 # Sync Swarm external secrets for a service stack from Bitwarden Secrets Manager (project rp5-homeserver; used before first Portainer deploy)
 # Needs BWS_ACCESS_TOKEN (machine account with read access), bws and jq.

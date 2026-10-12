@@ -39,7 +39,7 @@ Deploy RP5 Home Server stacks via Docker Swarm and Portainer's remote repository
 
 Use the sync script:
 ```bash
-./scripts/sync_infra.sh
+PI_SSH_USER=pi DOMAIN=<domain> ./scripts/sync_infra.sh
 ```
 
 This syncs `infra/` to the Pi and runs `docker stack deploy`. See [`scripts/README.md`](../scripts/README.md) for options.

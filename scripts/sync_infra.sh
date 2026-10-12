@@ -4,7 +4,8 @@
 # Usage: PI_SSH_USER=username ./sync_infra.sh [options]
 #
 # Required environment variables:
-#   PI_SSH_USER      - SSH username for the Pi
+#   PI_SSH_USER      - SSH username for the Pi (also the backed-up home directory)
+#   DOMAIN           - Public zone; docker-compose.yml reads it (never committed)
 #   BWS_ACCESS_TOKEN - Secrets Manager machine-account token (not needed with --local)
 #
 # Optional environment variables:
@@ -31,6 +32,7 @@ LOCAL_MODE=false   # run on the Pi itself (self-hosted runner): no SSH, no remot
 # Transport state (computed in validate_environment once LOCAL_MODE/PI_* are known)
 RSYNC_DEST=""
 RSYNC_EXCLUDES=()
+STACK_ENV=""        # env prefix for commands that read docker-compose.yml (DOMAIN, PI_SSH_USER)
 
 # Counters
 FILES_SYNCED=0
@@ -79,7 +81,8 @@ Sync and deploy infra stack on Raspberry Pi using Docker Swarm
 Usage: PI_SSH_USER=username $0 [options]
 
 Required environment variables:
-  PI_SSH_USER       SSH username for the Pi
+  PI_SSH_USER       SSH username for the Pi (also the backed-up home directory)
+  DOMAIN            Public zone, interpolated into docker-compose.yml
   BWS_ACCESS_TOKEN  Secrets Manager machine-account token (not needed with --local)
 
 Optional environment variables:
@@ -113,7 +116,7 @@ Behavior:
                   - Redeploys fresh stack
 
 Examples:
-  PI_SSH_USER=pi $0                    # Sync and update in-place
+  PI_SSH_USER=pi DOMAIN=example.com $0   # Sync and update in-place
   PI_SSH_USER=pi $0 --dry-run          # Preview changes
   PI_SSH_USER=pi $0 --pull             # Update with latest images
   PI_SSH_USER=pi $0 --restart          # Full stack restart
@@ -158,6 +161,12 @@ validate_environment() {
         exit 1
     fi
     
+    if [ -z "${DOMAIN:-}" ]; then
+        echo -e "${RED}Error: DOMAIN environment variable required (public zone, read by docker-compose.yml)${NC}" >&2
+        exit 1
+    fi
+    STACK_ENV="DOMAIN=$(printf %q "$DOMAIN") PI_SSH_USER=$(printf %q "$PI_SSH_USER")"
+
     PI_INFRA_PATH="${PI_INFRA_PATH:-/home/${PI_SSH_USER}/rp5-homeserver/infra}"
 
     if [ ! -d "$LOCAL_INFRA_PATH" ]; then
@@ -374,7 +383,7 @@ pull_images() {
     fi
     
     log_info "Pulling latest images..."
-    if remote "cd $PI_INFRA_PATH && docker compose pull" 2>/dev/null; then
+    if remote "cd $PI_INFRA_PATH && $STACK_ENV docker compose pull" 2>/dev/null; then
         log_success "Images updated"
     else
         log_warning "Some images failed to pull"
@@ -466,7 +475,7 @@ deploy_stack() {
     
     # Deploy (docker stack deploy handles both create and update)
     log_info "Deploying..."
-    if remote "cd $PI_INFRA_PATH && docker stack deploy -c docker-compose.yml infra" >/dev/null 2>&1; then
+    if remote "cd $PI_INFRA_PATH && $STACK_ENV docker stack deploy -c docker-compose.yml infra" >/dev/null 2>&1; then
         if [ "$is_new" = true ]; then
             log_success "Stack created"
         else
@@ -612,7 +621,7 @@ main() {
     
     echo
     echo -e "${GREEN}🚀 Infra Stack Sync${NC}"
-    echo -e "${DIM}   Target: $PI_SSH_USER@$PI_HOST${NC}"
+    echo -e "${DIM}   Target: $PI_HOST${NC}"
     echo -e "${DIM}   Local:  v$local_version${NC}"
     echo -e "${DIM}   Remote: v$remote_version${NC}"
     [ "$DRY_RUN" = true ] && echo -e "${DIM}   Mode: dry-run${NC}"
