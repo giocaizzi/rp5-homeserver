@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pin Carta Credito Fineco (id 3848) to zero after each monthly ESTRATTO.
+"""Pin the credit-card account to zero after each monthly statement.
 
 Designed to run on the 11th of each month via cron inside the firefly_scheduler
 container. Idempotent and defensive.
@@ -11,12 +11,16 @@ keeps the ledger free of synthetic transactions and avoids maintaining a
 paired reconciliation account.
 
 Flow:
-  1. Verify the most recent settlement transfer (fineco -> CC) is within the
-     last 14 days. If not, log + skip (LunchFlow gap or missing ESTRATTO —
+  1. Verify the most recent settlement transfer (settlement account -> CC) is
+     within the last 14 days. If not, log + skip (import gap or missing statement —
      don't blindly zero the account; surface the problem instead).
   2. Read current CC balance.
   3. If non-zero, PUT a new opening_balance = current_opening - current_balance.
      This shifts opening_balance so current_balance becomes zero.
+
+Account ids come from the environment (set on the firefly stack, passed on the
+cron line): CC_ACCOUNT_ID (the credit-card account) and CC_SETTLEMENT_SOURCE_ID
+(the account the card is settled from).
 
 All log output goes to stdout so `docker service logs firefly_scheduler`
 surfaces it.
@@ -24,7 +28,6 @@ surfaces it.
 import json, os, subprocess, sys, urllib.error, urllib.request
 from datetime import datetime, timedelta, timezone
 
-CC_ID                  = 3848
 SETTLEMENT_WINDOW_DAYS = 14
 APP_URL                = "http://firefly-app:8080"
 TOKEN_PATH             = "/run/secrets/firefly_access_token"
@@ -32,6 +35,12 @@ TOKEN_PATH             = "/run/secrets/firefly_access_token"
 def log(msg):
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     print(f"[cc_monthly_reconcile {ts}] {msg}", flush=True)
+
+def env_id(name):
+    v = os.environ.get(name, "")
+    if not v.isdigit():
+        log(f"FATAL: {name} must be set to a Firefly account id"); sys.exit(1)
+    return int(v)
 
 def load_token():
     try:
@@ -58,7 +67,7 @@ def api(method, path, token, body=None):
         log(f"FATAL: network error calling {url}: {e}"); sys.exit(3)
 
 def recent_settlement(token):
-    """Return (date_iso, amount, group_id, desc) of the most recent fineco->CC
+    """Return (date_iso, amount, group_id, desc) of the most recent settlement->CC
     transfer in the last SETTLEMENT_WINDOW_DAYS days, or None."""
     cutoff = (datetime.now(timezone.utc) - timedelta(days=SETTLEMENT_WINDOW_DAYS)).date().isoformat()
     today = datetime.now(timezone.utc).date().isoformat()
@@ -69,20 +78,23 @@ def recent_settlement(token):
     candidates = []
     for g in d.get("data", []):
         for s in g["attributes"]["transactions"]:
-            if str(s["source_id"]) == "1" and str(s["destination_id"]) == str(CC_ID):
+            if str(s["source_id"]) == str(SETTLEMENT_SOURCE_ID) and str(s["destination_id"]) == str(CC_ID):
                 candidates.append((s["date"][:10], float(s["amount"]), g["id"], s.get("description") or ""))
     if not candidates: return None
     candidates.sort(reverse=True)
     return candidates[0]
 
 def main():
+    global CC_ID, SETTLEMENT_SOURCE_ID
+    CC_ID = env_id("CC_ACCOUNT_ID")
+    SETTLEMENT_SOURCE_ID = env_id("CC_SETTLEMENT_SOURCE_ID")
     token = load_token()
 
-    log("checking most recent ESTRATTO settlement...")
+    log("checking most recent statement settlement...")
     recent = recent_settlement(token)
     if recent is None:
-        log(f"SKIP: no fineco->CC transfer found in last {SETTLEMENT_WINDOW_DAYS} days. "
-            f"Either LunchFlow is lagging, rule 9 misfired, or there was no ESTRATTO this cycle. "
+        log(f"SKIP: no settlement->CC transfer found in last {SETTLEMENT_WINDOW_DAYS} days. "
+            f"Either the bank import is lagging, the settlement rule misfired, or there was no statement this cycle. "
             f"Investigate before reconciling.")
         return
     settle_date, settle_amount, settle_gid, settle_desc = recent
