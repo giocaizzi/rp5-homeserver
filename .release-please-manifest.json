@@ -1,10 +1,10 @@
 {
-  "infra": "1.19.2",
+  "infra": "1.19.3",
   "cloud": "0.6.1",
   "workers/mcp-connector": "0.2.4",
-  "services/adguard": "0.2.1",
+  "services/adguard": "0.2.2",
   "services/ai": "0.1.1",
-  "services/firefly": "0.2.4",
+  "services/firefly": "0.2.5",
   "services/greenhouse": "0.1.0",
   "services/langfuse": "0.2.2",
   "services/n8n": "0.1.5",

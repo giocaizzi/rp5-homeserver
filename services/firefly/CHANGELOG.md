@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.4...firefly-v0.2.5) (2026-10-12)
+
+
+### Code Refactoring
+
+* **firefly:** read reconcile account ids from the stack env ([#345](https://github.com/giocaizzi/rp5-homeserver/issues/345)) ([14b5ee5](https://github.com/giocaizzi/rp5-homeserver/commit/14b5ee5d154bf004b4fa2e1c7aa508b6cb9b4e47))
+
 ## [0.2.4](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.3...firefly-v0.2.4) (2026-10-12)
 
 

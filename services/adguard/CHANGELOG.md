@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/giocaizzi/rp5-homeserver/compare/adguard-v0.2.1...adguard-v0.2.2) (2026-10-12)
+
+
+### Code Refactoring
+
+* **infra:** stop committing the public domain and pi user in infra ([#343](https://github.com/giocaizzi/rp5-homeserver/issues/343)) ([d2d2d8c](https://github.com/giocaizzi/rp5-homeserver/commit/d2d2d8c16fd10540bfbcc6b6cb16b018d2505ca5))
+
 ## [0.2.1](https://github.com/giocaizzi/rp5-homeserver/compare/adguard-v0.2.0...adguard-v0.2.1) (2026-10-03)
 
 
