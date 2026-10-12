@@ -138,7 +138,7 @@ services:
       - "5678"
     environment:
       # Network configuration
-      - N8N_HOST=n8n.<domain>
+      - N8N_HOST=n8n.${DOMAIN:?set DOMAIN in the stack env}
       - N8N_PORT=5678
       - N8N_PROTOCOL=https
       - N8N_LISTEN_ADDRESS=0.0.0.0
@@ -188,10 +188,10 @@ services:
       - EXECUTIONS_DATA_MAX_AGE=168
       
       # Webhook configuration for reverse proxy
-      - WEBHOOK_URL=https://n8n.<domain>
+      - WEBHOOK_URL=https://n8n.${DOMAIN:?set DOMAIN in the stack env}
       
       # Security headers
-      - N8N_ADDITIONAL_ALLOWED_ORIGINS=https://n8n.<domain>
+      - N8N_ADDITIONAL_ALLOWED_ORIGINS=https://n8n.${DOMAIN:?set DOMAIN in the stack env}
     secrets:
       - postgres_password
       - n8n_auth_password
