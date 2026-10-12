@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.6](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.5...firefly-v0.2.6) (2026-10-12)
+
+
+### Bug Fixes
+
+* **firefly:** keep secrets out of the scheduler's cron entries and log ([#349](https://github.com/giocaizzi/rp5-homeserver/issues/349)) ([3b201de](https://github.com/giocaizzi/rp5-homeserver/commit/3b201deb657e7bedab539b9c6a891338331bd1d3))
+
 ## [0.2.5](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.4...firefly-v0.2.5) (2026-10-12)
 
 
