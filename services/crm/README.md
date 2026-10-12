@@ -2,7 +2,7 @@
 
 > Self-hosted [Twenty](https://github.com/twentyhq/twenty) CRM — sales pipeline UI, REST/GraphQL API for Ticky, native MCP endpoint for Claude.
 
-**URL**: `https://crm.giocaizzi.xyz` · **Production instance** — dev/test environments must never write to it.
+**URL**: `https://crm.<domain>` · **Production instance** — dev/test environments must never write to it.
 
 ---
 
@@ -10,7 +10,7 @@
 
 1. Create the Swarm secrets (see [Secrets](#-secrets)).
 2. Deploy via Portainer → Swarm mode (Remote Stack from this repo, stack name `crm`, GitOps **Webhook**).
-3. Wait for first-boot migrations (`docker service logs -f crm_server`), then open `https://crm.giocaizzi.xyz`, create the owner account + workspace.
+3. Wait for first-boot migrations (`docker service logs -f crm_server`), then open `https://crm.<domain>`, create the owner account + workspace.
 4. Invite sales users from Settings → Members (they also need to be in the `CRM_USERS` CF Access list).
 5. Create API keys in Settings → APIs & Webhooks (one per consumer: Ticky backend, MCP connector).
 
@@ -66,7 +66,7 @@ PI_SSH_USER=<user> ./scripts/create_secrets.sh crm
 
 ## ⚙️ Configuration
 
-- `SERVER_URL` is fixed to `https://crm.giocaizzi.xyz` — links and OAuth callbacks are built from it.
+- `SERVER_URL` is fixed to `https://crm.<domain>` — links and OAuth callbacks are built from it.
 - Email/calendar sync and SSO are off (defaults). AI provider keys, if ever needed, go in the Twenty admin panel, not env.
 - Upgrades: bump the image tag for both `server` and `worker`; the server runs `upgrade` on start.
 

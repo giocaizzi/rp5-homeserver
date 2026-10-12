@@ -54,7 +54,7 @@ source of truth; `CLAUDE.md` is a local-only gitignored symlink to it.
   container's bind mount can point at a deleted inode (provisioning dir empties).
   Fix by re-resolving the mount:
   ```
-  ssh giorgiocaizzi@pi.local 'docker service update --force observability_dashboard'
+  ssh pi@pi.local 'docker service update --force observability_dashboard'
   ```
 - Fixed datasource uids: `prometheus`, `loki`, `tempo`. Dashboard uid: `claude-code-obs`.
 

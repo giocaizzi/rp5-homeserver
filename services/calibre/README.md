@@ -2,7 +2,7 @@
 
 > Calibre library web UI with Send-to-Kindle, OPDS and KOReader/Kobo sync ([Calibre-Web-Automated](https://github.com/crocodilestick/Calibre-Web-Automated))
 
-**URL**: `https://calibre.giocaizzi.xyz` (public via Cloudflare Tunnel; Access email gate on the UI, path bypass for `/opds`, `/kosync`, `/kobo` — CWA auth is the gate there)
+**URL**: `https://calibre.<domain>` (public via Cloudflare Tunnel; Access email gate on the UI, path bypass for `/opds`, `/kosync`, `/kobo` — CWA auth is the gate there)
 
 ---
 
