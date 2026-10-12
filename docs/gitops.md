@@ -103,11 +103,13 @@ Non-service releases (`infra`, `cloud`, `mcp-connector`) no-op.
    - **Compose path**: `services/<stack>/docker-compose.yml`
    - **Mode**: Swarm
    - **Relative path volumes**: enable, base path `/mnt/`
-   - **Environment variables**: `DOMAIN` = the public zone (repo variable
-     `CLOUDFLARE_ZONE_NAME`) for every stack whose compose file uses `${DOMAIN}`
+   - **Environment variables**: `DOMAIN` = the public zone (same value as repo
+     secret `CLOUDFLARE_ZONE_NAME`) for every stack whose compose file uses `${DOMAIN}`
      (`git grep -l 'DOMAIN:?' services/`). The value is never committed; a missing
      value fails the deploy (`set DOMAIN in the stack env`) and leaves the running
      services untouched.
+   - `firefly` also needs `CC_ACCOUNT_ID` and `CC_SETTLEMENT_SOURCE_ID` (Firefly
+     account ids used by the monthly credit-card reconciliation).
 2. Enable **GitOps updates** → **Webhook**, copy the webhook URL. The id is the
    last path segment: `…/api/stacks/webhooks/<WEBHOOK_ID>`.
 3. Pre-create the stack's external Swarm secrets:
