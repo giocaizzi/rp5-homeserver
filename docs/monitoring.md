@@ -189,7 +189,7 @@ Dashboards are organized in folders by purpose:
 |--------|------------|-------------|
 | `infra` | docker-overview | Docker Swarm container resources |
 | `observability` | health | Loki/Tempo/Prometheus/Alloy health |
-| `giocaizzi-xyz` | app, ai | Personal website application |
+| `Website` | app, ai | Website application (pick namespace/service in the dashboard variables) |
 | `shared` | postgresql, mariadb, redis, nginx | Technology-specific dashboards (multi-instance) |
 
 ### Dashboard Variables
