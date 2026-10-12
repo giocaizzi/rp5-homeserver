@@ -882,25 +882,25 @@ resource "cloudflare_zero_trust_access_application" "crm_mcp_policy" {
   ]
 }
 
-# --- Twenty CRM API (Ticky backend) ---------------------------------------
-# Ticky's Cloud Run services call /rest and /graphql server-to-server with this
+# --- Twenty CRM API (external backend consumer) ---------------------------
+# An external backend calls /rest and /graphql server-to-server with this
 # service token + a Twenty API key. Email fallthrough (precedence 2) is required:
 # the Twenty UI itself calls /graphql from the browser.
 
-resource "cloudflare_zero_trust_access_service_token" "ticky_crm_api" {
+resource "cloudflare_zero_trust_access_service_token" "external_crm_api" {
   account_id = var.cloudflare_account_id
-  name       = "ticky-crm-api"
+  name       = "external-crm-api"
 }
 
-resource "cloudflare_zero_trust_access_policy" "ticky_crm_api_bypass" {
+resource "cloudflare_zero_trust_access_policy" "external_crm_api_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "ticky-crm-api-bypass"
+  name       = "external-crm-api-bypass"
   decision   = "bypass"
 
   include = [
     {
       service_token = {
-        token_id = cloudflare_zero_trust_access_service_token.ticky_crm_api.id
+        token_id = cloudflare_zero_trust_access_service_token.external_crm_api.id
       }
     }
   ]
@@ -924,7 +924,7 @@ resource "cloudflare_zero_trust_access_application" "crm_api_policy" {
 
   policies = [
     {
-      id         = cloudflare_zero_trust_access_policy.ticky_crm_api_bypass.id
+      id         = cloudflare_zero_trust_access_policy.external_crm_api_bypass.id
       precedence = 1
     },
     {

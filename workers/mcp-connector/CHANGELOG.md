@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.4](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.2.3...mcp-connector-v0.2.4) (2026-10-12)
+
+
+### Bug Fixes
+
+* **mcp-connector:** render private config from secrets, not variables ([#339](https://github.com/giocaizzi/rp5-homeserver/issues/339)) ([5cf2a00](https://github.com/giocaizzi/rp5-homeserver/commit/5cf2a0032cfe5930e40cb9ee467755f8053d3753))
+
+## [0.2.3](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.2.2...mcp-connector-v0.2.3) (2026-10-12)
+
+
+### Code Refactoring
+
+* **mcp-connector:** render domain and kv ids into wrangler config at deploy ([#335](https://github.com/giocaizzi/rp5-homeserver/issues/335)) ([63a2c8a](https://github.com/giocaizzi/rp5-homeserver/commit/63a2c8ab079d1a79e6cd1445cca4c0f43efd6c2a))
+
 ## [0.2.2](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.2.1...mcp-connector-v0.2.2) (2026-10-11)
 
 

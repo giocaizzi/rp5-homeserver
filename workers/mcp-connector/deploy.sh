@@ -13,6 +13,9 @@
 # `terraform output` (cloud/), so you never handle them. You are prompted only
 # for the Google client creds (shared) and each service's UPSTREAM_BEARER.
 #
+# Needs DOMAIN, ALLOWED_EMAILS and KV_ID_<ENV> exported (see below); gh only to
+# store the id of a newly created KV namespace.
+#
 # Idempotent: re-runnable. KV namespaces are created once; secrets you skip
 # (press Enter) are left unchanged.
 set -euo pipefail
@@ -41,11 +44,11 @@ declare -A CF_SECRET=(
   [langfuse]=claude_langfuse_mcp_client_secret
 )
 
-wr() { npx wrangler "$@"; }
+wr() { npx wrangler -c wrangler.deploy.jsonc "$@"; }
 tf_out() { terraform -chdir="$CLOUD_DIR" output -raw "$1"; }
 put_secret() { printf '%s' "$2" | wr secret put "$1" --env "$3" >/dev/null; echo "    set $1"; }
 
-wr whoami >/dev/null 2>&1 || { echo "Not logged in — run: npx wrangler login"; exit 1; }
+npx wrangler whoami >/dev/null 2>&1 || { echo "Not logged in — run: npx wrangler login"; exit 1; }
 
 read -rp "Google OAuth Client ID (Enter to skip): " GOOGLE_ID
 GOOGLE_SECRET=""
@@ -53,17 +56,30 @@ if [ -n "$GOOGLE_ID" ]; then
   read -rsp "Google OAuth Client secret: " GOOGLE_SECRET; echo
 fi
 
+# Placeholders in wrangler.jsonc are rendered from the environment. CI reads them
+# from secrets on the cloudflare-workers environment; locally export them first:
+#   DOMAIN, ALLOWED_EMAILS and KV_ID_<ENV> (ids: `npx wrangler kv namespace list`).
+# A missing KV_ID_<ENV> creates the namespace and stores its id as that secret.
+# Values are never printed.
+: "${DOMAIN:?export DOMAIN (the public zone)}"
+: "${ALLOWED_EMAILS:?export ALLOWED_EMAILS (comma-separated login allowlist)}"
+export DOMAIN ALLOWED_EMAILS
+for env in "${ENVS[@]}"; do
+  var="KV_ID_$(echo "$env" | tr '[:lower:]' '[:upper:]')"
+  if [ -z "${!var:-}" ]; then
+    echo "=== $env: creating KV namespace (export $var if it already exists)..."
+    id=$(npx wrangler kv namespace create OAUTH_KV --env "$env" 2>&1 | grep -oiE '[a-f0-9]{32}' | head -1)
+    [ -n "$id" ] || { echo "  KV create failed"; exit 1; }
+    printf '%s' "$id" | gh secret set "$var" --env cloudflare-workers >/dev/null
+    printf -v "$var" '%s' "$id"
+    echo "  stored as secret $var on the cloudflare-workers environment"
+  fi
+  export "${var?}"
+done
+./render-config.sh
+
 for env in "${ENVS[@]}"; do
   echo "=== $env ==="
-  ph="REPLACE_WITH_$(echo "$env" | tr '[:lower:]' '[:upper:]')_KV_ID"
-  if grep -q "$ph" wrangler.jsonc; then
-    echo "  creating KV namespace..."
-    id=$(wr kv namespace create OAUTH_KV --env "$env" 2>&1 | grep -oiE '[a-f0-9]{32}' | head -1)
-    [ -n "$id" ] || { echo "  KV create failed"; exit 1; }
-    sed -i '' "s/$ph/$id/" wrangler.jsonc
-    echo "  KV id: $id"
-  fi
-
   echo "  deploying..."
   wr deploy --env "$env"
 

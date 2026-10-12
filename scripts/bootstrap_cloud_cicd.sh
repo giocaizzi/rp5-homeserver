@@ -150,19 +150,8 @@ GitHub Actions repository variables (Settings → Variables → Actions):
   GCP_REGION                ${REGION}
   GCP_BACKUP_BUCKET_NAME    <copy from cloud/terraform.tfvars>
   CLOUDFLARE_ACCOUNT_ID     <copy from cloud/terraform.tfvars>
-  CLOUDFLARE_ZONE_NAME      <copy from cloud/terraform.tfvars>
   CLOUDFLARE_ZONE_ID        <copy from cloud/terraform.tfvars>
   BACKUP_RETENTION_DAYS     <copy from cloud/terraform.tfvars>
-  N8N_USERS                 <JSON array string, e.g. ["a@x.com"]>
-  PORTAINER_USERS           <JSON array string>
-  BACKREST_USERS            <JSON array string>
-  FIREFLY_USERS             <JSON array string>
-  HOMEPAGE_USERS            <JSON array string>
-  OPENCLAW_USERS            <JSON array string>
-  GRAFANA_USERS             <JSON array string>
-  GREENHOUSE_USERS          <JSON array string>
-  CODE_USERS                <JSON array string>
-  CRM_USERS                 <JSON array string>
   TF_VERSION                1.9.8 (optional override)
 
 GitHub Environments to create (Settings → Environments):
@@ -173,6 +162,20 @@ GitHub Environments to create (Settings → Environments):
 GitHub Actions repository SECRETS (Settings → Secrets → Actions):
   CLOUDFLARE_API_TOKEN      <your CF API token>
   TUNNEL_SECRET             <openssl rand -base64 32 of the existing tunnel>
+  CLOUDFLARE_ZONE_NAME      <copy from cloud/terraform.tfvars>
+  N8N_USERS                 <JSON array string, e.g. ["a@x.com"]>
+  PORTAINER_USERS           <JSON array string>
+  BACKREST_USERS            <JSON array string>
+  FIREFLY_USERS             <JSON array string>
+  HOMEPAGE_USERS            <JSON array string>
+  OPENCLAW_USERS            <JSON array string>
+  GRAFANA_USERS             <JSON array string>
+  GREENHOUSE_USERS          <JSON array string>
+  CODE_USERS                <JSON array string>
+  CRM_USERS                 <JSON array string>
+  CALIBRE_USERS             <JSON array string>
+  (domain and emails are secrets, not variables: variable values are printed
+   in the public Actions logs)
 
 Migrate local state to GCS (run from your workstation, one time):
   cd cloud

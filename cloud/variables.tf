@@ -14,8 +14,9 @@ variable "cloudflare_account_id" {
 }
 
 variable "zone_name" {
-  description = "Cloudflare zone name"
+  description = "Cloudflare zone name (sensitive: keeps the domain out of public plan logs and PR comments)"
   type        = string
+  sensitive   = true
   // example.com
 }
 
@@ -47,60 +48,70 @@ variable "portainer_users" {
   description = "List of email addresses allowed to access Portainer"
   type        = list(string)
   default     = []
+  sensitive   = true
 }
 
 variable "backrest_users" {
   description = "List of email addresses allowed to access Backrest"
   type        = list(string)
   default     = []
+  sensitive   = true
 }
 
 variable "firefly_users" {
   description = "List of email addresses allowed to access Firefly III"
   type        = list(string)
   default     = []
+  sensitive   = true
 }
 
 variable "homepage_users" {
   description = "List of email addresses allowed to access Homepage"
   type        = list(string)
   default     = []
+  sensitive   = true
 }
 
 variable "openclaw_users" {
   description = "List of email addresses allowed to access OpenClaw"
   type        = list(string)
   default     = []
+  sensitive   = true
 }
 
 variable "grafana_users" {
   description = "List of email addresses allowed to access Grafana"
   type        = list(string)
   default     = []
+  sensitive   = true
 }
 
 variable "greenhouse_users" {
   description = "List of email addresses allowed to access Greenhouse"
   type        = list(string)
   default     = []
+  sensitive   = true
 }
 
 variable "code_users" {
   description = "List of email addresses allowed to access the Code dev environment (CloudCLI). Shell-equivalent access — keep this list minimal."
   type        = list(string)
   default     = []
+  sensitive   = true
 }
 
 variable "crm_users" {
   description = "List of email addresses allowed to access the Twenty CRM UI (owner + sales staff)"
   type        = list(string)
   default     = []
+  sensitive   = true
 }
 
 variable "calibre_users" {
   description = "List of email addresses allowed to access the Calibre-Web-Automated UI"
   type        = list(string)
   default     = []
+  sensitive   = true
 }
 
 # ============================================================================

@@ -22,7 +22,7 @@ export interface Env {
 
   // --- vars (non-secret) ---
   SERVICE_NAME: string;
-  /** Full upstream MCP endpoint, e.g. https://greenhouse.giocaizzi.xyz/mcp */
+  /** Full upstream MCP endpoint, e.g. https://greenhouse.<domain>/mcp */
   UPSTREAM_URL: string;
   /** Authorization scheme for UPSTREAM_BEARER; defaults to "Bearer" (Langfuse: "Basic"). */
   UPSTREAM_AUTH_SCHEME?: string;
