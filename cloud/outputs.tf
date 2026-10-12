@@ -16,56 +16,67 @@ output "tunnel_id" {
 output "n8n_url" {
   description = "The public URL for N8N"
   value       = "https://n8n.${var.zone_name}"
+  sensitive   = true
 }
 
 output "portainer_url" {
   description = "The public URL for Portainer"
   value       = "https://portainer.${var.zone_name}"
+  sensitive   = true
 }
 
 output "backrest_url" {
   description = "The public URL for Backrest"
   value       = "https://backrest.${var.zone_name}"
+  sensitive   = true
 }
 
 output "firefly_url" {
   description = "The public URL for Firefly III"
   value       = "https://firefly.${var.zone_name}"
+  sensitive   = true
 }
 
 output "openclaw_url" {
   description = "The public URL for OpenClaw"
   value       = "https://openclaw.${var.zone_name}"
+  sensitive   = true
 }
 
 output "grafana_url" {
   description = "The public URL for Grafana"
   value       = "https://grafana.${var.zone_name}"
+  sensitive   = true
 }
 
 output "ntfy_url" {
   description = "The public URL for ntfy"
   value       = "https://ntfy.${var.zone_name}"
+  sensitive   = true
 }
 
 output "greenhouse_url" {
   description = "The public URL for Greenhouse"
   value       = "https://greenhouse.${var.zone_name}"
+  sensitive   = true
 }
 
 output "code_url" {
   description = "The public URL for the Code dev environment (CloudCLI)"
   value       = "https://code.${var.zone_name}"
+  sensitive   = true
 }
 
 output "crm_url" {
   description = "The public URL for Twenty CRM (SERVER_URL)"
   value       = "https://crm.${var.zone_name}"
+  sensitive   = true
 }
 
 output "calibre_url" {
   description = "The public URL for Calibre-Web-Automated"
   value       = "https://calibre.${var.zone_name}"
+  sensitive   = true
 }
 
 # ============================================================================
@@ -159,6 +170,7 @@ output "external_crm_api_client_secret" {
 output "otel_ingest_url" {
   description = "Public OTLP HTTP endpoint (set as OTEL_EXPORTER_OTLP_ENDPOINT)"
   value       = "https://otel.${var.zone_name}"
+  sensitive   = true
 }
 
 output "otel_ingest_client_id" {

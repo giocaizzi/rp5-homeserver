@@ -906,16 +906,6 @@ resource "cloudflare_zero_trust_access_policy" "external_crm_api_bypass" {
   ]
 }
 
-moved {
-  from = cloudflare_zero_trust_access_service_token.ticky_crm_api
-  to   = cloudflare_zero_trust_access_service_token.external_crm_api
-}
-
-moved {
-  from = cloudflare_zero_trust_access_policy.ticky_crm_api_bypass
-  to   = cloudflare_zero_trust_access_policy.external_crm_api_bypass
-}
-
 resource "cloudflare_zero_trust_access_application" "crm_api_policy" {
   account_id = var.cloudflare_account_id
   type       = "self_hosted"
