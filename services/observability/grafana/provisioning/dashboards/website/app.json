@@ -130,7 +130,7 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "rate(http_server_duration_milliseconds_count{service_namespace=\"giocaizzi-xyz\", service_name=\"giocaizzi-xyz\"}[5m])",
+          "expr": "rate(http_server_duration_milliseconds_count{service_namespace=\"$namespace\", service_name=\"$service\"}[5m])",
           "legendFormat": "{{http_method}} {{http_route}}",
           "refId": "A"
         }
@@ -221,7 +221,7 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "histogram_quantile(0.50, sum(rate(http_server_duration_milliseconds_bucket{service_namespace=\"giocaizzi-xyz\", service_name=\"giocaizzi-xyz\"}[5m])) by (le, http_route))",
+          "expr": "histogram_quantile(0.50, sum(rate(http_server_duration_milliseconds_bucket{service_namespace=\"$namespace\", service_name=\"$service\"}[5m])) by (le, http_route))",
           "legendFormat": "p50 {{http_route}}",
           "refId": "A"
         },
@@ -230,7 +230,7 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_duration_milliseconds_bucket{service_namespace=\"giocaizzi-xyz\", service_name=\"giocaizzi-xyz\"}[5m])) by (le, http_route))",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_duration_milliseconds_bucket{service_namespace=\"$namespace\", service_name=\"$service\"}[5m])) by (le, http_route))",
           "legendFormat": "p95 {{http_route}}",
           "refId": "B"
         },
@@ -239,7 +239,7 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "histogram_quantile(0.99, sum(rate(http_server_duration_milliseconds_bucket{service_namespace=\"giocaizzi-xyz\", service_name=\"giocaizzi-xyz\"}[5m])) by (le, http_route))",
+          "expr": "histogram_quantile(0.99, sum(rate(http_server_duration_milliseconds_bucket{service_namespace=\"$namespace\", service_name=\"$service\"}[5m])) by (le, http_route))",
           "legendFormat": "p99 {{http_route}}",
           "refId": "C"
         }
@@ -297,7 +297,7 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "sum(rate(http_server_duration_milliseconds_count{service_namespace=\"giocaizzi-xyz\", service_name=\"giocaizzi-xyz\"}[5m]))",
+          "expr": "sum(rate(http_server_duration_milliseconds_count{service_namespace=\"$namespace\", service_name=\"$service\"}[5m]))",
           "refId": "A"
         }
       ],
@@ -362,7 +362,7 @@
             "type": "prometheus",
             "uid": "${datasource_prometheus}"
           },
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_duration_milliseconds_bucket{service_namespace=\"giocaizzi-xyz\", service_name=\"giocaizzi-xyz\"}[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_duration_milliseconds_bucket{service_namespace=\"$namespace\", service_name=\"$service\"}[5m])) by (le))",
           "refId": "A"
         }
       ],
@@ -913,7 +913,7 @@
             "type": "loki",
             "uid": "${datasource_loki}"
           },
-          "expr": "{service_namespace=\"giocaizzi-xyz\", service_name=\"giocaizzi-xyz\"}",
+          "expr": "{service_namespace=\"$namespace\", service_name=\"$service\"}",
           "refId": "A"
         }
       ],
@@ -924,7 +924,7 @@
   "refresh": "10s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["giocaizzi-xyz", "nextjs", "app"],
+  "tags": ["website", "nextjs", "app"],
   "templating": {
     "list": [
       {
@@ -960,6 +960,50 @@
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource_prometheus}"
+        },
+        "definition": "label_values(http_server_duration_milliseconds_count, service_namespace)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Namespace",
+        "multi": false,
+        "name": "namespace",
+        "options": [],
+        "query": {
+          "query": "label_values(http_server_duration_milliseconds_count, service_namespace)",
+          "refId": "namespace"
+        },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource_prometheus}"
+        },
+        "definition": "label_values(http_server_duration_milliseconds_count{service_namespace=\"$namespace\"}, service_name)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Service",
+        "multi": false,
+        "name": "service",
+        "options": [],
+        "query": {
+          "query": "label_values(http_server_duration_milliseconds_count{service_namespace=\"$namespace\"}, service_name)",
+          "refId": "service"
+        },
+        "refresh": 2,
+        "regex": "",
+        "sort": 1,
+        "type": "query"
       }
     ]
   },
