@@ -8,9 +8,9 @@
 # envs (one Worker `mcp-connector-<env>` each). Code-only deploy: per-env secrets
 # (UPSTREAM_BEARER, CF_ACCESS_*, Google OAuth) were set once by
 # workers/mcp-connector/deploy.sh and persist across deploys. wrangler.jsonc holds
-# placeholders: the domain (repo var CLOUDFLARE_ZONE_NAME) and the KV ids (vars
-# KV_ID_<ENV> on this environment) are rendered in by render-config.sh and masked
-# in the logs. Runs on GitHub-hosted runners (Cloudflare API, not the Pi).
+# placeholders (domain, login allowlist, KV ids) rendered by render-config.sh from
+# secrets on this environment (DOMAIN, ALLOWED_EMAILS, KV_ID_<ENV>), so the values
+# are masked in the logs. Runs on GitHub-hosted runners (Cloudflare API, not the Pi).
 #
 # The `cloudflare-workers` environment holds secrets CLOUDFLARE_API_TOKEN
 # (Workers Scripts:Edit, scoped to the account) and CLOUDFLARE_ACCOUNT_ID, and
@@ -63,20 +63,19 @@ jobs:
       - run: npm run typecheck
 
       - name: Render wrangler config
+        # Secrets, not variables: secret values are masked everywhere in the log,
+        # including this step's env header.
         env:
-          DOMAIN: ${{ vars.CLOUDFLARE_ZONE_NAME }}
-          KV_ID_GREENHOUSE: ${{ vars.KV_ID_GREENHOUSE }}
-          KV_ID_FIREFLY: ${{ vars.KV_ID_FIREFLY }}
-          KV_ID_N8N: ${{ vars.KV_ID_N8N }}
-          KV_ID_GRAFANA: ${{ vars.KV_ID_GRAFANA }}
-          KV_ID_NETDATA: ${{ vars.KV_ID_NETDATA }}
-          KV_ID_PORTAINER: ${{ vars.KV_ID_PORTAINER }}
-          KV_ID_LANGFUSE: ${{ vars.KV_ID_LANGFUSE }}
-        run: |
-          for n in DOMAIN KV_ID_GREENHOUSE KV_ID_FIREFLY KV_ID_N8N KV_ID_GRAFANA KV_ID_NETDATA KV_ID_PORTAINER KV_ID_LANGFUSE; do
-            [ -n "${!n}" ] && echo "::add-mask::${!n}"
-          done
-          ./render-config.sh
+          DOMAIN: ${{ secrets.DOMAIN }}
+          ALLOWED_EMAILS: ${{ secrets.ALLOWED_EMAILS }}
+          KV_ID_GREENHOUSE: ${{ secrets.KV_ID_GREENHOUSE }}
+          KV_ID_FIREFLY: ${{ secrets.KV_ID_FIREFLY }}
+          KV_ID_N8N: ${{ secrets.KV_ID_N8N }}
+          KV_ID_GRAFANA: ${{ secrets.KV_ID_GRAFANA }}
+          KV_ID_NETDATA: ${{ secrets.KV_ID_NETDATA }}
+          KV_ID_PORTAINER: ${{ secrets.KV_ID_PORTAINER }}
+          KV_ID_LANGFUSE: ${{ secrets.KV_ID_LANGFUSE }}
+        run: ./render-config.sh
 
       - name: Deploy Worker
         # Single-env manual runs skip the other matrix legs.

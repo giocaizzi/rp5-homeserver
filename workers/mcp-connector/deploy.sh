@@ -13,7 +13,8 @@
 # `terraform output` (cloud/), so you never handle them. You are prompted only
 # for the Google client creds (shared) and each service's UPSTREAM_BEARER.
 #
-# Needs gh (authenticated) for the domain and KV id variables.
+# Needs DOMAIN, ALLOWED_EMAILS and KV_ID_<ENV> exported (see below); gh only to
+# store the id of a newly created KV namespace.
 #
 # Idempotent: re-runnable. KV namespaces are created once; secrets you skip
 # (press Enter) are left unchanged.
@@ -55,20 +56,23 @@ if [ -n "$GOOGLE_ID" ]; then
   read -rsp "Google OAuth Client secret: " GOOGLE_SECRET; echo
 fi
 
-# Placeholders in wrangler.jsonc: the domain comes from the repo variable
-# CLOUDFLARE_ZONE_NAME, each KV id from KV_ID_<ENV> on the cloudflare-workers
-# environment (created here on first run). Values are never printed.
-export DOMAIN="${DOMAIN:-$(gh variable get CLOUDFLARE_ZONE_NAME)}"
+# Placeholders in wrangler.jsonc are rendered from the environment. CI reads them
+# from secrets on the cloudflare-workers environment; locally export them first:
+#   DOMAIN, ALLOWED_EMAILS and KV_ID_<ENV> (ids: `npx wrangler kv namespace list`).
+# A missing KV_ID_<ENV> creates the namespace and stores its id as that secret.
+# Values are never printed.
+: "${DOMAIN:?export DOMAIN (the public zone)}"
+: "${ALLOWED_EMAILS:?export ALLOWED_EMAILS (comma-separated login allowlist)}"
+export DOMAIN ALLOWED_EMAILS
 for env in "${ENVS[@]}"; do
   var="KV_ID_$(echo "$env" | tr '[:lower:]' '[:upper:]')"
-  [ -n "${!var:-}" ] || printf -v "$var" '%s' "$(gh variable get "$var" --env cloudflare-workers 2>/dev/null || true)"
-  if [ -z "${!var}" ]; then
-    echo "=== $env: creating KV namespace..."
+  if [ -z "${!var:-}" ]; then
+    echo "=== $env: creating KV namespace (export $var if it already exists)..."
     id=$(npx wrangler kv namespace create OAUTH_KV --env "$env" 2>&1 | grep -oiE '[a-f0-9]{32}' | head -1)
     [ -n "$id" ] || { echo "  KV create failed"; exit 1; }
-    printf '%s' "$id" | gh variable set "$var" --env cloudflare-workers >/dev/null
+    printf '%s' "$id" | gh secret set "$var" --env cloudflare-workers >/dev/null
     printf -v "$var" '%s' "$id"
-    echo "  stored as $var on the cloudflare-workers environment"
+    echo "  stored as secret $var on the cloudflare-workers environment"
   fi
   export "${var?}"
 done

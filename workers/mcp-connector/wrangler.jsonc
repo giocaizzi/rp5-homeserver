@@ -4,10 +4,9 @@
 	// (one Worker per upstream MCP server) via wrangler environments.
 	//
 	// Each env gets its own workers.dev hostname, its own KV namespace, and its
-	// own secrets. ${DOMAIN} and ${KV_ID_<ENV>} are placeholders, rendered at deploy
-	// time from GitHub variables (CLOUDFLARE_ZONE_NAME; KV_ID_<ENV> on the
-	// cloudflare-workers environment) by deploy-workers.yml or deploy.sh. Never deploy
-	// this file unrendered.
+	// own secrets. ${DOMAIN}, ${ALLOWED_EMAILS} and ${KV_ID_<ENV>} are placeholders,
+	// rendered at deploy time from secrets on the cloudflare-workers GitHub environment
+	// by render-config.sh (deploy-workers.yml, deploy.sh). Never deploy this file unrendered.
 	"name": "mcp-connector",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-06-01",
@@ -22,7 +21,7 @@
 			"vars": {
 				"SERVICE_NAME": "Greenhouse",
 				"UPSTREAM_URL": "https://greenhouse.${DOMAIN}/mcp",
-				"ALLOWED_EMAILS": "giocaizzi@gmail.com"
+				"ALLOWED_EMAILS": "${ALLOWED_EMAILS}"
 			},
 			"kv_namespaces": [
 				{
@@ -36,7 +35,7 @@
 			"vars": {
 				"SERVICE_NAME": "Firefly III",
 				"UPSTREAM_URL": "https://firefly.${DOMAIN}/api/v1/mcp",
-				"ALLOWED_EMAILS": "giocaizzi@gmail.com"
+				"ALLOWED_EMAILS": "${ALLOWED_EMAILS}"
 			},
 			"kv_namespaces": [
 				{
@@ -50,7 +49,7 @@
 			"vars": {
 				"SERVICE_NAME": "n8n",
 				"UPSTREAM_URL": "https://n8n.${DOMAIN}/mcp-server/http",
-				"ALLOWED_EMAILS": "giocaizzi@gmail.com"
+				"ALLOWED_EMAILS": "${ALLOWED_EMAILS}"
 			},
 			"kv_namespaces": [
 				{
@@ -64,7 +63,7 @@
 			"vars": {
 				"SERVICE_NAME": "Grafana",
 				"UPSTREAM_URL": "https://grafana.${DOMAIN}/mcp",
-				"ALLOWED_EMAILS": "giocaizzi@gmail.com"
+				"ALLOWED_EMAILS": "${ALLOWED_EMAILS}"
 			},
 			"kv_namespaces": [
 				{
@@ -78,7 +77,7 @@
 			"vars": {
 				"SERVICE_NAME": "Netdata",
 				"UPSTREAM_URL": "https://netdata-mcp.${DOMAIN}/mcp",
-				"ALLOWED_EMAILS": "giocaizzi@gmail.com"
+				"ALLOWED_EMAILS": "${ALLOWED_EMAILS}"
 			},
 			"kv_namespaces": [
 				{
@@ -92,7 +91,7 @@
 			"vars": {
 				"SERVICE_NAME": "Portainer",
 				"UPSTREAM_URL": "https://portainer.${DOMAIN}/mcp",
-				"ALLOWED_EMAILS": "giocaizzi@gmail.com"
+				"ALLOWED_EMAILS": "${ALLOWED_EMAILS}"
 			},
 			"kv_namespaces": [
 				{
@@ -107,7 +106,7 @@
 				"SERVICE_NAME": "Langfuse",
 				"UPSTREAM_URL": "https://langfuse-mcp.${DOMAIN}/api/public/mcp",
 				"UPSTREAM_AUTH_SCHEME": "Basic",
-				"ALLOWED_EMAILS": "giocaizzi@gmail.com"
+				"ALLOWED_EMAILS": "${ALLOWED_EMAILS}"
 			},
 			"kv_namespaces": [
 				{
