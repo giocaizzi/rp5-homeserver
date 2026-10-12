@@ -30,7 +30,7 @@ x-security-base: &security-base
 # Shared by server + worker. Twenty has no *_FILE support, so the entrypoint
 # wrapper below builds PG_DATABASE_URL / ENCRYPTION_KEY from Swarm secrets.
 x-twenty-env: &twenty-env
-  SERVER_URL: "https://crm.giocaizzi.xyz"
+  SERVER_URL: "https://crm.${DOMAIN:?set DOMAIN in the stack env}"
   REDIS_URL: "redis://crm-redis:6379"
   STORAGE_TYPE: "local"
   PG_POOL_MAX_CONNECTIONS: "5"

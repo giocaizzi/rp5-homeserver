@@ -55,6 +55,9 @@ services:
       - "80"
     environment:
       - TZ=Europe/Rome
+      # Externally visible URL; must match the URL the apps subscribe to (iOS
+      # instant delivery keys the upstream poll request on it). ntfy.home still works on LAN.
+      - NTFY_BASE_URL=https://ntfy.${DOMAIN:?set DOMAIN in the stack env}
     volumes:
       - ./server.yml:/etc/ntfy/server.yml:ro
       - ./templates:/etc/ntfy/templates:ro
