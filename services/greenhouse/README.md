@@ -52,10 +52,20 @@ Tuya Cloud (sensors)
 | `greenhouse_mcp_token` | `openssl rand -hex 32 \| docker secret create greenhouse_mcp_token -` |
 | `greenhouse_auth_secret_key` | `openssl rand -hex 32 \| docker secret create greenhouse_auth_secret_key -` |
 | `greenhouse_auth_admin_password` | `openssl rand -base64 24 \| docker secret create greenhouse_auth_admin_password -` |
+| `greenhouse_ntfy_token` | `ntfy token add --label greenhouse alerts` in the ntfy container (see [ntfy alert topics](../ntfy/README.md#-alert-topics)) |
 
 Tuya values come from the Tuya IoT Cloud project ("Authorization Key").
 The MCP token is opaque — generate any high-entropy string and share it
 with MCP clients via `Authorization: Bearer <token>`.
+
+### Push notifications (ntfy)
+
+The server pushes automatic and manual irrigation runs and every newly opened
+warning/critical alert to the self-hosted ntfy topic `greenhouse`
+(`http://ntfy_app` over `rp5_public`). A repeat of an alert that is still open
+never pushes again. Subscribe to `greenhouse` in the ntfy app (logged in as admin).
+Mute a category in the greenhouse preferences (`notify_auto`, `notify_manual`,
+`notify_emergency`, `notify_alerts`).
 
 ### Session auth (v3.0.0+)
 
