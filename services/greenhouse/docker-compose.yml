@@ -72,6 +72,10 @@ secrets:
   auth_admin_password:
     external: true
     name: greenhouse_auth_admin_password
+  # Publisher token for the self-hosted ntfy topic `greenhouse` (user `alerts`, write-only).
+  ntfy_token:
+    external: true
+    name: greenhouse_ntfy_token
 
 # =============================================================================
 # Services
@@ -108,12 +112,17 @@ services:
       # that encrypted path fine.
       - IRRIGATION_AUTH_ENABLED=true
       - GREENHOUSE_AUTH_ADMIN_USERNAME=admin
+      # Push irrigation runs and new warning/critical alerts to the self-hosted
+      # ntfy over the shared rp5_public network (token exported below).
+      - GREENHOUSE_NTFY_SERVER_URL=http://ntfy_app
+      - GREENHOUSE_NTFY_TOPIC=greenhouse
     secrets:
       - tuya_client_id
       - tuya_client_secret
       - mcp_token
       - auth_secret_key
       - auth_admin_password
+      - ntfy_token
     # Wrap secrets into env vars before exec'ing the server entrypoint.
     # The greenhouse image reads these directly from the environment (no
     # _FILE suffix support), so we export from /run/secrets. GREENHOUSE_MCP_TOKEN
@@ -127,6 +136,7 @@ services:
         export GREENHOUSE_MCP_TOKEN=$$(cat /run/secrets/mcp_token)
         export GREENHOUSE_AUTH_SECRET_KEY=$$(cat /run/secrets/auth_secret_key)
         export GREENHOUSE_AUTH_ADMIN_PASSWORD=$$(cat /run/secrets/auth_admin_password)
+        export GREENHOUSE_NTFY_TOKEN=$$(cat /run/secrets/ntfy_token)
         exec greenhouse-server
     volumes:
       - greenhouse_data:/app/data
