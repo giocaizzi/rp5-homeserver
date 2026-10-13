@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/ntfy-v0.2.2...ntfy-v0.3.0) (2026-10-13)
+
+
+### Features
+
+* **greenhouse:** push irrigation runs and alerts to ntfy ([#360](https://github.com/giocaizzi/rp5-homeserver/issues/360)) ([453fc88](https://github.com/giocaizzi/rp5-homeserver/commit/453fc88b0d24257a0e19e7fe81af230501908946))
+
 ## [0.2.2](https://github.com/giocaizzi/rp5-homeserver/compare/ntfy-v0.2.1...ntfy-v0.2.2) (2026-10-12)
 
 
