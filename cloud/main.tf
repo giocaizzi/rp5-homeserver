@@ -573,7 +573,7 @@ resource "cloudflare_zero_trust_access_application" "code_policy" {
   ]
 }
 
-# Twenty CRM UI. Whole-host email gate; machine paths (/rest, /graphql, /mcp)
+# Twenty CRM UI. Whole-host email gate; machine paths (/rest, /mcp)
 # get their own path-scoped apps below.
 resource "cloudflare_zero_trust_access_application" "crm_policy" {
   account_id = var.cloudflare_account_id
@@ -883,9 +883,10 @@ resource "cloudflare_zero_trust_access_application" "crm_mcp_policy" {
 }
 
 # --- Twenty CRM API (external backend consumer) ---------------------------
-# An external backend calls /rest and /graphql server-to-server with this
-# service token + a Twenty API key. Email fallthrough (precedence 2) is required:
-# the Twenty UI itself calls /graphql from the browser.
+# An external backend calls /rest server-to-server with this service token + a
+# Twenty API key. /graphql stays under the UI app: the browser calls it via XHR,
+# and a separate Access app (own session) there answers with a login 302 that
+# fetch() cannot follow (CORS "Failed to fetch"). Email fallthrough kept for /rest.
 
 resource "cloudflare_zero_trust_access_service_token" "external_crm_api" {
   account_id = var.cloudflare_account_id
@@ -915,10 +916,6 @@ resource "cloudflare_zero_trust_access_application" "crm_api_policy" {
     {
       type = "public"
       uri  = "crm.${var.zone_name}/rest"
-    },
-    {
-      type = "public"
-      uri  = "crm.${var.zone_name}/graphql"
     }
   ]
 
