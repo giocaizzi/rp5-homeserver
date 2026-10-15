@@ -173,6 +173,10 @@ Distributed tracing backend for OTLP-compatible traces.
 - n8n (via OTEL SDK)
 - Custom applications with OTEL SDK
 
+**Restart log lines (#290):** shutdown is graceful (`stop_grace_period: 90s`, "Tempo stopped" in a few seconds). Expected on every restart, all benign upstream behaviour:
+- `warn` `failed to replay block. removing.` (missing `meta.json`): the empty head block cut at shutdown, discarded on replay.
+- Tempo logs three upstream races at ERROR; Alloy demotes them to `warn` (`alloy/pipelines/logs.alloy`), so they do not count as errors or trip Container Error Logs Burst: `error tailing WAL ... failed to find segment for index` (the metrics-generator wipes its WAL on start and its remote-write watcher starts before segment 0 exists, then recovers), `queue is stopped` (query-frontend stops before the querier worker), `failed listing tenant blocks: open <uuid>: no such file or directory` (poller walks `traces/` while the compactor deletes a block). `docker service logs` still shows them as `level=error`.
+
 ---
 
 ## Grafana Dashboards
@@ -232,11 +236,11 @@ Grafana's contact point and root policy are provisioned in `grafana/provisioning
 | Redis Alerts | Redis Down, Redis High Memory |
 | Exporter Health | Metrics Exporter Down |
 | Observability Stack | Loki Down, Tempo Down, Alloy Down |
-| HTTP Errors (Loki) | Nginx 5xx Error Ratio High (per vhost, >5% and ≥20 errors over 5m), Nginx Access Logs Silent (no lines for 15m), Container Error Logs Burst (>15 error lines/10m per service), Cloudflare Tunnel Origin Unreachable (>3 in 5m) |
+| HTTP Errors (Loki) | Nginx 5xx Error Ratio High (per vhost, >5% and ≥20 errors over 5m), Container Error Logs Burst (>15 error lines/10m per service), Cloudflare Tunnel Origin Unreachable (>3 in 5m) |
 
 The container-error rule relies on Alloy's regex-derived `level` label (`alloy/pipelines/logs.alloy`: `level=`, `[ERROR]`, cloudflared `ERR`, monolog `.ERROR:`, NestJS and ntfy formats). Add a pattern there when a new service logs in another format. The query excludes noisy technologies (`grafana`, `alloy`, `netdata`, `*-exporter`) and benign lines (`Unauthenticated`, `context canceled`, `unexpected EOF`). Container health/restarts are covered by Netdata, not Grafana.
 
-Alert rules are provisioned via `grafana/provisioning/alerting/rules.yaml`.
+Alert rules are provisioned via `grafana/provisioning/alerting/rules.yaml`. Removing a rule from the file does not delete it from Grafana: add its uid to `deleteRules` at the top of that file in the same change (e.g. `nginx-no-logs`, dropped in #362 because nginx is legitimately silent at night; Alloy Down / Loki Down cover a broken log pipeline).
 
 ---
 
