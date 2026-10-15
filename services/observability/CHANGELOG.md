@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.3](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.2...observability-v0.5.3) (2026-10-15)
+
+
+### Bug Fixes
+
+* **observability:** demote firefly static cron token log line to warn ([#368](https://github.com/giocaizzi/rp5-homeserver/issues/368)) ([40687c1](https://github.com/giocaizzi/rp5-homeserver/commit/40687c10d2f0cbad7cc4967218e7bf4b7278c0e7))
+
 ## [0.5.2](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.1...observability-v0.5.2) (2026-10-15)
 
 
