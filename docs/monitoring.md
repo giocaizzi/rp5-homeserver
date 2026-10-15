@@ -177,6 +177,8 @@ Distributed tracing backend for OTLP-compatible traces.
 - `warn` `failed to replay block. removing.` (missing `meta.json`): the empty head block cut at shutdown, discarded on replay.
 - Tempo logs three upstream races at ERROR; Alloy demotes them to `warn` (`alloy/pipelines/logs.alloy`), so they do not count as errors or trip Container Error Logs Burst: `error tailing WAL ... failed to find segment for index` (the metrics-generator wipes its WAL on start and its remote-write watcher starts before segment 0 exists, then recovers), `queue is stopped` (query-frontend stops before the querier worker), `failed listing tenant blocks: open <uuid>: no such file or directory` (poller walks `traces/` while the compactor deletes a block). `docker service logs` still shows them as `level=error`.
 
+**Firefly cron token line (#328):** every call to `/api/v1/cron/<STATIC_CRON_TOKEN>` (the scheduler's daily 06:00 job) logs `production.ERROR: Recognized no users by access token "<prefix>..."`. Upstream `CronController` checks the static token first, then always looks it up as a per-user command-line token, logs the miss at ERROR, and runs the cron for all users anyway. The token is valid; check the `last_rt_job_<user>` / `last_ab_job_<user>` rows in Firefly's `configuration` table to confirm the jobs ran. Alloy demotes the line to `warn` (`alloy/pipelines/logs.alloy`).
+
 ---
 
 ## Grafana Dashboards
