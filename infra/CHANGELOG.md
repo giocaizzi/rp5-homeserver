@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.4](https://github.com/giocaizzi/rp5-homeserver/compare/v1.19.3...v1.19.4) (2026-10-15)
+
+
+### Bug Fixes
+
+* **infra:** raise management-mcp memory limit to 256M ([#364](https://github.com/giocaizzi/rp5-homeserver/issues/364)) ([a16b7b7](https://github.com/giocaizzi/rp5-homeserver/commit/a16b7b70f692746ec62f9edece29412eae75f784))
+
 ## [1.19.3](https://github.com/giocaizzi/rp5-homeserver/compare/v1.19.2...v1.19.3) (2026-10-12)
 
 

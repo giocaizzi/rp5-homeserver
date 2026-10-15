@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.1...observability-v0.5.2) (2026-10-15)
+
+
+### Bug Fixes
+
+* **observability:** drop nginx silent alert and demote tempo restart races ([#366](https://github.com/giocaizzi/rp5-homeserver/issues/366)) ([2beb20a](https://github.com/giocaizzi/rp5-homeserver/commit/2beb20a813c5c8067e60d6fe362a36f0caff6520))
+
 ## [0.5.1](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.0...observability-v0.5.1) (2026-10-12)
 
 
