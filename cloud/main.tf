@@ -855,29 +855,6 @@ resource "cloudflare_zero_trust_access_policy" "crm_mcp_bypass" {
   ]
 }
 
-# Retired shared-key path (mcp-connector Worker). Kept one apply so the app
-# drops its reference before deletion: Cloudflare refuses to delete a policy
-# still attached to an app (409), and Terraform doesn't order that destroy
-# after the app update. Delete in a follow-up PR.
-resource "cloudflare_zero_trust_access_service_token" "claude_crm_mcp" {
-  account_id = var.cloudflare_account_id
-  name       = "claude-crm-mcp"
-}
-
-resource "cloudflare_zero_trust_access_policy" "claude_crm_mcp_bypass" {
-  account_id = var.cloudflare_account_id
-  name       = "claude-crm-mcp-bypass"
-  decision   = "bypass"
-
-  include = [
-    {
-      service_token = {
-        token_id = cloudflare_zero_trust_access_service_token.claude_crm_mcp.id
-      }
-    }
-  ]
-}
-
 resource "cloudflare_zero_trust_access_application" "crm_mcp_policy" {
   account_id = var.cloudflare_account_id
   type       = "self_hosted"
