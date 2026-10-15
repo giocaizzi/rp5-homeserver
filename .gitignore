@@ -32,3 +32,11 @@ Thumbs.db
 # .claude/settings.json holds shared config; this file is local-only.
 .claude/settings.local.json
 
+# AI coding agents: personal and machine state (shared config is tracked)
+.claude/agent-memory-local/
+CLAUDE.local.md
+.github/copilot/settings.local.json
+.opencode/node_modules/
+.opencode/plans/
+.pi/npm/
+.pi/git/
