@@ -834,26 +834,23 @@ resource "cloudflare_zero_trust_access_application" "greenhouse_mcp_policy" {
   ]
 }
 
-# --- Twenty CRM MCP -------------------------------------------------------
-# Same shape as greenhouse: service-token bypass for the mcp-connector Worker,
-# email fallthrough so a browser session still works. Twenty API key (Bearer)
-# is the second factor.
+# --- Twenty CRM MCP (per-user OAuth) --------------------------------------
+# claude.ai talks to Twenty's built-in OAuth 2.1 server directly, so each user
+# acts as their own workspace member. claude.ai's backend calls these paths
+# without Access credentials, so Access is bypassed for Anthropic's egress IPs only; Twenty's OAuth
+# (bearer on /mcp, DCR + token endpoints) is the gate. The /authorize page is
+# a UI route and stays behind the crm_users email gate (browser popup).
 
-resource "cloudflare_zero_trust_access_service_token" "claude_crm_mcp" {
+resource "cloudflare_zero_trust_access_policy" "crm_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-crm-mcp"
-}
-
-resource "cloudflare_zero_trust_access_policy" "claude_crm_mcp_bypass" {
-  account_id = var.cloudflare_account_id
-  name       = "claude-crm-mcp-bypass"
+  name       = "crm-mcp-bypass"
   decision   = "bypass"
 
+  # Anthropic's published outbound range (MCP tool calls from claude.ai):
+  # https://platform.claude.com/docs/en/api/ip-addresses
   include = [
     {
-      service_token = {
-        token_id = cloudflare_zero_trust_access_service_token.claude_crm_mcp.id
-      }
+      ip = { ip = "160.79.104.0/21" }
     }
   ]
 }
@@ -864,20 +861,16 @@ resource "cloudflare_zero_trust_access_application" "crm_mcp_policy" {
   name       = "crm-mcp.${var.zone_name}"
 
   destinations = [
-    {
-      type = "public"
-      uri  = "crm.${var.zone_name}/mcp"
-    }
+    { type = "public", uri = "crm.${var.zone_name}/mcp" },
+    { type = "public", uri = "crm.${var.zone_name}/oauth" },
+    { type = "public", uri = "crm.${var.zone_name}/.well-known/oauth-protected-resource" },
+    { type = "public", uri = "crm.${var.zone_name}/.well-known/oauth-authorization-server" },
   ]
 
   policies = [
     {
-      id         = cloudflare_zero_trust_access_policy.claude_crm_mcp_bypass.id
+      id         = cloudflare_zero_trust_access_policy.crm_mcp_bypass.id
       precedence = 1
-    },
-    {
-      id         = cloudflare_zero_trust_access_policy.crm_users.id
-      precedence = 2
     }
   ]
 }

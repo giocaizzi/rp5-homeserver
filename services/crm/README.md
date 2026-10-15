@@ -12,7 +12,7 @@
 2. Deploy via Portainer → Swarm mode (Remote Stack from this repo, stack name `crm`, GitOps **Webhook**).
 3. Wait for first-boot migrations (`docker service logs -f crm_server`), then open `https://crm.<domain>`, create the owner account + workspace.
 4. Invite sales users from Settings → Members (they also need to be in the `CRM_USERS` CF Access list).
-5. Create API keys in Settings → APIs & Webhooks (one per consumer: external backend, MCP connector).
+5. Create API keys in Settings → APIs & Webhooks for machine consumers (external backend). MCP needs no key: each user signs in via OAuth.
 
 ---
 
@@ -39,7 +39,7 @@ Cloudflare Access ─► nginx ─► crm-server ─┬─► crm-db
 |------|------|
 | `/` (UI, incl. `/graphql`) | CF Access email allowlist (`CRM_USERS`) + Twenty login |
 | `/rest` | CF Access service token `external-crm-api` + Twenty API key (Bearer) |
-| `/mcp` | CF Access service token `claude-crm-mcp` (injected by `workers/mcp-connector`) + Twenty API key (Bearer) |
+| `/mcp`, `/oauth/*`, `/.well-known/oauth-*` | CF Access bypass for Anthropic egress IPs only (`160.79.104.0/21`); Twenty's built-in OAuth 2.1 (per-user token). `/authorize` stays behind the email allowlist |
 
 **Pi tuning:** memory limits server 1G / worker 1G / db 256M / redis 64M (~2.3G cap; Node heaps 768M each), Node heaps capped via `NODE_OPTIONS`, `PG_POOL_MAX_CONNECTIONS=5`, telemetry off. First boot (DB init + upgrade) is the memory peak — if `crm_server` is OOM-killed there, temporarily raise its limit.
 
@@ -86,3 +86,13 @@ Backed up by Backrest (restic, encrypted) with the rest of `/var/lib/docker/volu
 ```bash
 docker exec $(docker ps -qf name=crm_db) pg_dump -U twenty -Fc twenty > crm-$(date +%F).dump
 ```
+
+## MCP (per user)
+
+Each user connects as their own Twenty workspace member, so MCP calls carry that user's role and attribution.
+
+1. Be in `CRM_USERS` (Cloudflare Access) and a member of the Twenty workspace.
+2. claude.ai → Settings → Connectors → Add custom connector → `https://crm.<domain>/mcp`.
+3. Connect: claude.ai registers itself (`/oauth/register`) and opens Twenty's `/authorize` page; sign in to Access and Twenty, approve.
+4. Revoke: remove the connector in claude.ai (the token is revoked via `/oauth/revoke`).
+
