@@ -258,6 +258,13 @@ Alert rules are provisioned via `grafana/provisioning/alerting/rules.yaml`. Remo
 2. Check Tempo is receiving data: `curl http://observability-trace-store:3200/ready`
 3. Check Alloy OTLP receiver: `curl http://observability-collector:12345/metrics`
 
+**Host `oom_kill` / `30min_ram_swapped_out` alerts (Netdata):**
+1. Find who was killed: `ssh pi.local 'journalctl -k --since -2d | grep "Memory cgroup out of memory"'`. `constraint=CONSTRAINT_MEMCG` means one container hit its own `deploy.resources.limits.memory` (raise that limit); `CONSTRAINT_NONE` means the host ran out of RAM.
+2. Find which containers sit at their limit: `grep '^max' /sys/fs/cgroup/system.slice/docker-<id>.scope/memory.events` counts limit hits; `memory.swap.current` in the same folder shows how much of the container is swapped out.
+3. A container thrashing at its limit swaps in and out heavily, which also raises `30min_ram_swapped_out`; fix the limit first, the swap alert follows.
+
+Host swap baseline (not managed by this repo): zram `/dev/zram0` 2 GiB (priority 100) plus `/swapfile` 16 GiB (priority -2), `vm.swappiness=60`. Check with `cat /proc/swaps /proc/sys/vm/swappiness`.
+
 **High memory usage:**
 - Reduce Loki retention period
 - Adjust Prometheus scrape intervals
