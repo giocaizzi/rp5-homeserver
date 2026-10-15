@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.5](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.4...crm-v0.2.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* **cloud:** keep crm /graphql under the ui access app ([#371](https://github.com/giocaizzi/rp5-homeserver/issues/371)) ([506c37c](https://github.com/giocaizzi/rp5-homeserver/commit/506c37c934ab330471306b3683217da06124301f))
+* **crm:** log only errors and warnings from twenty ([#370](https://github.com/giocaizzi/rp5-homeserver/issues/370)) ([5c9f3be](https://github.com/giocaizzi/rp5-homeserver/commit/5c9f3be3dfd8479a0eafc0eb45eabe473c1572e1))
+
 ## [0.2.4](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.3...crm-v0.2.4) (2026-10-12)
 
 
