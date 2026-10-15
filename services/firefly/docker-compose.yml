@@ -55,6 +55,9 @@ services:
     image: ghcr.io/giocaizzi/firefly-iii:mcp
     hostname: firefly-app
     stop_grace_period: 30s # default 10s SIGKILLs (exit 137) in-flight requests on update (#316)
+    # Image STOPSIGNAL is SIGQUIT, a no-op for s6-svscan (PID 1) -> always SIGKILLed (137).
+    # SIGTERM runs s6 shutdown. No init: true, s6-overlay must be PID 1 (#316)
+    stop_signal: SIGTERM
     expose:
       - "8080"
     environment:
@@ -189,6 +192,7 @@ services:
   db-exporter:
     image: prom/mysqld-exporter:latest
     hostname: firefly-db-exporter
+    init: true # Go binary as PID 1 can't die from SIGTERM and exits 2 (#316)
     expose:
       - "9104"
     secrets:
@@ -230,6 +234,7 @@ services:
     image: fireflyiii/data-importer:version-2   # major-pinned (see #185)
     hostname: firefly-importer
     stop_grace_period: 30s # default 10s SIGKILLs (exit 137) in-flight imports on update (#316)
+    stop_signal: SIGTERM # image SIGQUIT is ignored by s6-svscan; see app (#316)
     expose:
       - "8080"
     environment:
@@ -310,6 +315,7 @@ services:
   scheduler:
     image: python:3.13-alpine
     hostname: firefly-scheduler
+    init: true # crond as PID 1 ignores SIGTERM -> SIGKILL (137) on stop (#316)
     environment:
       - TZ=Europe/Rome
       # Firefly account ids for cc_monthly_reconcile.py, from the stack env
