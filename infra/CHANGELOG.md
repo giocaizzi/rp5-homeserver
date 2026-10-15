@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.5](https://github.com/giocaizzi/rp5-homeserver/compare/v1.19.4...v1.19.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* **infra:** stop proxy and monitoring cleanly on update ([#374](https://github.com/giocaizzi/rp5-homeserver/issues/374)) ([315e7dd](https://github.com/giocaizzi/rp5-homeserver/commit/315e7dd9bf8be8b72d2c0e8b597c96ae39da944b))
+
 ## [1.19.4](https://github.com/giocaizzi/rp5-homeserver/compare/v1.19.3...v1.19.4) (2026-10-15)
 
 

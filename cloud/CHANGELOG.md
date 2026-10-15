@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.6.1...cloud-v0.6.2) (2026-10-15)
+
+
+### Bug Fixes
+
+* **cloud:** keep crm /graphql under the ui access app ([#371](https://github.com/giocaizzi/rp5-homeserver/issues/371)) ([506c37c](https://github.com/giocaizzi/rp5-homeserver/commit/506c37c934ab330471306b3683217da06124301f))
+
 ## [0.6.1](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.6.0...cloud-v0.6.1) (2026-10-12)
 
 
