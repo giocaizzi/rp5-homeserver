@@ -12,19 +12,41 @@
  *   - /mcp is token-protected and reverse-proxied to the self-hosted upstream.
  */
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
+import type { Env } from "./env";
 import { GoogleHandler } from "./google-handler";
 import { proxyHandler } from "./proxy";
 
-export default new OAuthProvider({
-  apiRoute: "/mcp",
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  apiHandler: proxyHandler as any,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  defaultHandler: GoogleHandler as any,
-  authorizeEndpoint: "/authorize",
-  tokenEndpoint: "/token",
-  // Claude.ai self-registers via Dynamic Client Registration (RFC 7591).
-  clientRegistrationEndpoint: "/register",
-  // Claude.ai requires PKCE S256; reject the weaker `plain` method.
-  allowPlainPKCE: false,
-});
+// 1.x needs the canonical resource (every token's audience) at construction.
+// One codebase serves several envs on distinct workers.dev hosts, so build the
+// provider per origin. `${origin}/mcp` is what 0.x advertised, hence what the
+// existing grants carry: changing it signs every user out (#254).
+const providers = new Map<string, OAuthProvider<Env>>();
+
+function providerFor(origin: string): OAuthProvider<Env> {
+  let p = providers.get(origin);
+  if (!p) {
+    p = new OAuthProvider<Env>({
+      apiRoute: "/mcp",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      apiHandler: proxyHandler as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      defaultHandler: GoogleHandler as any,
+      authorizeEndpoint: "/authorize",
+      tokenEndpoint: "/token",
+      // Claude.ai self-registers via Dynamic Client Registration (RFC 7591).
+      clientRegistrationEndpoint: "/register",
+      resourceMetadata: {
+        resource: `${origin}/mcp`,
+        authorization_servers: [origin],
+      },
+    });
+    providers.set(origin, p);
+  }
+  return p;
+}
+
+export default {
+  fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    return providerFor(new URL(request.url).origin).fetch(request, env, ctx);
+  },
+};
