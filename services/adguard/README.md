@@ -63,11 +63,7 @@ On first access, complete the wizard with these settings:
 Create admin username and strong password.
 
 ### Step 4: Upstream DNS
-| Provider | Address |
-|----------|---------|
-| Cloudflare | `1.1.1.1` |
-| Google | `8.8.8.8` |
-| Quad9 | `9.9.9.9` (privacy) |
+Set the upstreams from the [Configuration](#️-configuration) baseline below.
 
 ---
 
@@ -78,9 +74,15 @@ Runtime settings live in `AdGuardHome.yaml` (`adguard_conf` volume) and are mana
 | Setting | Value |
 |---------|-------|
 | Global protection | Enabled |
+| Upstream DNS | DoH `https://dns.quad9.net/dns-query` + `https://cloudflare-dns.com/dns-query` |
+| Upstream mode | **Parallel requests** (`upstream_mode: parallel`): first answer wins, a failing upstream doesn't stall queries |
+| Bootstrap DNS | `9.9.9.9`, `149.112.112.112`, `1.1.1.1`, `1.0.0.1` (plain IPs resolve the DoH hostnames) |
+| Fallback DNS | none |
 | Blocklists (enabled) | **AdGuard DNS filter** (`filter_1`) + **HaGeZi's Pro** (`filter_48`), ~405k rules |
 | Blocklists (disabled) | All other registry lists (nested HaGeZi/OISD/1Hosts supersets and small overlapping hosts lists) — kept but disabled |
 | Query log retention | 7 days (`querylog.interval: 7d`) |
+
+Upstreams were moved off `dns10.quad9.net` (single upstream, load-balance mode), whose DoH endpoint dropped connections (`unexpected EOF` errors in `adguard_dns` logs, firing the Grafana "Container Error Logs Burst" alert; #274). Change them in the UI (Settings → DNS settings, "Test upstreams" first) or `POST /control/dns_config` (admin basic auth; the password is the infra secret `adguard_password`).
 
 Keep the blocklist set non-overlapping: stacking supersets multiplies memory use (16 lists / 2.5M rules peaked at ~865 MB RSS) without blocking much more. Memory limit (`512M`) is sized against the 2-list baseline (~165 MB steady).
 
