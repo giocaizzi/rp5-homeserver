@@ -54,6 +54,10 @@ services:
   proxy:
     image: nginx:1-alpine   # major-pinned (see #185)
     hostname: infra-proxy
+    # Image STOPSIGNAL SIGQUIT = graceful shutdown, which waits on long-lived
+    # MCP/SSE connections; bounded by worker_shutdown_timeout 20s in nginx.conf.
+    # Default 10s grace SIGKILLed it (exit 137) on updates (#373)
+    stop_grace_period: 30s
     ports:
       - "80:80"     # HTTP
       - "443:443"   # HTTPS
@@ -239,6 +243,7 @@ services:
   monitoring:
     image: netdata/netdata:v2   # major-pinned stable; :latest is nightly (see #185)
     hostname: infra-monitoring
+    stop_grace_period: 60s # netdata saves its DB on exit; default 10s SIGKILLed it (exit 137) on updates (#373)
     # pid: host  # UNSUPPORTED in Swarm - would be needed for per-container cgroups
     expose:
       - "19999"
