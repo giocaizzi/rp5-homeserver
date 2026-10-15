@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.5...crm-v0.3.0) (2026-10-15)
+
+
+### Features
+
+* **cloud:** allow per-user oauth for crm mcp ([#375](https://github.com/giocaizzi/rp5-homeserver/issues/375)) ([16f3028](https://github.com/giocaizzi/rp5-homeserver/commit/16f30288718ed860b17f9a3ba762787edd712abd))
+
 ## [0.2.5](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.4...crm-v0.2.5) (2026-10-15)
 
 

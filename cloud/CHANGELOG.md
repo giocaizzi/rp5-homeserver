@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.7.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.6.2...cloud-v0.7.0) (2026-10-15)
+
+
+### Features
+
+* **cloud:** allow per-user oauth for crm mcp ([#375](https://github.com/giocaizzi/rp5-homeserver/issues/375)) ([16f3028](https://github.com/giocaizzi/rp5-homeserver/commit/16f30288718ed860b17f9a3ba762787edd712abd))
+
+
+### Bug Fixes
+
+* **cloud:** delete the retired crm mcp service token and policy ([#378](https://github.com/giocaizzi/rp5-homeserver/issues/378)) ([15a3942](https://github.com/giocaizzi/rp5-homeserver/commit/15a3942310e181bb20453c8bf7ece09c5b7b7013))
+* **cloud:** unblock crm mcp apply by retiring the old policy in two steps ([#377](https://github.com/giocaizzi/rp5-homeserver/issues/377)) ([8872af8](https://github.com/giocaizzi/rp5-homeserver/commit/8872af8401aca106c1ce69c0d7a2d47ee85a37c1))
+
 ## [0.6.2](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.6.1...cloud-v0.6.2) (2026-10-15)
 
 

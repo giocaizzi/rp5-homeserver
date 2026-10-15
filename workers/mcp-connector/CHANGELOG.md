@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.2.4...mcp-connector-v0.2.5) (2026-10-15)
+
+
+### Code Refactoring
+
+* **mcp-connector:** migrate to workers-oauth-provider 1.x ([#379](https://github.com/giocaizzi/rp5-homeserver/issues/379)) ([a2f3bf7](https://github.com/giocaizzi/rp5-homeserver/commit/a2f3bf772533de8de51ccdfcaddcf657c64db229))
+
 ## [0.2.4](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.2.3...mcp-connector-v0.2.4) (2026-10-12)
 
 
