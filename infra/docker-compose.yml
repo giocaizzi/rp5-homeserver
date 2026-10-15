@@ -195,7 +195,9 @@ services:
         com.giocaizzi.tier: "extra"
       resources:
         limits:
-          memory: 128M
+          # Python (fastmcp) process: ~140 MiB anon + ~70 MiB reclaimable slab at steady state;
+          # 128M OOM-killed it at startup (#303).
+          memory: 256M
     logging:
       <<: *logging-base
 
