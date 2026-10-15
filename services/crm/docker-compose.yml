@@ -35,6 +35,7 @@ x-twenty-env: &twenty-env
   STORAGE_TYPE: "local"
   PG_POOL_MAX_CONNECTIONS: "5"
   TELEMETRY_ENABLED: "false"
+  LOG_LEVELS: "error,warn"             # default adds "log": ~28k cron lines/day
 
 # Wraps the original /app/entrypoint.sh (migrations + cron registration),
 # then execs the service command passed as args.
