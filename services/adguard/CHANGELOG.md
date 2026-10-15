@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/giocaizzi/rp5-homeserver/compare/adguard-v0.2.2...adguard-v0.2.3) (2026-10-15)
+
+
+### Documentation
+
+* **adguard:** document doh upstreams in parallel mode ([#363](https://github.com/giocaizzi/rp5-homeserver/issues/363)) ([3f99b88](https://github.com/giocaizzi/rp5-homeserver/commit/3f99b88cba0b6062b4154311dc55d1bf09e8b6c8))
+
 ## [0.2.2](https://github.com/giocaizzi/rp5-homeserver/compare/adguard-v0.2.1...adguard-v0.2.2) (2026-10-12)
 
 

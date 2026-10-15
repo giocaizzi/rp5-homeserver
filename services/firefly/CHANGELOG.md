@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.8](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.7...firefly-v0.2.8) (2026-10-15)
+
+
+### Bug Fixes
+
+* **firefly:** stop tasks cleanly instead of SIGKILL on update ([#367](https://github.com/giocaizzi/rp5-homeserver/issues/367)) ([fddaec0](https://github.com/giocaizzi/rp5-homeserver/commit/fddaec0d9aa5f471f9a22b38fec8ee7eea714b34))
+
 ## [0.2.7](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.6...firefly-v0.2.7) (2026-10-12)
 
 
