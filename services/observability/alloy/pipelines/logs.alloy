@@ -224,6 +224,18 @@ declare "docker_logs" {
       }
     }
 
+    // Firefly III CronController always calls findUserByToken() on the static
+    // cron token, logging "Recognized no users by access token" at ERROR on every
+    // daily 06:00 cron, then runs the jobs for all users anyway (#328). Demoted to warn.
+    stage.match {
+      selector = "{technology=\"firefly\"} |= \"Recognized no users by access token\""
+
+      stage.template {
+        source   = "level"
+        template = "warn"
+      }
+    }
+
     // Add level as label
     stage.labels {
       values = {
