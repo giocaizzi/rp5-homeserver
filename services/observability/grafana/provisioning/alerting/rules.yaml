@@ -1,5 +1,10 @@
 apiVersion: 1
 
+# Rules dropped from this file stay in Grafana unless listed here.
+deleteRules:
+  - orgId: 1
+    uid: nginx-no-logs # #362: silent at night; alloy-down/loki-down cover a broken pipeline
+
 groups:
   # ===========================================
   # Database Alerts
@@ -488,46 +493,6 @@ groups:
         annotations:
           summary: 5xx responses on {{ $labels.vhost }}
           description: '{{ $values.B.Value | printf "%.1f" }}% of requests returned 5xx over the last 5m (threshold 5%, min 20 errors).'
-        labels:
-          severity: critical
-
-      - uid: nginx-no-logs
-        title: Nginx Access Logs Silent
-        condition: C
-        data:
-          - refId: A
-            relativeTimeRange:
-              from: 900
-              to: 0
-            datasourceUid: loki
-            model:
-              expr: sum(count_over_time({technology="nginx"}[15m]))
-              queryType: instant
-              refId: A
-          - refId: B
-            datasourceUid: __expr__
-            model:
-              expression: A
-              reducer: last
-              refId: B
-              type: reduce
-          - refId: C
-            datasourceUid: __expr__
-            model:
-              conditions:
-                - evaluator:
-                    params:
-                      - 1
-                    type: lt
-              expression: B
-              refId: C
-              type: threshold
-        noDataState: Alerting
-        execErrState: Error
-        for: 5m
-        annotations:
-          summary: No nginx access logs reaching Loki
-          description: No nginx log lines in 15m. The proxy, Alloy or Loki pipeline is broken, so 5xx alerts are blind.
         labels:
           severity: critical
 
