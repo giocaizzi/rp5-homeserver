@@ -208,6 +208,22 @@ declare "docker_logs" {
       template = "{{ if .detected_level }}{{ .detected_level }}{{ else }}info{{ end }}"
     }
 
+    // Tempo 2.10 logs benign upstream races at ERROR (#290), none fixable in config:
+    //   - startup: metrics-generator wipes its WAL, then starts the remote-write
+    //     watcher before segment 0 exists -> "failed to find segment for index" (retries, OK)
+    //   - shutdown: query-frontend stops before the querier worker -> "queue is stopped"
+    //   - local backend: poller walks traces/ while the compactor deletes a block
+    //     -> "failed listing tenant blocks: open <uuid>: no such file or directory"
+    // Demoted to warn (kept in Loki) so they don't count as errors or trip alerts.
+    stage.match {
+      selector = "{technology=\"tempo\"} |~ \"failed to find segment for index|queue is stopped|failed listing tenant blocks\""
+
+      stage.template {
+        source   = "level"
+        template = "warn"
+      }
+    }
+
     // Add level as label
     stage.labels {
       values = {
