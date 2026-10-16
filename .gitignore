@@ -19,12 +19,6 @@ Thumbs.db
 .idea/
 *.swp
 
-# Local agent-tooling shim (Portainer's git unpacker rejects symlinks).
-# Recreate locally with:
-#   ln -s AGENTS.md CLAUDE.md
-/CLAUDE.md
-/services/observability/grafana/provisioning/dashboards/CLAUDE.md
-
 # Sub-agent worktrees (created by the harness; do not track).
 .claude/worktrees/
 

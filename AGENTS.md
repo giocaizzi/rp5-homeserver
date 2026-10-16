@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file is the source of repo-specific rules for Claude Code (claude.ai/code) and other AI coding assistants. `CLAUDE.md` is a local-only symlink to this file (gitignored — Portainer's git unpacker rejects tracked symlinks).
+This file is the source of repo-specific rules for Claude Code (claude.ai/code) and other AI coding assistants.
 
 **Authoritative runbooks live in `.claude/skills/`** — load `firefly` and `openclaw-cli` before any task touching those stacks.
 
