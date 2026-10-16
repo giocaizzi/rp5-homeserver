@@ -1,8 +1,7 @@
 # AGENTS.md — Grafana dashboard authoring (Claude Code OTel)
 
 Scope: authoring/maintaining the dashboard JSON in this folder. For stack-wide
-rules (Swarm, Portainer, secrets) see the repo-root `AGENTS.md`. This file is the
-source of truth; `CLAUDE.md` is a local-only gitignored symlink to it.
+rules (Swarm, Portainer, secrets) see the repo-root `AGENTS.md`.
 
 ---
 
