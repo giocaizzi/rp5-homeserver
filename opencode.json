@@ -1,0 +1,30 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "grafana": {
+      "type": "remote",
+      "url": "https://mcp-connector-grafana.{env:MCP_CONNECTOR_ACCOUNT}.workers.dev/mcp",
+      "enabled": true
+    },
+    "greenhouse": {
+      "type": "remote",
+      "url": "https://mcp-connector-greenhouse.{env:MCP_CONNECTOR_ACCOUNT}.workers.dev/mcp",
+      "enabled": true
+    },
+    "n8n": {
+      "type": "remote",
+      "url": "https://mcp-connector-n8n.{env:MCP_CONNECTOR_ACCOUNT}.workers.dev/mcp",
+      "enabled": true
+    },
+    "netdata": {
+      "type": "remote",
+      "url": "https://mcp-connector-netdata.{env:MCP_CONNECTOR_ACCOUNT}.workers.dev/mcp",
+      "enabled": true
+    },
+    "portainer": {
+      "type": "remote",
+      "url": "https://mcp-connector-portainer.{env:MCP_CONNECTOR_ACCOUNT}.workers.dev/mcp",
+      "enabled": true
+    }
+  }
+}
