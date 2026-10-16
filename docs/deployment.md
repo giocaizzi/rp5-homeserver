@@ -15,7 +15,7 @@ Component → workflow mapping, Portainer Remote Stack mounts, infra versioning 
 
 > Portainer services use local mount cloning the repo at `/mnt`.
 
-> **No symlinks in the repo.** Portainer's git unpacker rejects any tracked symlink (`exit 255: repository contains a symlink, which is not allowed for security reasons`), blocking every Remote Stack deploy. Local-only agent shims (e.g. `CLAUDE.md` → `AGENTS.md`) must stay untracked via `.gitignore` — never `git add` a symlink.
+> **No symlinks in the repo.** Portainer's git unpacker rejects any tracked symlink (`exit 255: repository contains a symlink, which is not allowed for security reasons`), blocking every Remote Stack deploy. Never `git add` a symlink.
 
 | Mount Type | `infra/` | `services/` |
 |------------|----------|-------------|
