@@ -321,7 +321,7 @@ services:
   # Worker gate it, and callers must send Authorization: Bearer <server token>). Viewer-role
   # service account.
   mcp:
-    image: grafana/mcp-grafana:latest
+    image: grafana/mcp-grafana:2.0.2   # pinned: holds the Grafana SA token; no floating major tag, bump by hand
     hostname: observability-mcp
     environment:
       - GRAFANA_URL=http://observability-dashboard:3000
