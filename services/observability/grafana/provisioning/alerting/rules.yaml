@@ -498,3 +498,94 @@ groups:
           description: '{{ $values.B.Value | printf "%.0f" }} origin-unreachable errors in the last 5m. Public hostnames are returning 502.'
         labels:
           severity: critical
+
+  # ===========================================
+  # Agent Ops (Claude Code and guard telemetry, Loki)
+  # ===========================================
+  - orgId: 1
+    name: Agent Ops
+    folder: Alerts
+    interval: 15m
+    rules:
+      - uid: agent-telemetry-silent
+        title: Agent Telemetry Silent
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 129600
+              to: 0
+            datasourceUid: loki
+            model:
+              # 1 only when no claude-code event arrived for 36h: the laptop's
+              # OTLP export broke (endpoint, token, env) or nobody worked.
+              expr: absent_over_time({service_name="claude-code"}[36h])
+              queryType: instant
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: No Claude Code telemetry for 36h
+          description: No claude-code events reached Loki in 36h. Check the OTLP endpoint and token in the shell that launches the harness.
+        labels:
+          severity: warning
+
+      - uid: guard-deny-spike
+        title: Guard Deny Spike
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: loki
+            model:
+              # A misfiring guard rule shows up as a burst of denies.
+              expr: sum by (rule) (count_over_time({service_name="guard"} | action="deny" [1h]))
+              queryType: instant
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 10
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: Guard rule {{ $labels.rule }} denied more than 10 commands in 1h
+          description: '{{ $values.B.Value | printf "%.0f" }} denies from guard rule {{ $labels.rule }} in the last hour (threshold 10). Check for a false positive.'
+        labels:
+          severity: warning
