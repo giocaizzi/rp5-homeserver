@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.7.1...cloud-v0.8.0) (2026-10-17)
+
+
+### Features
+
+* **cloud:** add the mcp-stdio host and the fli MCP Access app ([#407](https://github.com/giocaizzi/rp5-homeserver/issues/407)) ([e4813af](https://github.com/giocaizzi/rp5-homeserver/commit/e4813af8a9f9a69d0e5c887bcf9c1044d6a07bf5))
+
 ## [0.7.1](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.7.0...cloud-v0.7.1) (2026-10-17)
 
 
