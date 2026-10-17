@@ -9,10 +9,14 @@ nginx/
 ├── nginx.conf              # Main config (global settings only)
 ├── conf.d/
 │   ├── globals.conf        # Backend map + rate limits
+│   ├── cf-access.conf      # Access JWT check: per-host flag + bypassed paths
 │   ├── defaults.conf       # Default server + HTTP redirect
 │   ├── infra.conf          # Infra services (always up)
 │   └── services/           # One <service>.conf per service (may be down)
+├── njs/
+│   └── cf_access.js        # Access JWT verifier (auth_request)
 └── snippets/
+    ├── cf-access.conf
     ├── ssl-params.conf
     ├── proxy-headers.conf
     ├── websocket-support.conf
@@ -46,6 +50,7 @@ Full stack checklist (release-please, webhook, homepage, Cloudflare): [GitOps �
 
 | Snippet | Purpose |
 |---------|---------|
+| `cf-access.conf` | Cloudflare Access JWT check via `auth_request` ([runbook](../../docs/access-jwt.md)) |
 | `ssl-params.conf` | SSL certificates and TLS config |
 | `proxy-headers.conf` | Standard proxy headers (Host, X-Real-IP, X-Forwarded-*) |
 | `websocket-support.conf` | WebSocket upgrade handling |
