@@ -715,9 +715,9 @@ resource "cloudflare_zero_trust_access_policy" "otel_ingest_bypass" {
 }
 
 # Path-scoped Access app: matches only https://otel.<zone>/v1/* (OTLP HTTP
-# paths: /v1/traces, /v1/metrics, /v1/logs). Anything else on this hostname
-# returns the default Access challenge — there is no UI to protect, but this
-# narrows the blast radius if a token leaks.
+# paths: /v1/traces, /v1/metrics, /v1/logs). Other paths on this hostname match
+# no Access app, so nginx answers them with 404 (otel.conf) instead of proxying
+# to Alloy; scoping the bypass narrows the blast radius if a token leaks.
 resource "cloudflare_zero_trust_access_application" "otel_ingest_policy" {
   account_id = var.cloudflare_account_id
   type       = "self_hosted"
