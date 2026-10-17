@@ -46,6 +46,16 @@ secrets:
   fli_api_key:
     external: true
     name: mcp-stdio_fli_api_key
+  garmin_api_key:
+    external: true
+    name: mcp-stdio_garmin_api_key
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  # Garmin OAuth tokens from `garmin-mcp-auth` (no password). Backed up by Backrest.
+  garmin_data:
 
 # =============================================================================
 # Services
@@ -53,7 +63,7 @@ secrets:
 services:
   gateway:
     # Pinned build of services/mcp-stdio (README → Build). Bump the tag on rebuild.
-    image: ghcr.io/giocaizzi/rp5-mcp-stdio:2026.10.17
+    image: ghcr.io/giocaizzi/rp5-mcp-stdio:2026.10.17.1
     hostname: mcp-stdio-gateway
     expose:
       - "8000"
@@ -61,6 +71,11 @@ services:
       - source: fli_api_key
         uid: "1000"
         mode: 0400
+      - source: garmin_api_key
+        uid: "1000"
+        mode: 0400
+    volumes:
+      - garmin_data:/home/node/.garminconnect
     networks:
       - public_network
     healthcheck:
@@ -81,8 +96,8 @@ services:
       labels:
         com.giocaizzi.tier: "extra"
       resources:
-        # ~120 MB gateway + ~135 MB per open fli session (one process each).
+        # ~120 MB gateway + ~135 MB per open fli or garmin session (one process each).
         limits:
-          memory: 1024M
+          memory: 1536M
     logging:
       <<: *logging-base

@@ -90,8 +90,8 @@ revisit mcphub only if friends need their own credentials on a shared server.
    connector in claude.ai).
 2. #396 `signed-identity`, `per-user-credential`, tool ACLs.
 3. #397 stdio stack with fli first. Built: stack, nginx route, Access app and connector
-   entry; deploy pending. Garmin next (owner only, interactive first login; see the
-   [runbook](../mcp-stdio.md#garmin-planned)).
+   entry, deployed (fli search results blocked upstream until `flights` 0.10.0, #434).
+   Garmin: owner only, interactive first login ([runbook](../mcp-stdio.md#garmin)).
 4. #398 sharing: groups, published Google client, rate limits.
 
 ## Open questions

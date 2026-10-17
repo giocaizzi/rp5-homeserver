@@ -1,0 +1,8 @@
+# Runtime dependencies of Taxuspt/garmin_mcp at the commit pinned in the
+# Dockerfile (its pyproject.toml). The package itself is not on PyPI: the
+# Dockerfile installs it from that commit with --no-deps. Re-sync on a bump.
+python-dotenv==1.2.2
+garminconnect==0.3.2
+requests==2.33.0
+mcp>=1.28.1,<2
+fitparse>=1.2.0
