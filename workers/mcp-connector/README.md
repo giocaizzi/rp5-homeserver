@@ -47,6 +47,8 @@ sequenceDiagram
     W-->>C: 401 + WWW-Authenticate (resource_metadata)
     C->>W: GET /.well-known/* , POST /register (DCR)
     C->>W: GET /authorize (PKCE S256)
+    W-->>C: consent page (client name, redirect host)
+    C->>W: POST /authorize (Allow)
     W->>G: redirect to Google login
     G->>W: GET /callback (code)
     W->>W: verify email ∈ ALLOWED_EMAILS
@@ -63,7 +65,8 @@ sequenceDiagram
 | File                | Role                                                                       |
 |---------------------|----------------------------------------------------------------------------|
 | `src/index.ts`      | Wires `OAuthProvider` (apiRoute `/mcp`, Google default handler).            |
-| `src/google-handler.ts` | `/authorize` → Google; `/callback` → email allowlist → complete auth.   |
+| `src/google-handler.ts` | `/authorize` → consent page → Google; `/callback` → email allowlist → complete auth. |
+| `src/policy.ts`     | Email allowlist and redirect-URI allowlist (Claude, VS Code, loopback).     |
 | `src/proxy.ts`      | Token-gated `/mcp` reverse proxy; injects upstream auth; streams response.  |
 | `src/env.ts`        | Typed bindings (vars + secrets + KV + OAuthProvider).                       |
 | `wrangler.jsonc`    | One `env.<service>` per upstream (name, vars, KV id placeholder).           |
@@ -77,7 +80,18 @@ sequenceDiagram
 Three independent gates protect the Pi origin; all must pass:
 
 1. **Identity (who):** OAuth login via Google, restricted to `ALLOWED_EMAILS`.
-   Only the owner can obtain a Worker access token.
+   Only the owner can obtain a Worker access token. The allowlist is checked at
+   login, on every token refresh and on every `/mcp` call, so removing an address
+   and redeploying revokes it immediately.
+   - **Consent per client:** every authorization shows a consent page (client
+     name, where the token goes, a warning for loopback) before the Google login;
+     the library's helpers bind it to the browser and forbid framing.
+   - **Redirect allowlist:** DCR and `/authorize` accept only
+     `https://claude.ai/api/mcp/auth_callback`, `https://claude.com/api/mcp/auth_callback`,
+     `https://vscode.dev/redirect` and loopback (`localhost`, `127.0.0.1`, `[::1]`)
+     callbacks (`src/policy.ts`). Without it, a phishing link to `/authorize` with
+     an attacker-registered client could mint a token for the attacker. Add a
+     client's callback there before connecting it.
 2. **Cloudflare Access (edge):** the upstream hostname sits behind a path-scoped
    Access app. The Worker carries `CF-Access-Client-Id/Secret` for a `bypass`
    policy; no one else traverses Access to the origin.
