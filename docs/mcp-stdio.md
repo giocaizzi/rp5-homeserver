@@ -50,6 +50,9 @@ Copy the `fli` block at the end of `cloud/main.tf`: service token `claude-<id>-m
 policy, path-scoped app on `mcp-stdio.${var.zone_name}/<id>/mcp`, and the two sensitive
 outputs `claude_<id>_mcp_client_id` / `_secret` in `outputs.tf`. The host, DNS and nginx
 route already exist. `cloud/` applies on merge: the plan comment must show only additions.
+Also add `<id>` to the `mcp-stdio` entry of `$cf_access_bypass` in
+`infra/nginx/conf.d/cf-access.conf` (`fix(infra):`), or the [Access JWT check](./access-jwt.md)
+rejects the connector's token-less calls once the host is enforced.
 
 ## 3. Connector (`workers/mcp-connector`, `feat(mcp-connector):`)
 
