@@ -5,9 +5,9 @@
 
 ### Features
 
-* **calibre:** add calibre-web-automated stack ([#262](https://github.com/giocaizzi/rp5-homeserver/issues/262)) ([8fff6fd](https://github.com/giocaizzi/rp5-homeserver/commit/8fff6fd20ee1ba2b2d577b3c1dce492169875710))
+* **calibre:** add calibre-web-automated stack ([#262](https://github.com/giocaizzi/rp5-homeserver/issues/262)) ([fc6092f](https://github.com/giocaizzi/rp5-homeserver/commit/fc6092fe6d4aed6c04e864c28238b7d9c0696934))
 
 
 ### Bug Fixes
 
-* **calibre:** use curl for healthcheck ([#269](https://github.com/giocaizzi/rp5-homeserver/issues/269)) ([84a37fe](https://github.com/giocaizzi/rp5-homeserver/commit/84a37fe3136a080a06f23a031ed1a90d52d65088))
+* **calibre:** use curl for healthcheck ([#269](https://github.com/giocaizzi/rp5-homeserver/issues/269)) ([a456e59](https://github.com/giocaizzi/rp5-homeserver/commit/a456e59f7a1f82abbb219c832267c8c9be1750d0))
