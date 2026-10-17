@@ -216,19 +216,69 @@ Shared dashboards (PostgreSQL, Redis) use both variables for multi-instance supp
 
 The Agents folder reads one request schema that `alloy/pipelines/otel.alloy` (`agent_usage`) builds from every harness: each model call is a Loki record with `agent_event="api_request"` and `model`, `session_id`, `input_tokens` (uncached), `output_tokens`, `cache_read_tokens` and `cost_usd` in structured metadata. `service_name` is the harness: `claude-code`, `codex`, `github-copilot` (Copilot CLI), `copilot-chat` (VS Code), `opencode`, `pi`.
 
-| Harness | Sends | Cost from |
-|---------|-------|-----------|
-| Claude Code | OTLP logs (`api_request`) | its own `cost_usd` |
-| opencode, pi | the guard plugin's `api_request` | the harness's own cost |
-| Codex | OTLP logs (`codex.sse_event` `response.completed`) | the Alloy price table |
-| Copilot CLI, VS Code | OTLP traces (`chat` spans), turned into logs by `spanlogs` | `github.copilot.nano_aiu` × 1e-11 when present, else the price table |
+| Harness | Sends | Cost from | Price basis |
+|---------|-------|-----------|-------------|
+| Claude Code | OTLP logs (`api_request`) | its own `cost_usd` | Anthropic API list price, computed by Claude Code |
+| opencode, pi | the guard plugin's `api_request` | the harness's own cost | the harness's model catalogue |
+| Codex | OTLP logs (`codex.sse_event` `response.completed`) | the Alloy price table | OpenAI API list price (Standard) |
+| Copilot CLI | OTLP traces (`chat` spans), turned into logs by `spanlogs` | `github.copilot.nano_aiu` × 1e-11 | GitHub AI credits actually charged |
+| VS Code | OTLP traces (`chat` spans), turned into logs by `spanlogs` | the Alloy price table (no `nano_aiu`) | Copilot per-token rates, which equal the API list prices for Claude and GPT |
 
-Costs are list-price equivalents: on a subscription they measure usage, not the bill. The client-side settings that send each harness's telemetry live in the dotfiles repo.
+Costs are list-price equivalents: on a subscription they measure usage, not the bill. Codex signed in with ChatGPT spends ChatGPT credits, which have no fixed USD value, so its cost is what the same tokens would cost on the API. The client-side settings that send each harness's telemetry live in the dotfiles repo.
+
+#### Where one model's price differs
+
+| Case | Handling |
+|------|----------|
+| Same model through the API and through Copilot | Copilot bills Claude and GPT at the API's per-token rates, so one row serves both. The one difference is GPT-5.6 Luna's long-context threshold (over 200K input on Copilot, over 272K on the API): its long-context rows are conditional on `service.name`. |
+| Long-context tiers | Claude Haiku 5.5 over 100K prompt tokens, GPT-6, GPT-5.6, GPT-5.5 and GPT-5.4 over 272K, Grok 4.5 to 4.7 over 200K pay higher rates. A long-context row (prompt = `input_tokens` + `cache_read_tokens`) precedes the model's default row. Other Claude models price their full 1M context at the standard rate. |
+| Cache writes | Claude and GPT-6, GPT-5.6 (API and Copilot) charge a cache write (Claude 1.25× input for 5 minutes, 2× for 1 hour; GPT 1.25× input). No harness that uses the table reports cache-write tokens (Codex reports total and cached input; Copilot spans carry `gen_ai.usage.cache_read.input_tokens` only), so the table bills them as uncached input. That understates a write by 0.25× input, and a 1-hour Claude write by 1×. Codex with ChatGPT credits has no cache-write charge. |
+| Copilot auto model selection | Paid plans get 10% off model costs with auto selection. Copilot CLI's `nano_aiu` includes it; VS Code spans do not say whether auto picked the model, so its table cost can be up to 10% high. |
+| Included or free models on Copilot | None: every chat model is billed in AI credits (code completions and next edit suggestions are not, and send no chat spans). VS Code's internal `gpt-4o-mini` calls are not on Copilot's price list, so they have no row and record tokens without cost. |
+| Fast and priority modes, data residency | Not in the telemetry, so not priced: Claude fast mode is 2× on Opus 5.5, OpenAI Fast mode and regional endpoints cost more, Anthropic US-only inference is 1.1×. Copilot's Opus 4.8 fast mode has its own row. |
+| Promotional prices | Copilot's Gemini rates are promotional: Gemini 4 Argon until 2026-12-01, Gemini 3.7 and 3.8 Flash until 2026-12-31. Recheck after those dates. |
+
+#### Price table (USD per 1M tokens, checked 2026-10-17)
+
+The rows in `agent_usage` are the source of truth; this mirrors them. Sources: [Anthropic pricing](https://platform.claude.com/docs/en/about-claude/pricing), [OpenAI API pricing](https://developers.openai.com/api/docs/pricing), [GitHub Copilot models and pricing](https://docs.github.com/en/copilot/reference/copilot-billing/models-and-pricing).
+
+| Model | Input | Cache read | Cache write | Output | Long context (input / cache read / output) | Source |
+|-------|------:|-----------:|------------:|-------:|---------------------------------------------|--------|
+| Claude Fable 5.1 | 10 | 0.25 | 12.50 | 50 | — | Anthropic, Copilot |
+| Claude Fable 5 | 10 | 1 | 12.50 | 50 | — | Anthropic, Copilot |
+| Claude Opus 5.5 | 4 | 0.20 | 5 | 20 | — | Anthropic, Copilot |
+| Claude Opus 5, 4.8, 4.7, 4.6, 4.5 | 5 | 0.50 | 6.25 | 25 | — | Anthropic (Copilot: 5, 4.8) |
+| Claude Opus 4.8 fast mode | 10 | 1 | 12.50 | 50 | — | Copilot |
+| Claude Sonnet 5.5 | 2 | 0.10 | 2.50 | 10 | — | Anthropic, Copilot |
+| Claude Sonnet 5 | 2 | 0.20 | 2.50 | 10 | — | Anthropic, Copilot |
+| Claude Sonnet 4.6, 4.5, 4 | 3 | 0.30 | 3.75 | 15 | — | Anthropic (Copilot: 4.6, 4) |
+| Claude Haiku 5.5 | 0.10 | 0.01 | 0.125 | 0.50 | > 100K: 0.50 / 0.05 / 2.50 | Anthropic, Copilot |
+| Claude Haiku 4.5 | 1 | 0.10 | 1.25 | 5 | — | Anthropic, Copilot |
+| GPT-6.1 Sol | 2 | 0.10 | 2.50 | 10 | > 272K: 4 / 0.20 / 15 | OpenAI, Copilot |
+| GPT-6 Sol | 2 | 0.20 | 2.50 | 10 | > 272K: 4 / 0.40 / 15 | OpenAI, Copilot |
+| GPT-6 Luna | 0.10 | 0.01 | 0.125 | 0.50 | > 272K: 0.20 / 0.02 / 0.75 | OpenAI, Copilot |
+| GPT-6 Astra | 10 | 1 | 12.50 | 50 | > 272K: 20 / 2 / 75 | OpenAI, Copilot |
+| GPT-5.6 Sol | 4 | 0.40 | 5 | 20 | > 272K: 8 / 0.80 / 30 | OpenAI, Copilot |
+| GPT-5.6 Terra | 2 | 0.20 | 2.50 | 12 | > 272K: 4 / 0.40 / 18 | OpenAI, Copilot |
+| GPT-5.6 Luna | 0.20 | 0.02 | 0.25 | 1.20 | > 272K API, > 200K Copilot: 0.40 / 0.04 / 1.80 | OpenAI, Copilot |
+| GPT-5.5 | 5 | 0.50 | — | 30 | > 272K: 10 / 1 / 45 | OpenAI, Copilot |
+| GPT-5.4 | 2.50 | 0.25 | — | 15 | > 272K: 5 / 0.50 / 22.50 | OpenAI, Copilot |
+| GPT-5.4 mini | 0.75 | 0.075 | — | 4.50 | — | OpenAI, Copilot |
+| GPT-5.4 nano | 0.20 | 0.02 | — | 1.25 | — | OpenAI, Copilot |
+| GPT-5 mini | 0.25 | 0.025 | — | 2 | — | OpenAI, Copilot |
+| GPT-5.3-Codex | 1.75 | 0.175 | — | 14 | — | Copilot |
+| Gemini 3.7 Flash, 3.8 Flash | 0.75 | 0.075 | — | 3.75 | — | Copilot (promotional) |
+| Gemini 4 Argon | 2 | 0.10 | — | 10 | — | Copilot (promotional) |
+| Grok 4.5, 4.6, 4.7 | 2 | 0.50 | — | 6 | > 200K: 4 / 1 / 12 | Copilot |
+| Kimi K3 | 3 | 0.30 | — | 15 | — | Copilot |
+| MAI-Code-1.1-Flash | 0.20 | 0.02 | — | 1.20 | — | Copilot |
+
+Cache write is listed for reference; the table cannot bill it (see above). Codex's defaults are GPT-6.1 Sol (paid ChatGPT plans) and GPT-6 Luna (Free and Go).
 
 **Update the price table** when a provider changes prices or a harness's default model changes:
 
-1. Check the providers' pricing pages (per 1M tokens: input, cache read, output). Copilot-only models (VS Code sends no `nano_aiu`) take Copilot's AI-credit rates from the VS Code Chat Debug View, at 1 AI credit = $0.01.
-2. Edit the `PRICE TABLE` rows in `otelcol.processor.transform "agent_usage"`; one row per model regex. A model with no row records tokens but no cost.
+1. Check the three pricing pages above (per 1M tokens: input, cache read, output, and any long-context threshold). Copilot-only models take Copilot's per-token rates, at 1 AI credit = $0.01. Leave out a model whose price no official page lists.
+2. Edit the `PRICE TABLE` rows in `otelcol.processor.transform "agent_usage"` and the table above. The first matching row wins: put a long-context row before its default row and a specific model before a broader regex. A model with no row records tokens but no cost.
 3. Ship it like any Alloy change (release PR, deploy), then check that `sum by (model) (count_over_time({service_name=~"codex|github-copilot|copilot-chat"} | agent_event="api_request" | cost_usd="" [1d]))` returns nothing for current models.
 
 The daily budget is the `budget` variable on Agent Overview and the `agent-daily-cost` alert threshold (`grafana/provisioning/alerting/rules.yaml`); change both together.
