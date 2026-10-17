@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.3.0...mcp-connector-v0.4.0) (2026-10-17)
+
+
+### Features
+
+* **mcp-connector:** add the fli (Google Flights) connector ([#409](https://github.com/giocaizzi/rp5-homeserver/issues/409)) ([3c69d1e](https://github.com/giocaizzi/rp5-homeserver/commit/3c69d1ec4a349053240784da1662103de5b7bd5c))
+
 ## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.2.6...mcp-connector-v0.3.0) (2026-10-17)
 
 
