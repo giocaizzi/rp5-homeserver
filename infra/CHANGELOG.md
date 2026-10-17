@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.2](https://github.com/giocaizzi/rp5-homeserver/compare/v1.21.1...v1.21.2) (2026-10-17)
+
+
+### Bug Fixes
+
+* **infra:** enforce the Access JWT check on homepage ([#440](https://github.com/giocaizzi/rp5-homeserver/issues/440)) ([9ad675e](https://github.com/giocaizzi/rp5-homeserver/commit/9ad675e63af77d1f367c8961edfef2b9bbf6a71f))
+
 ## [1.21.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.21.0...v1.21.1) (2026-10-17)
 
 
