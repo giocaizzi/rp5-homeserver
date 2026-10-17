@@ -2,14 +2,17 @@
 
 Design for exposing self-hosted MCP servers to claude.ai and to local CLIs from one
 place, with per-user identity, per-connector and per-tool ACLs, and selective sharing.
-Tracker: #261. Status: Phase 0 in progress; Phases 1–4 are proposals.
+Tracker: #261. Status: Phase 0 in progress; Phase 1 done without the single deployment (#395); Phases 2–4 are proposals.
 
 ## Where we are
 
 - `workers/mcp-connector`: one codebase, one Worker deployment **per upstream**
-  (greenhouse, firefly, n8n, grafana, netdata, portainer, langfuse). Google OAuth with
-  an email allowlist, then a reverse proxy that swaps Claude's token for the upstream
-  bearer and a CF Access service token. Every caller becomes the same upstream identity.
+  (greenhouse, firefly, n8n, grafana, netdata, portainer, langfuse), generated from
+  `registry.json` (upstream, auth scheme, mode, allowed groups). Google OAuth, then
+  a group check per connector (membership from the `MCP_GROUPS` deploy secret), then
+  a reverse proxy that swaps Claude's token for the upstream bearer and a CF Access
+  service token, with one audit log line per call. Every caller becomes the same
+  upstream identity.
 - Twenty CRM (`services/crm`) bypasses the Worker: claude.ai talks to Twenty's own
   OAuth so each user keeps ownership. Access is bypassed for Anthropic's egress range
   `160.79.104.0/21`, which every claude.ai user shares: it narrows who can connect but
@@ -29,7 +32,7 @@ claude.ai / CLIs ──OAuth──► MCP edge Worker (one deployment, registry-
                                                        └─ stdio servers: supergateway stack
 ```
 
-Registry (one file in the repo, replaces the per-env copies and the global allowlist):
+Registry target shape (Phase 1 ships `workers/mcp-connector/registry.json` with `shared` mode only; group membership stays out of the repo, in the `MCP_GROUPS` secret):
 
 ```yaml
 groups:  { owner: [...], friends: [...] }
@@ -74,12 +77,15 @@ revisit mcphub only if friends need their own credentials on a shared server.
 | 8 | Path variants vs path-scoped Access apps | Low | Not vulnerable: `//mcp`, `/%6Dcp`, `/MCP`, `/x/../mcp` all stopped by Access |
 | 9 | Stale grafana nginx comment | Low | #389 |
 | 10 | Token-holding sidecar on `:latest` with Shepherd auto-pull | Low | #390 (grafana); portainer-mcp is already pinned |
-| 11 | One global allowlist and Google client for all connectors | Low | Phase 1 (#395) |
+| 11 | One global allowlist and Google client for all connectors | Low | Allowlist: per-connector groups (#395); Google client: Phase 4 |
 
 ## Phases
 
 0. Security fixes above.
-1. #395 config-driven edge: registry, one deployment on custom domains, per-connector ACLs, audit log.
+1. #395 config-driven edge: registry, per-connector ACLs, audit log. Done, keeping one
+   deployment per server on workers.dev so existing connectors keep working; one
+   deployment on custom domains is deferred (a URL change means re-adding every
+   connector in claude.ai).
 2. #396 `signed-identity`, `per-user-credential`, tool ACLs.
 3. #397 stdio stack with fli first.
 4. #398 sharing: groups, published Google client, rate limits.

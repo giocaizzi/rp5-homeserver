@@ -1,9 +1,10 @@
 # 🔌 mcp-connector — Claude.ai MCP connectors for self-hosted servers
 
-A single Cloudflare Worker codebase, deployed once per upstream, that makes a
-self-hosted MCP server connectable from **Claude.ai (web + Desktop)** as a custom
-connector — with OAuth login gated to the owner's Google identity and the origin
-never exposed unauthenticated.
+A single Cloudflare Worker codebase, deployed once per server in
+[`registry.json`](registry.json), that makes a self-hosted MCP server connectable
+from **Claude.ai (web + Desktop)** as a custom connector — with OAuth login gated
+to Google identities in the groups allowed on that connector, and the origin never
+exposed unauthenticated.
 
 Live connectors:
 
@@ -51,7 +52,7 @@ sequenceDiagram
     C->>W: POST /authorize (Allow)
     W->>G: redirect to Google login
     G->>W: GET /callback (code)
-    W->>W: verify email ∈ ALLOWED_EMAILS
+    W->>W: verify email ∈ allowed groups
     W-->>C: redirect with auth code
     C->>W: POST /token  → access token
     C->>W: POST /mcp (Bearer worker-token)
@@ -66,11 +67,12 @@ sequenceDiagram
 |---------------------|----------------------------------------------------------------------------|
 | `src/index.ts`      | Wires `OAuthProvider` (apiRoute `/mcp`, Google default handler).            |
 | `src/google-handler.ts` | `/authorize` → consent page → Google; `/callback` → email allowlist → complete auth. |
-| `src/policy.ts`     | Email allowlist and redirect-URI allowlist (Claude, VS Code, loopback).     |
-| `src/proxy.ts`      | Token-gated `/mcp` reverse proxy; injects upstream auth; streams response.  |
+| `src/policy.ts`     | Group allowlist and redirect-URI allowlist (Claude, VS Code, loopback).     |
+| `src/proxy.ts`      | Token-gated `/mcp` reverse proxy; injects upstream auth; streams response; audit log. |
 | `src/env.ts`        | Typed bindings (vars + secrets + KV + OAuthProvider).                       |
-| `wrangler.jsonc`    | One `env.<service>` per upstream (name, vars, KV id placeholder).           |
-| `render-config.sh`  | Fills the `${DOMAIN}` / `${KV_ID_<ENV>}` placeholders into `wrangler.deploy.jsonc`. |
+| `registry.json`     | One entry per server: display name, upstream, auth scheme, mode, allowed groups. |
+| `wrangler.jsonc`    | Shared Worker settings (no envs).                                           |
+| `render-config.sh`  | Generates one `env.<id>` per registry server into `wrangler.deploy.jsonc`, filling private values from the environment; `--check` validates the registry. |
 | `deploy.sh`         | Idempotent deploy + secret-setting helper (pulls CF Access creds from TF).  |
 
 ---
@@ -79,10 +81,11 @@ sequenceDiagram
 
 Three independent gates protect the Pi origin; all must pass:
 
-1. **Identity (who):** OAuth login via Google, restricted to `ALLOWED_EMAILS`.
-   Only the owner can obtain a Worker access token. The allowlist is checked at
-   login, on every token refresh and on every `/mcp` call, so removing an address
-   and redeploying revokes it immediately.
+1. **Identity (who):** OAuth login via Google, restricted to members of the
+   groups the connector allows (`allow` in `registry.json`; membership in
+   `MCP_GROUPS`, see [Configuration](#-configuration)). The check runs at login,
+   on every token refresh and on every `/mcp` call, so removing an address and
+   redeploying revokes it immediately.
    - **Consent per client:** every authorization shows a consent page (client
      name, where the token goes, a warning for loopback) before the Google login;
      the library's helpers bind it to the browser and forbid framing.
@@ -143,24 +146,32 @@ https://mcp-connector-langfuse.<account>.workers.dev/callback
 
 ## ⚙️ Configuration
 
-Non-secret, per-service `vars` live in `wrangler.jsonc`:
+`registry.json` describes every server, keyed by id (the Worker is
+`mcp-connector-<id>`, so an id never changes once a connector is in use):
 
-- `SERVICE_NAME` — display/log label.
-- `UPSTREAM_URL` — the **full** upstream MCP endpoint (path included).
-- `ALLOWED_EMAILS` — comma-separated login allowlist.
-- `UPSTREAM_AUTH_SCHEME` — optional; scheme for `UPSTREAM_BEARER` (default `Bearer`, Langfuse `Basic`).
+| Field | Meaning |
+|---|---|
+| `name` | Display/log label (`SERVICE_NAME`). |
+| `upstream` | The **full** upstream MCP endpoint, path included, with `${DOMAIN}` for the zone. |
+| `auth` | Scheme for `UPSTREAM_BEARER`: `Bearer` or `Basic` (Langfuse). |
+| `mode` | Identity propagation ([design](../../docs/wip/mcp-edge.md)); only `shared` is implemented. |
+| `allow` | Groups whose members may use this connector. |
+| `extra_headers` | Optional `true`: `deploy.sh` also prompts for `UPSTREAM_EXTRA_HEADERS`. |
 
-Each env also binds a dedicated **KV namespace** (`OAUTH_KV`) that stores OAuth
-grants/tokens.
+Group **membership** is private and never in the repo. It comes from the
+`MCP_GROUPS` secret, a JSON object `{"owner": ["<email>"], "friends": ["<email>"]}`;
+while it is unset, every address in `ALLOWED_EMAILS` (comma-separated) is in group
+`owner` and no other group exists.
 
-`wrangler.jsonc` holds placeholders, never real values: `${DOMAIN}` in the
-`UPSTREAM_URL`s, `${ALLOWED_EMAILS}` and `${KV_ID_<ENV>}` for each KV id.
-`render-config.sh` fills them from the environment into the gitignored
-`wrangler.deploy.jsonc` and fails if one is missing; every deploy uses
-`-c wrangler.deploy.jsonc`. CI reads them from **secrets** on the
-`cloudflare-workers` environment (`DOMAIN`, `ALLOWED_EMAILS`, `KV_ID_<ENV>`), so
-they are masked in the logs, including step env headers. Never pass private values
-as GitHub variables: variable values are printed in clear.
+`render-config.sh` turns each registry entry into an `env.<id>` with vars
+`SERVICE_NAME`, `UPSTREAM_URL`, `UPSTREAM_AUTH_SCHEME`, `ALLOW_GROUPS`,
+`ALLOWED_EMAILS` and `MCP_GROUPS`, and a dedicated **KV namespace** (`OAUTH_KV`,
+id from `KV_ID_<ID>`) that stores OAuth grants/tokens. It writes the gitignored
+`wrangler.deploy.jsonc` and fails on an invalid registry or a missing value; every
+deploy uses `-c wrangler.deploy.jsonc`. CI reads the values from **secrets** on
+the `cloudflare-workers` environment (`DOMAIN`, `ALLOWED_EMAILS`, `MCP_GROUPS`,
+`KV_ID_<ID>`), so they are masked in the logs, including step env headers. Never
+pass private values as GitHub variables: variable values are printed in clear.
 
 `deploy.sh` creates a missing KV namespace and stores its id as that secret.
 
@@ -171,9 +182,9 @@ as GitHub variables: variable values are printed in clear.
 **Routine deploys are automatic:** publishing an `mcp-connector` release
 (`mcp-connector-v*`, via the release-please PR) runs `deploy-workers.yml`, which
 typechecks, renders the config (values masked in the logs) and runs
-`wrangler deploy --env` for every env (secrets persist). It needs the
+`wrangler deploy --env` for every server in `registry.json` (secrets persist). It needs the
 `cloudflare-workers` GitHub environment with `CLOUDFLARE_API_TOKEN` (Workers
-Scripts:Edit), `CLOUDFLARE_ACCOUNT_ID` and the placeholder secrets above. Use the manual flow below for
+Scripts:Edit), `CLOUDFLARE_ACCOUNT_ID` and the secrets above. Use the manual flow below for
 bootstrap (KV, secrets) or a one-off deploy.
 
 ```bash
@@ -181,21 +192,48 @@ cd workers/mcp-connector
 npm install
 npx wrangler login
 
-# export DOMAIN, ALLOWED_EMAILS and KV_ID_<ENV> first (ids: `npx wrangler kv namespace list`)
+# export DOMAIN, ALLOWED_EMAILS, KV_ID_<ID> (ids: `npx wrangler kv namespace list`)
+# and optionally MCP_GROUPS first
 
 # guided: creates KV (if needed), deploys each env, sets secrets
 ./deploy.sh
 
-# or per service: render, then deploy the rendered config
-./render-config.sh
-npx wrangler deploy -c wrangler.deploy.jsonc --env <greenhouse|firefly|n8n|grafana|netdata|portainer|langfuse>
+# or per server: render, then deploy the rendered config
+./render-config.sh <id>
+npx wrangler deploy -c wrangler.deploy.jsonc --env <id>
 npm run typecheck
 ```
 
-**Logs / debugging:** `npx wrangler tail --env <service> --format pretty`. The
-proxy logs a one-line `warn` on any non-2xx upstream response (status +
-content-type, never the body) — enough to distinguish an origin WAF block
-(`403 text/plain`), a bad bearer (`401`), and an app error.
+**Logs / audit:** `npx wrangler tail mcp-connector-<id> --format pretty`, or the
+Worker's logs in the Cloudflare dashboard (private). Every `/mcp` call writes one
+JSON line `{"audit":"mcp","server","user","method","tool","status"}` (`method` and
+`tool` from the `Mcp-Method`/`Mcp-Name` headers, null for older clients), as a
+`warn` with the upstream `ct` (content-type) when the status is 4xx/5xx — enough
+to distinguish an origin WAF block (`403 text/plain`), a bad bearer (`401`), an
+app error, and a denied user (`403` without `ct`). Bodies and tokens are never
+logged.
+
+### ➕ Adding a server
+
+Runbook; the Worker id is permanent once the connector is added in Claude.ai.
+
+1. Expose the upstream behind Cloudflare Access with a `claude_<id>_mcp` service
+   token and bypass policy in `cloud/` (Terraform outputs
+   `claude_<id>_mcp_client_id` / `_secret`), as for the existing services.
+2. Add one entry to `registry.json` and check it: `make lint` (runs
+   `render-config.sh --check`).
+3. Bootstrap from a machine with `wrangler login`, `terraform` access to `cloud/`
+   and `gh`: export the variables above and run `./deploy.sh`. It creates the
+   missing KV namespace (stored as secret `KV_ID_<ID>` on `cloudflare-workers`),
+   deploys and prompts for the secrets (Enter skips the ones already set).
+4. Add `https://mcp-connector-<id>.<account>.workers.dev/callback` to the Google
+   OAuth client's redirect URIs.
+5. Merge; the next `mcp-connector` release deploys it with the others. Add the
+   connector URL in Claude.ai and the table at the top of this README.
+
+To let a group in, add it to the server's `allow`; to change who is in a group,
+update the `MCP_GROUPS` secret and redeploy (`workflow_dispatch` on
+`deploy-workers.yml`).
 
 ---
 
