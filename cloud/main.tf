@@ -1256,3 +1256,46 @@ resource "cloudflare_zero_trust_access_application" "fli_mcp_policy" {
     }
   ]
 }
+
+# --- garmin MCP (mcp-stdio) ---------------------------------------------
+# Same shape as fli: path-scoped app + its own service token. Owner-only at the
+# connector (registry allow: ["owner"]); personal data.
+
+resource "cloudflare_zero_trust_access_service_token" "claude_garmin_mcp" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-garmin-mcp"
+}
+
+resource "cloudflare_zero_trust_access_policy" "claude_garmin_mcp_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-garmin-mcp-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.claude_garmin_mcp.id
+      }
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "garmin_mcp_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "garmin-mcp.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "mcp-stdio.${var.zone_name}/garmin/mcp"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.claude_garmin_mcp_bypass.id
+      precedence = 1
+    }
+  ]
+}
