@@ -9,8 +9,10 @@ Cloudflare Access. Design: [MCP edge](../../docs/wip/mcp-edge.md) (Phase 3).
 | Server | Path | Package | Users |
 |--------|------|---------|-------|
 | `fli` | `/fli/mcp` | [`flights[mcp]`](https://github.com/punitarani/fli) (Google Flights) | shared, no user data |
+| `garmin` | `/garmin/mcp` | [Taxuspt/garmin_mcp](https://github.com/Taxuspt/garmin_mcp) (Garmin Connect, all tools) | owner only |
 
-Adding a server (e.g. Garmin): [runbook](../../docs/mcp-stdio.md).
+Adding a server: [runbook](../../docs/mcp-stdio.md). Garmin needs a one-time interactive
+login after the first deploy: [Garmin](../../docs/mcp-stdio.md#garmin).
 
 ---
 
@@ -56,6 +58,7 @@ ssh pi@pi.local 'docker exec $(docker ps -q -f name=infra_proxy) \
 ```
 Worker ──(CF Access service token)──► nginx (mcp-stdio.<domain>) ──► gateway:8000
                                                                        ├─ /fli/mcp ─► fli-mcp (one process per session)
+                                                                       ├─ /garmin/mcp ─► garmin-mcp (one process per session)
                                                                        └─ /healthz
 ```
 
@@ -64,11 +67,14 @@ Worker ──(CF Access service token)──► nginx (mcp-stdio.<domain>) ─�
   session timeout). A server can also take a `tools` allowlist or a `toolPrefix`
   ([supergateway config](https://github.com/supercorp-ai/supergateway#several-servers-from-a-config-file)).
 - **One process per session** (stateful mode): sessions don't share state; an idle session
-  is reaped after `sessionTimeout`. Memory: ~120 MB gateway + ~135 MB per open fli session.
+  is reaped after `sessionTimeout`. Memory: ~120 MB gateway + ~135 MB per open session.
 - **Pinned**: base images by version, supergateway with its whole tree
   ([`gateway/package-lock.json`](gateway/package-lock.json)), each server's Python
   dependencies hash-locked in `servers/<name>.txt` (compiled from `servers/<name>.in`).
-- **Non-root** (`node`, uid 1000), `no-new-privileges`, no volumes, only on `rp5_public`.
+  Garmin is not on PyPI: `servers/garmin.in` lists its dependencies and the package comes
+  from a commit tarball pinned by `ADD --checksum` in the [`Dockerfile`](Dockerfile).
+- **Non-root** (`node`, uid 1000), `no-new-privileges`, only on `rp5_public`. One volume,
+  `garmin_data` (Garmin OAuth tokens, no password), backed up by Backrest.
 - `npm audit` flags GHSA-6qxp-vccf-f47h in the MCP SDK's OAuth **client**; supergateway
   uses it only to connect to remote servers, which this stack doesn't do.
 
@@ -81,6 +87,10 @@ uv pip compile servers/fli.in --python-version 3.12 \
 (cd gateway && npm install --package-lock-only --ignore-scripts)
 ```
 
+Bump Garmin: copy the dependencies of the new commit's `pyproject.toml` into
+`servers/garmin.in`, re-lock it as above, and update the tarball URL and its
+`sha256` (`curl -sL <url> | shasum -a 256`) in the `Dockerfile`.
+
 ---
 
 ## 🔐 Secrets
@@ -91,8 +101,9 @@ One API key per server, sent by the Worker as `Authorization: Bearer <key>`
 | Secret | Create (Secrets Manager project `rp5-homeserver`) |
 |--------|----------------------------------------------------|
 | `mcp-stdio_fli_api_key` | `bws secret create mcp-stdio_fli_api_key "$(openssl rand -hex 32)" <project-id>` |
+| `mcp-stdio_garmin_api_key` | `bws secret create mcp-stdio_garmin_api_key "$(openssl rand -hex 32)" <project-id>` |
 
-The same value goes into the Worker's `UPSTREAM_BEARER` for the `fli` connector:
+Each value also goes into the Worker's `UPSTREAM_BEARER` for the matching connector:
 read it back with `bws secret get <secret-id> | jq -r .value` piped straight into
 `wrangler secret put` ([mcp-connector](../../workers/mcp-connector/README.md)).
 

@@ -17,11 +17,25 @@ COPY servers/*.txt /opt/mcp/requirements/
 RUN uv venv /opt/mcp/fli --python 3.12 \
     && uv pip install --python /opt/mcp/fli --require-hashes -r /opt/mcp/requirements/fli.txt
 
+# Garmin (Taxuspt/garmin_mcp) is not on PyPI: its dependencies are hash-locked
+# like fli's, the package comes from a checksum-pinned commit tarball, --no-deps.
+ADD --checksum=sha256:4e4f2e8167325d60ba4e54957d21d7d4bfa369eeb762838777246976f713e4a5 \
+    https://github.com/Taxuspt/garmin_mcp/archive/202913fde53c9d15890d661fc9748dc6d0d5af52.tar.gz \
+    /tmp/garmin_mcp.tar.gz
+RUN uv venv /opt/mcp/garmin --python 3.12 \
+    && uv pip install --python /opt/mcp/garmin --require-hashes -r /opt/mcp/requirements/garmin.txt \
+    && uv pip install --python /opt/mcp/garmin --no-deps /tmp/garmin_mcp.tar.gz \
+    && rm /tmp/garmin_mcp.tar.gz
+
 # supergateway, pinned with its whole dependency tree.
 WORKDIR /opt/gateway
 COPY gateway/package.json gateway/package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY servers.jsonc /etc/supergateway/servers.jsonc
+
+# Garmin OAuth tokens (garmin_data volume): pre-created so the volume is
+# owned by node on first mount.
+RUN install -d -o node -g node -m 700 /home/node/.garminconnect
 
 # hadolint ignore=DL3066
 USER node

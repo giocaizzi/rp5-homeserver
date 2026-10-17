@@ -73,24 +73,30 @@ with `workers/mcp-connector/deploy.sh` (its `UPSTREAM_BEARER` prompt takes the s
 
 Local CLIs: add the connector URL to `.chezmoidata/mcp.toml` in the dotfiles.
 
-## Garmin (planned)
+## Garmin
 
-Garmin Connect is personal data and needs one interactive login, so it differs from fli:
+Garmin Connect ([Taxuspt/garmin_mcp](https://github.com/Taxuspt/garmin_mcp), all 155
+tools, each annotated read-only / additive / destructive) is personal data and needs one
+interactive login, so it differs from fli:
 
 - **Owner only.** `allow: ["owner"]` in the registry, never a shared group; its own Access
   app and service token as above.
-- **Interactive first login.** The Garmin server keeps OAuth tokens on disk after a login
-  that may ask for an MFA code. Add a named volume (e.g. `garmin_tokens`) mounted at the
-  server's token directory, owned by uid 1000, and back it up with the other volumes. After
-  the first deploy, log in once inside the running task:
+- **Not on PyPI.** Dependencies are hash-locked in `servers/garmin.in`; the package is a
+  checksum-pinned commit tarball in the `Dockerfile` (bump: [stack README](../services/mcp-stdio/README.md#-architecture)).
+- **Interactive login.** OAuth tokens live in the `garmin_data` volume
+  (`/home/node/.garminconnect`, `GARMINTOKENS`), backed up by Backrest. Until it holds
+  tokens, `tools/list` works but every tool call fails. After the first deploy, and
+  whenever calls fail with an auth error in `docker service logs mcp-stdio_gateway`
+  (tokens last about six months), log in once inside the running task:
 
   ```sh
   ssh -t pi@pi.local 'docker exec -it $(docker ps -q -f name=mcp-stdio_gateway) \
-    /opt/mcp/garmin/bin/<login-command>'
+    /opt/mcp/garmin/bin/garmin-mcp-auth'
+  ssh -t pi@pi.local 'docker exec -it $(docker ps -q -f name=mcp-stdio_gateway) \
+    /opt/mcp/garmin/bin/garmin-mcp-auth --verify'
   ```
 
-  Then check `tools/list` through the gateway. Repeat when the tokens expire or Garmin
-  invalidates them (calls start failing with an auth error in
-  `docker service logs mcp-stdio_gateway`).
+  It prompts for email, password and the MFA code. New sessions pick up the tokens; no
+  restart needed.
 - **No credentials in env or secrets.** Email and password are typed at the login prompt
   only; the volume holds tokens, not the password.
