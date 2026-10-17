@@ -70,6 +70,7 @@ flowchart TB
 | [Compose Standards](./compose_standards.md) | YAML anchors, service template, Swarm guidelines |
 | [Deployment Reference](./deployment.md) | Component→workflow map, Portainer mounts, infra VERSION, Homepage |
 | [CI/CD](./ci_cd.md) | Workflows, cloud/ Terraform auth and wiring, adding a public service |
+| [MCP stdio](./mcp-stdio.md) | Runbook: add a stdio-only MCP server (supergateway stack, Access, connector) |
 
 ## Services
 
