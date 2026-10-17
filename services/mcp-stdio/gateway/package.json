@@ -1,0 +1,8 @@
+{
+  "name": "rp5-mcp-stdio-gateway",
+  "private": true,
+  "description": "Pins supergateway and its dependency tree for the mcp-stdio image",
+  "dependencies": {
+    "supergateway": "4.2.0"
+  }
+}
