@@ -12,6 +12,10 @@
  * The upstream origin (Pi via tunnel) is never reachable without these, so it is
  * never exposed unauthenticated. The streamed response (JSON or SSE) is piped back
  * verbatim so the streamable-HTTP MCP transport works end to end.
+ *
+ * Every call writes one audit line to the Worker logs (private): server, user,
+ * MCP method and tool name (Mcp-Method / Mcp-Name headers), status. Never bodies
+ * or tokens.
  */
 import type { Env, Props } from "./env";
 import { isAllowedEmail } from "./policy";
@@ -38,8 +42,25 @@ export const proxyHandler = {
     env: Env,
     ctx: ExecutionContext & { props?: Props },
   ): Promise<Response> {
+    const email = ctx.props?.email;
+    const audit = (status: number, contentType?: string | null) => {
+      const line = JSON.stringify({
+        audit: "mcp",
+        server: env.SERVICE_NAME,
+        user: email ?? null,
+        method: request.headers.get("mcp-method"),
+        tool: request.headers.get("mcp-name"),
+        status,
+        // Content-type tells an origin WAF block (403 text/plain) from a bad bearer (401) or an app error.
+        ...(status >= 400 && contentType !== undefined ? { ct: contentType } : {}),
+      });
+      if (status >= 400) console.warn(line);
+      else console.log(line);
+    };
+
     // Tokens outlive allowlist changes; refuse a removed address on its next call.
-    if (!isAllowedEmail(env, ctx.props?.email)) {
+    if (!isAllowedEmail(env, email)) {
+      audit(403);
       return new Response("Access revoked", { status: 403 });
     }
 
@@ -66,7 +87,7 @@ export const proxyHandler = {
     // Stable, benign User-Agent so the origin's WAF sees a predictable client.
     headers.set("user-agent", "mcp-connector/1.0 (+cloudflare-workers)");
     // Trace which authenticated user drove the call (best-effort).
-    if (ctx.props?.email) headers.set("x-mcp-connector-user", ctx.props.email);
+    if (email) headers.set("x-mcp-connector-user", email);
 
     const init: RequestInit = {
       method: request.method,
@@ -81,15 +102,7 @@ export const proxyHandler = {
 
     const upstream = await fetch(target, init);
 
-    // Surface non-2xx upstream responses in `wrangler tail` (status + type only,
-    // never the body — it may carry data). Enough to tell apart an origin WAF
-    // block (403 text/plain), a bad bearer (401), and an app error.
-    if (!upstream.ok) {
-      console.warn(
-        `[proxy] ${env.SERVICE_NAME} upstream ${upstream.status} ` +
-          `(${request.method} ${inUrl.pathname}) ct=${upstream.headers.get("content-type")}`,
-      );
-    }
+    audit(upstream.status, upstream.headers.get("content-type"));
 
     // Stream the response back unchanged (supports SSE / chunked MCP responses).
     const outHeaders = new Headers(upstream.headers);
