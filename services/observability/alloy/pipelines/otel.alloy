@@ -284,6 +284,9 @@ declare "otlp_receivers" {
         `set(attributes["cost_usd"], (Double(attributes["input_tokens"]) * 2.0 + Double(attributes["cache_read_tokens"]) * 0.5 + Double(attributes["output_tokens"]) * 6.0) / 1000000.0) where attributes["agent.event"] == "api_request" and attributes["cost_usd"] == nil and IsMatch(attributes["model"], "^grok-4\\.[5-7]")`,
         `set(attributes["cost_usd"], (Double(attributes["input_tokens"]) * 3.0 + Double(attributes["cache_read_tokens"]) * 0.3 + Double(attributes["output_tokens"]) * 15.0) / 1000000.0) where attributes["agent.event"] == "api_request" and attributes["cost_usd"] == nil and IsMatch(attributes["model"], "^kimi-k3")`,
         `set(attributes["cost_usd"], (Double(attributes["input_tokens"]) * 0.2 + Double(attributes["cache_read_tokens"]) * 0.02 + Double(attributes["output_tokens"]) * 1.2) / 1000000.0) where attributes["agent.event"] == "api_request" and attributes["cost_usd"] == nil and IsMatch(attributes["model"], "^mai-code-1\\.1-flash")`,
+        // VS Code's internal gpt-4o-mini calls: not on Copilot's price list, rate 0
+        // in the VS Code Chat Debug View (2026-10).
+        `set(attributes["cost_usd"], 0.0) where attributes["agent.event"] == "api_request" and attributes["cost_usd"] == nil and IsMatch(attributes["model"], "^gpt-4o-mini") and resource.attributes["service.name"] == "copilot-chat"`,
       ]
     }
 

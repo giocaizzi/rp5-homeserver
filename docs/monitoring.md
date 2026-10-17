@@ -234,7 +234,7 @@ Costs are list-price equivalents: on a subscription they measure usage, not the 
 | Long-context tiers | Claude Haiku 5.5 over 100K prompt tokens, GPT-6, GPT-5.6, GPT-5.5 and GPT-5.4 over 272K, Grok 4.5 to 4.7 over 200K pay higher rates. A long-context row (prompt = `input_tokens` + `cache_read_tokens`) precedes the model's default row. Other Claude models price their full 1M context at the standard rate. |
 | Cache writes | Claude and GPT-6, GPT-5.6 (API and Copilot) charge a cache write (Claude 1.25× input for 5 minutes, 2× for 1 hour; GPT 1.25× input). No harness that uses the table reports cache-write tokens (Codex reports total and cached input; Copilot spans carry `gen_ai.usage.cache_read.input_tokens` only), so the table bills them as uncached input. That understates a write by 0.25× input, and a 1-hour Claude write by 1×. Codex with ChatGPT credits has no cache-write charge. |
 | Copilot auto model selection | Paid plans get 10% off model costs with auto selection. Copilot CLI's `nano_aiu` includes it; VS Code spans do not say whether auto picked the model, so its table cost can be up to 10% high. |
-| Included or free models on Copilot | None: every chat model is billed in AI credits (code completions and next edit suggestions are not, and send no chat spans). VS Code's internal `gpt-4o-mini` calls are not on Copilot's price list, so they have no row and record tokens without cost. |
+| Included or free models on Copilot | None: every chat model is billed in AI credits (code completions and next edit suggestions are not, and send no chat spans). VS Code's internal `gpt-4o-mini` calls are not on Copilot's price list; the VS Code Chat Debug View shows them at rate 0, so their row prices them at 0, on `copilot-chat` only. |
 | Fast and priority modes, data residency | Not in the telemetry, so not priced: Claude fast mode is 2× on Opus 5.5, OpenAI Fast mode and regional endpoints cost more, Anthropic US-only inference is 1.1×. Copilot's Opus 4.8 fast mode has its own row. |
 | Promotional prices | Copilot's Gemini rates are promotional: Gemini 4 Argon until 2026-12-01, Gemini 3.7 and 3.8 Flash until 2026-12-31. Recheck after those dates. |
 
@@ -272,6 +272,7 @@ The rows in `agent_usage` are the source of truth; this mirrors them. Sources: [
 | Grok 4.5, 4.6, 4.7 | 2 | 0.50 | — | 6 | > 200K: 4 / 1 / 12 | Copilot |
 | Kimi K3 | 3 | 0.30 | — | 15 | — | Copilot |
 | MAI-Code-1.1-Flash | 0.20 | 0.02 | — | 1.20 | — | Copilot |
+| gpt-4o-mini (VS Code internal) | 0 | 0 | — | 0 | — | VS Code Chat Debug View |
 
 Cache write is listed for reference; the table cannot bill it (see above). Codex's defaults are GPT-6.1 Sol (paid ChatGPT plans) and GPT-6 Luna (Free and Go).
 
