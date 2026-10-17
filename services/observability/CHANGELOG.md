@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.6.0...observability-v0.6.1) (2026-10-17)
+
+
+### Bug Fixes
+
+* **observability:** let tempo accept grafana's last-24h range ([#425](https://github.com/giocaizzi/rp5-homeserver/issues/425)) ([d35fd64](https://github.com/giocaizzi/rp5-homeserver/commit/d35fd646b6295cd3e4bf926d17c8b4701eef7098))
+
 ## [0.6.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.6...observability-v0.6.0) (2026-10-17)
 
 
