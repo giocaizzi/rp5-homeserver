@@ -135,7 +135,7 @@ services:
   # Loki - Log Aggregation
   # ========================================
   log-store:
-    image: grafana/loki:3.5.12
+    image: grafana/loki:3.7.8
     hostname: observability-log-store
     expose:
       - "3100"
@@ -257,7 +257,7 @@ services:
   # Grafana - Dashboards and Visualization
   # ========================================
   dashboard:
-    image: grafana/grafana:11.6.14
+    image: grafana/grafana:13.2.4
     hostname: observability-dashboard
     expose:
       - "3000"
