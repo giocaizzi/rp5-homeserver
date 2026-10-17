@@ -6,7 +6,7 @@
   "description": "Single-origin OAuth + MCP reverse-proxy Worker fronting self-hosted MCP servers for Claude.ai connectors",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "tail:greenhouse": "wrangler tail --env greenhouse"
+    "tail:greenhouse": "wrangler tail mcp-connector-greenhouse"
   },
   "dependencies": {
     "@cloudflare/workers-oauth-provider": "^1.2.3"
