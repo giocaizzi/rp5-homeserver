@@ -17,6 +17,7 @@ Live connectors:
 | Netdata    | `https://mcp-connector-netdata.<account>.workers.dev/mcp`  | `https://netdata-mcp.<domain>/mcp` (native)  |
 | Portainer  | `https://mcp-connector-portainer.<account>.workers.dev/mcp`    | `https://portainer.<domain>/mcp` (sidecar, full access) |
 | Langfuse   | `https://mcp-connector-langfuse.<account>.workers.dev/mcp`     | `https://langfuse-mcp.<domain>/api/public/mcp` (native) |
+| Google Flights | `https://mcp-connector-fli.<account>.workers.dev/mcp`      | `https://mcp-stdio.<domain>/fli/mcp` ([stdio via supergateway](../../services/mcp-stdio/README.md)) |
 
 ---
 

@@ -37,6 +37,12 @@ storage:
       max_workers: 10
       queue_depth: 1000
 
+# TraceQL metrics (rate(), Traces Drilldown) default to a 3h max range; 24h
+# keeps backend scans bounded on the Pi.
+query_frontend:
+  metrics:
+    max_duration: 24h
+
 compactor:
   compaction:
     block_retention: 720h

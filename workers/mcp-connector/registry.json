@@ -6,6 +6,7 @@
     "grafana": { "name": "Grafana", "upstream": "https://grafana.${DOMAIN}/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"] },
     "netdata": { "name": "Netdata", "upstream": "https://netdata-mcp.${DOMAIN}/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"] },
     "portainer": { "name": "Portainer", "upstream": "https://portainer.${DOMAIN}/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"], "extra_headers": true },
-    "langfuse": { "name": "Langfuse", "upstream": "https://langfuse-mcp.${DOMAIN}/api/public/mcp", "auth": "Basic", "mode": "shared", "allow": ["owner"] }
+    "langfuse": { "name": "Langfuse", "upstream": "https://langfuse-mcp.${DOMAIN}/api/public/mcp", "auth": "Basic", "mode": "shared", "allow": ["owner"] },
+    "fli": { "name": "Google Flights", "upstream": "https://mcp-stdio.${DOMAIN}/fli/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"] }
   }
 }
