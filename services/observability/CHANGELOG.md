@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.6.4...observability-v0.7.0) (2026-10-17)
+
+
+### Features
+
+* **observability:** agent cost schema, Agents dashboards and cost alerts ([#448](https://github.com/giocaizzi/rp5-homeserver/issues/448)) ([7eeb6a0](https://github.com/giocaizzi/rp5-homeserver/commit/7eeb6a092909bf0875ca92b28041985d8fde2113))
+
 ## [0.6.4](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.6.3...observability-v0.6.4) (2026-10-17)
 
 
