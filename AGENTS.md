@@ -123,6 +123,22 @@ There is no application test/lint/build suite — this repo is configuration. "T
 - Non-root containers when possible.
 - No `privileged: true`.
 
+## Public repo: no private values, anywhere
+
+This repo is **public**, and so are its PRs, issues, comments, releases and Actions logs. Never write a private value into any of them; use a placeholder in text and a secret in config.
+
+| Value | Write instead |
+|---|---|
+| Domain | `<domain>` in docs and PR text, `${DOMAIN}` in config |
+| Email addresses, Pi user, LAN IPs, hostnames beyond `pi.local` | `<email>`, `pi`, `<pi-ip>` |
+| Cloudflare account/zone ID, tunnel ID, Access team and `aud` tags, workers.dev subdomain, GCP project, bucket and service-account names | GitHub environment **secret** (never a `vars` entry: variables print unmasked in public logs) and `sensitive = true` in Terraform |
+| Any credential or token | Bitwarden Secrets Manager (see Constraints) |
+
+- Applies equally to PR titles and bodies, commit messages (they become CHANGELOG lines and release notes), issue comments and pasted command output.
+- Workflows never print private values: no `echo` of secrets or identifiers, `::add-mask::` for derived ones, Terraform plan comments only with sensitive values redacted.
+- Before pushing or posting, run `make check` (gitleaks) and search the diff and the PR text for the values above.
+- A leaked credential is rotated first, then scrubbed from history.
+
 ---
 ---
 
