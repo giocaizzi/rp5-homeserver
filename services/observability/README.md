@@ -56,10 +56,10 @@ flowchart TB
 | Container | Image | Purpose |
 |-----------|-------|---------|
 | prometheus | `prom/prometheus:v3.5.3` | Metrics TSDB |
-| loki | `grafana/loki:3.5.12` | Log aggregation |
+| loki | `grafana/loki:3.7.8` | Log aggregation |
 | tempo | `grafana/tempo:2.10.5` | Distributed tracing |
 | alloy | `grafana/alloy:v1.15.1` | OTEL collector |
-| grafana | `grafana/grafana:11.6.14` | Dashboards |
+| grafana | `grafana/grafana:13.2.4` | Dashboards |
 
 ---
 
@@ -195,3 +195,11 @@ Key labels applied by Alloy (OTEL-compliant names):
 | `alloy_data` | Collector state |
 
 
+
+### Upgrading Grafana
+
+Grafana migrates `grafana.db` on start and cannot run an older version against it. Snapshot the volume before bumping the image; to roll back, stop the service, restore the archive into the volume, and redeploy the old tag.
+
+```bash
+ssh pi@pi.local 'mkdir -p ~/backups && docker run --rm -v observability_grafana_data:/d:ro -v ~/backups:/b alpine tar czf /b/grafana_data-$(date +%Y%m%d%H%M).tgz -C /d .'
+```

@@ -19,6 +19,10 @@ datasources:
     editable: true
     jsonData:
       maxLines: 1000
+      # Loki 3.7 serves /loki/api/v1/drilldown-limits (Logs Drilldown) only with
+      # a tenant header even when auth_enabled is false; "fake" is Loki's
+      # single-tenant ID, so every other query sees the same data.
+      httpHeaderName1: X-Scope-OrgID
       # Enable derived fields for trace correlation
       derivedFields:
         - name: TraceID
@@ -26,6 +30,8 @@ datasources:
           datasourceUid: tempo
           url: '$${__value.raw}'
           urlDisplayLabel: 'View Trace'
+    secureJsonData:
+      httpHeaderValue1: fake
 
   - name: Tempo
     type: tempo
