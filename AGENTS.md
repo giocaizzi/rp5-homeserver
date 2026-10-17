@@ -137,6 +137,7 @@ This repo is **public**, and so are its PRs, issues, comments, releases and Acti
 - Applies equally to PR titles and bodies, commit messages (they become CHANGELOG lines and release notes), issue comments and pasted command output.
 - Workflows never print private values: no `echo` of secrets or identifiers, `::add-mask::` for derived ones, Terraform plan comments only with sensitive values redacted.
 - Before pushing or posting, run `make check` (gitleaks) and search the diff and the PR text for the values above.
+- CI enforces it: the required `Leak check` fails a PR whose diff, commits, title or body contain a value from the `LEAK_PATTERNS` secret. Add every new private value there (repo and Dependabot secret) in the same change that introduces it.
 - A leaked credential is rotated first, then scrubbed from history.
 
 ---

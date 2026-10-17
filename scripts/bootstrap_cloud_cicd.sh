@@ -143,14 +143,7 @@ cat <<EOF
 Bootstrap complete. Wire up GitHub next:
 
 GitHub Actions repository variables (Settings → Variables → Actions):
-  TF_STATE_BUCKET           ${STATE_BUCKET}
-  GCP_WIF_PROVIDER          ${PROVIDER_FQN}
-  GCP_TF_SERVICE_ACCOUNT    ${SA_EMAIL}
-  GCP_PROJECT_ID            ${GCP_PROJECT_ID}
   GCP_REGION                ${REGION}
-  GCP_BACKUP_BUCKET_NAME    <copy from cloud/terraform.tfvars>
-  CLOUDFLARE_ACCOUNT_ID     <copy from cloud/terraform.tfvars>
-  CLOUDFLARE_ZONE_ID        <copy from cloud/terraform.tfvars>
   BACKUP_RETENTION_DAYS     <copy from cloud/terraform.tfvars>
   TF_VERSION                1.9.8 (optional override)
 
@@ -162,6 +155,13 @@ GitHub Environments to create (Settings → Environments):
 GitHub Actions ENVIRONMENT SECRETS on cloud-plan AND cloud-production
 (gh secret set <NAME> -e cloud-plan; same for cloud-production):
   CLOUDFLARE_API_TOKEN      <your CF API token>
+  TF_STATE_BUCKET           (printed by this script; never paste it in public)
+  GCP_WIF_PROVIDER          (same)
+  GCP_TF_SERVICE_ACCOUNT    (same)
+  GCP_PROJECT_ID            <your GCP project>
+  GCP_BACKUP_BUCKET_NAME    <copy from cloud/terraform.tfvars>
+  CLOUDFLARE_ACCOUNT_ID     <copy from cloud/terraform.tfvars>
+  CLOUDFLARE_ZONE_ID        <copy from cloud/terraform.tfvars>
   TUNNEL_SECRET             <openssl rand -base64 32 of the existing tunnel>
   CLOUDFLARE_ZONE_NAME      <copy from cloud/terraform.tfvars>
   N8N_USERS                 <JSON array string, e.g. ["a@x.com"]>

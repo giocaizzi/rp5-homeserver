@@ -46,11 +46,11 @@ jobs:
 
       - uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
-          service_account: ${{ vars.GCP_TF_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.GCP_TF_SERVICE_ACCOUNT }}
 
       - name: terraform init
-        run: terraform init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
+        run: terraform init -input=false -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}"
 
       - name: Mask private inputs
         # Secrets are masked as whole strings only; mask each email of the JSON-array
@@ -76,9 +76,9 @@ jobs:
       - name: terraform apply
         env:
           TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          TF_VAR_cloudflare_account_id: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_zone_name: ${{ secrets.CLOUDFLARE_ZONE_NAME }}
-          TF_VAR_zone_id: ${{ vars.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           TF_VAR_tunnel_secret: ${{ secrets.TUNNEL_SECRET }}
           TF_VAR_n8n_users: ${{ secrets.N8N_USERS || '[]' }}
           TF_VAR_portainer_users: ${{ secrets.PORTAINER_USERS || '[]' }}
@@ -91,8 +91,8 @@ jobs:
           TF_VAR_code_users: ${{ secrets.CODE_USERS || '[]' }}
           TF_VAR_crm_users: ${{ secrets.CRM_USERS || '[]' }}
           TF_VAR_calibre_users: ${{ secrets.CALIBRE_USERS || '[]' }}
-          TF_VAR_gcp_project_id: ${{ vars.GCP_PROJECT_ID }}
+          TF_VAR_gcp_project_id: ${{ secrets.GCP_PROJECT_ID }}
           TF_VAR_gcp_region: ${{ vars.GCP_REGION }}
-          TF_VAR_gcp_backup_bucket_name: ${{ vars.GCP_BACKUP_BUCKET_NAME }}
+          TF_VAR_gcp_backup_bucket_name: ${{ secrets.GCP_BACKUP_BUCKET_NAME }}
           TF_VAR_backup_retention_days: ${{ vars.BACKUP_RETENTION_DAYS }}
         run: terraform apply -input=false -auto-approve -lock-timeout=5m
