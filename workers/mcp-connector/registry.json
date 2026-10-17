@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "greenhouse": { "name": "Greenhouse", "upstream": "https://greenhouse.${DOMAIN}/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"] },
+    "firefly": { "name": "Firefly III", "upstream": "https://firefly.${DOMAIN}/api/v1/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"] },
+    "n8n": { "name": "n8n", "upstream": "https://n8n.${DOMAIN}/mcp-server/http", "auth": "Bearer", "mode": "shared", "allow": ["owner"] },
+    "grafana": { "name": "Grafana", "upstream": "https://grafana.${DOMAIN}/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"] },
+    "netdata": { "name": "Netdata", "upstream": "https://netdata-mcp.${DOMAIN}/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"] },
+    "portainer": { "name": "Portainer", "upstream": "https://portainer.${DOMAIN}/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"], "extra_headers": true },
+    "langfuse": { "name": "Langfuse", "upstream": "https://langfuse-mcp.${DOMAIN}/api/public/mcp", "auth": "Basic", "mode": "shared", "allow": ["owner"] }
+  }
+}
