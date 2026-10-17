@@ -312,7 +312,7 @@ services:
         com.giocaizzi.tier: "core"
       resources:
         limits:
-          memory: 384M
+          memory: 512M # Grafana 13 idles at ~300MiB
     logging:
       <<: *logging-base
 
