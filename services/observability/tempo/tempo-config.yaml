@@ -37,11 +37,12 @@ storage:
       max_workers: 10
       queue_depth: 1000
 
-# TraceQL metrics (rate(), Traces Drilldown) default to a 3h max range; 24h
-# keeps backend scans bounded on the Pi.
+# TraceQL metrics (rate(), Traces Drilldown) default to a 3h max range. 25h:
+# Grafana's "Last 24 hours" range is rejected at exactly 24h, and a day keeps
+# backend scans bounded on the Pi.
 query_frontend:
   metrics:
-    max_duration: 24h
+    max_duration: 25h
 
 compactor:
   compaction:
