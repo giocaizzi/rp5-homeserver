@@ -1,0 +1,50 @@
+# Fail a PR whose diff, commit messages, title or body contains a private value
+# (domain, emails, Pi user, cloud identifiers). The values live only in the
+# LEAK_PATTERNS secret (one per line; also set as a Dependabot secret), so this
+# check reveals nothing: it reports where a match is, never what matched.
+# Runs on `edited` too, so a PR body changed after opening is re-checked.
+# Required check: `Leak check`. Rule: AGENTS.md "Public repo: no private values".
+name: Leak check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  leak-check:
+    name: Leak check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Scan PR for private values
+        # Read from env, never interpolated into the script.
+        env:
+          LEAK_PATTERNS: ${{ secrets.LEAK_PATTERNS }}
+          TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${LEAK_PATTERNS:-}" ]; then
+            echo "::error::LEAK_PATTERNS secret is not set"; exit 1
+          fi
+          pat=$(mktemp)
+          printf '%s\n' "$LEAK_PATTERNS" | sed '/^[[:space:]]*$/d' > "$pat"
+          fail=0
+          scan() { if grep -qiF -f "$pat"; then echo "::error::private value in $1"; fail=1; fi; }
+          scan "PR title" < <(printf '%s' "$TITLE")
+          scan "PR body" < <(printf '%s' "$BODY")
+          scan "commit messages" < <(git log --format=%B "$BASE..$HEAD")
+          while IFS= read -r f; do
+            scan "$f" < <(git diff "$BASE...$HEAD" -- "$f" | grep '^+' || true)
+          done < <(git diff --name-only "$BASE...$HEAD")
+          rm -f "$pat"
+          [ "$fail" -eq 0 ] && echo "No private values found."
+          exit "$fail"

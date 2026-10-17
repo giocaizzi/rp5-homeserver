@@ -11,6 +11,7 @@ output "tunnel_token" {
 output "tunnel_id" {
   description = "The ID of the created Cloudflare tunnel"
   value       = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
+  sensitive   = true
 }
 
 output "n8n_url" {
@@ -86,16 +87,19 @@ output "calibre_url" {
 output "backup_bucket_name" {
   description = "Name of the backup GCS bucket"
   value       = google_storage_bucket.backup.name
+  sensitive   = true
 }
 
 output "backup_bucket_url" {
   description = "URL of the backup GCS bucket"
   value       = google_storage_bucket.backup.url
+  sensitive   = true
 }
 
 output "backup_service_account_email" {
   description = "Email of the backup service account"
   value       = google_service_account.backup.email
+  sensitive   = true
 }
 
 output "backup_service_account_key" {
@@ -111,6 +115,7 @@ output "backup_service_account_key" {
 output "claude_n8n_mcp_client_id" {
   description = "Client ID for the n8n MCP service token (CF-Access-Client-Id)"
   value       = cloudflare_zero_trust_access_service_token.claude_n8n_mcp.client_id
+  sensitive   = true
 }
 
 output "claude_n8n_mcp_client_secret" {
@@ -122,6 +127,7 @@ output "claude_n8n_mcp_client_secret" {
 output "claude_firefly_mcp_client_id" {
   description = "Client ID for the Firefly III MCP service token (CF-Access-Client-Id)"
   value       = cloudflare_zero_trust_access_service_token.claude_firefly_mcp.client_id
+  sensitive   = true
 }
 
 output "claude_firefly_mcp_client_secret" {
@@ -133,6 +139,7 @@ output "claude_firefly_mcp_client_secret" {
 output "claude_greenhouse_mcp_client_id" {
   description = "Client ID for the greenhouse MCP service token (CF-Access-Client-Id)"
   value       = cloudflare_zero_trust_access_service_token.claude_greenhouse_mcp.client_id
+  sensitive   = true
 }
 
 output "claude_greenhouse_mcp_client_secret" {
@@ -144,6 +151,7 @@ output "claude_greenhouse_mcp_client_secret" {
 output "external_crm_api_client_id" {
   description = "Client ID for the external backend -> Twenty CRM API service token (CF-Access-Client-Id)"
   value       = cloudflare_zero_trust_access_service_token.external_crm_api.client_id
+  sensitive   = true
 }
 
 output "external_crm_api_client_secret" {
@@ -165,6 +173,7 @@ output "otel_ingest_url" {
 output "otel_ingest_client_id" {
   description = "Client ID for the otel-ingest service token (CF-Access-Client-Id)"
   value       = cloudflare_zero_trust_access_service_token.otel_ingest.client_id
+  sensitive   = true
 }
 
 output "otel_ingest_client_secret" {
@@ -176,6 +185,7 @@ output "otel_ingest_client_secret" {
 output "claude_grafana_mcp_client_id" {
   description = "Client ID for the Grafana MCP service token (CF-Access-Client-Id)"
   value       = cloudflare_zero_trust_access_service_token.claude_grafana_mcp.client_id
+  sensitive   = true
 }
 
 output "claude_grafana_mcp_client_secret" {
@@ -187,6 +197,7 @@ output "claude_grafana_mcp_client_secret" {
 output "claude_netdata_mcp_client_id" {
   description = "Client ID for the Netdata MCP service token (CF-Access-Client-Id)"
   value       = cloudflare_zero_trust_access_service_token.claude_netdata_mcp.client_id
+  sensitive   = true
 }
 
 output "claude_netdata_mcp_client_secret" {
@@ -198,6 +209,7 @@ output "claude_netdata_mcp_client_secret" {
 output "claude_portainer_mcp_client_id" {
   description = "Client ID for the Portainer MCP service token (CF-Access-Client-Id)"
   value       = cloudflare_zero_trust_access_service_token.claude_portainer_mcp.client_id
+  sensitive   = true
 }
 
 output "claude_portainer_mcp_client_secret" {
@@ -209,6 +221,7 @@ output "claude_portainer_mcp_client_secret" {
 output "claude_langfuse_mcp_client_id" {
   description = "Client ID for the Langfuse MCP service token (CF-Access-Client-Id)"
   value       = cloudflare_zero_trust_access_service_token.claude_langfuse_mcp.client_id
+  sensitive   = true
 }
 
 output "claude_langfuse_mcp_client_secret" {
