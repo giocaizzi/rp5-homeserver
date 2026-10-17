@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.6](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.2.5...mcp-connector-v0.2.6) (2026-10-17)
+
+
+### Bug Fixes
+
+* **mcp-connector:** require consent and allowlisted redirects for OAuth ([#388](https://github.com/giocaizzi/rp5-homeserver/issues/388)) ([eaea8b0](https://github.com/giocaizzi/rp5-homeserver/commit/eaea8b0a0d9cd13d4f62c0f04ced6f53bff76786))
+
 ## [0.2.5](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.2.4...mcp-connector-v0.2.5) (2026-10-15)
 
 

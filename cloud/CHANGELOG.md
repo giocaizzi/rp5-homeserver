@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.7.0...cloud-v0.7.1) (2026-10-17)
+
+
+### Documentation
+
+* **cloud:** correct the otel access app comment ([#391](https://github.com/giocaizzi/rp5-homeserver/issues/391)) ([cb7fc92](https://github.com/giocaizzi/rp5-homeserver/commit/cb7fc92b6d2e5f851cdbd5d47b4dfe43bcce8a6d))
+
 ## [0.7.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.6.2...cloud-v0.7.0) (2026-10-15)
 
 

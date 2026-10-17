@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.6](https://github.com/giocaizzi/rp5-homeserver/compare/v1.19.5...v1.19.6) (2026-10-17)
+
+
+### Bug Fixes
+
+* **infra:** stop proxying non-OTLP paths on the otel host ([#389](https://github.com/giocaizzi/rp5-homeserver/issues/389)) ([d4069a7](https://github.com/giocaizzi/rp5-homeserver/commit/d4069a78744480bd2b1b26cdaf30d1a0dad47b00))
+
 ## [1.19.5](https://github.com/giocaizzi/rp5-homeserver/compare/v1.19.4...v1.19.5) (2026-10-15)
 
 
