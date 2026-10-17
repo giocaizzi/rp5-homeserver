@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.21.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.20.0...v1.21.0) (2026-10-17)
+
+
+### Features
+
+* **infra:** put the mcp-stdio host behind the Access JWT flag ([#413](https://github.com/giocaizzi/rp5-homeserver/issues/413)) ([76464dd](https://github.com/giocaizzi/rp5-homeserver/commit/76464ddc42bce0af9e34c683df8f4c9fa1a7e5c7))
+
 ## [1.20.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.19.6...v1.20.0) (2026-10-17)
 
 
