@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.6...observability-v0.6.0) (2026-10-17)
+
+
+### Features
+
+* **observability:** upgrade loki to 3.7.8 and grafana to 13.2.4 ([#424](https://github.com/giocaizzi/rp5-homeserver/issues/424)) ([a1532b1](https://github.com/giocaizzi/rp5-homeserver/commit/a1532b1a29866af480605a4cdac7c3fbce7390b0))
+
 ## [0.5.6](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.5...observability-v0.5.6) (2026-10-17)
 
 
