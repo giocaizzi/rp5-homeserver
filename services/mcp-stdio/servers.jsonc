@@ -1,0 +1,19 @@
+// supergateway servers: each is served at /<name>/mcp on port 8000.
+// Every server needs its own apiKeyFile (a Swarm secret, see README); the
+// gateway refuses to start if a key file is missing or empty.
+{
+  "port": 8000,
+  "healthEndpoint": "/healthz",
+  "logFormat": "json",
+  // Defaults for every server: Streamable HTTP, one server process per session.
+  "outputTransport": "streamableHttp",
+  "stateful": true,
+  "sessionTimeout": 900000,
+  "mcpServers": {
+    // Google Flights (PyPI `flights`). Shared upstream: no user data.
+    "fli": {
+      "command": "/opt/mcp/fli/bin/fli-mcp",
+      "apiKeyFile": "/run/secrets/fli_api_key"
+    }
+  }
+}
