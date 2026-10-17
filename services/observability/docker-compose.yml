@@ -7,7 +7,7 @@
 x-labels-base: &labels-base
   com.giocaizzi.namespace: "observability"
   com.giocaizzi.env: "production"
-  com.giocaizzi.config-rev: "0.5.4" # x-release-please-version — bumped per release so tasks re-bind fresh Portainer clone
+  com.giocaizzi.config-rev: "0.5.6" # x-release-please-version — bumped per release so tasks re-bind fresh Portainer clone
 
 x-deploy-base: &deploy-base
   mode: replicated
@@ -268,6 +268,8 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=false
       - GF_SERVER_ROOT_URL=https://grafana.home/
       - GF_SERVER_SERVE_FROM_SUB_PATH=false
+      # Live (WebSocket) only accepts the root_url origin; allow the public host too
+      - GF_LIVE_ALLOWED_ORIGINS=https://grafana.${DOMAIN:?set DOMAIN in the stack env}
       - GF_INSTALL_PLUGINS=
       - GF_FEATURE_MANAGEMENT_ALLOW_EDITING=false
       - GF_ANALYTICS_REPORTING_ENABLED=false

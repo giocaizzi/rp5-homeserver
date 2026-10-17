@@ -37,6 +37,12 @@ storage:
       max_workers: 10
       queue_depth: 1000
 
+# TraceQL metrics (rate(), Traces Drilldown) default to a 3h max range; 24h
+# keeps backend scans bounded on the Pi.
+query_frontend:
+  metrics:
+    max_duration: 24h
+
 compactor:
   compaction:
     block_retention: 720h
@@ -46,9 +52,11 @@ memberlist:
   abort_if_cluster_join_fails: false
   join_members: []
 
-# Metrics generator: span-metrics only (traces_spanmetrics_* → Prometheus).
-# local-blocks (TraceQL metrics) and service-graphs are disabled to fit the
-# 1024M container.
+# Metrics generator: span-metrics (traces_spanmetrics_* → Prometheus) and
+# local-blocks (TraceQL metrics: rate(), histogram; required by Grafana Traces
+# Drilldown). local-blocks is kept small to fit the 1024M container: recent
+# blocks only, no flush (older ranges are served from the trace backend).
+# service-graphs stays disabled.
 metrics_generator:
   registry:
     external_labels:
@@ -60,11 +68,18 @@ metrics_generator:
         send_exemplars: true
   # Single-instance deployment - no ring configuration needed
   # The generator runs embedded in the Tempo monolith
+  traces_storage:
+    path: /var/tempo/generator/traces
+  processor:
+    local_blocks:
+      flush_to_storage: false
+      max_block_bytes: 50000000
+      complete_block_timeout: 30m
 
 overrides:
   defaults:
     metrics_generator:
-      processors: [span-metrics]
+      processors: [span-metrics, local-blocks]
 
 usage_report:
   reporting_enabled: false

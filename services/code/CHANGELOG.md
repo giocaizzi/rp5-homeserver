@@ -5,4 +5,4 @@
 
 ### Features
 
-* **code:** remote Claude Code dev environment (CloudCLI) ([#149](https://github.com/giocaizzi/rp5-homeserver/issues/149)) ([f6e1c28](https://github.com/giocaizzi/rp5-homeserver/commit/f6e1c285e5ed59e00b68199f7833c14355eb96e0))
+* **code:** remote Claude Code dev environment (CloudCLI) ([#149](https://github.com/giocaizzi/rp5-homeserver/issues/149)) ([dbce3ac](https://github.com/giocaizzi/rp5-homeserver/commit/dbce3ac1df062063856db600f35d004246b53702))

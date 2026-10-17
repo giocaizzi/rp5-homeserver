@@ -62,6 +62,7 @@ flowchart TB
 | [Setup](./setup.md) | Initial deployment, Docker Swarm init |
 | [Cloud](./cloud.md) | Terraform: Cloudflare tunnel, GCS backup bucket |
 | [Networking](./networking.md) | Network topology, DNS resolution, nginx routing |
+| [Access JWT](./access-jwt.md) | Cloudflare Access JWT check at nginx: per-host flag, rollout and rollback runbook |
 | [Backup](./backup.md) | Backrest setup, restore procedures |
 | [GitOps](./gitops.md) | Portainer webhooks, automated deployment |
 | [Releases](./releases.md) | release-please versioning, tags, changelogs, commit/PR-title contract |
@@ -70,6 +71,7 @@ flowchart TB
 | [Compose Standards](./compose_standards.md) | YAML anchors, service template, Swarm guidelines |
 | [Deployment Reference](./deployment.md) | Component→workflow map, Portainer mounts, infra VERSION, Homepage |
 | [CI/CD](./ci_cd.md) | Workflows, cloud/ Terraform auth and wiring, adding a public service |
+| [MCP stdio](./mcp-stdio.md) | Runbook: add a stdio-only MCP server (supergateway stack, Access, connector) |
 
 ## Services
 
@@ -91,6 +93,7 @@ flowchart TB
 | Code | `https://code.<domain>` | services/code |
 | CRM | `https://crm.<domain>` | services/crm |
 | Calibre | `https://calibre.<domain>` | services/calibre |
+| MCP stdio | `https://mcp-stdio.<domain>/<server>/mcp` (Worker only) | services/mcp-stdio |
 
 ## Quick Start
 
