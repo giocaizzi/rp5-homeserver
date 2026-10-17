@@ -197,6 +197,16 @@ resource "cloudflare_dns_record" "langfuse_mcp" {
   proxied = true
 }
 
+# Creates the CNAME record that routes mcp-stdio.${var.zone_name} to the tunnel (MCP-only host).
+resource "cloudflare_dns_record" "mcp_stdio" {
+  zone_id = var.zone_id
+  name    = "mcp-stdio"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+
 # Configures tunnel with a published application for clientless access.
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
@@ -336,6 +346,15 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
           no_tls_verify      = true
           http_host_header   = "calibre.${var.zone_name}"
           origin_server_name = "calibre.${var.zone_name}"
+        }
+      },
+      {
+        hostname = "mcp-stdio.${var.zone_name}"
+        service  = "https://infra-proxy:443"
+        origin_request = {
+          no_tls_verify      = true
+          http_host_header   = "mcp-stdio.${var.zone_name}"
+          origin_server_name = "mcp-stdio.${var.zone_name}"
         }
       },
       {
@@ -1163,6 +1182,51 @@ resource "cloudflare_zero_trust_access_application" "langfuse_mcp_policy" {
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.claude_langfuse_mcp_bypass.id
+      precedence = 1
+    }
+  ]
+}
+
+# --- fli MCP (mcp-stdio) ------------------------------------------------
+# mcp-stdio.<zone> is an MCP-only host (nginx 404s everything but /<server>/mcp) for
+# stdio servers behind supergateway. One path-scoped app and service token per server,
+# so a connector's token reaches only its own server. The per-server gateway API key
+# is the app-layer factor.
+
+resource "cloudflare_zero_trust_access_service_token" "claude_fli_mcp" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-fli-mcp"
+}
+
+resource "cloudflare_zero_trust_access_policy" "claude_fli_mcp_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-fli-mcp-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.claude_fli_mcp.id
+      }
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "fli_mcp_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "fli-mcp.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "mcp-stdio.${var.zone_name}/fli/mcp"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.claude_fli_mcp_bypass.id
       precedence = 1
     }
   ]
