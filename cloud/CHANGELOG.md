@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.8.0...cloud-v0.9.0) (2026-10-17)
+
+
+### Features
+
+* **cloud:** access app and service token for the garmin mcp ([#436](https://github.com/giocaizzi/rp5-homeserver/issues/436)) ([1b60752](https://github.com/giocaizzi/rp5-homeserver/commit/1b60752af8cdf1835244a05b4d34d868eca162db))
+
 ## [0.8.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.7.1...cloud-v0.8.0) (2026-10-17)
 
 
