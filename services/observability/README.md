@@ -200,6 +200,12 @@ Key labels applied by Alloy (OTEL-compliant names):
 
 Grafana migrates `grafana.db` on start and cannot run an older version against it. Snapshot the volume before bumping the image; to roll back, stop the service, restore the archive into the volume, and redeploy the old tag.
 
+Preinstalled app plugins (Drilldown apps, advisor) live in `grafana_data` and are not upgraded across a major, so after a major bump they fail to load (`Could not load plugin`, `ReactCurrentOwner`). Move them aside and restart; Grafana reinstalls compatible versions on start:
+
+```bash
+ssh pi@pi.local 'c=$(docker ps -q -f name=observability_dashboard); docker exec $c sh -c "mkdir -p /var/lib/grafana/plugins-old && mv /var/lib/grafana/plugins/* /var/lib/grafana/plugins-old/" && docker service update --force observability_dashboard'
+```
+
 ```bash
 ssh pi@pi.local 'mkdir -p ~/backups && docker run --rm -v observability_grafana_data:/d:ro -v ~/backups:/b alpine tar czf /b/grafana_data-$(date +%Y%m%d%H%M).tgz -C /d .'
 ```
