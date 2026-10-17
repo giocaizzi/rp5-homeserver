@@ -243,6 +243,10 @@ declare "otlp_receivers" {
         `set(attributes["cost_usd"], (Double(attributes["input_tokens"]) * 2.0 + Double(attributes["cache_read_tokens"]) * 0.1 + Double(attributes["output_tokens"]) * 10.0) / 1000000.0) where attributes["agent.event"] == "api_request" and attributes["cost_usd"] == nil and IsMatch(attributes["model"], "^claude-sonnet-5-5")`,
         `set(attributes["cost_usd"], (Double(attributes["input_tokens"]) * 0.1 + Double(attributes["cache_read_tokens"]) * 0.01 + Double(attributes["output_tokens"]) * 0.5) / 1000000.0) where attributes["agent.event"] == "api_request" and attributes["cost_usd"] == nil and IsMatch(attributes["model"], "^claude-haiku-5-5")`,
         `set(attributes["cost_usd"], (Double(attributes["input_tokens"]) * 10.0 + Double(attributes["cache_read_tokens"]) * 0.25 + Double(attributes["output_tokens"]) * 50.0) / 1000000.0) where attributes["agent.event"] == "api_request" and attributes["cost_usd"] == nil and IsMatch(attributes["model"], "^claude-fable-5-1")`,
+        // Copilot-only models at Copilot's AI-credit rates (VS Code Chat Debug View,
+        // 2026-10; 1 AI credit = $0.01): copilot-chat spans carry no nano_aiu.
+        `set(attributes["cost_usd"], (Double(attributes["input_tokens"]) * 0.2 + Double(attributes["cache_read_tokens"]) * 0.02 + Double(attributes["output_tokens"]) * 1.2) / 1000000.0) where attributes["agent.event"] == "api_request" and attributes["cost_usd"] == nil and IsMatch(attributes["model"], "^mai-code-1\\.1-flash")`,
+        `set(attributes["cost_usd"], 0.0) where attributes["agent.event"] == "api_request" and attributes["cost_usd"] == nil and IsMatch(attributes["model"], "^gpt-4o-mini")`,
       ]
     }
 

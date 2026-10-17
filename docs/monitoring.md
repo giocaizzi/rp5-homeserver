@@ -227,7 +227,7 @@ Costs are list-price equivalents: on a subscription they measure usage, not the 
 
 **Update the price table** when a provider changes prices or a harness's default model changes:
 
-1. Check the providers' pricing pages (per 1M tokens: input, cache read, output).
+1. Check the providers' pricing pages (per 1M tokens: input, cache read, output). Copilot-only models (VS Code sends no `nano_aiu`) take Copilot's AI-credit rates from the VS Code Chat Debug View, at 1 AI credit = $0.01.
 2. Edit the `PRICE TABLE` rows in `otelcol.processor.transform "agent_usage"`; one row per model regex. A model with no row records tokens but no cost.
 3. Ship it like any Alloy change (release PR, deploy), then check that `sum by (model) (count_over_time({service_name=~"codex|github-copilot|copilot-chat"} | agent_event="api_request" | cost_usd="" [1d]))` returns nothing for current models.
 
