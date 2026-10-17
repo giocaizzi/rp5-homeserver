@@ -80,7 +80,7 @@ Contains `declare` blocks for consistent label extraction:
 
 | File | Data Flow |
 |------|-----------|
-| `otel.alloy` | OTLP receivers → memory_limiter → batch → transform → backends |
+| `otel.alloy` | OTLP receivers → memory_limiter → batch → transform → backends; agent logs and Copilot chat spans → `agent_usage` (one request schema with `cost_usd`, see docs/monitoring.md, Agent cost) → Loki |
 | `logs.alloy` | Docker discovery → log collection → processing → Loki |
 | `metrics.alloy` | Static + dynamic targets → scrape → Prometheus |
 

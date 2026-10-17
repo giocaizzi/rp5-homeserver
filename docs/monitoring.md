@@ -197,6 +197,8 @@ Dashboards are organized in folders by purpose:
 | `observability` | health | Loki/Tempo/Prometheus/Alloy health |
 | `Website` | app, ai | Website application (pick namespace/service in the dashboard variables) |
 | `shared` | postgresql, mariadb, redis, nginx | Technology-specific dashboards (multi-instance) |
+| `claude-code` | dashboard | Claude Code metrics in depth (Prometheus) |
+| `Agents` | overview, ops | Every agent harness: cost, tokens, errors (Agent Overview); guard, skills, tools, subagents (Agent Ops) |
 
 ### Dashboard Variables
 
@@ -209,6 +211,27 @@ Dashboards use variables for dynamic filtering:
 | `$datasource` | Select Prometheus/Loki instance | — |
 
 Shared dashboards (PostgreSQL, Redis) use both variables for multi-instance support.
+
+### Agent cost
+
+The Agents folder reads one request schema that `alloy/pipelines/otel.alloy` (`agent_usage`) builds from every harness: each model call is a Loki record with `agent_event="api_request"` and `model`, `session_id`, `input_tokens` (uncached), `output_tokens`, `cache_read_tokens` and `cost_usd` in structured metadata. `service_name` is the harness: `claude-code`, `codex`, `github-copilot` (Copilot CLI), `copilot-chat` (VS Code), `opencode`, `pi`.
+
+| Harness | Sends | Cost from |
+|---------|-------|-----------|
+| Claude Code | OTLP logs (`api_request`) | its own `cost_usd` |
+| opencode, pi | the guard plugin's `api_request` | the harness's own cost |
+| Codex | OTLP logs (`codex.sse_event` `response.completed`) | the Alloy price table |
+| Copilot CLI, VS Code | OTLP traces (`chat` spans), turned into logs by `spanlogs` | `github.copilot.nano_aiu` × 1e-11 when present, else the price table |
+
+Costs are list-price equivalents: on a subscription they measure usage, not the bill. The client-side settings that send each harness's telemetry live in the dotfiles repo.
+
+**Update the price table** when a provider changes prices or a harness's default model changes:
+
+1. Check the providers' pricing pages (per 1M tokens: input, cache read, output).
+2. Edit the `PRICE TABLE` rows in `otelcol.processor.transform "agent_usage"`; one row per model regex. A model with no row records tokens but no cost.
+3. Ship it like any Alloy change (release PR, deploy), then check that `sum by (model) (count_over_time({service_name=~"codex|github-copilot|copilot-chat"} | agent_event="api_request" | cost_usd="" [1d]))` returns nothing for current models.
+
+The daily budget is the `budget` variable on Agent Overview and the `agent-daily-cost` alert threshold (`grafana/provisioning/alerting/rules.yaml`); change both together.
 
 ### Data Sources (Pre-configured)
 | Name | Type | URL |
@@ -237,7 +260,7 @@ Grafana's contact point and root policy are provisioned in `grafana/provisioning
 | Database Alerts | PostgreSQL Down, PostgreSQL Low Cache Hit, MariaDB Down |
 | Redis Alerts | Redis Down |
 | Observability Stack | Loki Down, Tempo Down, Alloy Down |
-| Agent Ops (Loki) | Agent Telemetry Silent (no `claude-code` events for 36h), Guard Deny Spike (>10 denies per guard rule in 1h) |
+| Agent Ops (Loki) | Agent Telemetry Silent (no `claude-code` events for 36h), Guard Deny Spike (>10 denies per guard rule in 1h), Agent Daily Cost (>$750 list price across harnesses in 24h), Agent Rate Limit Burst (>5 Claude Code 429s in 1h) |
 | HTTP Errors (Loki) | Nginx 5xx Error Ratio High (per vhost, >5% and ≥20 errors over 5m), Container Error Logs Burst (>15 error lines/10m per service), Cloudflare Tunnel Origin Unreachable (>3 in 5m) |
 
 The container-error rule relies on Alloy's regex-derived `level` label (`alloy/pipelines/logs.alloy`: `level=`, `[ERROR]`, cloudflared `ERR`, monolog `.ERROR:`, NestJS and ntfy formats). Add a pattern there when a new service logs in another format. The query excludes noisy technologies (`grafana`, `alloy`, `netdata`, `*-exporter`) and benign lines (`Unauthenticated`, `context canceled`, `unexpected EOF`). Container health/restarts are covered by Netdata, not Grafana.
