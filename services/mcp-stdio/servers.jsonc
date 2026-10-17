@@ -14,6 +14,13 @@
     "fli": {
       "command": "/opt/mcp/fli/bin/fli-mcp",
       "apiKeyFile": "/run/secrets/fli_api_key"
+    },
+    // Garmin Connect (Taxuspt/garmin_mcp). Owner only: personal data. Tokens
+    // come from a one-time interactive `garmin-mcp-auth` (docs/mcp-stdio.md).
+    "garmin": {
+      "command": "/opt/mcp/garmin/bin/garmin-mcp",
+      "apiKeyFile": "/run/secrets/garmin_api_key",
+      "env": { "GARMINTOKENS": "/home/node/.garminconnect" }
     }
   }
 }

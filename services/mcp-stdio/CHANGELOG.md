@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.0.0...mcp-stdio-v1.1.0) (2026-10-17)
+
+
+### Features
+
+* **mcp-stdio:** add the garmin server ([#435](https://github.com/giocaizzi/rp5-homeserver/issues/435)) ([901a336](https://github.com/giocaizzi/rp5-homeserver/commit/901a336f0d23c365254aa5a93ed1a84533d36c51))
+
 ## 1.0.0 (2026-10-17)
 
 

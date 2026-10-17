@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.4.0...mcp-connector-v0.5.0) (2026-10-17)
+
+
+### Features
+
+* **mcp-connector:** add the garmin connector ([#437](https://github.com/giocaizzi/rp5-homeserver/issues/437)) ([77c2a69](https://github.com/giocaizzi/rp5-homeserver/commit/77c2a69d2b8c287abd21c3a6f7bd91d4a59d67a7))
+
 ## [0.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.3.0...mcp-connector-v0.4.0) (2026-10-17)
 
 

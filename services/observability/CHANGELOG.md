@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.3](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.6.2...observability-v0.6.3) (2026-10-17)
+
+
+### Documentation
+
+* **observability:** reinstall grafana app plugins after a major upgrade ([#432](https://github.com/giocaizzi/rp5-homeserver/issues/432)) ([3e4cb1c](https://github.com/giocaizzi/rp5-homeserver/commit/3e4cb1c265b50bc25c66b9577353c6f70045b3ec))
+
 ## [0.6.2](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.6.1...observability-v0.6.2) (2026-10-17)
 
 
