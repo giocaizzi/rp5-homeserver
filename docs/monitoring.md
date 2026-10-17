@@ -235,8 +235,7 @@ Grafana's contact point and root policy are provisioned in `grafana/provisioning
 | Group | Alerts |
 |-------|--------|
 | Database Alerts | PostgreSQL Down, PostgreSQL Low Cache Hit, MariaDB Down |
-| Redis Alerts | Redis Down, Redis High Memory |
-| Exporter Health | Metrics Exporter Down |
+| Redis Alerts | Redis Down |
 | Observability Stack | Loki Down, Tempo Down, Alloy Down |
 | HTTP Errors (Loki) | Nginx 5xx Error Ratio High (per vhost, >5% and ≥20 errors over 5m), Container Error Logs Burst (>15 error lines/10m per service), Cloudflare Tunnel Origin Unreachable (>3 in 5m) |
 
