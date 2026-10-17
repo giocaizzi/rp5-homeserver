@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.20.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.19.6...v1.20.0) (2026-10-17)
+
+
+### Features
+
+* **infra:** route mcp-stdio host to the stdio MCP gateway ([#406](https://github.com/giocaizzi/rp5-homeserver/issues/406)) ([9c3a033](https://github.com/giocaizzi/rp5-homeserver/commit/9c3a0332ffdca35c245b368ed977c4dfef0bd27e))
+* **infra:** verify the Cloudflare Access JWT at nginx behind a per-host flag ([#412](https://github.com/giocaizzi/rp5-homeserver/issues/412)) ([51445f3](https://github.com/giocaizzi/rp5-homeserver/commit/51445f38811dfee0168f70a2934faef17d79efea))
+
+
+### Bug Fixes
+
+* **infra:** keep calibre kobo logs token-free on errors and parseable ([#411](https://github.com/giocaizzi/rp5-homeserver/issues/411)) ([4601acb](https://github.com/giocaizzi/rp5-homeserver/commit/4601acbef0e24a23bfce6069f0c1b24fc718623f))
+* **infra:** rate-limit calibre reader paths and keep the kobo token out of logs ([#404](https://github.com/giocaizzi/rp5-homeserver/issues/404)) ([b9f89ed](https://github.com/giocaizzi/rp5-homeserver/commit/b9f89edee95067568f68201833cf67eade901b0a))
+
 ## [1.19.6](https://github.com/giocaizzi/rp5-homeserver/compare/v1.19.5...v1.19.6) (2026-10-17)
 
 

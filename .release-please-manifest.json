@@ -1,7 +1,7 @@
 {
-  "infra": "1.19.6",
-  "cloud": "0.7.1",
-  "workers/mcp-connector": "0.2.6",
+  "infra": "1.20.0",
+  "cloud": "0.8.0",
+  "workers/mcp-connector": "0.3.0",
   "services/adguard": "0.2.3",
   "services/ai": "0.1.1",
   "services/firefly": "0.2.8",
@@ -13,5 +13,6 @@
   "services/openclaw": "0.1.1",
   "services/code": "0.2.0",
   "services/crm": "0.3.0",
-  "services/calibre": "0.2.0"
+  "services/calibre": "0.2.0",
+  "services/mcp-stdio": "1.0.0"
 }

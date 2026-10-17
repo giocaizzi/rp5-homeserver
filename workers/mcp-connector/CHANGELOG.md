@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.2.6...mcp-connector-v0.3.0) (2026-10-17)
+
+
+### Features
+
+* **mcp-connector:** registry-driven connectors with per-connector groups and audit log ([#405](https://github.com/giocaizzi/rp5-homeserver/issues/405)) ([48b321f](https://github.com/giocaizzi/rp5-homeserver/commit/48b321fbb9f346552cfa5a604a1390ad7d93737e))
+
 ## [0.2.6](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.2.5...mcp-connector-v0.2.6) (2026-10-17)
 
 
