@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.6.1...observability-v0.6.2) (2026-10-17)
+
+
+### Bug Fixes
+
+* **observability:** drop dead alerts and raise the grafana memory limit ([#429](https://github.com/giocaizzi/rp5-homeserver/issues/429)) ([ec438b5](https://github.com/giocaizzi/rp5-homeserver/commit/ec438b5fb20aed7843c3f78b5782bdb58ed2c5ee))
+
 ## [0.6.1](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.6.0...observability-v0.6.1) (2026-10-17)
 
 
