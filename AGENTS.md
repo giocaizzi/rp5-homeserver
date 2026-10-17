@@ -108,6 +108,8 @@ There is no application test/lint/build suite — this repo is configuration. "T
 
 - Minimal Swarm config: avoid unnecessary stacks, networks, wrappers, CRON containers.
 - Never embed secrets in YAML—use Swarm secrets or `.env` files (gitignored).
+- `BWS_ACCESS_TOKEN` is never pasted, exported or printed: inject it from the OS keyring for the one command (a local wrapper, or `BWS_ACCESS_TOKEN="$(<keyring read>)" ./scripts/...`). An empty variable in your shell does not mean there is no token: look for the wrapper first.
+- Local `terraform` in `cloud/` failing with `UserProjectAccountProblem`: set `GOOGLE_CLOUD_QUOTA_PROJECT` to the GCP project in `terraform.tfvars` (why: [docs/cloud.md](docs/cloud.md#troubleshooting)).
 - Source of truth for `services/` secrets: Bitwarden Secrets Manager project `rp5-homeserver` (key = Swarm secret name). Never keep them as local files. `infra/` secrets stay file-based on the Pi (`file:`) but are generated from the same project (key `infra_<file stem>`, e.g. `infra_cert` for `cert.pem`): `sync_infra.sh` (without `--local`) writes them on the Pi when their hash differs; the Mac and the CI checkout hold no secret files. `*.pem`/`*.json` files end with a newline, the others don't — keep that, or Docker sees a changed (immutable) secret.
 - OpenClaw exception: prefer OpenClaw CLI-managed auth (gateway/config/auth profiles/channel tokens) persisted in `config_data` over custom entrypoint secret-export wrappers.
 - Use configs only for non-secret, user-level configuration.

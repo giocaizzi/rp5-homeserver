@@ -52,7 +52,18 @@ bws secret create infra_cloudflared_token "$(terraform output -raw tunnel_token)
 bws secret create infra_gcp_service_account "$(terraform output -raw backup_service_account_key | base64 -d)" <project-id>
 ```
 
-Then sync infra: `BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> DOMAIN=<domain> ./scripts/sync_infra.sh`
+Then sync infra: `BWS_ACCESS_TOKEN=<token from your keyring> PI_SSH_USER=<user> DOMAIN=<domain> ./scripts/sync_infra.sh`
+
+## Troubleshooting
+
+**`Error loading state ... UserProjectAccountProblem` (HTTP 403) on a local `terraform init`/`plan`.** Application Default Credentials bill Google API calls to a *quota project*: the one set by `gcloud auth application-default set-quota-project`, or the gcloud default project at login. If that project's billing account is closed, every call fails, including reading the state bucket, although the bucket's own project is fine. CI is unaffected (Workload Identity Federation has no user quota project). Point the quota project at this setup's GCP project for the session:
+
+```bash
+export GOOGLE_CLOUD_QUOTA_PROJECT=<gcp-project>   # the gcp_project_id in terraform.tfvars
+terraform init -backend-config=backend.hcl -reconfigure
+```
+
+**`BWS_ACCESS_TOKEN` is empty but secrets sync works on CI or another shell.** The token is meant to live in the OS keyring and reach `sync_infra.sh`/`create_secrets.sh` only through the command's environment, so an interactive shell normally doesn't have it. Read it from the keyring inline for the one command instead of exporting it.
 
 ## Details
 
