@@ -1,7 +1,7 @@
 /**
  * Worker environment bindings.
  *
- * `vars` (wrangler.jsonc) — non-secret, per-service.
+ * `vars` (rendered from registry.json by render-config.sh) — per-service.
  * Secrets (wrangler secret put --env <svc>) — sensitive, per-service.
  * Bindings — KV namespace + the OAuthProvider helper injected by the library.
  */
@@ -19,7 +19,11 @@ export interface Env {
   UPSTREAM_URL: string;
   /** Authorization scheme for UPSTREAM_BEARER; defaults to "Bearer" (Langfuse: "Basic"). */
   UPSTREAM_AUTH_SCHEME?: string;
-  /** Comma-separated email allowlist that may complete the OAuth login. */
+  /** Comma-separated groups allowed on this server (registry.json `allow`). */
+  ALLOW_GROUPS: string;
+  /** JSON {"<group>": ["<email>", ...]}; empty means every ALLOWED_EMAILS address is in `owner`. */
+  MCP_GROUPS?: string;
+  /** Comma-separated emails: the `owner` group while MCP_GROUPS is unset. */
   ALLOWED_EMAILS: string;
 
   // --- secrets ---
