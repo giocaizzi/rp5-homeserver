@@ -131,11 +131,11 @@ This repo is **public**, and so are its PRs, issues, comments, releases and Acti
 |---|---|
 | Domain | `<domain>` in docs and PR text, `${DOMAIN}` in config |
 | Email addresses, Pi user, LAN IPs, hostnames beyond `pi.local` | `<email>`, `pi`, `<pi-ip>` |
-| Cloudflare account/zone ID, tunnel ID, Access team and `aud` tags, workers.dev subdomain, GCP project, bucket and service-account names | GitHub environment **secret** (never a `vars` entry: variables print unmasked in public logs) and `sensitive = true` in Terraform |
+| Cloudflare account/zone ID, tunnel ID, Access team and `aud` tags, workers.dev subdomain, GCP project, bucket and service-account names | GitHub environment **secret** (never a `vars` entry: variables print unmasked in public logs) and a `LEAK_PATTERNS` line |
 | Any credential or token | Bitwarden Secrets Manager (see Constraints) |
 
 - Applies equally to PR titles and bodies, commit messages (they become CHANGELOG lines and release notes), issue comments and pasted command output.
-- Workflows never print private values: no `echo` of secrets or identifiers, `::add-mask::` for derived ones, Terraform plan comments only with sensitive values redacted.
+- Workflows never print private values: no `echo` of secrets or identifiers, `::add-mask::` for derived ones, anything posted through the API (PR comments) scrubbed first: log masking does not apply there.
 - Before pushing or posting, run `make check` (gitleaks) and search the diff and the PR text for the values above.
 - CI enforces it: the required `Leak check` fails a PR whose diff, commits, title or body contain a value from the `LEAK_PATTERNS` secret. Add every new private value there (repo and Dependabot secret) in the same change that introduces it.
 - A leaked credential is rotated first, then scrubbed from history.

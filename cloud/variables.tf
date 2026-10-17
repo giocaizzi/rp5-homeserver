@@ -11,7 +11,6 @@ variable "cloudflare_api_token" {
 variable "cloudflare_account_id" {
   description = "Cloudflare account ID"
   type        = string
-  sensitive   = true
 }
 
 variable "zone_name" {
@@ -24,7 +23,6 @@ variable "zone_name" {
 variable "zone_id" {
   description = "Zone ID of domain"
   type        = string
-  sensitive   = true
 }
 
 variable "tunnel_secret" {
@@ -123,7 +121,6 @@ variable "calibre_users" {
 variable "gcp_project_id" {
   description = "GCP project ID"
   type        = string
-  sensitive   = true
 }
 
 variable "gcp_region" {
@@ -135,7 +132,6 @@ variable "gcp_region" {
 variable "gcp_backup_bucket_name" {
   description = "Name of the GCS bucket for backups (must be globally unique)"
   type        = string
-  sensitive   = true
 }
 
 variable "backup_retention_days" {
