@@ -156,6 +156,7 @@ This repo is **public**, and so are its PRs, issues, comments, releases and Acti
 | Setup, networking, backup, cloud, monitoring | [docs/setup.md](docs/setup.md), [docs/networking.md](docs/networking.md), [docs/backup.md](docs/backup.md), [docs/cloud.md](docs/cloud.md), [docs/monitoring.md](docs/monitoring.md) |
 | Documentation and README conventions, file management | [docs/README.md](docs/README.md#documentation-conventions) |
 | OpenClaw runbook | `.claude/skills/openclaw-cli/SKILL.md` (auth gateway, channel tokens, `openclaw.sh pull-config` / `push-config`) |
+| Stdio MCP servers (add one, Garmin notes) | [docs/mcp-stdio.md](docs/mcp-stdio.md) |
 | Firefly runbook | `.claude/skills/firefly/SKILL.md` (not present in this checkout; referenced as before) |
 
 Key gotchas (details in docs/deployment.md): no tracked symlinks in the repo (Portainer rejects them); Tier label must be set in both `labels:` and `deploy.labels:` or Shepherd silently skips the service; Portainer redeploy re-clones the repo, so use `docker service update --force <stack>_<svc>` for out-of-band redeploys; a new `infra/` secret file needs a non-local `sync_infra.sh` run before the infra release.

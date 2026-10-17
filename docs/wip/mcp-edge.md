@@ -2,7 +2,7 @@
 
 Design for exposing self-hosted MCP servers to claude.ai and to local CLIs from one
 place, with per-user identity, per-connector and per-tool ACLs, and selective sharing.
-Tracker: #261. Status: Phase 0 in progress; Phase 1 done without the single deployment (#395); Phases 2–4 are proposals.
+Tracker: #261. Status: Phase 0 in progress; Phase 1 done without the single deployment (#395); Phase 3 built, fli not yet deployed (#397); Phases 2 and 4 are proposals.
 
 ## Where we are
 
@@ -17,7 +17,9 @@ Tracker: #261. Status: Phase 0 in progress; Phase 1 done without the single depl
   OAuth so each user keeps ownership. Access is bypassed for Anthropic's egress range
   `160.79.104.0/21`, which every claude.ai user shares: it narrows who can connect but
   does not identify anyone; Twenty's OAuth is the gate. Local CLIs can't reach it.
-- Stdio-only servers (e.g. fli) have no path to claude.ai.
+- Stdio-only servers run in `services/mcp-stdio` (supergateway, `https://mcp-stdio.<domain>/<id>/mcp`,
+  per-server API key and Access app), reached through the Worker like any other upstream.
+  First server: fli. Adding one: [runbook](../mcp-stdio.md).
 
 ## Target
 
@@ -87,7 +89,9 @@ revisit mcphub only if friends need their own credentials on a shared server.
    deployment on custom domains is deferred (a URL change means re-adding every
    connector in claude.ai).
 2. #396 `signed-identity`, `per-user-credential`, tool ACLs.
-3. #397 stdio stack with fli first.
+3. #397 stdio stack with fli first. Built: stack, nginx route, Access app and connector
+   entry; deploy pending. Garmin next (owner only, interactive first login; see the
+   [runbook](../mcp-stdio.md#garmin-planned)).
 4. #398 sharing: groups, published Google client, rate limits.
 
 ## Open questions
