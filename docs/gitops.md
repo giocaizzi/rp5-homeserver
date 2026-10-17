@@ -85,8 +85,9 @@ PI_SSH_USER=<user> DOMAIN=<domain> ./scripts/sync_infra.sh --pull     # pull ima
 `deploy-services.yml` fires on a published **service release** (`<stack>-v*`),
 parses the stack name from the tag, then the `deploy` job runs on the **Pi
 self-hosted runner** and POSTs that stack's **Portainer GitOps webhook** locally
-(resolving the Portainer host to loopback, so the request hits nginx → Portainer
-without leaving the Pi). Portainer then git-pulls and redeploys that stack.
+(`portainer.home` resolved to loopback, so the request hits nginx → Portainer
+without leaving the Pi; the LAN name, because public hosts require the Access
+JWT at nginx, see [access-jwt.md](access-jwt.md)). Portainer then git-pulls and redeploys that stack.
 Non-service releases (`infra`, `cloud`, `mcp-connector`) no-op.
 
 > Why local, not through Cloudflare: Cloudflare's WAF blocks GitHub's cloud
@@ -118,8 +119,6 @@ Non-service releases (`infra`, `cloud`, `mcp-connector`) no-op.
 ### GitHub config
 
 **Environment secrets** on `pi-services` (never repository-wide):
-- `PORTAINER_URL` — e.g. `https://portainer.<domain>` (host is resolved to
-  loopback on the Pi runner; only the hostname is used, for nginx server_name).
 - `WEBHOOK_ID_<STACK>` — the webhook id per stack
   (`WEBHOOK_ID_N8N`, `WEBHOOK_ID_FIREFLY`, `WEBHOOK_ID_ADGUARD`, …)
 
