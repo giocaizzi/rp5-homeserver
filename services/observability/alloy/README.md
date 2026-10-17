@@ -54,7 +54,7 @@ alloy/
 
 | Pipeline | Source Label | Description |
 |----------|--------------|-------------|
-| OTEL | `source=otel` | Apps sending OTLP traces/metrics/logs |
+| OTEL | `source=otel` (metrics, traces) | Apps sending OTLP traces/metrics/logs; OTLP logs carry no `source` default (see below) |
 | Docker | `source=docker` | Container log scraping via Docker socket |
 | Scrape | `source=scrape` | Prometheus metric scraping |
 
@@ -183,6 +183,9 @@ OTLP receiver → memory_limiter → batch → transform (defaults) → ┬─ P
 - `batch` groups data points (10s / 1000 items) before export.
 - `transform` (resource context) fills missing resource attributes:
   `deployment.environment.name=production`, `source=otel`, `tier=core`.
+  Logs get no `source` default: Loki merges resource and record attributes,
+  so it would overwrite a record's own `source` (Claude Code's
+  `tool_decision` source).
   `service.namespace` is **not** defaulted — senders own it; missing values
   stay empty.
 

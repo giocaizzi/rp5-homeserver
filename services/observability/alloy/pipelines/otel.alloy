@@ -172,11 +172,14 @@ declare "otlp_receivers" {
       ]
     }
 
+    // No `source` default on logs: Loki flattens resource and record attributes
+    // into one structured-metadata map, and a resource `source=otel` replaced
+    // the record's own `source` (Claude Code's tool_decision source: config,
+    // hook, user_temporary, ...). OTLP logs are told apart by service_name.
     log_statements {
       context = "resource"
       statements = [
         `set(resource.attributes["deployment.environment.name"], "production") where resource.attributes["deployment.environment.name"] == nil`,
-        `set(resource.attributes["source"], "otel") where resource.attributes["source"] == nil`,
         `set(resource.attributes["tier"], "core") where resource.attributes["tier"] == nil`,
       ]
     }
