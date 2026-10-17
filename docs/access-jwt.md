@@ -13,7 +13,7 @@ Cloudflare Access gates the public hosts at the edge, but anything that reaches 
 
 Modes:
 
-- `off`: allowed, nothing read or fetched. All hosts ship `off`.
+- `off`: allowed, nothing read or fetched. Every listed host is `enforce` since 2026-10-17; a new host starts at `log`.
 - `log`: checked, always allowed; a failure writes a `cf_access log: <reason> (host=... path=... client=...)` warning to the nginx error log.
 - `enforce`: checked; no token gets 401, any other failure (bad signature, wrong `aud`, expired, verifier error) gets 403. Failures are logged as `cf_access enforce: ...`.
 
