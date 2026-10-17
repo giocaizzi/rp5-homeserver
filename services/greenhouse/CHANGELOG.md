@@ -5,4 +5,4 @@
 
 ### Features
 
-* **greenhouse:** push irrigation runs and alerts to ntfy ([#360](https://github.com/giocaizzi/rp5-homeserver/issues/360)) ([453fc88](https://github.com/giocaizzi/rp5-homeserver/commit/453fc88b0d24257a0e19e7fe81af230501908946))
+* **greenhouse:** push irrigation runs and alerts to ntfy ([#360](https://github.com/giocaizzi/rp5-homeserver/issues/360)) ([b0f934e](https://github.com/giocaizzi/rp5-homeserver/commit/b0f934ee979108d12fe7e8b7d41a3224056ee457))

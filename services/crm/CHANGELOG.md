@@ -5,53 +5,53 @@
 
 ### Features
 
-* **cloud:** allow per-user oauth for crm mcp ([#375](https://github.com/giocaizzi/rp5-homeserver/issues/375)) ([16f3028](https://github.com/giocaizzi/rp5-homeserver/commit/16f30288718ed860b17f9a3ba762787edd712abd))
+* **cloud:** allow per-user oauth for crm mcp ([#375](https://github.com/giocaizzi/rp5-homeserver/issues/375)) ([c3d0cf6](https://github.com/giocaizzi/rp5-homeserver/commit/c3d0cf664fa8d6654b31af57e58fdf0a69da4bce))
 
 ## [0.2.5](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.4...crm-v0.2.5) (2026-10-15)
 
 
 ### Bug Fixes
 
-* **cloud:** keep crm /graphql under the ui access app ([#371](https://github.com/giocaizzi/rp5-homeserver/issues/371)) ([506c37c](https://github.com/giocaizzi/rp5-homeserver/commit/506c37c934ab330471306b3683217da06124301f))
-* **crm:** log only errors and warnings from twenty ([#370](https://github.com/giocaizzi/rp5-homeserver/issues/370)) ([5c9f3be](https://github.com/giocaizzi/rp5-homeserver/commit/5c9f3be3dfd8479a0eafc0eb45eabe473c1572e1))
+* **cloud:** keep crm /graphql under the ui access app ([#371](https://github.com/giocaizzi/rp5-homeserver/issues/371)) ([a379b11](https://github.com/giocaizzi/rp5-homeserver/commit/a379b11913da02c8878edaf90abe697fb37a9748))
+* **crm:** log only errors and warnings from twenty ([#370](https://github.com/giocaizzi/rp5-homeserver/issues/370)) ([cf01fd8](https://github.com/giocaizzi/rp5-homeserver/commit/cf01fd8a6c6b2b5b8c5150e97b9e34a10440554a))
 
 ## [0.2.4](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.3...crm-v0.2.4) (2026-10-12)
 
 
 ### Code Refactoring
 
-* **cloud:** give the crm api service token a generic name ([#336](https://github.com/giocaizzi/rp5-homeserver/issues/336)) ([6e7f131](https://github.com/giocaizzi/rp5-homeserver/commit/6e7f1312ce8642b8af854ccc10d4588991e8e4b2))
-* **repo:** read the public domain from the stack env in service stacks ([#337](https://github.com/giocaizzi/rp5-homeserver/issues/337)) ([56f387a](https://github.com/giocaizzi/rp5-homeserver/commit/56f387af39ba8012fb18708f5ba874eb6d327818))
+* **cloud:** give the crm api service token a generic name ([#336](https://github.com/giocaizzi/rp5-homeserver/issues/336)) ([1293b0f](https://github.com/giocaizzi/rp5-homeserver/commit/1293b0fd572e163e72bdfe6b5cc7bdde216026af))
+* **repo:** read the public domain from the stack env in service stacks ([#337](https://github.com/giocaizzi/rp5-homeserver/issues/337)) ([0919adb](https://github.com/giocaizzi/rp5-homeserver/commit/0919adb1fb181b882be843d56194d9e340685910))
 
 ## [0.2.3](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.2...crm-v0.2.3) (2026-10-11)
 
 
 ### Bug Fixes
 
-* **crm:** scrape crm-redis and alert on missing redis metrics ([#287](https://github.com/giocaizzi/rp5-homeserver/issues/287)) ([a24364c](https://github.com/giocaizzi/rp5-homeserver/commit/a24364c91b1f73e1d1ddbf939bc01d6ab7918194))
+* **crm:** scrape crm-redis and alert on missing redis metrics ([#287](https://github.com/giocaizzi/rp5-homeserver/issues/287)) ([c6cf31a](https://github.com/giocaizzi/rp5-homeserver/commit/c6cf31a25cf3c8cf570dcde0fe0511c5dbd8d67a))
 
 ## [0.2.2](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.1...crm-v0.2.2) (2026-10-03)
 
 
 ### Bug Fixes
 
-* **crm:** run worker without yarn wrappers and bound postgres/redis memory ([#227](https://github.com/giocaizzi/rp5-homeserver/issues/227)) ([117ac7d](https://github.com/giocaizzi/rp5-homeserver/commit/117ac7d13dde936c6856b92a4874825bc56c52e7))
+* **crm:** run worker without yarn wrappers and bound postgres/redis memory ([#227](https://github.com/giocaizzi/rp5-homeserver/issues/227)) ([4f11b8c](https://github.com/giocaizzi/rp5-homeserver/commit/4f11b8c5b9f76a39d2ff842790c846ce50fb3b25))
 
 ## [0.2.1](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.0...crm-v0.2.1) (2026-10-03)
 
 
 ### Bug Fixes
 
-* **crm:** raise server and worker memory limits to 1536M ([#216](https://github.com/giocaizzi/rp5-homeserver/issues/216)) ([a4e0f4f](https://github.com/giocaizzi/rp5-homeserver/commit/a4e0f4f9b35fe551e80a6a5c95709e6a94bc0782))
+* **crm:** raise server and worker memory limits to 1536M ([#216](https://github.com/giocaizzi/rp5-homeserver/issues/216)) ([53e54c4](https://github.com/giocaizzi/rp5-homeserver/commit/53e54c463c15bb69acb0e50f92e42578c3f607e2))
 
 ## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.1.0...crm-v0.2.0) (2026-09-27)
 
 
 ### Features
 
-* **crm:** add Twenty CRM stack ([#167](https://github.com/giocaizzi/rp5-homeserver/issues/167)) ([04d7e2e](https://github.com/giocaizzi/rp5-homeserver/commit/04d7e2e2c7381dd9c2cc3f0c911bca4e2f035f3b))
+* **crm:** add Twenty CRM stack ([#167](https://github.com/giocaizzi/rp5-homeserver/issues/167)) ([2f44223](https://github.com/giocaizzi/rp5-homeserver/commit/2f4422320f7b765d841bbb7a9d9015d382a85b17))
 
 
 ### Bug Fixes
 
-* **crm:** raise worker heap to 768M ([#174](https://github.com/giocaizzi/rp5-homeserver/issues/174)) ([819dce1](https://github.com/giocaizzi/rp5-homeserver/commit/819dce127d9bafa41d0ac08b20ce2fd6d74884c5))
+* **crm:** raise worker heap to 768M ([#174](https://github.com/giocaizzi/rp5-homeserver/issues/174)) ([4436fc3](https://github.com/giocaizzi/rp5-homeserver/commit/4436fc3f436599e062f3192378cd383183fd05ba))
