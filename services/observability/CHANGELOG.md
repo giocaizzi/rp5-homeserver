@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.6](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.5...observability-v0.5.6) (2026-10-17)
+
+
+### Bug Fixes
+
+* **observability:** widen tempo metrics range and allow public grafana live origin ([#418](https://github.com/giocaizzi/rp5-homeserver/issues/418)) ([94ffece](https://github.com/giocaizzi/rp5-homeserver/commit/94ffeced36aa8742c7ee730ed1afd8c231f7cb27))
+
 ## [0.5.5](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.4...observability-v0.5.5) (2026-10-17)
 
 
