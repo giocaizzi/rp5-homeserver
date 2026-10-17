@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.4](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.6.3...observability-v0.6.4) (2026-10-17)
+
+
+### Bug Fixes
+
+* **observability:** keep OTLP log attributes intact and alert on agent telemetry ([#446](https://github.com/giocaizzi/rp5-homeserver/issues/446)) ([af2550f](https://github.com/giocaizzi/rp5-homeserver/commit/af2550fc9a8cdeb07aa432fc59d9bbff634a46a7))
+
 ## [0.6.3](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.6.2...observability-v0.6.3) (2026-10-17)
 
 
