@@ -88,7 +88,6 @@ jobs:
     steps:
       - name: Trigger Portainer redeploy via webhook
         env:
-          PORTAINER_URL: ${{ secrets.PORTAINER_URL }}
           # One webhook id per stack (Portainer stack -> GitOps -> Webhook).
           # Add a line here when you give a new service stack a webhook.
           WEBHOOK_ID_ADGUARD: ${{ secrets.WEBHOOK_ID_ADGUARD }}
@@ -110,21 +109,18 @@ jobs:
           key="WEBHOOK_ID_$(echo "$stack" | tr '[:lower:]-' '[:upper:]_')"
           id="${!key:-}"
 
-          if [ -z "${PORTAINER_URL:-}" ]; then
-            echo "::error::Secret PORTAINER_URL is not set"; exit 1
-          fi
           if [ -z "$id" ]; then
             echo "::warning::No webhook secret ($key) for stack '$stack' — skipping. Add it to deploy env + pi-services environment secrets."
             exit 0
           fi
 
           # Hit Portainer locally via nginx (resolve the host to loopback), so the
-          # request never leaves the Pi and never touches Cloudflare's WAF. The
-          # GitOps webhook endpoint is unauthenticated and LAN-reachable here.
-          host="$(echo "${PORTAINER_URL#*://}" | sed 's#/.*##')"
-          # Only the full PORTAINER_URL secret is masked; mask the derived host too.
-          echo "::add-mask::$host"
-          echo "Redeploying '$stack' via local Portainer webhook ($host)..."
+          # request never leaves the Pi and never touches Cloudflare's WAF. Use the
+          # LAN name: nginx checks the Access JWT on public hosts (docs/access-jwt.md)
+          # and a local call carries none. The GitOps webhook endpoint is
+          # unauthenticated and LAN-reachable here.
+          host=portainer.home
+          echo "Redeploying '$stack' via local Portainer webhook..."
           code="$(curl -sS -k --resolve "$host:443:127.0.0.1" -o /dev/null -w '%{http_code}' -X POST \
             "https://$host/api/stacks/webhooks/$id")"
 
