@@ -14,6 +14,7 @@
  * verbatim so the streamable-HTTP MCP transport works end to end.
  */
 import type { Env, Props } from "./env";
+import { isAllowedEmail } from "./policy";
 
 // Forward ONLY the headers the MCP streamable-HTTP transport needs. The inbound
 // request from Claude.ai carries a large browser/SDK header set (User-Agent,
@@ -37,6 +38,11 @@ export const proxyHandler = {
     env: Env,
     ctx: ExecutionContext & { props?: Props },
   ): Promise<Response> {
+    // Tokens outlive allowlist changes; refuse a removed address on its next call.
+    if (!isAllowedEmail(env, ctx.props?.email)) {
+      return new Response("Access revoked", { status: 403 });
+    }
+
     const inUrl = new URL(request.url);
     // UPSTREAM_URL already carries the full path (e.g. .../mcp); preserve query string.
     const target = env.UPSTREAM_URL + inUrl.search;

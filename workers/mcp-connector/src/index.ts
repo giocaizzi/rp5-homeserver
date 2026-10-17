@@ -11,9 +11,10 @@
  *   - /authorize delegates human login to Google (defaultHandler), gated by email.
  *   - /mcp is token-protected and reverse-proxied to the self-hosted upstream.
  */
-import OAuthProvider from "@cloudflare/workers-oauth-provider";
-import type { Env } from "./env";
+import OAuthProvider, { GrantType, OAuthError } from "@cloudflare/workers-oauth-provider";
+import type { Env, Props } from "./env";
 import { GoogleHandler } from "./google-handler";
+import { isAllowedEmail, isAllowedRedirect } from "./policy";
 import { proxyHandler } from "./proxy";
 
 // 1.x needs the canonical resource (every token's audience) at construction.
@@ -35,6 +36,21 @@ function providerFor(origin: string): OAuthProvider<Env> {
       tokenEndpoint: "/token",
       // Claude.ai self-registers via Dynamic Client Registration (RFC 7591).
       clientRegistrationEndpoint: "/register",
+      // DCR stays open (Claude.ai needs it), but a client may only name redirect URIs
+      // we'd send a token to (policy.ts).
+      clientRegistrationCallback: ({ clientMetadata }) => {
+        const uris = clientMetadata.redirect_uris;
+        if (!Array.isArray(uris) || uris.length === 0 || !uris.every((u) => typeof u === "string" && isAllowedRedirect(u))) {
+          return { description: "redirect_uris must be Claude, VS Code or loopback callbacks" };
+        }
+      },
+      // A refresh re-checks the allowlist, so a removed address loses access within
+      // one access-token lifetime even if it never calls /mcp again.
+      tokenExchangeCallback: ({ grantType, props, env }) => {
+        if (grantType === GrantType.REFRESH_TOKEN && !isAllowedEmail(env, (props as Props).email)) {
+          throw new OAuthError("invalid_grant", { description: "Access was revoked" });
+        }
+      },
       resourceMetadata: {
         resource: `${origin}/mcp`,
         authorization_servers: [origin],
