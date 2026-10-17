@@ -151,6 +151,7 @@ This repo is **public**, and so are its PRs, issues, comments, releases and Acti
 | Naming and labels | [docs/naming_labels.md](docs/naming_labels.md) |
 | Deployment mapping, Portainer mounts, re-clone trap, no-symlink rule, `infra/VERSION`, Homepage | [docs/deployment.md](docs/deployment.md) |
 | CI/CD workflows, cloud/ auth and variable wiring, adding a public service | [docs/ci_cd.md](docs/ci_cd.md) |
+| Cloudflare Access JWT check at nginx (per-host flag, bypassed paths, rollout/rollback) | [docs/access-jwt.md](docs/access-jwt.md) |
 | Releases, versioning, PR/commit title contract | [docs/releases.md](docs/releases.md) |
 | GitOps / Portainer webhooks | [docs/gitops.md](docs/gitops.md) |
 | Setup, networking, backup, cloud, monitoring | [docs/setup.md](docs/setup.md), [docs/networking.md](docs/networking.md), [docs/backup.md](docs/backup.md), [docs/cloud.md](docs/cloud.md), [docs/monitoring.md](docs/monitoring.md) |

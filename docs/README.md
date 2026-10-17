@@ -62,6 +62,7 @@ flowchart TB
 | [Setup](./setup.md) | Initial deployment, Docker Swarm init |
 | [Cloud](./cloud.md) | Terraform: Cloudflare tunnel, GCS backup bucket |
 | [Networking](./networking.md) | Network topology, DNS resolution, nginx routing |
+| [Access JWT](./access-jwt.md) | Cloudflare Access JWT check at nginx: per-host flag, rollout and rollback runbook |
 | [Backup](./backup.md) | Backrest setup, restore procedures |
 | [GitOps](./gitops.md) | Portainer webhooks, automated deployment |
 | [Releases](./releases.md) | release-please versioning, tags, changelogs, commit/PR-title contract |
