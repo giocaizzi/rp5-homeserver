@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.4](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.3...observability-v0.5.4) (2026-10-17)
+
+
+### Bug Fixes
+
+* **observability:** pin the grafana mcp sidecar image ([#390](https://github.com/giocaizzi/rp5-homeserver/issues/390)) ([44dcca2](https://github.com/giocaizzi/rp5-homeserver/commit/44dcca2d59519812d55b8a519087495bf55cbbc6))
+
+
+### Documentation
+
+* point stale claude.md references at agents.md ([#382](https://github.com/giocaizzi/rp5-homeserver/issues/382)) ([22d0897](https://github.com/giocaizzi/rp5-homeserver/commit/22d089735bb538767a2c02a0b160f19622dd19be))
+
 ## [0.5.3](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.2...observability-v0.5.3) (2026-10-15)
 
 
