@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.5](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.4...observability-v0.5.5) (2026-10-17)
+
+
+### Bug Fixes
+
+* **observability:** enable tempo local-blocks for traceql metrics ([#415](https://github.com/giocaizzi/rp5-homeserver/issues/415)) ([e2e5459](https://github.com/giocaizzi/rp5-homeserver/commit/e2e5459e17c2719ddddd197ab8ad4e8268f9e08d))
+
 ## [0.5.4](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.5.3...observability-v0.5.4) (2026-10-17)
 
 
