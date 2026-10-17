@@ -1,4 +1,4 @@
-# AGENTS.md — Grafana dashboard authoring (Claude Code OTel)
+# AGENTS.md — Grafana dashboard authoring (agent telemetry)
 
 Scope: authoring/maintaining the dashboard JSON in this folder. For stack-wide
 rules (Swarm, Portainer, secrets) see the repo-root `AGENTS.md`.
@@ -67,3 +67,14 @@ rules (Swarm, Portainer, secrets) see the repo-root `AGENTS.md`.
   instant can still 422 as a range.
 - Use `$__rate_interval` / `$__interval` for time-series panels; `$__range` /
   `$__range_s` for totals and averages.
+
+---
+
+## Agents folder (`agents/`)
+
+- Harness-agnostic, Loki only. A model call is `agent_event="api_request" or event_name="api_request"`
+  (the second covers Claude Code records from before the Alloy `agent_usage` transform).
+- Every `unwrap` is followed by `| __error__=""`: harnesses leave fields such as `cost_usd`
+  or `cache_creation_tokens` out, and the conversion error would otherwise show as a series.
+- Schema and price table: `docs/monitoring.md`, Agent cost. Dashboard uids: `agents-overview`, `agents-ops`.
+- Verify each query against live Loki (instant and range) before shipping.

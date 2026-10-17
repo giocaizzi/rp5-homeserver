@@ -500,7 +500,7 @@ groups:
           severity: critical
 
   # ===========================================
-  # Agent Ops (Claude Code and guard telemetry, Loki)
+  # Agent Ops (agent harness and guard telemetry, Loki)
   # ===========================================
   - orgId: 1
     name: Agent Ops
@@ -587,5 +587,87 @@ groups:
         annotations:
           summary: Guard rule {{ $labels.rule }} denied more than 10 commands in 1h
           description: '{{ $values.B.Value | printf "%.0f" }} denies from guard rule {{ $labels.rule }} in the last hour (threshold 10). Check for a false positive.'
+        labels:
+          severity: warning
+
+      - uid: agent-daily-cost
+        title: Agent Daily Cost
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 86400
+              to: 0
+            datasourceUid: loki
+            model:
+              # List-price USD across every harness over the last 24h (Agent Overview dashboard).
+              expr: 'sum(sum_over_time({service_name=~"claude-code|codex.*|github-copilot|copilot-chat|opencode|pi", deployment_environment_name!="test"} | agent_event="api_request" or event_name="api_request" | unwrap cost_usd | __error__="" [24h]))'
+              queryType: instant
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 750
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: Agent spend above $750 in 24h
+          description: '{{ $values.B.Value | printf "%.0f" }} USD at list price in the last 24h (threshold 750). See the Agent Overview dashboard for the harness, model and source.'
+        labels:
+          severity: warning
+
+      - uid: agent-rate-limit-burst
+        title: Agent Rate Limit Burst
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: loki
+            model:
+              # 429s mean too many parallel agents for the plan quota.
+              expr: 'sum(count_over_time({service_name="claude-code"} | event_name="api_error" | status_code="429" [1h]))'
+              queryType: instant
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              expression: A
+              reducer: last
+              refId: B
+              type: reduce
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 5
+                    type: gt
+              expression: B
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: Claude Code hit the rate limit more than 5 times in 1h
+          description: '{{ $values.B.Value | printf "%.0f" }} HTTP 429 responses in the last hour (threshold 5). Fewer parallel agents, or wait for the quota reset.'
         labels:
           severity: warning

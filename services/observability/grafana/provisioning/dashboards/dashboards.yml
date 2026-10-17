@@ -44,3 +44,14 @@ providers:
     editable: true
     options:
       path: /etc/grafana/provisioning/dashboards/claude-code
+
+  # Every agent harness (Claude Code, Codex, Copilot, opencode, pi) and the guard
+  - name: 'agents'
+    orgId: 1
+    folder: 'Agents'
+    folderUid: 'agents'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/agents
