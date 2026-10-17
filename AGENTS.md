@@ -52,7 +52,7 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 | Path | Purpose |
 |------|---------|
 | `infra/` | Always-on infra stack (nginx, portainer, cloudflared, netdata, backrest, homepage, shepherd). Single `docker-compose.yml` + `VERSION`; file-based `secrets/` live only on the Pi, written from Secrets Manager by `sync_infra.sh`. |
-| `services/<stack>/` | One folder per service stack (n8n, firefly, adguard, ai, langfuse, ntfy, observability, openclaw, greenhouse, code, crm). Each ships a `docker-compose.yml` and a README; secrets come from Secrets Manager (project `rp5-homeserver`), never from files in the stack folder. |
+| `services/<stack>/` | One folder per service stack (n8n, firefly, adguard, ai, langfuse, ntfy, observability, openclaw, greenhouse, code, crm, calibre, mcp-stdio). Each ships a `docker-compose.yml` and a README; secrets come from Secrets Manager (project `rp5-homeserver`), never from files in the stack folder. |
 | `scripts/` | Operational scripts — see Common Commands. |
 | `cloud/` | Terraform for Cloudflare Tunnel + GCS backup bucket. |
 | `docs/` | Documentation (source of truth): see "Where to find what". |

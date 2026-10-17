@@ -91,6 +91,7 @@ flowchart TB
 | Code | `https://code.<domain>` | services/code |
 | CRM | `https://crm.<domain>` | services/crm |
 | Calibre | `https://calibre.<domain>` | services/calibre |
+| MCP stdio | `https://mcp-stdio.<domain>/<server>/mcp` (Worker only) | services/mcp-stdio |
 
 ## Quick Start
 

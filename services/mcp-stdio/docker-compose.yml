@@ -1,0 +1,88 @@
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "mcp-stdio"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
+# =============================================================================
+# Networks
+# =============================================================================
+# Only nginx talks to the gateway; servers reach the internet through the
+# default egress, so no stack-private network is needed.
+networks:
+  public_network:
+    external: true
+    name: rp5_public
+
+# =============================================================================
+# Secrets
+# =============================================================================
+# One API key per server (apiKeyFile in servers.jsonc). From Secrets Manager:
+# `create_secrets.sh mcp-stdio` (see README).
+secrets:
+  fli_api_key:
+    external: true
+    name: mcp-stdio_fli_api_key
+
+# =============================================================================
+# Services
+# =============================================================================
+services:
+  gateway:
+    # Pinned build of services/mcp-stdio (README → Build). Bump the tag on rebuild.
+    image: ghcr.io/giocaizzi/rp5-mcp-stdio:2026.10.17
+    hostname: mcp-stdio-gateway
+    expose:
+      - "8000"
+    secrets:
+      - source: fli_api_key
+        uid: "1000"
+        mode: 0400
+    networks:
+      - public_network
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8000/healthz').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "gateway"
+      com.giocaizzi.component: "gateway"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "supergateway"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        # ~120 MB gateway + ~135 MB per open fli session (one process each).
+        limits:
+          memory: 1024M
+    logging:
+      <<: *logging-base
