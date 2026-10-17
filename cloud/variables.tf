@@ -114,6 +114,20 @@ variable "calibre_users" {
   sensitive   = true
 }
 
+variable "mcp_stdio_users" {
+  description = "List of email addresses allowed through Access on mcp-stdio.<zone> outside the per-server service-token paths (owner only)"
+  type        = list(string)
+  default     = []
+  sensitive   = true
+
+  # Fail the plan rather than apply a host with no Access app: Access rejects a policy
+  # with no include rule, and the DNS record and tunnel route would be created anyway.
+  validation {
+    condition     = length(var.mcp_stdio_users) > 0
+    error_message = "Set the MCP_STDIO_USERS secret (JSON array of emails) on cloud-plan and cloud-production."
+  }
+}
+
 # ============================================================================
 # GCP Variables
 # ============================================================================
