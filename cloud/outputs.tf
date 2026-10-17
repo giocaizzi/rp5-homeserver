@@ -241,3 +241,15 @@ output "claude_fli_mcp_client_secret" {
   value       = cloudflare_zero_trust_access_service_token.claude_fli_mcp.client_secret
   sensitive   = true
 }
+
+output "claude_garmin_mcp_client_id" {
+  description = "Client ID for the garmin MCP service token (CF-Access-Client-Id)"
+  value       = cloudflare_zero_trust_access_service_token.claude_garmin_mcp.client_id
+  sensitive   = true
+}
+
+output "claude_garmin_mcp_client_secret" {
+  description = "Client Secret for the garmin MCP service token (CF-Access-Client-Secret)"
+  value       = cloudflare_zero_trust_access_service_token.claude_garmin_mcp.client_secret
+  sensitive   = true
+}
