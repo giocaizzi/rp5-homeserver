@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.7.0...observability-v0.8.0) (2026-10-17)
+
+
+### Features
+
+* **observability:** price every model the agent harnesses use ([#453](https://github.com/giocaizzi/rp5-homeserver/issues/453)) ([fc1870d](https://github.com/giocaizzi/rp5-homeserver/commit/fc1870da4eb5b8b5c31de2a26a4b86241ee7e02c))
+
+
+### Bug Fixes
+
+* **observability:** price VS Code Copilot chat models ([#451](https://github.com/giocaizzi/rp5-homeserver/issues/451)) ([ad57269](https://github.com/giocaizzi/rp5-homeserver/commit/ad57269d983e555b4260cc6cb5ef2b2c9c0d297b))
+
 ## [0.7.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.6.4...observability-v0.7.0) (2026-10-17)
 
 
