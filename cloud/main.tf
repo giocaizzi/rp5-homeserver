@@ -1190,8 +1190,33 @@ resource "cloudflare_zero_trust_access_application" "langfuse_mcp_policy" {
 # --- fli MCP (mcp-stdio) ------------------------------------------------
 # mcp-stdio.<zone> is an MCP-only host (nginx 404s everything but /<server>/mcp) for
 # stdio servers behind supergateway. One path-scoped app and service token per server,
-# so a connector's token reaches only its own server. The per-server gateway API key
+# so a connector's token reaches only its own server; the rest of the host is owner-only. The per-server gateway API key
 # is the app-layer factor.
+
+# Whole host: owner email only. The path-scoped server apps below are more specific
+# and win for their paths; everything else (other /<id>/mcp paths nginx forwards,
+# the root) needs the owner login.
+resource "cloudflare_zero_trust_access_policy" "mcp_stdio_users" {
+  account_id = var.cloudflare_account_id
+  name       = "mcp-stdio-users"
+  decision   = "allow"
+  include = [
+    for email in var.mcp_stdio_users : { email = { email = email } }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "mcp_stdio_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "mcp-stdio.${var.zone_name}"
+  domain     = "mcp-stdio.${var.zone_name}"
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.mcp_stdio_users.id
+      precedence = 1
+    }
+  ]
+}
 
 resource "cloudflare_zero_trust_access_service_token" "claude_fli_mcp" {
   account_id = var.cloudflare_account_id
