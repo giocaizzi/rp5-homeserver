@@ -27,6 +27,17 @@ RUN uv venv /opt/mcp/garmin --python 3.12 \
     && uv pip install --python /opt/mcp/garmin --no-deps /tmp/garmin_mcp.tar.gz \
     && rm /tmp/garmin_mcp.tar.gz
 
+# pysurfline (giocaizzi/pysurfline) is private: its wheel comes from the
+# `pysurfline` build context (a local `uv build --wheel`, README → Build),
+# dependencies hash-locked like fli's, the package itself --no-deps.
+# `pysurfline` is a named build context (--build-context), not a stage.
+# hadolint ignore=DL3022
+COPY --from=pysurfline pysurfline-*-py3-none-any.whl /tmp/
+RUN uv venv /opt/mcp/surfline --python 3.12 \
+    && uv pip install --python /opt/mcp/surfline --require-hashes -r /opt/mcp/requirements/surfline.txt \
+    && uv pip install --python /opt/mcp/surfline --no-deps /tmp/pysurfline-*-py3-none-any.whl \
+    && rm /tmp/pysurfline-*-py3-none-any.whl
+
 # supergateway, pinned with its whole dependency tree.
 WORKDIR /opt/gateway
 COPY gateway/package.json gateway/package-lock.json ./

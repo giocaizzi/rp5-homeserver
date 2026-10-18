@@ -1,0 +1,7 @@
+# Runtime dependencies of pysurfline[mcp] (giocaizzi/pysurfline, private, its
+# uv.lock). The package itself is not published: the Dockerfile installs a wheel
+# from the `pysurfline` build context with --no-deps. Re-sync on a bump.
+curl-cffi==0.16.3
+httpx==0.28.1
+pydantic==2.14.1
+fastmcp==4.1.1
