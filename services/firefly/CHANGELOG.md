@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.8...firefly-v0.3.0) (2026-10-18)
+
+
+### Features
+
+* **firefly:** daily card residuals, balance checks and card import ([#455](https://github.com/giocaizzi/rp5-homeserver/issues/455)) ([9eef967](https://github.com/giocaizzi/rp5-homeserver/commit/9eef967f7b7803da4b13937075c1b09a0a193d59))
+
 ## [0.2.8](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.7...firefly-v0.2.8) (2026-10-15)
 
 
