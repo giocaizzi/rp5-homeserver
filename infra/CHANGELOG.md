@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.23.0...v1.23.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* **infra:** skip databases of stopped stacks in the dump hook ([#464](https://github.com/giocaizzi/rp5-homeserver/issues/464)) ([23b58e5](https://github.com/giocaizzi/rp5-homeserver/commit/23b58e5a805234d5a129f1ed6f0953392e929ce9))
+
 ## [1.23.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.22.0...v1.23.0) (2026-10-18)
 
 
