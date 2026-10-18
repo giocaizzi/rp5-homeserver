@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.10.0...cloud-v0.11.0) (2026-10-18)
+
+
+### Features
+
+* **cloud:** add Access for the lamma MCP server ([#482](https://github.com/giocaizzi/rp5-homeserver/issues/482)) ([adc6dd9](https://github.com/giocaizzi/rp5-homeserver/commit/adc6dd973b185118bddf23094db278b925267bcc))
+
 ## [0.10.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.9.0...cloud-v0.10.0) (2026-10-18)
 
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.6.0...mcp-connector-v0.7.0) (2026-10-18)
+
+
+### Features
+
+* **mcp-connector:** add the lamma connector ([#484](https://github.com/giocaizzi/rp5-homeserver/issues/484)) ([b6a0a90](https://github.com/giocaizzi/rp5-homeserver/commit/b6a0a906552924642afba4f54ba4a2d1cf6792ee))
+
+
+### Documentation
+
+* **firefly:** document disjoint everyday and admin MCP toolsets ([#478](https://github.com/giocaizzi/rp5-homeserver/issues/478)) ([20813bb](https://github.com/giocaizzi/rp5-homeserver/commit/20813bb096c5e1f8c05ae63fb1ff138e6a94a126))
+
 ## [0.6.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.5.1...mcp-connector-v0.6.0) (2026-10-18)
 
 

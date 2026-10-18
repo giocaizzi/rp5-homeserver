@@ -21,6 +21,7 @@ Live connectors:
 | Google Flights | `https://mcp-connector-fli.<account>.workers.dev/mcp`      | `https://mcp-stdio.<domain>/fli/mcp` ([stdio via supergateway](../../services/mcp-stdio/README.md)) |
 | Garmin Connect | `https://mcp-connector-garmin.<account>.workers.dev/mcp`   | `https://mcp-stdio.<domain>/garmin/mcp` ([stdio via supergateway](../../services/mcp-stdio/README.md)) |
 | Surfline   | `https://mcp-connector-surfline.<account>.workers.dev/mcp`     | `https://mcp-stdio.<domain>/surfline/mcp` ([stdio via supergateway](../../services/mcp-stdio/README.md)) |
+| LaMMA Toscana | `https://mcp-connector-lamma.<account>.workers.dev/mcp` | `https://mcp-stdio.<domain>/lamma/mcp` ([stdio via supergateway](../../services/mcp-stdio/README.md)) |
 
 ---
 
