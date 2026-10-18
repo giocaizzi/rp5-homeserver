@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.2](https://github.com/giocaizzi/rp5-homeserver/compare/v1.23.1...v1.23.2) (2026-10-18)
+
+
+### Bug Fixes
+
+* **infra:** bypass the Access JWT check for the surfline MCP path ([#474](https://github.com/giocaizzi/rp5-homeserver/issues/474)) ([6662e3e](https://github.com/giocaizzi/rp5-homeserver/commit/6662e3e8b4eaed72a4ade337fc98a5e6954e424d))
+
 ## [1.23.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.23.0...v1.23.1) (2026-10-18)
 
 
