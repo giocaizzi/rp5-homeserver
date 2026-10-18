@@ -40,12 +40,12 @@ Caveat: a top-up booked from the receiving account carries that account's date; 
 
 ## MCP connectors
 
-The MCP endpoint `/api/v1/mcp` serves two tool sets, chosen by the `toolset` query parameter:
+The MCP endpoint `/api/v1/mcp` serves two disjoint tool sets, chosen by the `toolset` query parameter. Each tool is in exactly one, so a client with both connectors sees every tool once:
 
-- **everyday** (default, no parameter): 38 tools for reading, searching, totals, classification, imports, bills and rules (list/test/create/update). Use it as the always-on claude.ai connector to keep the per-turn tool list small.
-- **all** (`?toolset=all`): every tool (63), adding budgets, piggy banks, recurrences, currencies, attachments, links, object groups, webhooks, account/bill writes, rule groups, `apply-rule` and deletes of rules, accounts and categories. Add it as a second claude.ai connector ("Firefly admin") and enable it only when needed; Claude Code uses it in `~/ops/.mcp.json`.
+- **everyday** (default, no parameter): 38 tools for reading, searching, totals, classification, imports, bills and rules (list/test/create/update). Use it as the always-on "Firefly" connector.
+- **admin** (`?toolset=admin`): the other 25 tools: budgets, piggy banks, recurrences, currencies, attachments, links, object groups, webhooks, account/bill writes, rule groups, `apply-rule` and deletes of rules, accounts and categories. Add it as a second connector ("Firefly admin") and enable it only when needed.
 
-Both go through the same Worker (`mcp-connector-firefly`), which passes the query string through; see [workers/mcp-connector](../workers/mcp-connector/README.md). An unknown value returns HTTP 400; calling an admin tool on the everyday set returns an error naming `toolset=all`.
+Claude Code in `~/ops` has both (`firefly` and `firefly-admin` in `~/ops/.mcp.json`). Both go through the same Worker (`mcp-connector-firefly`), which passes the query string through; see [workers/mcp-connector](../workers/mcp-connector/README.md). Any other value returns HTTP 400, and calling a tool on the wrong set returns an error naming the right one.
 
 ## Stack env (Portainer)
 
