@@ -37,17 +37,32 @@ task() { docker ps --format '{{.Names}}' -f "label=com.docker.swarm.service.name
 ## Verify
 The app's UI shows the expected data, and its service is healthy: `docker service ps <stack>_app --format '{{.CurrentState}}' | head -1` is `Running`.
 
-**Restore test** (no impact on live data; run after any change to the dump setup):
+**Restore test** (no impact on live data; run after any change to the dump setup). Loads the latest dumps into throwaway containers; non-zero counts mean they restore cleanly.
 ```bash
 D=/var/lib/docker/volumes/infra_backrest_dumps/_data
-docker run -d --name restore-test -e POSTGRES_PASSWORD=test postgres:16-alpine && sleep 5
-sudo cat "$D/crm.sql" | docker exec -i restore-test psql -q -v ON_ERROR_STOP=1 -U postgres
-docker exec restore-test psql -U postgres -tAc "select count(*) from information_schema.tables where table_schema not in ('pg_catalog','information_schema')"
+# Postgres: crm (owner twenty), n8n (owner n8n)
+docker run -d --name restore-test -e POSTGRES_PASSWORD=test postgres:16-alpine
+until docker exec restore-test pg_isready -qU postgres; do sleep 1; done; sleep 2
+for db in crm:twenty n8n:n8n; do
+  f=${db%%:*}; role=${db##*:}
+  docker exec restore-test psql -qU postgres -c "create role $role" -c "create database $f owner $role"
+  sudo cat "$D/$f.sql" | docker exec -i restore-test psql -q -v ON_ERROR_STOP=1 -U postgres -d "$f" >/dev/null
+  docker exec restore-test psql -U postgres -d "$f" -tAc "select count(*) from information_schema.tables where table_schema not in ('pg_catalog','information_schema')"
+done
 docker rm -f restore-test
+# MariaDB: firefly. Wait for "init process done": the first ping answers the temporary init server.
+docker run -d --name restore-test-mariadb -e MARIADB_ROOT_PASSWORD=test -e MARIADB_DATABASE=firefly mariadb:12.3
+until docker logs restore-test-mariadb 2>&1 | grep -q "init process done"; do sleep 2; done
+until docker exec restore-test-mariadb mariadb-admin -uroot -ptest ping >/dev/null 2>&1; do sleep 2; done
+sudo cat "$D/firefly.sql" | docker exec -i restore-test-mariadb mariadb -uroot -ptest firefly
+docker exec restore-test-mariadb mariadb -uroot -ptest -N firefly -e "select count(*) from transactions"
+docker rm -f restore-test-mariadb
+# SQLite: greenhouse
+sudo python3 -c "import sqlite3; print(sqlite3.connect('file:$D/greenhouse.db?mode=ro', uri=True).execute('pragma integrity_check').fetchone())"
 ```
-A non-zero table count means the dump restores cleanly. Role errors for the dump's owner are expected unless you create the role first; `ON_ERROR_STOP` stops on them, so run `docker exec restore-test psql -U postgres -c 'create role twenty'` before loading.
+Expected: two table counts and a transaction count above 0, and `('ok',)`.
 
 ## Rollback
 Load the dump taken in the preconditions with the same steps.
 
-**Last verified:** not yet verified (restore test pending first deploy)
+**Last verified:** 2026-10-18 by Claude Code (restore test only: crm 115 tables, n8n 158 tables, firefly 6834 transactions, greenhouse `ok`; the live restore steps are unverified)
