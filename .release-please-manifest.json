@@ -14,5 +14,5 @@
   "services/code": "0.2.0",
   "services/crm": "0.3.0",
   "services/calibre": "0.2.0",
-  "services/mcp-stdio": "1.2.0"
+  "services/mcp-stdio": "1.3.0"
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.2.0...mcp-stdio-v1.3.0) (2026-10-18)
+
+
+### Features
+
+* **mcp-stdio:** add the lamma server ([#481](https://github.com/giocaizzi/rp5-homeserver/issues/481)) ([d15c5de](https://github.com/giocaizzi/rp5-homeserver/commit/d15c5dee355064f60ebc2b5e2ce443d853952b22))
+
 ## [1.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.1.0...mcp-stdio-v1.2.0) (2026-10-18)
 
 
