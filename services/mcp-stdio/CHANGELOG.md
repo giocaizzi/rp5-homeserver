@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.3.0...mcp-stdio-v1.4.0) (2026-10-18)
+
+
+### Features
+
+* **mcp-stdio:** bump pysurfline to the chart grid tools ([#486](https://github.com/giocaizzi/rp5-homeserver/issues/486)) ([c82f968](https://github.com/giocaizzi/rp5-homeserver/commit/c82f968a8a996aa2e26f37bf258104eb4b0f89de))
+
 ## [1.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.2.0...mcp-stdio-v1.3.0) (2026-10-18)
 
 
