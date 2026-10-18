@@ -2,7 +2,7 @@
 
 This file is the source of repo-specific rules for Claude Code (claude.ai/code) and other AI coding assistants.
 
-**Authoritative runbooks live in `.claude/skills/`** — load `firefly` and `openclaw-cli` before any task touching those stacks.
+**Authoritative runbooks:** load the `openclaw-cli` skill (`.claude/skills/`) before touching that stack; for Firefly read [docs/firefly.md](docs/firefly.md) and [docs/RUNBOOKS/](docs/RUNBOOKS/).
 
 ---
 
