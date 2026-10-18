@@ -24,8 +24,9 @@ NTFY_TOKEN_PATH = "/run/secrets/ntfy_token"
 # unset: the cycle closes on the last day of the previous month
 CLOSE_MARKER = os.environ.get("CC_CLOSE_MARKER", "")
 CLOSE_RE = re.compile(rf"\b{re.escape(CLOSE_MARKER)} (\d{{2}}/\d{{2}}/\d{{2,4}})\b") if CLOSE_MARKER else None
-SKIP_PREFIXES = tuple(p for p in os.environ.get("CC_IMPORT_SKIP_PREFIXES", "").split(",") if p)
-REVIEW_TAGS = [t for t in os.environ.get("REVIEW_TAGS", "").split(",") if t]
+# List values accept ";" as well as ",": Portainer cuts swarm stack env values at the first comma
+SKIP_PREFIXES = tuple(p for p in re.split(r"[;,]", os.environ.get("CC_IMPORT_SKIP_PREFIXES", "")) if p)
+REVIEW_TAGS = [t for t in re.split(r"[;,]", os.environ.get("REVIEW_TAGS", "")) if t]
 CYCLES_TO_CHECK = 4
 TOKEN_WARN_DAYS = 30
 RESIDUAL_TAG = "cc-residual"

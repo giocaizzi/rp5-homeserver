@@ -46,7 +46,7 @@ Caveat: a top-up booked from the receiving account carries that account's date; 
 | `CC_SETTLEMENT_SOURCE_ID` | yes | Firefly id of the account the statement is debited from |
 | `CC_RESIDUAL_ACCOUNT_ID` | yes | Firefly id of the expense account for unitemized card spending |
 | `FIREFLY_CC_CLOSE_MARKER` | no | word before the close date (`dd/mm/yy`) in the statement debit text; unset = cycle closes at month end |
-| `FIREFLY_CC_SKIP_PREFIXES` | no | comma-separated description prefixes of card rows to skip on import (card-funded top-ups already booked) |
-| `FIREFLY_REVIEW_TAGS` | no | comma-separated tags listed every Monday |
+| `FIREFLY_CC_SKIP_PREFIXES` | no | `;`-separated description prefixes of card rows to skip on import (card-funded top-ups already booked) |
+| `FIREFLY_REVIEW_TAGS` | no | `;`-separated tags listed every Monday |
 
-Portainer's API replaces the whole env list on update: send every variable.
+Portainer's API replaces the whole env list on update: send every variable. Separate list values with `;`: Portainer cuts a swarm stack env value at the first comma when it deploys (`,` still works when the value reaches the container intact).
