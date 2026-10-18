@@ -52,6 +52,9 @@ secrets:
   surfline_api_key:
     external: true
     name: mcp-stdio_surfline_api_key
+  lamma_api_key:
+    external: true
+    name: mcp-stdio_lamma_api_key
 
 # =============================================================================
 # Volumes
@@ -66,7 +69,7 @@ volumes:
 services:
   gateway:
     # Pinned build of services/mcp-stdio (README → Build). Bump the tag on rebuild.
-    image: ghcr.io/giocaizzi/rp5-mcp-stdio:2026.10.18
+    image: ghcr.io/giocaizzi/rp5-mcp-stdio:2026.10.18.1
     hostname: mcp-stdio-gateway
     expose:
       - "8000"
@@ -78,6 +81,9 @@ services:
         uid: "1000"
         mode: 0400
       - source: surfline_api_key
+        uid: "1000"
+        mode: 0400
+      - source: lamma_api_key
         uid: "1000"
         mode: 0400
     volumes:

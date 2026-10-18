@@ -11,6 +11,7 @@ Cloudflare Access. Design: [MCP edge](../../docs/wip/mcp-edge.md) (Phase 3).
 | `fli` | `/fli/mcp` | [`flights[mcp]`](https://github.com/punitarani/fli) (Google Flights) | shared, no user data |
 | `garmin` | `/garmin/mcp` | [Taxuspt/garmin_mcp](https://github.com/Taxuspt/garmin_mcp) (Garmin Connect, all tools) | owner only |
 | `surfline` | `/surfline/mcp` | [giocaizzi/pysurfline](https://github.com/giocaizzi/pysurfline) `[mcp]` (Surfline forecasts, private repo) | owner only |
+| `lamma` | `/lamma/mcp` | [giocaizzi/pylamma](https://github.com/giocaizzi/pylamma) `[mcp]` (LaMMA Toscana wind and sea forecasts, private repo) | owner only |
 
 Adding a server: [runbook](../../docs/mcp-stdio.md). Garmin needs a one-time interactive
 login after the first deploy: [Garmin](../../docs/mcp-stdio.md#garmin).
@@ -23,22 +24,27 @@ login after the first deploy: [Garmin](../../docs/mcp-stdio.md#garmin).
 `code` and `openclaw`). Use a new date tag on every rebuild and set it in
 `docker-compose.yml`:
 
-pysurfline is private, so its wheel is built locally from a pinned commit and passed as
-the `pysurfline` build context:
+pysurfline and pylamma are private, so their wheels are built locally from a pinned commit
+and passed as the `pysurfline` and `pylamma` build contexts (every rebuild needs both):
 
 ```sh
 git -C ~/Documents/github/pysurfline fetch && git -C ~/Documents/github/pysurfline worktree add /tmp/pysurfline-build <commit>
 uv build --wheel --directory /tmp/pysurfline-build --out-dir /tmp/pysurfline-dist
+git -C ~/Documents/github/pylamma fetch && git -C ~/Documents/github/pylamma worktree add /tmp/pylamma-build <commit>
+uv build --wheel --directory /tmp/pylamma-build --out-dir /tmp/pylamma-dist
 docker buildx build --platform linux/arm64 \
   --build-context pysurfline=/tmp/pysurfline-dist \
+  --build-context pylamma=/tmp/pylamma-dist \
   --label com.giocaizzi.pysurfline.commit=<commit> \
+  --label com.giocaizzi.pylamma.commit=<commit> \
   -t ghcr.io/giocaizzi/rp5-mcp-stdio:<yyyy.mm.dd> \
   --push services/mcp-stdio
 git -C ~/Documents/github/pysurfline worktree remove /tmp/pysurfline-build
+git -C ~/Documents/github/pylamma worktree remove /tmp/pylamma-build
 ```
 
-`/tmp/pysurfline-dist` must hold exactly one wheel; the label records which commit it is. The GHCR
-package is public, so the image ships pysurfline's code (accepted).
+Each `-dist` directory must hold exactly one wheel; the labels record which commits they are. The GHCR
+package is public, so the image ships pysurfline's and pylamma's code (accepted).
 
 The Pi must be able to pull it (public GHCR package, or `docker login ghcr.io` on the Pi).
 
@@ -72,6 +78,7 @@ Worker ──(CF Access service token)──► nginx (mcp-stdio.<domain>) ─�
                                                                        ├─ /fli/mcp ─► fli-mcp (one process per session)
                                                                        ├─ /garmin/mcp ─► garmin-mcp (one process per session)
                                                                        ├─ /surfline/mcp ─► surfline-mcp (one process per session)
+                                                                       ├─ /lamma/mcp ─► lamma-mcp (one process per session)
                                                                        └─ /healthz
 ```
 
@@ -87,7 +94,8 @@ Worker ──(CF Access service token)──► nginx (mcp-stdio.<domain>) ─�
   Garmin is not on PyPI: `servers/garmin.in` lists its dependencies and the package comes
   from a commit tarball pinned by `ADD --checksum` in the [`Dockerfile`](Dockerfile).
   pysurfline is private: `servers/surfline.in` pins `pysurfline[mcp]`'s dependencies (from
-  its `uv.lock`) and the wheel comes from the `pysurfline` build context.
+  its `uv.lock`) and the wheel comes from the `pysurfline` build context; pylamma likewise
+  (`servers/lamma.in`, `pylamma` build context).
 - **Non-root** (`node`, uid 1000), `no-new-privileges`, only on `rp5_public`. One volume,
   `garmin_data` (Garmin OAuth tokens, no password), backed up by Backrest.
 - `npm audit` flags GHSA-6qxp-vccf-f47h in the MCP SDK's OAuth **client**; supergateway
@@ -110,6 +118,10 @@ Bump pysurfline: copy the `curl-cffi`, `httpx`, `pydantic` and `fastmcp` pins of
 commit (`uv export --extra mcp --no-dev --no-emit-project` in pysurfline) into
 `servers/surfline.in`, re-lock it as above, and build from that commit.
 
+Bump pylamma: same, with the `fastmcp`, `httpx`, `numpy`, `pillow`, `pydantic` and
+`xarray` pins (`uv export --extra mcp --no-dev --no-emit-project` in pylamma) into
+`servers/lamma.in`.
+
 ---
 
 ## 🔐 Secrets
@@ -122,6 +134,7 @@ One API key per server, sent by the Worker as `Authorization: Bearer <key>`
 | `mcp-stdio_fli_api_key` | `bws secret create mcp-stdio_fli_api_key "$(openssl rand -hex 32)" <project-id>` |
 | `mcp-stdio_garmin_api_key` | `bws secret create mcp-stdio_garmin_api_key "$(openssl rand -hex 32)" <project-id>` |
 | `mcp-stdio_surfline_api_key` | `bws secret create mcp-stdio_surfline_api_key "$(openssl rand -hex 32)" <project-id>` |
+| `mcp-stdio_lamma_api_key` | `bws secret create mcp-stdio_lamma_api_key "$(openssl rand -hex 32)" <project-id>` |
 
 Each value also goes into the Worker's `UPSTREAM_BEARER` for the matching connector:
 read it back with `bws secret get <secret-id> | jq -r .value` piped straight into

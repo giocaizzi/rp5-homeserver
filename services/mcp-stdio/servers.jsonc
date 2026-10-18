@@ -29,6 +29,13 @@
       "apiKeyFile": "/run/secrets/surfline_api_key",
       // FastMCP logs INFO to stderr, which the gateway reports as errors.
       "env": { "FASTMCP_LOG_LEVEL": "WARNING" }
+    },
+    // LaMMA Toscana wind and sea forecasts (giocaizzi/pylamma, read-only
+    // tools; Nominatim for place lookup). Public data: no user data.
+    "lamma": {
+      "command": "/opt/mcp/lamma/bin/lamma-mcp",
+      "apiKeyFile": "/run/secrets/lamma_api_key",
+      "env": { "FASTMCP_LOG_LEVEL": "WARNING" }
     }
   }
 }
