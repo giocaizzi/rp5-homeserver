@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.5.0...mcp-connector-v0.5.1) (2026-10-18)
+
+
+### Documentation
+
+* **firefly:** document everyday and full MCP toolsets ([#469](https://github.com/giocaizzi/rp5-homeserver/issues/469)) ([890ec5f](https://github.com/giocaizzi/rp5-homeserver/commit/890ec5fceedfcf5e70978d30d5bca945ddd8a999))
+
 ## [0.5.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.4.0...mcp-connector-v0.5.0) (2026-10-17)
 
 

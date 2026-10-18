@@ -4,7 +4,7 @@
 x-labels-base: &labels-base
   com.giocaizzi.namespace: "firefly"
   com.giocaizzi.env: "production"
-  com.giocaizzi.config-rev: "0.3.1" # x-release-please-version — bumped per release so tasks re-bind fresh Portainer clone
+  com.giocaizzi.config-rev: "0.3.2" # x-release-please-version — bumped per release so tasks re-bind fresh Portainer clone
 
 x-deploy-base: &deploy-base
   mode: replicated
@@ -350,7 +350,7 @@ services:
       echo 'Firefly is ready, setting up cron jobs...' &&
       echo '0 6 * * * wget -qO- http://firefly-app:8080/api/v1/cron/\$$(cat /run/secrets/static_cron_token)' > /tmp/crontab &&
       echo '0 6 * * * wget -qO- --post-data=\"directory=/var/www/html/import&secret=\$$(cat /run/secrets/auto_import_secret)\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer \$$(cat /run/secrets/firefly_access_token)\" http://firefly-importer:8080/autoimport' >> /tmp/crontab &&
-      env | grep -E \"^(CC_|REVIEW_TAGS|NTFY_URL|TZ)\" | sed \"s/^/export /\" > /tmp/jobs.env &&
+      export -p | grep -E \"^export (CC_|REVIEW_TAGS|NTFY_URL|TZ)\" > /tmp/jobs.env &&
       echo '0 7 * * * . /tmp/jobs.env && python3 /usr/local/bin/firefly_jobs.py daily >> /proc/1/fd/1 2>&1' >> /tmp/crontab &&
       crontab /tmp/crontab &&
       rm /tmp/crontab &&
