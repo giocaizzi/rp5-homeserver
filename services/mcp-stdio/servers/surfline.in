@@ -5,3 +5,7 @@ curl-cffi==0.16.3
 httpx==0.28.1
 pydantic==2.14.1
 fastmcp==4.1.1
+# charts and plot extras, pulled in by [mcp] since pysurfline #87
+matplotlib==3.11.2
+numpy==2.5.4
+pillow==13.0.0
