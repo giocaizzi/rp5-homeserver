@@ -12,10 +12,17 @@ fail=0
 
 # dump <swarm service> <output file> <command run inside the container>
 dump() {
-  local name
+  local name err
   name=$(docker ps --format '{{.Names}}' --filter "label=com.docker.swarm.service.name=$1" | head -n1)
   if [ -z "$name" ]; then
-    echo "ERROR: $1 has no running task" >&2
+    # A stopped stack has no service: skip it and keep its last dump (older ones
+    # stay in the snapshots). A deployed service with no running task is an error.
+    err=$(docker service inspect "$1" 2>&1 >/dev/null)
+    if [[ "$err" == *"no such service"* ]]; then
+      echo "WARN: $1 not deployed (stack stopped), skipped; keeping the last $2" >&2
+      return 0
+    fi
+    echo "ERROR: $1 has no running task ${err:+($err)}" >&2
     return 1
   fi
   if docker exec "$name" sh -c "$3" > "$OUT/$2.tmp" && [ -s "$OUT/$2.tmp" ]; then

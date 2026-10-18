@@ -22,6 +22,7 @@ Copying a running database's files does not give a consistent copy, so the raw `
 2. The script `docker exec`s the engine's own dump tool in each DB task, with that container's credentials, and writes to the `infra_backrest_dumps` volume (`/dumps`). Backrest never holds a DB password.
 3. The snapshot then picks the dumps up under `/backup/docker-volumes/infra_backrest_dumps/_data/`. Restic keeps the history; the volume holds only the latest dump.
 4. If any dump fails, the snapshot fails and the error hook alerts ntfy (topic `backup`). `ON_ERROR_CANCEL` would stop the snapshot silently, without running error hooks.
+5. A database whose stack is stopped (service not deployed) is skipped with a `WARN` line in the backup log; its last dump stays in the volume and older ones in the snapshots. A deployed service with no running task is still an error.
 
 | File | Source | Tool |
 |------|--------|------|
@@ -30,7 +31,7 @@ Copying a running database's files does not give a consistent copy, so the raw `
 | `n8n.sql` | `n8n_db` (Postgres) | `pg_dump` |
 | `greenhouse.db` | `greenhouse_app` (SQLite) | Python `sqlite3` online backup |
 
-Backrest reaches Docker only through `infra_docker-proxy` ([wollomatic/socket-proxy](https://github.com/wollomatic/socket-proxy)). Its allowlist permits listing containers, exec into these four tasks and the prune endpoints used by the janitor ([disk hygiene](./monitoring.md#disk-hygiene)), nothing else: no container create, no exec into other containers. Adding a database means adding a `dump` line to the script and its service name to both proxy allowlist regexes in `infra/docker-compose.yml`.
+Backrest reaches Docker only through `infra_docker-proxy` ([wollomatic/socket-proxy](https://github.com/wollomatic/socket-proxy)). Its allowlist permits listing containers, inspecting and exec into these four services/tasks and the prune endpoints used by the janitor ([disk hygiene](./monitoring.md#disk-hygiene)), nothing else: no container create, no exec into other containers. Adding a database means adding a `dump` line to the script and its service name to the three name lists in the proxy allowlist regexes in `infra/docker-compose.yml`.
 
 Restore: [RUNBOOKS/restore-database.md](./RUNBOOKS/restore-database.md).
 
