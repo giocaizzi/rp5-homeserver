@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.3.1...firefly-v0.3.2) (2026-10-18)
+
+
+### Bug Fixes
+
+* **firefly:** quote the cron job env so list values survive sourcing ([#468](https://github.com/giocaizzi/rp5-homeserver/issues/468)) ([f03d284](https://github.com/giocaizzi/rp5-homeserver/commit/f03d284bebc867575ef5408125d92008d0e2bfb7))
+
 ## [0.3.1](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.3.0...firefly-v0.3.1) (2026-10-18)
 
 
