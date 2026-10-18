@@ -264,6 +264,7 @@ services:
       - ./netdata/netdata.conf:/etc/netdata/netdata.conf:ro  # custom config
       - ./netdata/health_alarm_notify.conf:/etc/netdata/health_alarm_notify.conf:ro  # ntfy alerts
       - ./netdata/health.d/pi_temp.conf:/etc/netdata/health.d/pi_temp.conf:ro  # custom alarm (file mount: a :ro dir mount breaks the entrypoint's stock-config copy)
+      - ./netdata/health.d/disk_used.conf:/etc/netdata/health.d/disk_used.conf:ro  # custom alarm (file mount, as above)
       - netdata_config:/etc/netdata         # config directory
       - netdata_cache:/var/cache/netdata    # persistent cache
       - netdata_lib:/var/lib/netdata        # persistent data
@@ -351,8 +352,9 @@ services:
       retries: 3
       start_period: 10s
 
-  # Docker socket proxy for Backrest's DB dump hook: only exec into the DB tasks.
-  # Serves a unix socket in a shared volume, so no network is involved.
+  # Docker socket proxy for Backrest's DB dump hook (exec into the DB tasks only)
+  # and the janitor (prune only). Serves a unix socket in a shared volume, so no
+  # network is involved.
   docker-proxy:
     image: wollomatic/socket-proxy:1   # major-pinned (see #185)
     hostname: infra-docker-proxy
@@ -365,7 +367,7 @@ services:
       - '-proxysocketendpoint=/docker-proxy/docker.sock'
       - '-allowHEAD=/_ping'
       - '-allowGET=/(_ping|v1\.\d+/(containers/json|containers/(firefly_db|crm_db|n8n_db|greenhouse_app)\.1\.\w+/json|exec/\w+/json))'
-      - '-allowPOST=/v1\.\d+/(containers/(firefly_db|crm_db|n8n_db|greenhouse_app)\.1\.\w+/exec|exec/\w+/start)'
+      - '-allowPOST=/v1\.\d+/(containers/(firefly_db|crm_db|n8n_db|greenhouse_app)\.1\.\w+/exec|exec/\w+/start|(containers|images)/prune)'
       - '-watchdoginterval=3600'
       - '-stoponwatchdog'
     volumes:
@@ -385,6 +387,44 @@ services:
       resources:
         limits:
           memory: 32M
+    logging:
+      <<: *logging-base
+
+  # Janitor - daily prune of stopped containers and unused images (CI/Shepherd
+  # redeploys leave ~1 GiB/day of old images otherwise). Volumes are never pruned;
+  # nothing builds on the Pi, so there is no build cache. See docs/monitoring.md#disk-hygiene.
+  janitor:
+    image: docker:29-cli   # major-pinned (see #185)
+    hostname: infra-janitor
+    init: true  # sleep as PID 1 ignores SIGTERM -> SIGKILL on stop (#316)
+    environment:
+      - DOCKER_HOST=unix:///docker-proxy/docker.sock
+    command:
+      - sh
+      - -c
+      - |
+        while true; do
+          date
+          docker container prune -f --filter until=24h
+          docker image prune -af --filter until=48h
+          sleep 86400
+        done
+    volumes:
+      - docker_proxy_socket:/docker-proxy
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "janitor"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.tier: "critical"
+      com.giocaizzi.technology: "docker-cli"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "critical"
+      resources:
+        limits:
+          memory: 64M
     logging:
       <<: *logging-base
 

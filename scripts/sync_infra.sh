@@ -42,7 +42,7 @@ NGINX_CHANGED=false   # nginx/ is bind-mounted: content changes need an explicit
 # Single-file bind mounts the container only reads at start (rsync may swap the inode;
 # an unchanged service spec means `stack deploy` won't restart it). Keep in sync with
 # the `./netdata/*.conf` mounts of the `monitoring` service in docker-compose.yml.
-NETDATA_CONF_RE='netdata/(netdata|health_alarm_notify)\.conf$'
+NETDATA_CONF_RE='netdata/((netdata|health_alarm_notify)\.conf|health\.d/[a-z_]+\.conf)$'
 NETDATA_CHANGED=false
 
 # Colors
