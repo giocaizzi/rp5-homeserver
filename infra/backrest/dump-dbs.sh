@@ -1,6 +1,6 @@
 #!/bin/bash
 # Logical database dumps, run by Backrest before each docker-volumes snapshot
-# (CONDITION_SNAPSHOT_START hook, ON_ERROR_CANCEL). See docs/backup.md.
+# (CONDITION_SNAPSHOT_START hook, ON_ERROR_FATAL). See docs/backup.md.
 # docker talks to infra_docker-proxy, which only allows exec into the tasks
 # below; each dump runs with the DB container's own credentials.
 # Dump commands are single-quoted on purpose: they expand inside the DB container.
