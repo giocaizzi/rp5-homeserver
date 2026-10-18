@@ -1342,3 +1342,46 @@ resource "cloudflare_zero_trust_access_application" "surfline_mcp_policy" {
     }
   ]
 }
+
+# --- lamma MCP (mcp-stdio) ------------------------------------------------
+# Same shape as fli: path-scoped app + its own service token. Owner-only at the
+# connector (registry allow: ["owner"]); public LaMMA forecast data, no user data.
+
+resource "cloudflare_zero_trust_access_service_token" "claude_lamma_mcp" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-lamma-mcp"
+}
+
+resource "cloudflare_zero_trust_access_policy" "claude_lamma_mcp_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "claude-lamma-mcp-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      service_token = {
+        token_id = cloudflare_zero_trust_access_service_token.claude_lamma_mcp.id
+      }
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "lamma_mcp_policy" {
+  account_id = var.cloudflare_account_id
+  type       = "self_hosted"
+  name       = "lamma-mcp.${var.zone_name}"
+
+  destinations = [
+    {
+      type = "public"
+      uri  = "mcp-stdio.${var.zone_name}/lamma/mcp"
+    }
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.claude_lamma_mcp_bypass.id
+      precedence = 1
+    }
+  ]
+}
