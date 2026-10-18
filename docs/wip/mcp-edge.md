@@ -93,6 +93,7 @@ revisit mcphub only if friends need their own credentials on a shared server.
    entry, deployed (fli search results blocked upstream until `flights` 0.10.0, #434).
    Garmin: owner only, interactive first login ([runbook](../mcp-stdio.md#garmin)).
    Surfline (giocaizzi/pysurfline): owner only, public forecast data.
+   LaMMA Toscana (giocaizzi/pylamma): owner only, public forecast data.
 4. #398 sharing: groups, published Google client, rate limits.
 
 ## Open questions
