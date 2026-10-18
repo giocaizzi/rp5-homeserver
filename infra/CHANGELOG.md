@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.23.3](https://github.com/giocaizzi/rp5-homeserver/compare/v1.23.2...v1.23.3) (2026-10-18)
+
+
+### Bug Fixes
+
+* **infra:** bypass the Access JWT check for the lamma MCP path ([#483](https://github.com/giocaizzi/rp5-homeserver/issues/483)) ([ba44815](https://github.com/giocaizzi/rp5-homeserver/commit/ba44815298b8a7a5cade0c72ead3229a9f907bfd))
+
 ## [1.23.2](https://github.com/giocaizzi/rp5-homeserver/compare/v1.23.1...v1.23.2) (2026-10-18)
 
 
