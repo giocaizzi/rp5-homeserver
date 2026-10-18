@@ -1,7 +1,7 @@
 {
   "infra": "1.23.2",
   "cloud": "0.10.0",
-  "workers/mcp-connector": "0.5.1",
+  "workers/mcp-connector": "0.6.0",
   "services/adguard": "0.2.3",
   "services/ai": "0.1.1",
   "services/firefly": "0.3.2",
