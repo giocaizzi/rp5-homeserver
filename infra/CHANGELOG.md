@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.23.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.22.0...v1.23.0) (2026-10-18)
+
+
+### Features
+
+* **infra:** prune old docker images daily and alert on disk growth ([#462](https://github.com/giocaizzi/rp5-homeserver/issues/462)) ([da80938](https://github.com/giocaizzi/rp5-homeserver/commit/da809387c0c4eea9b4bb6ccb0bf83fda6b4db07d))
+
+
+### Bug Fixes
+
+* **infra:** use ON_ERROR_FATAL for the backrest dump hook ([#459](https://github.com/giocaizzi/rp5-homeserver/issues/459)) ([be36556](https://github.com/giocaizzi/rp5-homeserver/commit/be36556f76721c145437efabfc4e8869ad33ad9e))
+
 ## [1.22.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.21.4...v1.22.0) (2026-10-18)
 
 
