@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.4.0...mcp-stdio-v1.4.1) (2026-10-18)
+
+
+### Performance Improvements
+
+* **mcp-stdio:** ship compiled bytecode for the server venvs ([#488](https://github.com/giocaizzi/rp5-homeserver/issues/488)) ([627e320](https://github.com/giocaizzi/rp5-homeserver/commit/627e320ec25fd9d02677ec99c478809d5a20bd46))
+
 ## [1.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.3.0...mcp-stdio-v1.4.0) (2026-10-18)
 
 
