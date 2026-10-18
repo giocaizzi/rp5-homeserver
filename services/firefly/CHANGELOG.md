@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.3.0...firefly-v0.3.1) (2026-10-18)
+
+
+### Bug Fixes
+
+* **firefly:** accept ";" between list values in the stack env ([#466](https://github.com/giocaizzi/rp5-homeserver/issues/466)) ([f2d6c21](https://github.com/giocaizzi/rp5-homeserver/commit/f2d6c21985093fba71202906df1ad1c151456b95))
+
 ## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.2.8...firefly-v0.3.0) (2026-10-18)
 
 
