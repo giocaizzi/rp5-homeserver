@@ -323,9 +323,11 @@ services:
       - CC_SETTLEMENT_SOURCE_ID=${CC_SETTLEMENT_SOURCE_ID:?set CC_SETTLEMENT_SOURCE_ID in the stack env}
       - CC_RESIDUAL_ACCOUNT_ID=${CC_RESIDUAL_ACCOUNT_ID:?set CC_RESIDUAL_ACCOUNT_ID in the stack env}
       # Optional, comma-separated: tags summarised every Monday; card-import row
-      # prefixes to skip (card-funded top-ups already booked on the receiving account)
+      # prefixes to skip (card-funded top-ups already booked on the receiving account).
+      # Optional: word before the statement close date in the settlement text
       - REVIEW_TAGS=${FIREFLY_REVIEW_TAGS:-}
       - CC_IMPORT_SKIP_PREFIXES=${FIREFLY_CC_SKIP_PREFIXES:-}
+      - CC_CLOSE_MARKER=${FIREFLY_CC_CLOSE_MARKER:-}
       # ntfy over the shared rp5_public network
       - NTFY_URL=http://ntfy_app/firefly
     secrets:

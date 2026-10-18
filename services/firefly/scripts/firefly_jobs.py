@@ -4,23 +4,10 @@
 Runs inside the firefly_scheduler container (stdlib only, HTTP to firefly-app).
 
   firefly_jobs.py daily       daily, after the bank-data auto-import
-  firefly_jobs.py cc-import   card rows as JSON on stdin (scripts/firefly_cc_import.sh)
+  firefly_jobs.py cc-import   card rows as JSON on stdin: [{"date","booked","amount","description"}]
 
-Credit-card model: the card is an asset account. Each statement is a transfer
-settlement -> card. Itemized card purchases are withdrawals from the card; top-ups
-paid with the card are transfers card -> other asset. Whatever a statement covers
-that is not itemized is booked as one residual withdrawal per cycle
-(card -> CC_RESIDUAL_ACCOUNT_ID, tag `cc-residual`), so the card is back to the
-open-cycle spending after every statement. The residual is recomputed on every
-run for the last CYCLES_TO_CHECK cycles, so a later card import shrinks or
-removes it.
-
-Balance check: for every bank-data account mapped in the importer config, the
-provider's balance must equal Firefly's current balance (set the provider to
-report booked balances; Firefly only holds booked transactions).
-
-Alerts go to ntfy (topic `firefly`). Nothing private lives here: account ids and
-names come from the stack env and the importer config.
+Ledger model, checks and alerts: docs/firefly.md. Nothing private lives here:
+account ids, bank wording and tags come from the stack env and the importer config.
 """
 import base64, hashlib, json, os, re, sys, time, urllib.error, urllib.parse, urllib.request
 from datetime import date, datetime, timedelta, timezone
@@ -33,8 +20,10 @@ PROVIDER_API = "https://lunchflow.app/api/v1"
 IMPORTER_CONFIG = os.environ.get("IMPORTER_CONFIG", "/etc/firefly/importer.json")
 NTFY_URL = os.environ.get("NTFY_URL", "http://ntfy_app/firefly")
 NTFY_TOKEN_PATH = "/run/secrets/ntfy_token"
-# Statement close date inside the settlement description, e.g. "... AL 30/09/26 ..."
-CLOSE_RE = re.compile(os.environ.get("CC_CLOSE_REGEX", r"\bAL (\d{2}/\d{2}/\d{2,4})\b"))
+# Word before the statement close date in the settlement description ("<marker> dd/mm/yy");
+# unset: the cycle closes on the last day of the previous month
+CLOSE_MARKER = os.environ.get("CC_CLOSE_MARKER", "")
+CLOSE_RE = re.compile(rf"\b{re.escape(CLOSE_MARKER)} (\d{{2}}/\d{{2}}/\d{{2,4}})\b") if CLOSE_MARKER else None
 SKIP_PREFIXES = tuple(p for p in os.environ.get("CC_IMPORT_SKIP_PREFIXES", "").split(",") if p)
 REVIEW_TAGS = [t for t in os.environ.get("REVIEW_TAGS", "").split(",") if t]
 CYCLES_TO_CHECK = 4
@@ -103,7 +92,7 @@ def splits(account_id, start, end):
 
 # ---------------------------------------------------------------- card residuals
 def close_date(desc, posted):
-    m = CLOSE_RE.search(desc or "")
+    m = CLOSE_RE.search(desc or "") if CLOSE_RE else None
     if m:
         d = m.group(1)
         return datetime.strptime(d, "%d/%m/%y" if len(d) == 8 else "%d/%m/%Y").date()

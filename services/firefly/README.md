@@ -146,7 +146,7 @@ See [Data Importer docs](https://docs.firefly-iii.org/how-to/data-importer/impor
 | 06:00 daily | Auto-import (`POST /autoimport`, directory and secret in the form body) | Import from the bank-data provider via config.json |
 | 07:00 daily | `firefly_jobs.py daily` | Credit-card cycle residuals, bank-balance and connection checks, token expiry; alerts to ntfy topic `firefly` ([model](../../docs/firefly.md)) |
 
-All run in the `scheduler` Alpine container over HTTP — no Docker socket. Stack env for `firefly_jobs.py`: `CC_ACCOUNT_ID` (card), `CC_SETTLEMENT_SOURCE_ID` (account the card is settled from), `CC_RESIDUAL_ACCOUNT_ID` (expense account for unitemized card spending); optional `FIREFLY_REVIEW_TAGS`, `FIREFLY_CC_SKIP_PREFIXES`. Card files: [Import a credit-card statement](../../docs/RUNBOOKS/import-card-statement.md).
+All run in the `scheduler` Alpine container over HTTP — no Docker socket. Stack env for `firefly_jobs.py`: [Firefly](../../docs/firefly.md#stack-env-portainer).
 
 No secret reaches a log: the crontab holds `$(cat /run/secrets/...)` (expanded only when the job runs), the auto-import secret travels in the POST body, and the app's nginx skips `/api/v1/cron/*` in its access log (`nginx/log-map.conf` + `nginx/access-log.conf`, bind-mounted into `conf.d` and `server-opts.d`).
 
