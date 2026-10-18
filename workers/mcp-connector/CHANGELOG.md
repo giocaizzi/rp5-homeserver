@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.5.1...mcp-connector-v0.6.0) (2026-10-18)
+
+
+### Features
+
+* **mcp-connector:** add the surfline connector ([#475](https://github.com/giocaizzi/rp5-homeserver/issues/475)) ([aff502c](https://github.com/giocaizzi/rp5-homeserver/commit/aff502c45cbd471e8a5f82119b03697e24a84cdb))
+
 ## [0.5.1](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.5.0...mcp-connector-v0.5.1) (2026-10-18)
 
 
