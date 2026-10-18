@@ -8,6 +8,7 @@
     "portainer": { "name": "Portainer", "upstream": "https://portainer.${DOMAIN}/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"], "extra_headers": true },
     "langfuse": { "name": "Langfuse", "upstream": "https://langfuse-mcp.${DOMAIN}/api/public/mcp", "auth": "Basic", "mode": "shared", "allow": ["owner"] },
     "fli": { "name": "Google Flights", "upstream": "https://mcp-stdio.${DOMAIN}/fli/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"] },
-    "garmin": { "name": "Garmin Connect", "upstream": "https://mcp-stdio.${DOMAIN}/garmin/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"] }
+    "garmin": { "name": "Garmin Connect", "upstream": "https://mcp-stdio.${DOMAIN}/garmin/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"] },
+    "surfline": { "name": "Surfline", "upstream": "https://mcp-stdio.${DOMAIN}/surfline/mcp", "auth": "Bearer", "mode": "shared", "allow": ["owner"] }
   }
 }
