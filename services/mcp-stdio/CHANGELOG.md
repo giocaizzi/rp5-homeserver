@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.4.1...mcp-stdio-v1.5.0) (2026-10-18)
+
+
+### Features
+
+* **mcp-stdio:** bump pysurfline to full mcp parity ([#490](https://github.com/giocaizzi/rp5-homeserver/issues/490)) ([bd9cec6](https://github.com/giocaizzi/rp5-homeserver/commit/bd9cec66e2bdf8e169a2cc4e7de5e5e08df0060f))
+
 ## [1.4.1](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.4.0...mcp-stdio-v1.4.1) (2026-10-18)
 
 
