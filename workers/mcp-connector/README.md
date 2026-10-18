@@ -12,7 +12,7 @@ Live connectors:
 |------------|----------------------------------------------------------------|---------------------------------------------------|
 | Greenhouse | `https://mcp-connector-greenhouse.<account>.workers.dev/mcp`   | `https://greenhouse.<domain>/mcp`            |
 | Firefly III| `https://mcp-connector-firefly.<account>.workers.dev/mcp`      | `https://firefly.<domain>/api/v1/mcp`        |
-| Firefly III (admin) | `https://mcp-connector-firefly.<account>.workers.dev/mcp?toolset=all` | same; the query string is passed through, all tools instead of the everyday set |
+| Firefly III (admin) | `https://mcp-connector-firefly.<account>.workers.dev/mcp?toolset=admin` | same; the query string is passed through, the admin tools only (disjoint from the default everyday set) |
 | n8n        | `https://mcp-connector-n8n.<account>.workers.dev/mcp`          | `https://n8n.<domain>/mcp-server/http`       |
 | Grafana    | `https://mcp-connector-grafana.<account>.workers.dev/mcp`      | `https://grafana.<domain>/mcp` (sidecar, read-only) |
 | Netdata    | `https://mcp-connector-netdata.<account>.workers.dev/mcp`  | `https://netdata-mcp.<domain>/mcp` (native)  |
