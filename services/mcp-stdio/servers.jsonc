@@ -21,6 +21,14 @@
       "command": "/opt/mcp/garmin/bin/garmin-mcp",
       "apiKeyFile": "/run/secrets/garmin_api_key",
       "env": { "GARMINTOKENS": "/home/node/.garminconnect" }
+    },
+    // Surfline forecasts (giocaizzi/pysurfline, read-only tools). Anonymous
+    // Surfline access: no user data.
+    "surfline": {
+      "command": "/opt/mcp/surfline/bin/surfline-mcp",
+      "apiKeyFile": "/run/secrets/surfline_api_key",
+      // FastMCP logs INFO to stderr, which the gateway reports as errors.
+      "env": { "FASTMCP_LOG_LEVEL": "WARNING" }
     }
   }
 }
