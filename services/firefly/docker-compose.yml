@@ -318,15 +318,28 @@ services:
     init: true # crond as PID 1 ignores SIGTERM -> SIGKILL (137) on stop (#316)
     environment:
       - TZ=Europe/Rome
-      # Firefly account ids for cc_monthly_reconcile.py, from the stack env
+      # Firefly account ids for firefly_jobs.py, from the stack env
       - CC_ACCOUNT_ID=${CC_ACCOUNT_ID:?set CC_ACCOUNT_ID in the stack env}
       - CC_SETTLEMENT_SOURCE_ID=${CC_SETTLEMENT_SOURCE_ID:?set CC_SETTLEMENT_SOURCE_ID in the stack env}
+      - CC_RESIDUAL_ACCOUNT_ID=${CC_RESIDUAL_ACCOUNT_ID:?set CC_RESIDUAL_ACCOUNT_ID in the stack env}
+      # Optional, comma-separated: tags summarised every Monday; card-import row
+      # prefixes to skip (card-funded top-ups already booked on the receiving account)
+      - REVIEW_TAGS=${FIREFLY_REVIEW_TAGS:-}
+      - CC_IMPORT_SKIP_PREFIXES=${FIREFLY_CC_SKIP_PREFIXES:-}
+      # ntfy over the shared rp5_public network
+      - NTFY_URL=http://ntfy_app/firefly
     secrets:
       - auto_import_secret
       - firefly_access_token
       - static_cron_token
+      - lunch_flow_api_key
+      - ntfy_token
+    configs:
+      - source: importer_config
+        target: /etc/firefly/importer.json
+        mode: 0444
     volumes:
-      - ./scripts/cc_monthly_reconcile.py:/usr/local/bin/cc_monthly_reconcile.py:ro
+      - ./scripts/firefly_jobs.py:/usr/local/bin/firefly_jobs.py:ro
     command: >
       sh -c "apk add --no-cache tzdata wget &&
       ln -sf /usr/share/zoneinfo/Europe/Rome /etc/localtime &&
@@ -335,13 +348,15 @@ services:
       echo 'Firefly is ready, setting up cron jobs...' &&
       echo '0 6 * * * wget -qO- http://firefly-app:8080/api/v1/cron/\$$(cat /run/secrets/static_cron_token)' > /tmp/crontab &&
       echo '0 6 * * * wget -qO- --post-data=\"directory=/var/www/html/import&secret=\$$(cat /run/secrets/auto_import_secret)\" --header=\"Accept: application/json\" --header=\"Authorization: Bearer \$$(cat /run/secrets/firefly_access_token)\" http://firefly-importer:8080/autoimport' >> /tmp/crontab &&
-      echo '0 4 11 * * CC_ACCOUNT_ID='$$CC_ACCOUNT_ID' CC_SETTLEMENT_SOURCE_ID='$$CC_SETTLEMENT_SOURCE_ID' python3 /usr/local/bin/cc_monthly_reconcile.py >> /proc/1/fd/1 2>&1' >> /tmp/crontab &&
+      env | grep -E \"^(CC_|REVIEW_TAGS|NTFY_URL|TZ)\" | sed \"s/^/export /\" > /tmp/jobs.env &&
+      echo '0 7 * * * . /tmp/jobs.env && python3 /usr/local/bin/firefly_jobs.py daily >> /proc/1/fd/1 2>&1' >> /tmp/crontab &&
       crontab /tmp/crontab &&
       rm /tmp/crontab &&
       echo 'Cron jobs configured' &&
       exec crond -f -L /dev/stdout"
     networks:
       - firefly_network
+      - public_network
     labels:
       <<: *labels-base
       com.giocaizzi.service: "scheduler"
@@ -394,3 +409,7 @@ secrets:
   lunch_flow_api_key:
     external: true
     name: firefly_lunch_flow_api_key
+  # Publisher token for the self-hosted ntfy topic `firefly` (user `alerts`, write-only).
+  ntfy_token:
+    external: true
+    name: firefly_ntfy_token
