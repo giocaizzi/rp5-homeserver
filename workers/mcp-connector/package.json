@@ -1,6 +1,6 @@
 {
   "name": "mcp-connector",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "description": "Single-origin OAuth + MCP reverse-proxy Worker fronting self-hosted MCP servers for Claude.ai connectors",
