@@ -109,8 +109,7 @@ Non-service releases (`infra`, `cloud`, `mcp-connector`) no-op.
      (`git grep -l 'DOMAIN:?' services/`). The value is never committed; a missing
      value fails the deploy (`set DOMAIN in the stack env`) and leaves the running
      services untouched.
-   - `firefly` also needs `CC_ACCOUNT_ID` and `CC_SETTLEMENT_SOURCE_ID` (Firefly
-     account ids used by the monthly credit-card reconciliation).
+   - `firefly` also needs the variables in [Firefly: stack env](./firefly.md#stack-env-portainer).
 2. Enable **GitOps updates** → **Webhook**, copy the webhook URL. The id is the
    last path segment: `…/api/stacks/webhooks/<WEBHOOK_ID>`.
 3. Pre-create the stack's external Swarm secrets:

@@ -45,6 +45,7 @@ Secrets live in the Secrets Manager project `rp5-homeserver`; `scripts/create_se
 | `firefly_client_id` | Profile → OAuth → Create Personal Access Client |
 | `firefly_access_token` | Profile → OAuth → Personal Access Tokens |
 | `firefly_lunch_flow_api_key` | External: the bank-data provider's API key (Data Importer provider) |
+| `firefly_ntfy_token` | `ntfy token add --label firefly alerts` in the ntfy container (see [ntfy alert topics](../ntfy/README.md#-alert-topics)) |
 
 ### Rotating `firefly_access_token`
 
@@ -128,11 +129,7 @@ Imports run from config files placed in the importer container.
    - Configure import settings
    - Download JSON config
 
-2. **Deploy config to container**:
-   ```bash
-   scp config.json pi@pi.local:/tmp/
-   ssh pi@pi.local "docker cp /tmp/config.json \$(docker ps -qf 'label=com.docker.swarm.service.name=firefly_importer'):/import/config.json"
-   ```
+2. **Deploy config**: it is the external Swarm config `firefly_importer_config` (importer and scheduler read it); see [Update the importer config](../../docs/RUNBOOKS/update-firefly-importer-config.md).
 
 3. **Add Personal Access Token to config**:
    - Edit config.json: `"access_token": "eyJ0eXAi..."`
@@ -147,9 +144,9 @@ See [Data Importer docs](https://docs.firefly-iii.org/how-to/data-importer/impor
 |------------|-----|---------|
 | 06:00 daily | Firefly web cron (`/api/v1/cron/<STATIC_CRON_TOKEN>`) | Recurring transactions, auto-budgets, exchange rates |
 | 06:00 daily | Auto-import (`POST /autoimport`, directory and secret in the form body) | Import from the bank-data provider via config.json |
-| 04:00 on the 11th | `cc_monthly_reconcile.py` | Credit-card monthly reconciliation (account ids from stack env `CC_ACCOUNT_ID`, `CC_SETTLEMENT_SOURCE_ID`) |
+| 07:00 daily | `firefly_jobs.py daily` | Credit-card cycle residuals, bank-balance and connection checks, token expiry; alerts to ntfy topic `firefly` ([model](../../docs/firefly.md)) |
 
-All run in the `scheduler` Alpine container over HTTP — no Docker socket.
+All run in the `scheduler` Alpine container over HTTP — no Docker socket. Stack env for `firefly_jobs.py`: [Firefly](../../docs/firefly.md#stack-env-portainer).
 
 No secret reaches a log: the crontab holds `$(cat /run/secrets/...)` (expanded only when the job runs), the auto-import secret travels in the POST body, and the app's nginx skips `/api/v1/cron/*` in its access log (`nginx/log-map.conf` + `nginx/access-log.conf`, bind-mounted into `conf.d` and `server-opts.d`).
 
