@@ -114,8 +114,9 @@ Bump Garmin: copy the dependencies of the new commit's `pyproject.toml` into
 `servers/garmin.in`, re-lock it as above, and update the tarball URL and its
 `sha256` (`curl -sL <url> | shasum -a 256`) in the `Dockerfile`.
 
-Bump pysurfline: copy the `curl-cffi`, `httpx`, `pydantic` and `fastmcp` pins of the new
-commit (`uv export --extra mcp --no-dev --no-emit-project` in pysurfline) into
+Bump pysurfline: copy the `curl-cffi`, `httpx`, `pydantic`, `fastmcp`, `matplotlib`,
+`numpy` and `pillow` pins of the new commit (`uv export --extra mcp --no-dev
+--no-emit-project` in pysurfline; `[mcp]` pulls in the `charts` and `plot` extras) into
 `servers/surfline.in`, re-lock it as above, and build from that commit.
 
 Bump pylamma: same, with the `fastmcp`, `httpx`, `numpy`, `pillow`, `pydantic` and
