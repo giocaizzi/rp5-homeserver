@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.22.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.21.4...v1.22.0) (2026-10-18)
+
+
+### Features
+
+* **infra:** dump databases before each backrest snapshot ([#457](https://github.com/giocaizzi/rp5-homeserver/issues/457)) ([f8f4998](https://github.com/giocaizzi/rp5-homeserver/commit/f8f49986ba3bba680c06c9bff360b33043f8d0e9))
+
 ## [1.21.4](https://github.com/giocaizzi/rp5-homeserver/compare/v1.21.3...v1.21.4) (2026-10-17)
 
 
