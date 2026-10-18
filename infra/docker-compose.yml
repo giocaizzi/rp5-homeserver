@@ -306,6 +306,7 @@ services:
       - XDG_CACHE_HOME=/cache
       - TZ=Europe/Rome
       - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcp_service_account
+      - DOCKER_HOST=unix:///docker-proxy/docker.sock  # filtered socket for the DB dump hook
     volumes:
       # Backrest data and config
       - backrest_data:/data
@@ -314,10 +315,16 @@ services:
       # Backup targets
       - /home/${PI_SSH_USER:?}:/backup/home/${PI_SSH_USER:?}:ro
       - /var/lib/docker/volumes:/backup/docker-volumes:ro
+      # DB dumps (pre-snapshot hook, docs/backup.md); lands in the docker-volumes plan
+      - ./backrest:/scripts:ro
+      - backrest_dumps:/dumps
+      - docker_proxy_socket:/docker-proxy
     secrets:
       - gcp_service_account
+      - ntfy_token
     networks:
       - infra_network
+      - public_network  # reach ntfy_app for backup error alerts
     labels:
       <<: *labels-base
       com.giocaizzi.service: "backup"
@@ -343,6 +350,43 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+  # Docker socket proxy for Backrest's DB dump hook: only exec into the DB tasks.
+  # Serves a unix socket in a shared volume, so no network is involved.
+  docker-proxy:
+    image: wollomatic/socket-proxy:1   # major-pinned (see #185)
+    hostname: infra-docker-proxy
+    user: "65534:123"  # nobody:docker (host docker group gid)
+    read_only: true
+    cap_drop:
+      - ALL
+    command:
+      - '-loglevel=info'
+      - '-proxysocketendpoint=/docker-proxy/docker.sock'
+      - '-allowHEAD=/_ping'
+      - '-allowGET=/(_ping|v1\.\d+/(containers/json|containers/(firefly_db|crm_db|n8n_db|greenhouse_app)\.1\.\w+/json|exec/\w+/json))'
+      - '-allowPOST=/v1\.\d+/(containers/(firefly_db|crm_db|n8n_db|greenhouse_app)\.1\.\w+/exec|exec/\w+/start)'
+      - '-watchdoginterval=3600'
+      - '-stoponwatchdog'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - docker_proxy_socket:/docker-proxy
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "docker-proxy"
+      com.giocaizzi.component: "gateway"
+      com.giocaizzi.tier: "critical"
+      com.giocaizzi.technology: "socket-proxy"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "critical"
+      resources:
+        limits:
+          memory: 32M
+    logging:
+      <<: *logging-base
 
   # Homepage - Modern application dashboard
   dashboard:
@@ -522,6 +566,14 @@ volumes:
     driver: local
   backrest_cache:
     driver: local
+  backrest_dumps:
+    driver: local
+  docker_proxy_socket:  # tmpfs owned by docker-proxy's uid, so it can create the socket
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: "size=1k,uid=65534,gid=123,mode=0770"
 
 secrets:
   portainer_api_key:

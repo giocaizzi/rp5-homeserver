@@ -1,0 +1,39 @@
+#!/bin/bash
+# Logical database dumps, run by Backrest before each docker-volumes snapshot
+# (CONDITION_SNAPSHOT_START hook, ON_ERROR_CANCEL). See docs/backup.md.
+# docker talks to infra_docker-proxy, which only allows exec into the tasks
+# below; each dump runs with the DB container's own credentials.
+# Dump commands are single-quoted on purpose: they expand inside the DB container.
+# shellcheck disable=SC2016
+set -uo pipefail
+
+OUT=/dumps
+fail=0
+
+# dump <swarm service> <output file> <command run inside the container>
+dump() {
+  local name
+  name=$(docker ps --format '{{.Names}}' --filter "label=com.docker.swarm.service.name=$1" | head -n1)
+  if [ -z "$name" ]; then
+    echo "ERROR: $1 has no running task" >&2
+    return 1
+  fi
+  if docker exec "$name" sh -c "$3" > "$OUT/$2.tmp" && [ -s "$OUT/$2.tmp" ]; then
+    mv "$OUT/$2.tmp" "$OUT/$2"
+    echo "ok $2 $(stat -c %s "$OUT/$2") bytes"
+  else
+    rm -f "$OUT/$2.tmp"
+    echo "ERROR: dump of $1 failed" >&2
+    return 1
+  fi
+}
+
+dump firefly_db firefly.sql \
+  'MYSQL_PWD="$(cat /run/secrets/db_password)" mariadb-dump -uroot --single-transaction --routines --triggers "$MYSQL_DATABASE"' || fail=1
+dump crm_db crm.sql 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' || fail=1
+dump n8n_db n8n.sql 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' || fail=1
+# SQLite online backup into memory, streamed out (no temp file in the container)
+dump greenhouse_app greenhouse.db \
+  "python3 -c 'import sqlite3, sys; s = sqlite3.connect(\"/app/data/irrigation.db\"); d = sqlite3.connect(\":memory:\"); s.backup(d); sys.stdout.buffer.write(d.serialize())'" || fail=1
+
+exit "$fail"
