@@ -18,10 +18,10 @@ Backrest mounts `/var/lib/docker/volumes` read-only and creates incremental snap
 
 Copying a running database's files does not give a consistent copy, so the raw `*_db`/`*_data` volumes are only a second copy. The restorable backup is a logical dump taken just before each `docker-volumes` snapshot:
 
-1. A Backrest command hook (`CONDITION_SNAPSHOT_START`, `ON_ERROR_CANCEL`) runs [`infra/backrest/dump-dbs.sh`](../infra/backrest/dump-dbs.sh).
+1. A Backrest command hook (`CONDITION_SNAPSHOT_START`, `ON_ERROR_FATAL`) runs [`infra/backrest/dump-dbs.sh`](../infra/backrest/dump-dbs.sh).
 2. The script `docker exec`s the engine's own dump tool in each DB task, with that container's credentials, and writes to the `infra_backrest_dumps` volume (`/dumps`). Backrest never holds a DB password.
 3. The snapshot then picks the dumps up under `/backup/docker-volumes/infra_backrest_dumps/_data/`. Restic keeps the history; the volume holds only the latest dump.
-4. If any dump fails, the snapshot is cancelled. An error hook alerts ntfy (topic `backup`).
+4. If any dump fails, the snapshot fails and the error hook alerts ntfy (topic `backup`). `ON_ERROR_CANCEL` would stop the snapshot silently, without running error hooks.
 
 | File | Source | Tool |
 |------|--------|------|
@@ -59,7 +59,7 @@ bws secret create infra_gcp_service_account "$(terraform output -raw backup_serv
    - Schedule: Daily at preferred time (e.g., 6:00 AM UTC)
    - Retention: 7 daily, 4 weekly, 6 monthly, 2 yearly
 4. **Add hooks to the `docker-volumes` plan** (plan → Hooks):
-   - Command, condition `CONDITION_SNAPSHOT_START`, on error `ON_ERROR_CANCEL`, command `bash /scripts/dump-dbs.sh`
+   - Command, condition `CONDITION_SNAPSHOT_START`, on error `ON_ERROR_FATAL`, command `bash /scripts/dump-dbs.sh`
    - Command, condition `CONDITION_ANY_ERROR`, on error `ON_ERROR_IGNORE`, command:
      ```bash
      curl -fsS -H "Authorization: Bearer $(cat /run/secrets/ntfy_token)" -H "Title: Backrest error" --data-binary @- http://ntfy_app/backup <<'EOF'
