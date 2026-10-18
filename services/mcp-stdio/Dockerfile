@@ -38,6 +38,16 @@ RUN uv venv /opt/mcp/surfline --python 3.12 \
     && uv pip install --python /opt/mcp/surfline --no-deps /tmp/pysurfline-*-py3-none-any.whl \
     && rm /tmp/pysurfline-*-py3-none-any.whl
 
+# pylamma (giocaizzi/pylamma) is private, like pysurfline: its wheel comes
+# from the `pylamma` build context, dependencies hash-locked, package --no-deps.
+# `pylamma` is a named build context (--build-context), not a stage.
+# hadolint ignore=DL3022
+COPY --from=pylamma pylamma-*-py3-none-any.whl /tmp/
+RUN uv venv /opt/mcp/lamma --python 3.12 \
+    && uv pip install --python /opt/mcp/lamma --require-hashes -r /opt/mcp/requirements/lamma.txt \
+    && uv pip install --python /opt/mcp/lamma --no-deps /tmp/pylamma-*-py3-none-any.whl \
+    && rm /tmp/pylamma-*-py3-none-any.whl
+
 # supergateway, pinned with its whole dependency tree.
 WORKDIR /opt/gateway
 COPY gateway/package.json gateway/package-lock.json ./

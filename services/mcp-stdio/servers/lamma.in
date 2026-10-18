@@ -1,0 +1,9 @@
+# Runtime dependencies of pylamma[mcp] (giocaizzi/pylamma, private, its
+# uv.lock). The package itself is not published: the Dockerfile installs a wheel
+# from the `pylamma` build context with --no-deps. Re-sync on a bump.
+fastmcp==4.1.1
+httpx==0.28.1
+numpy==2.5.4
+pillow==13.0.0
+pydantic==2.14.1
+xarray==2026.9.0
