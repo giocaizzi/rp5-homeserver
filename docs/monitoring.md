@@ -51,6 +51,19 @@ Lightweight real-time monitoring running as a Docker container in the infra stac
 - Real-time system metrics and alerts
 - No authentication required (internal network only)
 
+### Disk Hygiene
+
+`/` (NVMe) holds `/var/lib/docker`. Without cleanup it grew ~1 GiB/day from old images left by CI and Shepherd redeploys (231 → 295 GiB, Aug–Oct 2026; manual cleanup on 15–16 Oct 2026 freed ~255 GiB, #454). Two pieces keep it flat:
+
+| Piece | What it does |
+|-------|--------------|
+| `infra_janitor` | Every 24h (from its start): prunes stopped containers older than 24h and unused images older than 48h. Never touches volumes. Goes through `infra_docker-proxy`, whose allowlist permits only the two prune endpoints for it. |
+| Netdata `root_disk_used` ([`health.d/disk_used.conf`](../infra/netdata/health.d/disk_used.conf)) | Used space on `/`: warning above 80 GiB, critical (ntfy) above 120 GiB. Normal is ~45 GiB. |
+
+Images of stopped on-demand stacks are pruned after 48h and pulled again on the next deploy.
+
+**If `root_disk_used` fires:** check the janitor ran (`docker service logs --since 48h infra_janitor` shows a daily `Total reclaimed space`), then find the growth (`docker system df -v`, `sudo du -xh --max-depth=2 /var/lib/docker | sort -h | tail`).
+
 ---
 
 ## Telemetry Pipeline
