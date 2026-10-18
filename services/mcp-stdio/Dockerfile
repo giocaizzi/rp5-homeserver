@@ -6,9 +6,12 @@ FROM node:22.23.3-bookworm-slim
 COPY --from=ghcr.io/astral-sh/uv:0.13.1 /uv /usr/local/bin/uv
 
 # Python for the servers: uv-managed, outside any home dir so `node` can run it.
+# UV_COMPILE_BYTECODE: /opt is read-only for `node`, so without prebuilt .pyc
+# every server process (one per MCP request) recompiles its imports.
 ENV UV_PYTHON_INSTALL_DIR=/opt/python \
     UV_PYTHON_PREFERENCE=only-managed \
-    UV_NO_CACHE=1
+    UV_NO_CACHE=1 \
+    UV_COMPILE_BYTECODE=1
 RUN uv python install 3.12
 
 # One venv per server, from a hash-locked requirements file (servers/<name>.txt,
