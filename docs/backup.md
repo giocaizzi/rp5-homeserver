@@ -14,6 +14,26 @@ Backrest mounts `/var/lib/docker/volumes` read-only and creates incremental snap
 | **Retention** | Configurable (default: 7 daily, 4 weekly, 6 monthly, 2 yearly) |
 | **Schedule** | Configured per backup plan in Web UI |
 
+## Database Dumps
+
+Copying a running database's files does not give a consistent copy, so the raw `*_db`/`*_data` volumes are only a second copy. The restorable backup is a logical dump taken just before each `docker-volumes` snapshot:
+
+1. A Backrest command hook (`CONDITION_SNAPSHOT_START`, `ON_ERROR_CANCEL`) runs [`infra/backrest/dump-dbs.sh`](../infra/backrest/dump-dbs.sh).
+2. The script `docker exec`s the engine's own dump tool in each DB task, with that container's credentials, and writes to the `infra_backrest_dumps` volume (`/dumps`). Backrest never holds a DB password.
+3. The snapshot then picks the dumps up under `/backup/docker-volumes/infra_backrest_dumps/_data/`. Restic keeps the history; the volume holds only the latest dump.
+4. If any dump fails, the snapshot is cancelled. An error hook alerts ntfy (topic `backup`).
+
+| File | Source | Tool |
+|------|--------|------|
+| `firefly.sql` | `firefly_db` (MariaDB) | `mariadb-dump --single-transaction` |
+| `crm.sql` | `crm_db` (Postgres) | `pg_dump` |
+| `n8n.sql` | `n8n_db` (Postgres) | `pg_dump` |
+| `greenhouse.db` | `greenhouse_app` (SQLite) | Python `sqlite3` online backup |
+
+Backrest reaches Docker only through `infra_docker-proxy` ([wollomatic/socket-proxy](https://github.com/wollomatic/socket-proxy)). Its allowlist permits listing containers and exec into these four tasks, nothing else: no container create, no exec into other containers. Adding a database means adding a `dump` line to the script and its service name to both proxy allowlist regexes in `infra/docker-compose.yml`.
+
+Restore: [RUNBOOKS/restore-database.md](./RUNBOOKS/restore-database.md).
+
 ## Setup
 
 ### 1. GCS Bucket (via Terraform)
@@ -38,11 +58,19 @@ bws secret create infra_gcp_service_account "$(terraform output -raw backup_serv
      - `/backup/docker-volumes/*ollama_data*` (skip Ollama models)
    - Schedule: Daily at preferred time (e.g., 6:00 AM UTC)
    - Retention: 7 daily, 4 weekly, 6 monthly, 2 yearly
+4. **Add hooks to the `docker-volumes` plan** (plan → Hooks):
+   - Command, condition `CONDITION_SNAPSHOT_START`, on error `ON_ERROR_CANCEL`, command `bash /scripts/dump-dbs.sh`
+   - Command, condition `CONDITION_ANY_ERROR`, on error `ON_ERROR_IGNORE`, command:
+     ```bash
+     curl -fsS -H "Authorization: Bearer $(cat /run/secrets/ntfy_token)" -H "Title: Backrest error" --data-binary @- http://ntfy_app/backup <<'EOF'
+     {{ .Summary }}
+     EOF
+     ```
 
 ## What to Back Up
 
-**Critical volumes** (databases, config, user data):
-- All `*_db` and `*_data` volumes containing databases
+**Critical data** (databases, config, user data):
+- Database dumps in `infra_backrest_dumps` (see [Database Dumps](#database-dumps)); the raw `*_db` and `*_data` volumes stay as a second copy
 - Configuration volumes (`portainer_data`, `backrest_config`, `grafana_data`)
 - User uploads and attachments
 

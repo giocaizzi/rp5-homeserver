@@ -25,7 +25,8 @@ BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> DOMAIN=<domain> ./scripts/sync_infra
 | management-mcp | `portainer/portainer-mcp:2.45` | Portainer MCP (full access) for the [mcp-connector](../workers/mcp-connector/README.md) |
 | cloudflared | `cloudflare/cloudflared:latest` | Secure tunnel (no port forwarding) |
 | netdata | `netdata/netdata:v2` | Real-time system monitoring |
-| backrest | `garethgeorge/backrest:v1` | Restic backup web UI |
+| backrest | `garethgeorge/backrest:v1` | Restic backup web UI; dumps the databases before each snapshot |
+| docker-proxy | `wollomatic/socket-proxy:1` | Filtered Docker socket: Backrest may only exec into the DB tasks |
 | homepage | `ghcr.io/gethomepage/homepage:v2` | Service dashboard |
 | shepherd | `containrrr/shepherd:latest` | Auto-update Swarm services every 24h |
 
@@ -179,5 +180,7 @@ See [docs/dns.md](../docs/dns.md) for complete setup.
 | `backrest_data` | Backup metadata |
 | `backrest_config` | Backup plans |
 | `backrest_cache` | Restic cache |
+| `backrest_dumps` | Logical DB dumps written by `backrest/dump-dbs.sh` |
+| `docker_proxy_socket` | Unix socket shared by docker-proxy and Backrest |
 
 > Homepage uses bind-mounted `./homepage/` configs.
