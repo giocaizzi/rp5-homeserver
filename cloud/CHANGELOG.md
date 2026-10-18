@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.9.0...cloud-v0.10.0) (2026-10-18)
+
+
+### Features
+
+* **cloud:** add Access for the surfline MCP server ([#473](https://github.com/giocaizzi/rp5-homeserver/issues/473)) ([0e09958](https://github.com/giocaizzi/rp5-homeserver/commit/0e09958bb128b40b0938c8d2b970bbefd26f1036))
+
 ## [0.9.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.8.0...cloud-v0.9.0) (2026-10-17)
 
 
