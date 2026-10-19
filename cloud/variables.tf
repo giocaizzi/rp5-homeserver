@@ -114,6 +114,13 @@ variable "calibre_users" {
   sensitive   = true
 }
 
+variable "miniflux_users" {
+  description = "List of email addresses allowed to access the Miniflux UI"
+  type        = list(string)
+  default     = []
+  sensitive   = true
+}
+
 variable "mcp_stdio_users" {
   description = "List of email addresses allowed through Access on mcp-stdio.<zone> outside the per-server service-token paths (owner only)"
   type        = list(string)
