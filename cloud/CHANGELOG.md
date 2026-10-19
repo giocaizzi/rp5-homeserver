@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.11.0...cloud-v0.12.0) (2026-10-19)
+
+
+### Features
+
+* **cloud:** add miniflux public hostname and Access app ([#496](https://github.com/giocaizzi/rp5-homeserver/issues/496)) ([e2ecd4a](https://github.com/giocaizzi/rp5-homeserver/commit/e2ecd4afce57428e62220e003ea9486400ee9f90))
+
 ## [0.11.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.10.0...cloud-v0.11.0) (2026-10-18)
 
 

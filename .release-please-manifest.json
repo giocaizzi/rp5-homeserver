@@ -1,6 +1,6 @@
 {
-  "infra": "1.23.3",
-  "cloud": "0.11.0",
+  "infra": "1.24.0",
+  "cloud": "0.12.0",
   "workers/mcp-connector": "0.7.0",
   "services/adguard": "0.2.3",
   "services/ai": "0.1.1",
@@ -14,5 +14,6 @@
   "services/code": "0.2.0",
   "services/crm": "0.3.0",
   "services/calibre": "0.2.0",
-  "services/mcp-stdio": "1.5.0"
+  "services/mcp-stdio": "1.5.0",
+  "services/miniflux": "1.0.0"
 }

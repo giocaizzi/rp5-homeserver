@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.23.3...v1.24.0) (2026-10-19)
+
+
+### Features
+
+* **infra:** route miniflux.&lt;domain&gt; and dump its database ([#495](https://github.com/giocaizzi/rp5-homeserver/issues/495)) ([ebdfcd5](https://github.com/giocaizzi/rp5-homeserver/commit/ebdfcd5f4a17ee2aa097cd5595bb851174d3e377))
+
 ## [1.23.3](https://github.com/giocaizzi/rp5-homeserver/compare/v1.23.2...v1.23.3) (2026-10-18)
 
 
