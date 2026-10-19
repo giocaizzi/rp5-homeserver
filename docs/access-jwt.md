@@ -33,6 +33,7 @@ Access issues no JWT for a request let through by a **bypass** policy, so these 
 | `greenhouse` | users | `/mcp` (service token or users) |
 | `crm` | users | `/rest` (service token or users); `/mcp`, `/oauth`, `/.well-known/oauth-protected-resource`, `/.well-known/oauth-authorization-server` (claude.ai egress IPs) |
 | `calibre` | users | `/opds`, `/kosync`, `/kobo` (everyone) |
+| `miniflux` | users | none; host at `log` until its `aud` is in the secret |
 | `mcp-stdio` | owner | `/fli/mcp`, `/garmin/mcp` (service token); one entry per path-scoped server app |
 | `otel`, `ntfy`, `netdata-mcp`, `langfuse-mcp` | no host-wide app | not checked (not in the flag map) |
 
