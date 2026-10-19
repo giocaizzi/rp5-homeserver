@@ -29,9 +29,10 @@ Copying a running database's files does not give a consistent copy, so the raw `
 | `firefly.sql` | `firefly_db` (MariaDB) | `mariadb-dump --single-transaction` |
 | `crm.sql` | `crm_db` (Postgres) | `pg_dump` |
 | `n8n.sql` | `n8n_db` (Postgres) | `pg_dump` |
+| `miniflux.sql` | `miniflux_db` (Postgres) | `pg_dump` |
 | `greenhouse.db` | `greenhouse_app` (SQLite) | Python `sqlite3` online backup |
 
-Backrest reaches Docker only through `infra_docker-proxy` ([wollomatic/socket-proxy](https://github.com/wollomatic/socket-proxy)). Its allowlist permits listing containers, inspecting and exec into these four services/tasks and the prune endpoints used by the janitor ([disk hygiene](./monitoring.md#disk-hygiene)), nothing else: no container create, no exec into other containers. Adding a database means adding a `dump` line to the script and its service name to the three name lists in the proxy allowlist regexes in `infra/docker-compose.yml`.
+Backrest reaches Docker only through `infra_docker-proxy` ([wollomatic/socket-proxy](https://github.com/wollomatic/socket-proxy)). Its allowlist permits listing containers, inspecting and exec into these five services/tasks and the prune endpoints used by the janitor ([disk hygiene](./monitoring.md#disk-hygiene)), nothing else: no container create, no exec into other containers. Adding a database means adding a `dump` line to the script and its service name to the three name lists in the proxy allowlist regexes in `infra/docker-compose.yml`.
 
 Restore: [RUNBOOKS/restore-database.md](./RUNBOOKS/restore-database.md).
 

@@ -1,6 +1,6 @@
 # Restore a database
 
-**When:** a database (Firefly, CRM, n8n, greenhouse) is lost or corrupted, or for the restore test below. How the dumps are taken: [backup.md](../backup.md#database-dumps).
+**When:** a database (Firefly, CRM, n8n, Miniflux, greenhouse) is lost or corrupted, or for the restore test below. How the dumps are taken: [backup.md](../backup.md#database-dumps).
 **Preconditions:** SSH to the Pi (`ssh pi.local`). Restoring overwrites the live database: take a fresh dump first (Backrest → plan `docker-volumes` → Backup now).
 
 Helper used below (run on the Pi):
@@ -14,13 +14,14 @@ task() { docker ps --format '{{.Names}}' -f "label=com.docker.swarm.service.name
    - Firefly: `docker service scale firefly_app=0 firefly_importer=0 firefly_scheduler=0`
    - CRM: `docker service scale crm_server=0 crm_worker=0`
    - n8n: `docker service scale n8n_app=0`
+   - Miniflux: `docker service scale miniflux_app=0`
    - greenhouse: `docker service scale greenhouse_app=0`
 3. **Load the dump:**
    - Firefly (MariaDB):
      ```bash
      sudo cat "$D/firefly.sql" | docker exec -i "$(task firefly_db)" sh -c 'MYSQL_PWD="$(cat /run/secrets/db_password)" mariadb -uroot "$MYSQL_DATABASE"'
      ```
-   - CRM / n8n (Postgres; `crm_db`+`crm.sql`, or `n8n_db`+`n8n.sql`):
+   - CRM / n8n / Miniflux (Postgres; `crm_db`+`crm.sql`, `n8n_db`+`n8n.sql`, or `miniflux_db`+`miniflux.sql`):
      ```bash
      db=crm_db; f=crm.sql
      docker exec "$(task $db)" sh -c 'psql -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE \"$POSTGRES_DB\" WITH (FORCE)" -c "CREATE DATABASE \"$POSTGRES_DB\" OWNER \"$POSTGRES_USER\""'
@@ -40,10 +41,10 @@ The app's UI shows the expected data, and its service is healthy: `docker servic
 **Restore test** (no impact on live data; run after any change to the dump setup). Loads the latest dumps into throwaway containers; non-zero counts mean they restore cleanly.
 ```bash
 D=/var/lib/docker/volumes/infra_backrest_dumps/_data
-# Postgres: crm (owner twenty), n8n (owner n8n)
+# Postgres: crm (owner twenty), n8n (owner n8n), miniflux (owner miniflux)
 docker run -d --name restore-test -e POSTGRES_PASSWORD=test postgres:16-alpine
 until docker exec restore-test pg_isready -qU postgres; do sleep 1; done; sleep 2
-for db in crm:twenty n8n:n8n; do
+for db in crm:twenty n8n:n8n miniflux:miniflux; do
   f=${db%%:*}; role=${db##*:}
   docker exec restore-test psql -qU postgres -c "create role $role" -c "create database $f owner $role"
   sudo cat "$D/$f.sql" | docker exec -i restore-test psql -q -v ON_ERROR_STOP=1 -U postgres -d "$f" >/dev/null
@@ -60,7 +61,7 @@ docker rm -f restore-test-mariadb
 # SQLite: greenhouse
 sudo python3 -c "import sqlite3; print(sqlite3.connect('file:$D/greenhouse.db?mode=ro', uri=True).execute('pragma integrity_check').fetchone())"
 ```
-Expected: two table counts and a transaction count above 0, and `('ok',)`.
+Expected: three table counts and a transaction count above 0, and `('ok',)`.
 
 ## Rollback
 Load the dump taken in the preconditions with the same steps.

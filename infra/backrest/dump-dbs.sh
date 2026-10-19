@@ -39,6 +39,7 @@ dump firefly_db firefly.sql \
   'MYSQL_PWD="$(cat /run/secrets/db_password)" mariadb-dump -uroot --single-transaction --routines --triggers "$MYSQL_DATABASE"' || fail=1
 dump crm_db crm.sql 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' || fail=1
 dump n8n_db n8n.sql 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' || fail=1
+dump miniflux_db miniflux.sql 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' || fail=1
 # SQLite online backup into memory, streamed out (no temp file in the container)
 dump greenhouse_app greenhouse.db \
   "python3 -c 'import sqlite3, sys; s = sqlite3.connect(\"/app/data/irrigation.db\"); d = sqlite3.connect(\":memory:\"); s.backup(d); sys.stdout.buffer.write(d.serialize())'" || fail=1
