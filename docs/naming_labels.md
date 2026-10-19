@@ -20,6 +20,7 @@ The **stack name** is the top-level identifier (folder name in `services/` or `i
 | `adguard` | DNS filtering |
 | `ntfy` | Push notifications |
 | `ollama` | LLM inference |
+| `miniflux` | Feed reader |
 
 ### Service Name (Compose Key)
 

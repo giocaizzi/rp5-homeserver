@@ -102,6 +102,7 @@ jobs:
           WEBHOOK_ID_CODE: ${{ secrets.WEBHOOK_ID_CODE }}
           WEBHOOK_ID_CRM: ${{ secrets.WEBHOOK_ID_CRM }}
           WEBHOOK_ID_CALIBRE: ${{ secrets.WEBHOOK_ID_CALIBRE }}
+          WEBHOOK_ID_MINIFLUX: ${{ secrets.WEBHOOK_ID_MINIFLUX }}
           WEBHOOK_ID_MCP_STDIO: ${{ secrets.WEBHOOK_ID_MCP_STDIO }}
         run: |
           set -euo pipefail
