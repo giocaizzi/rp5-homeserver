@@ -63,6 +63,12 @@
             icon: calibre-web.png
             ping: http://calibre_app:8083
 
+      - Miniflux:
+            href: https://miniflux.{{HOMEPAGE_FILE_DOMAIN}}
+            description: Feed reader
+            icon: miniflux.png
+            ping: http://miniflux_app:8080/healthcheck
+
       - ntfy:
             href: https://ntfy.{{HOMEPAGE_FILE_DOMAIN}}
             description: Push notification service
