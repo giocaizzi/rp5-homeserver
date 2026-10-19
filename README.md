@@ -34,6 +34,7 @@ Infrastructure and services for a single-node home server: reverse proxy, monito
 | **[Code](./services/code/README.md)** | `https://code.<domain>` | Remote Claude Code dev environment (CloudCLI) |
 | **[CRM](./services/crm/README.md)** | `https://crm.<domain>` | Twenty CRM (sales pipeline, API + MCP for an external backend and Claude) |
 | **[Calibre](./services/calibre/README.md)** | `https://calibre.<domain>` | Ebook library (Send-to-Kindle, OPDS, reader sync) |
+| **[Miniflux](./services/miniflux/README.md)** | `https://miniflux.<domain>` | Feed reader (follow sites, ntfy on new articles) |
 
 **Infrastructure** (deployed with `infra/`):
 - **Portainer** — Docker management (`https://portainer.home`)

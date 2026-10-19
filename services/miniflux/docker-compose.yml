@@ -1,0 +1,145 @@
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "miniflux"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  # Private network for miniflux stack
+  miniflux_network:
+    driver: overlay
+    name: rp5_miniflux
+
+  # External network to connect to nginx proxy
+  public_network:
+    external: true
+    name: rp5_public
+
+# =============================================================================
+# Services
+# =============================================================================
+services:
+  db:
+    image: postgres:16-alpine
+    hostname: miniflux-db
+    environment:
+      - POSTGRES_DB=miniflux
+      - POSTGRES_USER=miniflux
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - miniflux_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U miniflux -d miniflux"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "db"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "postgres"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 256M
+    logging:
+      <<: *logging-base
+
+  app:
+    image: miniflux/miniflux:2.3.3
+    hostname: miniflux-app
+    expose:
+      - "8080"
+    # Miniflux reads DATABASE_URL_FILE but not a bare password: build the URL
+    # from the same secret Postgres uses (hex password, no URL escaping needed).
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        export DATABASE_URL="postgres://miniflux:$$(cat /run/secrets/postgres_password)@miniflux-db/miniflux?sslmode=disable"
+        exec /usr/bin/miniflux
+    environment:
+      - BASE_URL=https://miniflux.${DOMAIN:?set DOMAIN in the stack env}
+      - RUN_MIGRATIONS=1
+      - CREATE_ADMIN=1
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD_FILE=/run/secrets/admin_password
+    secrets:
+      - postgres_password
+      - admin_password
+    networks:
+      - miniflux_network
+      - public_network
+    healthcheck:
+      test: ["CMD", "/usr/bin/miniflux", "-healthcheck", "auto"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "app"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "miniflux"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      <<: *logging-base
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+
+secrets:
+  postgres_password:
+    external: true
+    name: miniflux_postgres_password
+  admin_password:
+    external: true
+    name: miniflux_admin_password
