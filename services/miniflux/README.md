@@ -45,7 +45,7 @@ The public hostname, nginx route and Access apps ship with the `infra` and `clou
 
 - **Add a site:** Feeds → Add subscription → paste the site URL; Miniflux discovers the feed.
 - **Full articles:** feed → Edit → *Fetch original content*, or a scraper rule for sites that only publish summaries.
-- **Notify on new articles (ntfy):** Settings → Integrations → Ntfy: URL `https://ntfy.<domain>`, a topic, and an ntfy access token (ntfy is `deny-all` by default). Then enable ntfy per feed (feed → Edit).
+- **Notify on new articles (ntfy):** Settings → Integrations → Ntfy: tick *Push entries to Ntfy*, URL `https://ntfy.<domain>`, topic `miniflux`, API token = Secrets Manager `miniflux_ntfy_token` (user `alerts`, write-only on `miniflux`; see [ntfy alert topics](../ntfy/README.md#-alert-topics)). Then tick *Push notifications to ntfy* per feed (feed → Edit); both switches are required.
 - **Phone:** open the site in the mobile browser and add it to the home screen (Miniflux is a PWA). Native reader apps (Fever / Google Reader API) can't pass Cloudflare Access; enabling them needs a path-scoped bypass app (see Calibre in `cloud/main.tf`).
 - **Automations (n8n):** Settings → Integrations → Webhook sends new entries to an n8n webhook.
 
