@@ -67,9 +67,10 @@ jobs:
           CODE_USERS: ${{ secrets.CODE_USERS }}
           CRM_USERS: ${{ secrets.CRM_USERS }}
           CALIBRE_USERS: ${{ secrets.CALIBRE_USERS }}
+          MINIFLUX_USERS: ${{ secrets.MINIFLUX_USERS }}
           MCP_STDIO_USERS: ${{ secrets.MCP_STDIO_USERS }}
         run: |
-          for n in N8N_USERS PORTAINER_USERS BACKREST_USERS FIREFLY_USERS HOMEPAGE_USERS OPENCLAW_USERS GRAFANA_USERS GREENHOUSE_USERS CODE_USERS CRM_USERS CALIBRE_USERS MCP_STDIO_USERS; do
+          for n in N8N_USERS PORTAINER_USERS BACKREST_USERS FIREFLY_USERS HOMEPAGE_USERS OPENCLAW_USERS GRAFANA_USERS GREENHOUSE_USERS CODE_USERS CRM_USERS CALIBRE_USERS MINIFLUX_USERS MCP_STDIO_USERS; do
             [ -n "${!n:-}" ] || continue
             jq -r '.[]' <<< "${!n}" | while IFS= read -r e; do [ -n "$e" ] && echo "::add-mask::$e"; done
           done
@@ -92,6 +93,7 @@ jobs:
           TF_VAR_code_users: ${{ secrets.CODE_USERS || '[]' }}
           TF_VAR_crm_users: ${{ secrets.CRM_USERS || '[]' }}
           TF_VAR_calibre_users: ${{ secrets.CALIBRE_USERS || '[]' }}
+          TF_VAR_miniflux_users: ${{ secrets.MINIFLUX_USERS || '[]' }}
           TF_VAR_mcp_stdio_users: ${{ secrets.MCP_STDIO_USERS || '[]' }}
           TF_VAR_gcp_project_id: ${{ secrets.GCP_PROJECT_ID }}
           TF_VAR_gcp_region: ${{ vars.GCP_REGION }}

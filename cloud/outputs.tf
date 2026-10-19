@@ -80,6 +80,12 @@ output "calibre_url" {
   sensitive   = true
 }
 
+output "miniflux_url" {
+  description = "The public URL for Miniflux (BASE_URL)"
+  value       = "https://miniflux.${var.zone_name}"
+  sensitive   = true
+}
+
 # ============================================================================
 # GCP Outputs
 # ============================================================================

@@ -175,6 +175,7 @@ GitHub Actions ENVIRONMENT SECRETS on cloud-plan AND cloud-production
   CODE_USERS                <JSON array string>
   CRM_USERS                 <JSON array string>
   CALIBRE_USERS             <JSON array string>
+  MINIFLUX_USERS            <JSON array string>
   MCP_STDIO_USERS           <JSON array string>
   (domain and emails are secrets, not variables: variable values are printed
    in the public Actions logs)
