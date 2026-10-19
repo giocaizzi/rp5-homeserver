@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.24.0...v1.24.1) (2026-10-19)
+
+
+### Bug Fixes
+
+* **infra:** enforce the Access JWT check on miniflux ([#498](https://github.com/giocaizzi/rp5-homeserver/issues/498)) ([52d6004](https://github.com/giocaizzi/rp5-homeserver/commit/52d60046542fb812727533e340d8a0a5ac2ebcfb))
+
 ## [1.24.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.23.3...v1.24.0) (2026-10-19)
 
 
