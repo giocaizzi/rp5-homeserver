@@ -70,7 +70,8 @@ services:
     secrets:
       - ssl_cert
       - ssl_key
-      - cf_access   # Access team domain + aud per host (njs/cf_access.js)
+      - source: cf_access_v2   # Access team domain + aud per host (njs/cf_access.js)
+        target: cf_access
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -636,8 +637,8 @@ secrets:
     file: ./secrets/cert.pem
   ssl_key:
     file: ./secrets/key.pem
-  cf_access:
-    file: ./secrets/cf_access.json
+  cf_access_v2:
+    file: ./secrets/cf_access_v2.json
   ntfy_token:
     file: ./secrets/ntfy_token.txt
   portainer_mcp_auth_token:

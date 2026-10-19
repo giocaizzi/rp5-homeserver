@@ -9,7 +9,7 @@ Cloudflare Access gates the public hosts at the edge, but anything that reaches 
 | `infra/nginx/njs/cf_access.js` | Verifier (njs). RS256 signature against the team's JWKS (`https://<team>.cloudflareaccess.com/cdn-cgi/access/certs`, cached 1 h in a shared dict, refetched on an unknown `kid`), `iss`, `exp`/`nbf` (60 s skew) and the host's `aud` tag. |
 | `infra/nginx/snippets/cf-access.conf` | `auth_request` to the verifier. Included in every public server block that has a host-wide Access app. |
 | `infra/nginx/conf.d/cf-access.conf` | The per-host flag (`$cf_access_mode`: `off` / `log` / `enforce`) and the paths Access bypasses (`$cf_access_bypass`). |
-| Swarm secret `cf_access` (BWS key `infra_cf_access`) | `{"team_domain": "<team>.cloudflareaccess.com", "aud": {"<subdomain>": "<aud tag>", ...}}`. Private: never committed. |
+| Swarm secret `cf_access_v2` (BWS key `infra_cf_access_v2`, mounted at `/run/secrets/cf_access`) | `{"team_domain": "<team>.cloudflareaccess.com", "aud": {"<subdomain>": "<aud tag>", ...}}`. Private: never committed. |
 
 Modes:
 
@@ -26,14 +26,13 @@ Access issues no JWT for a request let through by a **bypass** policy, so these 
 | Host | Access app | Paths skipped (Access bypass) |
 |---|---|---|
 | `portainer` | users | `/mcp` (service token) |
-| `backrest`, `homepage`, `openclaw`, `code` | users | none |
+| `backrest`, `homepage`, `openclaw`, `code`, `miniflux` | users | none |
 | `n8n` | users | `/mcp-server` (service token) |
 | `firefly` | users | `/api/v1/mcp` (service token) |
 | `grafana` | users | `/mcp` (service token) |
 | `greenhouse` | users | `/mcp` (service token or users) |
 | `crm` | users | `/rest` (service token or users); `/mcp`, `/oauth`, `/.well-known/oauth-protected-resource`, `/.well-known/oauth-authorization-server` (claude.ai egress IPs) |
 | `calibre` | users | `/opds`, `/kosync`, `/kobo` (everyone) |
-| `miniflux` | users | none; host at `log` until its `aud` is in the secret |
 | `mcp-stdio` | owner | `/fli/mcp`, `/garmin/mcp` (service token); one entry per path-scoped server app |
 | `otel`, `ntfy`, `netdata-mcp`, `langfuse-mcp` | no host-wide app | not checked (not in the flag map) |
 
@@ -55,7 +54,7 @@ When a path-scoped Access app is added or changed in `cloud/main.tf`, update `$c
 2. Add the team name and every `aud` tag to the `LEAK_PATTERNS` secret (repo and Dependabot), as for any private value.
 3. Write the secret file on the Pi before the infra release that ships the `cf_access` secret, or that deploy fails on the missing file: `BWS_ACCESS_TOKEN=<token> PI_SSH_USER=pi DOMAIN=<domain> ./scripts/sync_infra.sh`.
 
-Docker secrets are immutable: when an `aud` changes (an app recreated) or a host is added, rename the secret (`cf_access_v2`, file `./secrets/cf_access_v2.json`, BWS key `infra_cf_access_v2`) and point the proxy at it in the same infra change.
+Docker secrets are immutable: when an `aud` changes (an app recreated) or a host is added, bump the secret's version suffix (`cf_access_v3`, file `./secrets/cf_access_v3.json`, BWS key `infra_cf_access_v3`) and point the proxy's `source:` at it in the same infra change; keep `target: cf_access` so the verifier's path stays put.
 
 ## Rollout (one host at a time)
 
