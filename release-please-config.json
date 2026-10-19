@@ -46,6 +46,7 @@
     "services/code": { "release-type": "simple", "component": "code" },
     "services/crm": { "release-type": "simple", "component": "crm" },
     "services/calibre": { "release-type": "simple", "component": "calibre" },
+    "services/miniflux": { "release-type": "simple", "component": "miniflux" },
     "services/mcp-stdio": { "release-type": "simple", "component": "mcp-stdio" }
   }
 }
