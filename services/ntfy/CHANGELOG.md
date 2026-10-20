@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/giocaizzi/rp5-homeserver/compare/ntfy-v0.4.0...ntfy-v0.4.1) (2026-10-20)
+
+
+### Documentation
+
+* **ntfy:** document the miniflux alert topic and token ([#500](https://github.com/giocaizzi/rp5-homeserver/issues/500)) ([b42b413](https://github.com/giocaizzi/rp5-homeserver/commit/b42b41367698ea0c16042fdaa36a724ea812492e))
+
 ## [0.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/ntfy-v0.3.0...ntfy-v0.4.0) (2026-10-18)
 
 
