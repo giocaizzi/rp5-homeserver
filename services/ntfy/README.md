@@ -108,6 +108,7 @@ ntfy access everyone "up*" write
 | `swarm` | `swarm-health.yml` workflow (service below desired replicas ≥10 min) | GitHub repo secret `NTFY_SWARM_TOKEN` |
 | `firefly` | Firefly scheduler `firefly_jobs.py` (balance mismatch, bank consent, import lag, card residual, token expiry) | `firefly_ntfy_token` |
 | `miniflux` | Miniflux ntfy integration (new entries of feeds with ntfy enabled) | `miniflux_ntfy_token` (pasted into Miniflux Settings → Integrations) |
+| `factory*` | factory-runtime notify sink (questions, halts, auth, done…); `factory` plus per-repo `factory-<repo>` topics | Mac Keychain, service `factory-runtime`, account `ntfy` (the publish URL; token label `factory-runtime`), not Secrets Manager |
 
 All publish as user `alerts` (write-only), one token per source so each can be revoked alone:
 
@@ -119,12 +120,14 @@ ntfy access alerts swarm wo
 ntfy access alerts greenhouse wo
 ntfy access alerts firefly wo
 ntfy access alerts miniflux wo
+ntfy access alerts "factory*" wo
 ntfy token add --label grafana alerts
 ntfy token add --label netdata alerts
 ntfy token add --label swarm alerts
 ntfy token add --label greenhouse alerts
 ntfy token add --label firefly alerts
 ntfy token add --label miniflux alerts
+ntfy token add --label factory-runtime alerts
 ```
 
 ---
