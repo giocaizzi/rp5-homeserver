@@ -586,7 +586,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Value"
+              "options": "Cost"
             },
             "properties": [
               {
@@ -629,7 +629,18 @@
       ],
       "title": "Cost by Subagent",
       "type": "table",
-      "description": "Cost per subagent (agent_name). Empty agent_name = main-thread / unattributed."
+      "description": "Cost per subagent (agent_name). Empty agent_name = main-thread / unattributed.",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Value": "Cost",
+              "Value #A": "Cost"
+            }
+          }
+        }
+      ]
     },
     {
       "datasource": {
@@ -1182,7 +1193,18 @@
       "title": "Tool Failures by Error Type",
       "type": "table",
       "maxDataPoints": 500,
-      "description": "Failed tool_result events grouped by tool and error_type over range."
+      "description": "Failed tool_result events grouped by tool and error_type over range.",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Value": "Failures",
+              "Value #A": "Failures"
+            }
+          }
+        }
+      ]
     },
     {
       "type": "row",
@@ -1858,7 +1880,18 @@
       "title": "Subagent Token Usage",
       "type": "table",
       "maxDataPoints": 500,
-      "description": "Total tokens per subagent type over range."
+      "description": "Total tokens per subagent type over range.",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Value": "Tokens",
+              "Value #A": "Tokens"
+            }
+          }
+        }
+      ]
     },
     {
       "type": "row",

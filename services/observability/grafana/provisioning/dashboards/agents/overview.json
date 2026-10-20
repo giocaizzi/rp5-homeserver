@@ -541,6 +541,10 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value": "Cost",
+              "Value #A": "Cost"
             }
           }
         }
@@ -603,6 +607,10 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value": "Cost",
+              "Value #A": "Cost"
             }
           }
         }

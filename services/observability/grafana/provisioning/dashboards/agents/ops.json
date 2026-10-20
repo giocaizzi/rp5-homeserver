@@ -200,6 +200,10 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value": "Decisions",
+              "Value #A": "Decisions"
             }
           }
         }
@@ -262,6 +266,10 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value": "Reminders",
+              "Value #A": "Reminders"
             }
           }
         }
@@ -324,6 +332,10 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value": "Checks",
+              "Value #A": "Checks"
             }
           }
         }
@@ -442,6 +454,10 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value": "Loads",
+              "Value #A": "Loads"
             }
           }
         }
@@ -504,6 +520,10 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value": "Loads",
+              "Value #A": "Loads"
             }
           }
         }
@@ -633,6 +653,10 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value": "Tool calls",
+              "Value #A": "Tool calls"
             }
           }
         }
@@ -695,6 +719,10 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value": "Failures",
+              "Value #A": "Failures"
             }
           }
         }
@@ -757,6 +785,10 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value": "Calls",
+              "Value #A": "Calls"
             }
           }
         }
@@ -832,6 +864,10 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value": "Runs",
+              "Value #A": "Runs"
             }
           }
         }
@@ -894,6 +930,10 @@
           "options": {
             "excludeByName": {
               "Time": true
+            },
+            "renameByName": {
+              "Value": "Cost",
+              "Value #A": "Cost"
             }
           }
         }
@@ -975,7 +1015,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"compaction\" | unwrap pre_tokens | __error__=\"\" [$__range])",
+          "expr": "sum(sum_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"compaction\" | unwrap pre_tokens | __error__=\"\" [$__range])) / sum(count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"compaction\" | pre_tokens!=\"\" [$__range]))",
           "queryType": "instant",
           "legendFormat": ""
         }
