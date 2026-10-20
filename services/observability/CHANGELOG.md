@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.8.0...observability-v0.8.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* **observability:** repair agent dashboards and fold claude code into agents ([#502](https://github.com/giocaizzi/rp5-homeserver/issues/502)) ([bbb2abe](https://github.com/giocaizzi/rp5-homeserver/commit/bbb2abee7c81d865474c4e76fa13fae81a160904))
+
 ## [0.8.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.7.0...observability-v0.8.0) (2026-10-17)
 
 
