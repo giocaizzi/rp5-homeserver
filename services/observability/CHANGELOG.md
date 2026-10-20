@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.2](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.8.1...observability-v0.8.2) (2026-10-20)
+
+
+### Bug Fixes
+
+* **observability:** name agent table columns and fix compaction average ([#503](https://github.com/giocaizzi/rp5-homeserver/issues/503)) ([fd4f9d1](https://github.com/giocaizzi/rp5-homeserver/commit/fd4f9d1aa53c4de605e3271062af58acb72fe882))
+
 ## [0.8.1](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.8.0...observability-v0.8.1) (2026-10-20)
 
 
