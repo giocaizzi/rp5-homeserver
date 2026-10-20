@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/giocaizzi/rp5-homeserver/compare/ntfy-v0.4.1...ntfy-v0.4.2) (2026-10-20)
+
+
+### Documentation
+
+* **ntfy:** document the factory alert topics and token ([#505](https://github.com/giocaizzi/rp5-homeserver/issues/505)) ([99016f4](https://github.com/giocaizzi/rp5-homeserver/commit/99016f4d83905118fd905897acf93deec18097a3))
+
 ## [0.4.1](https://github.com/giocaizzi/rp5-homeserver/compare/ntfy-v0.4.0...ntfy-v0.4.1) (2026-10-20)
 
 
