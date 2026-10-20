@@ -55,7 +55,7 @@ rules (Swarm, Portainer, secrets) see the repo-root `AGENTS.md`.
   ```
   ssh pi@pi.local 'docker service update --force observability_dashboard'
   ```
-- Fixed datasource uids: `prometheus`, `loki`, `tempo`. Dashboard uid: `claude-code-obs`.
+- Fixed datasource uids: `prometheus`, `loki`, `tempo`.
 
 ---
 
@@ -67,14 +67,22 @@ rules (Swarm, Portainer, secrets) see the repo-root `AGENTS.md`.
   instant can still 422 as a range.
 - Use `$__rate_interval` / `$__interval` for time-series panels; `$__range` /
   `$__range_s` for totals and averages.
+- Claude Code exports metrics every 60s. A per-interval Prometheus panel (`max - min`,
+  `rate`, `increase`, `changes` over `$__rate_interval`) needs panel `"interval": "2m"`,
+  or each window holds one sample and the panel is flat or empty.
 
 ---
 
 ## Agents folder (`agents/`)
 
-- Harness-agnostic, Loki only. A model call is `agent_event="api_request" or event_name="api_request"`
+- One folder for every agent dashboard. A signal lives on exactly one dashboard: cost, tokens,
+  sessions and errors for every harness on Agent Overview; guard, skills, tool approvals and
+  subagents on Agent Ops; signals only Claude Code emits on Claude Code (detail). Add a panel
+  to the detail dashboard only when no harness-agnostic equivalent exists.
+- Overview and Ops are harness-agnostic, Loki only. A model call is `agent_event="api_request" or event_name="api_request"`
   (the second covers Claude Code records from before the Alloy `agent_usage` transform).
 - Every `unwrap` is followed by `| __error__=""`: harnesses leave fields such as `cost_usd`
   or `cache_creation_tokens` out, and the conversion error would otherwise show as a series.
-- Schema and price table: `docs/monitoring.md`, Agent cost. Dashboard uids: `agents-overview`, `agents-ops`.
+- Schema and price table: `docs/monitoring.md`, Agent cost. Dashboard uids: `agents-overview`, `agents-ops`,
+  `claude-code-obs` (`agents/claude-code.json`, Prometheus + Loki; the Data model and join rules above apply).
 - Verify each query against live Loki (instant and range) before shipping.
