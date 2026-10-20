@@ -34,18 +34,7 @@ providers:
     options:
       path: /etc/grafana/provisioning/dashboards/shared
 
-  # Claude Code OTel dashboards (sourced from ColeMurray/claude-code-otel)
-  - name: 'claude-code'
-    orgId: 1
-    folder: 'claude-code'
-    folderUid: 'claude-code'
-    type: file
-    disableDeletion: false
-    editable: true
-    options:
-      path: /etc/grafana/provisioning/dashboards/claude-code
-
-  # Every agent harness (Claude Code, Codex, Copilot, opencode, pi) and the guard
+  # Every agent harness (Claude Code, Codex, Copilot, opencode, pi), the guard and the Claude Code detail
   - name: 'agents'
     orgId: 1
     folder: 'Agents'

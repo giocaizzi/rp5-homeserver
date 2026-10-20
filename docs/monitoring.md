@@ -210,8 +210,7 @@ Dashboards are organized in folders by purpose:
 | `observability` | health | Loki/Tempo/Prometheus/Alloy health |
 | `Website` | app, ai | Website application (pick namespace/service in the dashboard variables) |
 | `shared` | postgresql, mariadb, redis, nginx | Technology-specific dashboards (multi-instance) |
-| `claude-code` | dashboard | Claude Code metrics in depth (Prometheus) |
-| `Agents` | overview, ops | Every agent harness: cost, tokens, errors (Agent Overview); guard, skills, tools, subagents (Agent Ops) |
+| `Agents` | overview, ops, claude-code | Every agent harness: cost, tokens, errors (Agent Overview); guard, skills, tools, subagents (Agent Ops); Claude Code only signals such as lines of code, accept rate, cost by subagent or MCP server, latency (Claude Code detail) |
 
 ### Dashboard Variables
 
