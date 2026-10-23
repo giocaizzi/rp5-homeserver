@@ -59,3 +59,7 @@ stack's webhook from the Pi runner when its `<stack>-v*` release is published.
 3. Set the `WEBHOOK_ID_<STACK>` secret on environment `pi-services`: [GitOps → GitHub config](./gitops.md#github-config)
 
 New stacks: [GitOps → Adding a new service stack](./gitops.md#adding-a-new-service-stack).
+
+## Host patching
+
+Security updates from Debian install automatically (`unattended-upgrades`, no auto-reboot); kernel, Docker and vendor packages are manual: [RUNBOOKS/patch-pi-host.md](./RUNBOOKS/patch-pi-host.md).
