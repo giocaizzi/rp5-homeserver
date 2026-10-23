@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.3](https://github.com/giocaizzi/rp5-homeserver/compare/v1.24.2...v1.24.3) (2026-10-23)
+
+
+### Bug Fixes
+
+* **infra:** log Shepherd in to Docker Hub ([#518](https://github.com/giocaizzi/rp5-homeserver/issues/518)) ([f118038](https://github.com/giocaizzi/rp5-homeserver/commit/f1180382498780614148ab2c5f0d2e4f922d68d1))
+
 ## [1.24.2](https://github.com/giocaizzi/rp5-homeserver/compare/v1.24.1...v1.24.2) (2026-10-23)
 
 
