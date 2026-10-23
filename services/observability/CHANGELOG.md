@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.8.2...observability-v0.9.0) (2026-10-23)
+
+
+### Features
+
+* **observability:** attribute subagent cost and add agent ask, swap and pinning panels ([#516](https://github.com/giocaizzi/rp5-homeserver/issues/516)) ([0b3bb54](https://github.com/giocaizzi/rp5-homeserver/commit/0b3bb54372753fffd75ccc66c668cf003dece01a))
+
 ## [0.8.2](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.8.1...observability-v0.8.2) (2026-10-20)
 
 
