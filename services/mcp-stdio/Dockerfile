@@ -12,7 +12,9 @@ ENV UV_PYTHON_INSTALL_DIR=/opt/python \
     UV_PYTHON_PREFERENCE=only-managed \
     UV_NO_CACHE=1 \
     UV_COMPILE_BYTECODE=1
-RUN uv python install 3.12
+# pip is unused (uv installs everything) and its vendored certifi is flagged (GHSA-6q48-6c7w-9gw2).
+RUN uv python install 3.12 \
+    && rm -rf /opt/python/*/lib/python3.12/site-packages/pip /opt/python/*/lib/python3.12/site-packages/pip-*.dist-info
 
 # One venv per server, from a hash-locked requirements file (servers/<name>.txt,
 # compiled from servers/<name>.in; see README).

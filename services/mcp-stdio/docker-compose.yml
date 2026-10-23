@@ -69,7 +69,7 @@ volumes:
 services:
   gateway:
     # Pinned build of services/mcp-stdio (README → Build). Bump the tag on rebuild.
-    image: ghcr.io/giocaizzi/rp5-mcp-stdio:2026.10.19.2
+    image: ghcr.io/giocaizzi/rp5-mcp-stdio:2026.10.23.1
     hostname: mcp-stdio-gateway
     expose:
       - "8000"
