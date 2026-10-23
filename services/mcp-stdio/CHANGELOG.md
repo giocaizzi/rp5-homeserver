@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.2](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.5.1...mcp-stdio-v1.5.2) (2026-10-23)
+
+
+### Bug Fixes
+
+* **mcp-stdio:** ship the rebuilt gateway image 2026.10.23.1 ([#514](https://github.com/giocaizzi/rp5-homeserver/issues/514)) ([e3f6315](https://github.com/giocaizzi/rp5-homeserver/commit/e3f631564186ca3a89ae33dcd677926f437a6602))
+
 ## [1.5.1](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.5.0...mcp-stdio-v1.5.1) (2026-10-23)
 
 
