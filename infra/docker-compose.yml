@@ -499,6 +499,12 @@ services:
     image: containrrr/shepherd:latest
     hostname: infra-shepherd-critical
     init: true  # shepherd's bash loop is PID 1 and ignores SIGTERM while sleeping -> SIGKILL (137) on stop (#316)
+    entrypoint:
+      - /bin/bash
+      - -c
+      - IFS=, read -r _ _ REGISTRY_USER REGISTRY_PASSWORD < /run/secrets/shepherd_registries; export REGISTRY_USER REGISTRY_PASSWORD; exec /usr/local/bin/shepherd
+    secrets:
+      - shepherd_registries
     environment:
       - SLEEP_TIME=24h
       - FILTER_SERVICES=label=com.giocaizzi.tier=critical
@@ -531,6 +537,12 @@ services:
     image: containrrr/shepherd:latest
     hostname: infra-shepherd-core
     init: true
+    entrypoint:
+      - /bin/bash
+      - -c
+      - IFS=, read -r _ _ REGISTRY_USER REGISTRY_PASSWORD < /run/secrets/shepherd_registries; export REGISTRY_USER REGISTRY_PASSWORD; exec /usr/local/bin/shepherd
+    secrets:
+      - shepherd_registries
     environment:
       - SLEEP_TIME=48h
       - FILTER_SERVICES=label=com.giocaizzi.tier=core
@@ -563,6 +575,12 @@ services:
     image: containrrr/shepherd:latest
     hostname: infra-shepherd-extra
     init: true
+    entrypoint:
+      - /bin/bash
+      - -c
+      - IFS=, read -r _ _ REGISTRY_USER REGISTRY_PASSWORD < /run/secrets/shepherd_registries; export REGISTRY_USER REGISTRY_PASSWORD; exec /usr/local/bin/shepherd
+    secrets:
+      - shepherd_registries
     environment:
       - SLEEP_TIME=72h
       - FILTER_SERVICES=label=com.giocaizzi.tier=extra
@@ -643,3 +661,5 @@ secrets:
     file: ./secrets/ntfy_token.txt
   portainer_mcp_auth_token:
     file: ./secrets/portainer_mcp_auth_token.txt
+  shepherd_registries:
+    file: ./secrets/shepherd_registries.txt

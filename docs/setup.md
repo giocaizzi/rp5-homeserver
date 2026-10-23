@@ -21,6 +21,7 @@ Deploy RP5 Home Server stacks via Docker Swarm and Portainer's remote repository
    - Service passwords (backrest, adguard, grafana)
    - API tokens (portainer, firefly—after deployment)
    - GCP service account for backups
+   - Docker Hub login for Shepherd (`infra_shepherd_registries`, one line `<id>,docker.io,<user>,<access token>`; read-only token): without it Shepherd's pulls hit the anonymous rate limit
 
    See [`infra/README.md`](../infra/README.md) for complete secret requirements.
 
