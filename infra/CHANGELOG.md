@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.24.2](https://github.com/giocaizzi/rp5-homeserver/compare/v1.24.1...v1.24.2) (2026-10-23)
+
+
+### Bug Fixes
+
+* **infra:** pin nginx-prometheus-exporter to 1.5.3 ([#510](https://github.com/giocaizzi/rp5-homeserver/issues/510)) ([2cf02df](https://github.com/giocaizzi/rp5-homeserver/commit/2cf02df2f164b5e7fd9a70248f357651389a3f87))
+
 ## [1.24.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.24.0...v1.24.1) (2026-10-19)
 
 

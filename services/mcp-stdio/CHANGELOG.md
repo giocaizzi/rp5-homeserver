@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.5.0...mcp-stdio-v1.5.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **mcp-stdio:** bump certifi and the node base image ([#512](https://github.com/giocaizzi/rp5-homeserver/issues/512)) ([5b9200f](https://github.com/giocaizzi/rp5-homeserver/commit/5b9200fce3563684089c162ad6b309645b560ca4))
+
 ## [1.5.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.4.1...mcp-stdio-v1.5.0) (2026-10-18)
 
 

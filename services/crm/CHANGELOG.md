@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.3.0...crm-v0.3.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **crm:** bump Twenty to v2.51.0 ([#511](https://github.com/giocaizzi/rp5-homeserver/issues/511)) ([d651ae2](https://github.com/giocaizzi/rp5-homeserver/commit/d651ae2a728478af2b715b88c693a8c34209dacf))
+
 ## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.2.5...crm-v0.3.0) (2026-10-15)
 
 
