@@ -1,7 +1,7 @@
 # Stdio-only MCP servers behind supergateway (stdio -> Streamable HTTP).
 # One gateway process, one URL path per server (servers.jsonc), one server
 # process per MCP session. Multi-arch base (arm64 for the Pi). Runs as `node`.
-FROM node:22.23.3-bookworm-slim
+FROM node:22.23.4-bookworm-slim
 
 COPY --from=ghcr.io/astral-sh/uv:0.13.1 /uv /usr/local/bin/uv
 
