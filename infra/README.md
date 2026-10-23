@@ -64,6 +64,7 @@ File-based secrets in `./secrets/` on the Pi (gitignored). Source of truth: Secr
 | `portainer_mcp_auth_token` | `portainer_mcp_auth_token.txt` | Portainer MCP gate token (`openssl rand -hex 32`; key `infra_portainer_mcp_auth_token`) |
 | `domain` | `domain.txt` | Production domain |
 | `ntfy_token` | `ntfy_token.txt` | Netdata → ntfy publisher token |
+| `shepherd_registries` | `shepherd_registries.txt` | Docker Hub login for Shepherd, one line `<id>,docker.io,<user>,<read-only access token>` (key `infra_shepherd_registries`) |
 
 ```bash
 # Generate a random password straight into Secrets Manager, then run sync_infra.sh
@@ -139,7 +140,7 @@ Automatically checks and updates Swarm services with tiered strategy to stay wit
 - Uses Docker socket (read-only) to run `docker service update`.
 - Runs on manager node only.
 - Auto-ignores all shepherd instances.
-- No authentication required—tiered intervals prevent rate limiting.
+- Logs in to Docker Hub with the `shepherd_registries` secret (the entrypoint splits it into `REGISTRY_USER` / `REGISTRY_PASSWORD`); the tiered intervals keep pulls low on top of that.
 
 ---
 
