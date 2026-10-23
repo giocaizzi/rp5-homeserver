@@ -20,8 +20,8 @@
 
 | Container | Image | Purpose |
 |-----------|-------|---------|
-| crm-server | `twentycrm/twenty:v2.43.0` | UI + REST/GraphQL/MCP API, runs DB migrations and registers cron jobs on start |
-| crm-worker | `twentycrm/twenty:v2.43.0` | BullMQ background jobs (webhooks, workflows, imports, timeline) |
+| crm-server | `twentycrm/twenty:v2.51.0` | UI + REST/GraphQL/MCP API, runs DB migrations and registers cron jobs on start |
+| crm-worker | `twentycrm/twenty:v2.51.0` | BullMQ background jobs (webhooks, workflows, imports, timeline) |
 | crm-db | `postgres:16-alpine` | Primary data store |
 | crm-redis | `redis:7-alpine` | Queue + cache (`noeviction`, no persistence) |
 | crm-redis-exporter | `oliver006/redis_exporter:alpine` | Redis metrics, scraped by Alloy |
