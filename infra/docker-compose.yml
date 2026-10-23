@@ -102,7 +102,7 @@ services:
 
   # Nginx Prometheus Exporter
   proxy-exporter:
-    image: nginx/nginx-prometheus-exporter:1.5   # minor-pinned: upstream :1 tag is stale (see #185)
+    image: nginx/nginx-prometheus-exporter:1.5.3   # patch-pinned: upstream :1 tag is stale (see #185)
     hostname: infra-proxy-exporter
     command:
       - --nginx.scrape-uri=http://infra-proxy:80/stub_status
