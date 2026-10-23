@@ -391,6 +391,72 @@
       }
     },
     {
+      "id": 20,
+      "type": "table",
+      "title": "Asks answered",
+      "description": "How each guard ask ended: a high timeout share means asks land while nobody is at the keyboard; a rule whose asks are nearly all allow is a false positive.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (harness, cmd_class, result) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.ask_result\" [$__range]))",
+          "queryType": "instant",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Value",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "merge"
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "Value": "Asks",
+              "Value #A": "Asks"
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 17
+      }
+    },
+    {
       "id": 7,
       "type": "row",
       "title": "Skills",
@@ -399,7 +465,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 17
+        "y": 25
       },
       "panels": []
     },
@@ -466,7 +532,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 18
+        "y": 26
       }
     },
     {
@@ -532,7 +598,7 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 18
+        "y": 26
       }
     },
     {
@@ -544,7 +610,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 28
+        "y": 36
       },
       "panels": []
     },
@@ -599,7 +665,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 29
+        "y": 37
       }
     },
     {
@@ -665,7 +731,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 29
+        "y": 37
       }
     },
     {
@@ -731,7 +797,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 37
+        "y": 45
       }
     },
     {
@@ -797,7 +863,7 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 37
+        "y": 45
       }
     },
     {
@@ -809,7 +875,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 47
+        "y": 55
       },
       "panels": []
     },
@@ -876,14 +942,14 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 48
+        "y": 56
       }
     },
     {
       "id": 17,
       "type": "table",
-      "title": "Subagent cost by model",
-      "description": "",
+      "title": "Subagent cost by agent (Claude Code)",
+      "description": "A spawn given a name (Agent tool `name`) carries no agent name in Claude Code telemetry and shows as (named spawn).",
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -895,7 +961,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (model, query_source) (sum_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"api_request\" | query_source=~\"agent:.*\" | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum by (agent_name, model) (sum_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"api_request\" | query_source=~\"agent:.*\" | label_format agent_name=`{{ if .agent_name }}{{ .agent_name }}{{ else }}(named spawn){{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "legendFormat": ""
         }
@@ -942,7 +1008,139 @@
         "h": 10,
         "w": 12,
         "x": 12,
-        "y": 48
+        "y": 56
+      }
+    },
+    {
+      "id": 21,
+      "type": "table",
+      "title": "Model swaps (Claude Code)",
+      "description": "Subagents that finished on another model than they started on (a fallback chain).",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (agent_type, model, final_model) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"subagent_completed\" | model_swapped=\"true\" [$__range]))",
+          "queryType": "instant",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Value",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "merge"
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "Value": "Runs",
+              "Value #A": "Runs"
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 66
+      }
+    },
+    {
+      "id": 22,
+      "type": "table",
+      "title": "Spawns with no model pinned (Claude Code)",
+      "description": "Agent tool calls without a model: they run on the session's model. web-fetch and claude-code-guide pick their own.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (agent) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"tool_result\" | tool_name=\"Agent\" | line_format \"{{.tool_input}}\" !~ `\"model\":` | regexp `\"subagent_type\":\"(?P<agent>[^\"]+)\"` | label_format agent=`{{ if .agent }}{{ .agent }}{{ else }}general-purpose{{ end }}` [$__range]))",
+          "queryType": "instant",
+          "legendFormat": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Value",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "merge"
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "Value": "Spawns",
+              "Value #A": "Spawns"
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 66
       }
     },
     {
@@ -996,7 +1194,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 58
+        "y": 74
       }
     },
     {
@@ -1039,7 +1237,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 58
+        "y": 74
       }
     }
   ]

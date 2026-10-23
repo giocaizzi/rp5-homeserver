@@ -619,7 +619,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (agent_name) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"}))",
+          "expr": "label_replace(sum by (agent_name) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", session_id=~\"$session_id\"}[$__range])) * on (job) group_left() max by (job) (target_info{host_name=~\"$host_name\"})), \"agent_name\", \"main thread or named spawn\", \"agent_name\", \"\")",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -629,7 +629,7 @@
       ],
       "title": "Cost by Subagent",
       "type": "table",
-      "description": "Cost per subagent (agent_name). Empty agent_name = main-thread / unattributed.",
+      "description": "Cost per subagent (agent_name). Main threads and spawns given a name carry no agent name: they are grouped as \"main thread or named spawn\".",
       "transformations": [
         {
           "id": "organize",
@@ -1182,7 +1182,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (tool_name, error_type) (count_over_time({service_name=\"claude-code\"} | event_name=\"tool_result\" | session_id=~\"$session_id\" | success=\"false\" [$__range]))",
+          "expr": "sum by (tool_name, error_type) (count_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} | event_name=\"tool_result\" | session_id=~\"$session_id\" | success=\"false\" [$__range]))",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1392,7 +1392,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "quantile_over_time(0.50, {service_name=\"claude-code\"} | event_name=\"api_request\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]) by (model)",
+          "expr": "quantile_over_time(0.50, {service_name=\"claude-code\", host_name=~\"$host_name\"} | event_name=\"api_request\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]) by (model)",
           "interval": "",
           "legendFormat": "p50 {{model}}",
           "refId": "A"
@@ -1402,7 +1402,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "quantile_over_time(0.95, {service_name=\"claude-code\"} | event_name=\"api_request\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]) by (model)",
+          "expr": "quantile_over_time(0.95, {service_name=\"claude-code\", host_name=~\"$host_name\"} | event_name=\"api_request\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]) by (model)",
           "interval": "",
           "legendFormat": "p95 {{model}}",
           "refId": "B"
@@ -1412,7 +1412,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "quantile_over_time(0.99, {service_name=\"claude-code\"} | event_name=\"api_request\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]) by (model)",
+          "expr": "quantile_over_time(0.99, {service_name=\"claude-code\", host_name=~\"$host_name\"} | event_name=\"api_request\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]) by (model)",
           "interval": "",
           "legendFormat": "p99 {{model}}",
           "refId": "C"
@@ -1811,7 +1811,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({service_name=\"claude-code\"} | event_name=\"subagent_completed\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]) by (agent_type)",
+          "expr": "avg_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} | event_name=\"subagent_completed\" | session_id=~\"$session_id\" | unwrap duration_ms [$__interval]) by (agent_type)",
           "interval": "",
           "legendFormat": "{{agent_type}}",
           "refId": "A"
@@ -1869,7 +1869,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (agent_type) (sum_over_time({service_name=\"claude-code\"} | event_name=\"subagent_completed\" | session_id=~\"$session_id\" | unwrap total_tokens [$__range]))",
+          "expr": "sum by (agent_type) (sum_over_time({service_name=\"claude-code\", host_name=~\"$host_name\"} | event_name=\"subagent_completed\" | session_id=~\"$session_id\" | unwrap total_tokens [$__range]))",
           "format": "table",
           "instant": true,
           "interval": "",

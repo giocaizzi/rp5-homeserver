@@ -638,7 +638,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (query_source) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | agent_event=\"api_request\" or event_name=\"api_request\" | unwrap cost_usd | __error__=\"\" [$__interval]))",
+          "expr": "sum by (query_source) (sum_over_time({service_name=\"claude-code\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | agent_event=\"api_request\" or event_name=\"api_request\" | unwrap cost_usd | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{query_source}}"
         }
