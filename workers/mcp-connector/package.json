@@ -9,11 +9,11 @@
     "tail:greenhouse": "wrangler tail mcp-connector-greenhouse"
   },
   "dependencies": {
-    "@cloudflare/workers-oauth-provider": "^1.2.3"
+    "@cloudflare/workers-oauth-provider": "^1.2.4"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^5.20261016.1",
+    "@cloudflare/workers-types": "^5.20261023.1",
     "typescript": "^7.0.2",
-    "wrangler": "^4.151.1"
+    "wrangler": "^4.152.0"
   }
 }
