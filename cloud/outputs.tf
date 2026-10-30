@@ -86,6 +86,12 @@ output "miniflux_url" {
   sensitive   = true
 }
 
+output "pocket_id_url" {
+  description = "The public URL for Pocket ID (OIDC issuer)"
+  value       = "https://id.${var.zone_name}"
+  sensitive   = true
+}
+
 # ============================================================================
 # GCP Outputs
 # ============================================================================
