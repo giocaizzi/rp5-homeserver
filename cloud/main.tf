@@ -722,31 +722,25 @@ resource "cloudflare_zero_trust_access_application" "miniflux_policy" {
   ]
 }
 
-# TEMPORARY owner-only gate for id.${var.zone_name} (Pocket ID), for first-admin and
-# passkey enrollment. Removed when Pocket ID becomes an Access login method (stage 2):
-# the host must then be public, because Cloudflare's servers call its token and JWKS
-# endpoints. Runbook: docs/pocket-id.md.
-resource "cloudflare_zero_trust_access_policy" "pocket_id_bootstrap" {
+# Pocket ID (passkey OIDC provider) as an Access login method. id.${var.zone_name} has no
+# Access app: Cloudflare's servers call its token and JWKS endpoints, so it must be public.
+# One-time PIN stays enabled as break-glass (dashboard-managed). Policies match on email,
+# so no application changes. Never rotate Pocket ID's signing key to EdDSA: Access does
+# not support it. Runbook: docs/pocket-id.md.
+resource "cloudflare_zero_trust_access_identity_provider" "pocket_id" {
   account_id = var.cloudflare_account_id
-  name       = "pocket-id-bootstrap"
-  decision   = "allow"
-  include = [
-    for email in var.mcp_stdio_users : { email = { email = email } }
-  ]
-}
-
-resource "cloudflare_zero_trust_access_application" "pocket_id_bootstrap_policy" {
-  account_id       = var.cloudflare_account_id
-  type             = "self_hosted"
-  name             = "id.${var.zone_name}"
-  domain           = "id.${var.zone_name}"
-  session_duration = "1h"
-  policies = [
-    {
-      id         = cloudflare_zero_trust_access_policy.pocket_id_bootstrap.id
-      precedence = 1
-    }
-  ]
+  name       = "Pocket ID"
+  type       = "oidc"
+  config = {
+    client_id        = var.pocket_id_client_id
+    client_secret    = var.pocket_id_client_secret
+    auth_url         = "https://id.${var.zone_name}/authorize"
+    token_url        = "https://id.${var.zone_name}/api/oidc/token"
+    certs_url        = "https://id.${var.zone_name}/.well-known/jwks.json"
+    scopes           = ["openid", "email", "profile"]
+    pkce_enabled     = true
+    email_claim_name = "email"
+  }
 }
 
 # ============================================================================

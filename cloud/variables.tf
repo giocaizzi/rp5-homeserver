@@ -135,6 +135,30 @@ variable "mcp_stdio_users" {
   }
 }
 
+variable "pocket_id_client_id" {
+  description = "OIDC client ID of the Cloudflare Access client created in Pocket ID"
+  type        = string
+  sensitive   = true
+
+  # An unset GitHub secret arrives as "": fail the plan instead of creating a broken login method.
+  validation {
+    condition     = length(var.pocket_id_client_id) > 0
+    error_message = "Set the POCKET_ID_CLIENT_ID secret on cloud-plan and cloud-production (docs/pocket-id.md)."
+  }
+}
+
+variable "pocket_id_client_secret" {
+  description = "OIDC client secret of the Cloudflare Access client created in Pocket ID"
+  type        = string
+  sensitive   = true
+
+  # An unset GitHub secret arrives as "": fail the plan instead of creating a broken login method.
+  validation {
+    condition     = length(var.pocket_id_client_secret) > 0
+    error_message = "Set the POCKET_ID_CLIENT_SECRET secret on cloud-plan and cloud-production (docs/pocket-id.md)."
+  }
+}
+
 # ============================================================================
 # GCP Variables
 # ============================================================================
