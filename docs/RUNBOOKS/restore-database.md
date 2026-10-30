@@ -34,7 +34,7 @@ task() { docker ps --format '{{.Names}}' -f "label=com.docker.swarm.service.name
      sudo rm -f "$v/irrigation.db-wal" "$v/irrigation.db-shm"
      sudo install -o 1000 -g 1000 -m 644 "$D/greenhouse.db" "$v/irrigation.db"
      ```
-   - Pocket ID (SQLite + uploads, app stopped). The import needs the same encryption key as the dump. Before step 2, copy it from the running task into a file (never printed): `k=$(mktemp); docker exec "$(task pocket-id_app)" cat /run/secrets/encryption_key > "$k"`; with no running task, write Secrets Manager key `pocket-id_encryption_key` into `$k` instead. Then import in a one-off container of the service's image (runs as root; the entrypoint fixes `/app/data` ownership on the next start):
+   - Pocket ID (SQLite + uploads, app stopped). The import needs the same encryption key as the dump. Before step 2, copy it from the running task into a file (never printed): `k=$(mktemp); docker exec "$(task pocket-id_app)" cat /run/secrets/encryption_key > "$k"`; with no running task, write into `$k` the Secrets Manager key named by `secrets.encryption_key.name` in `services/pocket-id/docker-compose.yml` (`pocket-id_encryption_key`, or `_v<N>` after a rotation) instead. Then import in a one-off container of the service's image (runs as root; the entrypoint fixes `/app/data` ownership on the next start):
      ```bash
      img=$(docker service inspect pocket-id_app --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}')
      sudo cat "$D/pocket-id.zip" | docker run --rm -i --entrypoint /app/pocket-id \
