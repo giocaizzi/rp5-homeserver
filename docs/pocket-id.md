@@ -8,7 +8,7 @@ Runbook for Pocket ID, the passkey-only OIDC provider used as a Cloudflare Acces
 |-------|-------|
 | Stack `pocket-id`, service `pocket-id_app` (v2.19, port 1411) | `services/pocket-id/` |
 | Data | volume `app_data` at `/app/data` |
-| Encryption key | Swarm secret `pocket-id_encryption_key` -> `ENCRYPTION_KEY_FILE` (Secrets Manager key of the same name) |
+| Encryption key | Swarm secret named by `secrets.encryption_key.name` in the compose file (`pocket-id_encryption_key`, `pocket-id_encryption_key_v<N>` after a [rotation](#encryption-key-rotation)) -> `ENCRYPTION_KEY_FILE`; Secrets Manager key of the same name |
 | Public URL | `https://id.<domain>` through the tunnel |
 | nginx route | `infra/nginx/conf.d/services/pocket-id.conf`, no Access JWT check |
 | Access login method | `cloudflare_zero_trust_access_identity_provider.pocket_id` (generic OIDC, PKCE) in `cloud/` |
@@ -32,10 +32,12 @@ Order matters; each step keeps One-time PIN as a way in.
    ```bash
    PI_SSH_USER=pi ./scripts/create_secrets.sh pocket-id
    ```
-3. Create the Portainer remote stack and the `WEBHOOK_ID_POCKET_ID` secret (environment `pi-services`) as in [services/pocket-id/README.md](../services/pocket-id/README.md).
-4. Cloudflare zone setting: turn Rocket Loader off (it breaks Pocket ID's Content Security Policy).
-5. Merge the stage 1 cloud PR (`feat(cloud): add the Pocket ID hostname behind a temporary Access gate`: DNS, tunnel ingress, owner-only Access app on `id.<domain>`) and the infra route PR, then cut the infra release.
-6. Open `https://id.<domain>/setup` (Access asks for a One-time PIN). Create the admin with the policy email and add the passkey (Bitwarden). Setup works only until the first account exists.
+3. Cloudflare zone setting: turn Rocket Loader off (it breaks Pocket ID's Content Security Policy).
+4. Merge the stack PR, the infra route PR (then cut the infra release) and the stage 1 cloud PR (`feat(cloud): add the Pocket ID hostname behind a temporary Access gate`: owner-only Access app on `id.<domain>`; the DNS record and tunnel ingress are created only after it). Before going on, confirm in Zero Trust > Access > Applications that the `id.<domain>` app exists.
+5. Only now create the Portainer remote stack and the `WEBHOOK_ID_POCKET_ID` secret (environment `pi-services`) as in [services/pocket-id/README.md](../services/pocket-id/README.md), so Pocket ID first runs behind the gate.
+6. Right away, open `https://id.<domain>/setup` (Access asks for a One-time PIN). Create the admin with the policy email and add the passkey (Bitwarden). Setup works only until the first account exists.
+   - **If `/setup` no longer offers first-admin creation, stop:** someone else claimed it. Run `docker service scale pocket-id_app=0`, remove its exited task containers (`docker container prune -f --filter label=com.docker.swarm.service.name=pocket-id_app`), delete the volume (`docker volume rm pocket-id_app_data`), scale back to 1 and start this step again. Never continue to step 8 on an instance you did not set up.
+   - Accepted risk: the gate is enforced at the Cloudflare edge only. Between step 5 and the admin's creation, a LAN client that sends `Host: id.<domain>` straight to the Pi's port 443 reaches `/setup` without Access. The LAN is trusted and the window is minutes, so this is accepted; the check above catches it.
 7. Under My Account, enroll a second passkey on another authenticator (hardware key or platform keychain), so losing the vault does not lose Pocket ID.
 8. Administration > User Groups: create group `access`, add the admin. OIDC Clients > add `Cloudflare Access`:
    - callback `https://<team>.cloudflareaccess.com/cdn-cgi/access/callback`
@@ -51,7 +53,7 @@ Order matters; each step keeps One-time PIN as a way in.
    ```
    Add the client id as a line in the `LEAK_PATTERNS` secret (repo and Dependabot).
 9. Ensure the Terraform Cloudflare API token has the permission "Access: Organizations, Identity Providers, and Groups Write".
-10. Mark the stage 2 PR ready (`feat(cloud): add Pocket ID as an Access login method`) and merge it. It removes the temporary Access app and adds the login method (URLs `https://id.<domain>/authorize`, `/api/oidc/token`, `/.well-known/jwks.json`); `apply-cloud` applies it.
+10. Mark the stage 2 PR ready (`feat(cloud): add Pocket ID as an Access login method`) and merge it. It removes the temporary Access app and adds the login method (URLs `https://id.<domain>/authorize`, `/api/oidc/token`, `/.well-known/jwks.json`); `apply-cloud` applies it. `id.<domain>` may turn public a moment before the login method exists; that is safe only because step 6 already claimed `/setup`, so never merge it earlier.
 11. Verify:
     - Zero Trust dashboard: Test button on the Pocket ID login method.
     - Log in to homepage, then backrest, then the rest, choosing Pocket ID. Check the `cf_access enforce` log lines as in [access-jwt.md](./access-jwt.md).
@@ -84,8 +86,25 @@ Restore from backup: [RUNBOOKS/restore-database.md](./RUNBOOKS/restore-database.
 
 ## Encryption key rotation
 
-1. In the running task: `/app/pocket-id encryption-key-rotate --new-key <new key>`.
-2. Docker secrets are immutable: bump the secret name suffix in the compose file and in Secrets Manager in the same change, run `create_secrets.sh pocket-id`, redeploy.
+The rotation re-encrypts the database; the app must then start only with the new key. Rotate with the service scaled to 0, so no restart (Shepherd update, crash) can start it with the old key on the re-encrypted data. Key names are versioned: the current one is in `secrets.encryption_key.name` in `services/pocket-id/docker-compose.yml`; the new one is the next `pocket-id_encryption_key_v<N>`.
+
+1. Add Secrets Manager key `pocket-id_encryption_key_v<N>` (`openssl rand -base64 32`, no trailing newline).
+2. On a branch, point `secrets.encryption_key.name` at the new name, and run `PI_SSH_USER=pi ./scripts/create_secrets.sh pocket-id` from it: this creates the new Swarm secret; the running service keeps the old one. Open the PR, do not merge yet.
+3. On the Pi, stop the app and rotate in a one-off service that mounts both secrets (no key in a file or in your shell; the CLI only takes the new key as an argument, so it is visible in the container's process list while the command runs):
+   ```bash
+   docker service scale pocket-id_app=0
+   img=$(docker service inspect pocket-id_app --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}')
+   docker service create --name pocket-id-rotate --restart-condition none --detach \
+     --secret source=<current key name>,target=encryption_key \
+     --secret source=pocket-id_encryption_key_v<N>,target=new_key \
+     --mount type=volume,source=pocket-id_app_data,target=/app/data \
+     -e ENCRYPTION_KEY_FILE=/run/secrets/encryption_key "$img" \
+     sh -c '/app/pocket-id encryption-key-rotate --yes --new-key "$(cat /run/secrets/new_key)"'
+   docker service logs pocket-id-rotate   # expect "Restart pocket-id with the new ENCRYPTION_KEY ..."
+   docker service rm pocket-id-rotate
+   ```
+4. Merge the PR and cut the `pocket-id` service release: the redeploy starts the app with the new key (back to 1 replica). Do not scale up before that: any start in between uses the old key.
+5. Once logins work, delete the old Swarm secret (`create_secrets.sh pocket-id --prune`) and the old Secrets Manager key.
 
 ## Rollback
 
