@@ -95,6 +95,8 @@ jobs:
           TF_VAR_calibre_users: ${{ secrets.CALIBRE_USERS || '[]' }}
           TF_VAR_miniflux_users: ${{ secrets.MINIFLUX_USERS || '[]' }}
           TF_VAR_mcp_stdio_users: ${{ secrets.MCP_STDIO_USERS || '[]' }}
+          TF_VAR_pocket_id_client_id: ${{ secrets.POCKET_ID_CLIENT_ID }}
+          TF_VAR_pocket_id_client_secret: ${{ secrets.POCKET_ID_CLIENT_SECRET }}
           TF_VAR_gcp_project_id: ${{ secrets.GCP_PROJECT_ID }}
           TF_VAR_gcp_region: ${{ vars.GCP_REGION }}
           TF_VAR_gcp_backup_bucket_name: ${{ secrets.GCP_BACKUP_BUCKET_NAME }}
