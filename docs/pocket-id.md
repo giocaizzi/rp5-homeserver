@@ -94,12 +94,14 @@ The rotation re-encrypts the database; the app must then start only with the new
    ```bash
    docker service scale pocket-id_app=0
    img=$(docker service inspect pocket-id_app --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}')
-   docker service create --name pocket-id-rotate --restart-condition none --detach \
+   docker service create --name pocket-id-rotate --mode replicated-job --restart-condition none \
      --secret source=<current key name>,target=encryption_key \
      --secret source=pocket-id_encryption_key_v<N>,target=new_key \
      --mount type=volume,source=pocket-id_app_data,target=/app/data \
      -e ENCRYPTION_KEY_FILE=/run/secrets/encryption_key "$img" \
      sh -c '/app/pocket-id encryption-key-rotate --yes --new-key "$(cat /run/secrets/new_key)"'
+   # Without --detach, create returns only when the job has finished
+   docker service ps pocket-id-rotate     # expect Complete
    docker service logs pocket-id-rotate   # expect "Restart pocket-id with the new ENCRYPTION_KEY ..."
    docker service rm pocket-id-rotate
    ```
