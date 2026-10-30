@@ -37,7 +37,7 @@ Manifest mode: [`release-please-config.json`](../release-please-config.json) + [
 | `mcp-connector` | `workers/mcp-connector` | `node` | `mcp-connector-vX.Y.Z` | `package.json` |
 | `<service>` | `services/<service>` | `simple` | `<service>-vX.Y.Z` | manifest-only |
 
-Services covered: `adguard`, `ai`, `calibre`, `code`, `crm`, `firefly`, `greenhouse`, `langfuse`, `mcp-stdio`, `miniflux`, `n8n`, `ntfy`, `observability`, `openclaw`. Stacks with repo bind mounts (`firefly`, `langfuse`, `observability`) also list `docker-compose.yml` under `extra-files`, so release-please bumps their `com.giocaizzi.config-rev` label and every release rolls the tasks.
+Services covered: `adguard`, `ai`, `calibre`, `code`, `crm`, `firefly`, `greenhouse`, `langfuse`, `mcp-stdio`, `miniflux`, `n8n`, `ntfy`, `observability`, `openclaw`, `pocket-id`. Stacks with repo bind mounts (`firefly`, `langfuse`, `observability`) also list `docker-compose.yml` under `extra-files`, so release-please bumps their `com.giocaizzi.config-rev` label and every release rolls the tasks.
 
 Cross-cutting changes (CI, root docs, `scripts/`) use the `repo` scope, touch no component path, and cut **no** release.
 

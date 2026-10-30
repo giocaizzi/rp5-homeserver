@@ -104,6 +104,7 @@ jobs:
           WEBHOOK_ID_CALIBRE: ${{ secrets.WEBHOOK_ID_CALIBRE }}
           WEBHOOK_ID_MINIFLUX: ${{ secrets.WEBHOOK_ID_MINIFLUX }}
           WEBHOOK_ID_MCP_STDIO: ${{ secrets.WEBHOOK_ID_MCP_STDIO }}
+          WEBHOOK_ID_POCKET_ID: ${{ secrets.WEBHOOK_ID_POCKET_ID }}
         run: |
           set -euo pipefail
           stack="${{ matrix.stack }}"
