@@ -1,0 +1,103 @@
+# =============================================================================
+# YAML Anchors - Common configurations
+# =============================================================================
+x-labels-base: &labels-base
+  com.giocaizzi.namespace: "pocket-id"
+  com.giocaizzi.env: "production"
+
+x-deploy-base: &deploy-base
+  mode: replicated
+  replicas: 1
+  placement:
+    constraints:
+      - node.role == manager
+  restart_policy:
+    condition: any
+    delay: 5s
+    max_attempts: 3
+    window: 120s
+
+x-logging-base: &logging-base
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-security-base: &security-base
+  security_opt:
+    - no-new-privileges:true
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  # External network to connect to nginx proxy
+  public_network:
+    external: true
+    name: rp5_public
+
+# =============================================================================
+# Services
+# =============================================================================
+services:
+  app:
+    # Floating minor tag on purpose: Shepherd re-pulls the digest, so patch
+    # releases arrive automatically. Alpine variant, not distroless: Backrest's
+    # dump runs `docker exec ... sh -c`.
+    image: ghcr.io/pocket-id/pocket-id:v2.19
+    hostname: pocket-id-app
+    expose:
+      - "1411"
+    environment:
+      - APP_URL=https://id.${DOMAIN:?set DOMAIN in the stack env}
+      - ENCRYPTION_KEY_FILE=/run/secrets/encryption_key
+      # nginx sets CF-Connecting-IP to the real client IP only for tunnel traffic
+      - TRUSTED_PLATFORM=CF-Connecting-IP
+      - ALLOW_INSECURE_CALLBACK_URLS=false
+      - ANALYTICS_DISABLED=true
+      # Application Configuration comes from env (GitOps), not the UI
+      - UI_CONFIG_DISABLED=true
+      - ALLOW_USER_SIGNUPS=disabled
+      # Access trusts the email claim: users must not change their email
+      - ALLOW_OWN_ACCOUNT_EDIT=false
+    secrets:
+      - encryption_key
+    volumes:
+      # SQLite DB + uploads
+      - app_data:/app/data
+    networks:
+      - public_network
+    healthcheck:
+      test: ["CMD", "/app/pocket-id", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.service: "app"
+      com.giocaizzi.component: "app"
+      com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "pocket-id"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "core"
+      resources:
+        limits:
+          memory: 128M
+    logging:
+      <<: *logging-base
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  app_data:
+    driver: local
+
+secrets:
+  encryption_key:
+    external: true
+    name: pocket-id_encryption_key

@@ -21,6 +21,7 @@ The **stack name** is the top-level identifier (folder name in `services/` or `i
 | `ntfy` | Push notifications |
 | `ollama` | LLM inference |
 | `miniflux` | Feed reader |
+| `pocket-id` | Identity provider (Pocket ID, passkeys) |
 
 ### Service Name (Compose Key)
 
