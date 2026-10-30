@@ -1,6 +1,6 @@
 # Restore a database
 
-**When:** a database (Firefly, CRM, n8n, Miniflux, greenhouse) is lost or corrupted, or for the restore test below. How the dumps are taken: [backup.md](../backup.md#database-dumps).
+**When:** a database (Firefly, CRM, n8n, Miniflux, greenhouse, Pocket ID) is lost or corrupted, or for the restore test below. How the dumps are taken: [backup.md](../backup.md#database-dumps).
 **Preconditions:** SSH to the Pi (`ssh pi.local`). Restoring overwrites the live database: take a fresh dump first (Backrest → plan `docker-volumes` → Backup now).
 
 Helper used below (run on the Pi):
@@ -16,6 +16,7 @@ task() { docker ps --format '{{.Names}}' -f "label=com.docker.swarm.service.name
    - n8n: `docker service scale n8n_app=0`
    - Miniflux: `docker service scale miniflux_app=0`
    - greenhouse: `docker service scale greenhouse_app=0`
+   - Pocket ID: `docker service scale pocket-id_app=0`
 3. **Load the dump:**
    - Firefly (MariaDB):
      ```bash
@@ -32,6 +33,14 @@ task() { docker ps --format '{{.Names}}' -f "label=com.docker.swarm.service.name
      v=/var/lib/docker/volumes/greenhouse_greenhouse_data/_data
      sudo rm -f "$v/irrigation.db-wal" "$v/irrigation.db-shm"
      sudo install -o 1000 -g 1000 -m 644 "$D/greenhouse.db" "$v/irrigation.db"
+     ```
+   - Pocket ID (SQLite + uploads, app stopped). The import needs the same encryption key as the dump. Before step 2, copy it from the running task into a file (never printed): `k=$(mktemp); docker exec "$(task pocket-id_app)" cat /run/secrets/encryption_key > "$k"`; with no running task, write into `$k` the Secrets Manager key named by `secrets.encryption_key.name` in `services/pocket-id/docker-compose.yml` (`pocket-id_encryption_key`, or `_v<N>` after a rotation) instead. Then import in a one-off container of the service's image (runs as root; the entrypoint fixes `/app/data` ownership on the next start):
+     ```bash
+     img=$(docker service inspect pocket-id_app --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}')
+     sudo cat "$D/pocket-id.zip" | docker run --rm -i --entrypoint /app/pocket-id \
+       -v pocket-id_app_data:/app/data -v "$k":/run/secrets/encryption_key:ro \
+       -e ENCRYPTION_KEY_FILE=/run/secrets/encryption_key "$img" import --yes --path -
+     shred -u "$k"
      ```
 4. **Start the writers** again with the same `docker service scale` commands set to `=1`.
 

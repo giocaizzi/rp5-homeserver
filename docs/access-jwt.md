@@ -34,7 +34,7 @@ Access issues no JWT for a request let through by a **bypass** policy, so these 
 | `crm` | users | `/rest` (service token or users); `/mcp`, `/oauth`, `/.well-known/oauth-protected-resource`, `/.well-known/oauth-authorization-server` (claude.ai egress IPs) |
 | `calibre` | users | `/opds`, `/kosync`, `/kobo` (everyone) |
 | `mcp-stdio` | owner | `/fli/mcp`, `/garmin/mcp` (service token); one entry per path-scoped server app |
-| `otel`, `ntfy`, `netdata-mcp`, `langfuse-mcp` | no host-wide app | not checked (not in the flag map) |
+| `otel`, `ntfy`, `netdata-mcp`, `langfuse-mcp`, `id` | no host-wide app | not checked (not in the flag map) |
 
 When a path-scoped Access app is added or changed in `cloud/main.tf`, update `$cf_access_bypass` in the same change. Switching an MCP policy from `bypass` to Service Auth (`non_identity`) would make Access issue a JWT for it (with that path app's `aud`); the skip entry and the `aud` lookup would then need to change with it.
 
