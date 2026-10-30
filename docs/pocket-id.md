@@ -33,7 +33,7 @@ Order matters; each step keeps One-time PIN as a way in.
    PI_SSH_USER=pi ./scripts/create_secrets.sh pocket-id
    ```
 3. Cloudflare zone setting: turn Rocket Loader off (it breaks Pocket ID's Content Security Policy).
-4. Merge the stack PR, the infra route PR (then cut the infra release) and the stage 1 cloud PR (`feat(cloud): add the Pocket ID hostname behind a temporary Access gate`: owner-only Access app on `id.<domain>`; the DNS record and tunnel ingress are created only after it). Before going on, confirm in Zero Trust > Access > Applications that the `id.<domain>` app exists.
+4. Land the first three layers of the GitHub stack (stack PR, infra route PR, stage 1 cloud PR `feat(cloud): add the Pocket ID hostname behind a temporary Access gate`: owner-only Access app on `id.<domain>`; the DNS record and tunnel ingress are created only after it) with `gh stack merge <stage 1 PR number>`: it lands every layer up to and including that one, all or nothing, and leaves the stage 2 PR (draft, top of the stack) open. Never merge the top of the stack here. Then cut the infra release. Before going on, confirm in Zero Trust > Access > Applications that the `id.<domain>` app exists.
 5. Only now create the Portainer remote stack and the `WEBHOOK_ID_POCKET_ID` secret (environment `pi-services`) as in [services/pocket-id/README.md](../services/pocket-id/README.md), so Pocket ID first runs behind the gate.
 6. Right away, open `https://id.<domain>/setup` (Access asks for a One-time PIN). Create the admin with the policy email and add the passkey (Bitwarden). Setup works only until the first account exists.
    - **If `/setup` no longer offers first-admin creation, stop:** someone else claimed it. Run `docker service scale pocket-id_app=0`, remove its exited task containers (`docker container prune -f --filter label=com.docker.swarm.service.name=pocket-id_app`), delete the volume (`docker volume rm pocket-id_app_data`), scale back to 1 and start this step again. Never continue to step 8 on an instance you did not set up.
@@ -53,7 +53,7 @@ Order matters; each step keeps One-time PIN as a way in.
    ```
    Add the client id as a line in the `LEAK_PATTERNS` secret (repo and Dependabot).
 9. Ensure the Terraform Cloudflare API token has the permission "Access: Organizations, Identity Providers, and Groups Write".
-10. Mark the stage 2 PR ready (`feat(cloud): add Pocket ID as an Access login method`) and merge it. It removes the temporary Access app and adds the login method (URLs `https://id.<domain>/authorize`, `/api/oidc/token`, `/.well-known/jwks.json`); `apply-cloud` applies it. `id.<domain>` may turn public a moment before the login method exists; that is safe only because step 6 already claimed `/setup`, so never merge it earlier.
+10. Mark the stage 2 PR ready (`feat(cloud): add Pocket ID as an Access login method`, the last layer of the stack) and land it with `gh stack merge <stage 2 PR number>`. It removes the temporary Access app and adds the login method (URLs `https://id.<domain>/authorize`, `/api/oidc/token`, `/.well-known/jwks.json`); `apply-cloud` applies it. `id.<domain>` may turn public a moment before the login method exists; that is safe only because step 6 already claimed `/setup`, so never merge it earlier.
 11. Verify:
     - Zero Trust dashboard: Test button on the Pocket ID login method.
     - Log in to homepage, then backrest, then the rest, choosing Pocket ID. Check the `cf_access enforce` log lines as in [access-jwt.md](./access-jwt.md).
