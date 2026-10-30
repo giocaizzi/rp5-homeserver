@@ -172,9 +172,6 @@ resource "cloudflare_dns_record" "pocket_id" {
   type    = "CNAME"
   ttl     = 1
   proxied = true
-  # Stage 1: publish only once the temporary Access gate exists, so a failed app
-  # create can't leave /setup public and unclaimed. Dropped in stage 2.
-  depends_on = [cloudflare_zero_trust_access_application.pocket_id_bootstrap_policy]
 }
 
 # Creates the CNAME record that routes otel.${var.zone_name} to the tunnel.
@@ -234,9 +231,6 @@ resource "cloudflare_dns_record" "mcp_stdio" {
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
   tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.homeserver.id
   account_id = var.cloudflare_account_id
-  # Stage 1: the id.<domain> route waits for the temporary Pocket ID Access gate
-  # (see cloudflare_dns_record.pocket_id). Dropped in stage 2.
-  depends_on = [cloudflare_zero_trust_access_application.pocket_id_bootstrap_policy]
   config = {
     ingress = [
       {
