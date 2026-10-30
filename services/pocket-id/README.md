@@ -32,7 +32,7 @@
 
 | Swarm secret | Used by | Purpose |
 |--------------|---------|---------|
-| `pocket-id_encryption_key` | app | Encrypts sensitive data in the database (`ENCRYPTION_KEY_FILE`) |
+| `pocket-id_encryption_key` (`pocket-id_encryption_key_v<N>` after a [key rotation](../../docs/pocket-id.md#encryption-key-rotation); the compose `secrets.encryption_key.name` is authoritative) | app | Encrypts sensitive data in the database (`ENCRYPTION_KEY_FILE`) |
 
 ---
 
