@@ -18,10 +18,10 @@
         "name": "harness",
         "label": "Harness",
         "type": "custom",
-        "query": "claude-code,codex,github-copilot,copilot-chat,opencode,pi",
+        "query": "claude-code,codex,github-copilot,copilot-chat,opencode,pi,antigravity",
         "includeAll": true,
         "multi": true,
-        "allValue": "claude-code|codex.*|github-copilot|copilot-chat|opencode|pi",
+        "allValue": "claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|antigravity.*",
         "current": {
           "text": [
             "All"
@@ -41,10 +41,10 @@
           "type": "loki",
           "uid": "loki"
         },
-        "definition": "label_values({service_name=~\"claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|guard\"}, host_name)",
+        "definition": "label_values({service_name=~\"claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|guard|antigravity.*\"}, host_name)",
         "query": {
           "label": "host_name",
-          "stream": "{service_name=~\"claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|guard\"}",
+          "stream": "{service_name=~\"claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|guard|antigravity.*\"}",
           "type": 1,
           "refId": "LokiVariableQueryEditor-VariableQuery"
         },
@@ -617,7 +617,7 @@
     {
       "id": 11,
       "type": "timeseries",
-      "title": "Tool failures by tool (Claude Code)",
+      "title": "Tool failures by tool (all harnesses)",
       "description": "",
       "datasource": {
         "type": "loki",
@@ -630,7 +630,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (tool_name) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"tool_result\" | success=\"false\" [$__interval]))",
+          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\"} | (event_name=\"tool_result\" or agent_event=\"tool_result\") | success=\"false\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{tool_name}}"
         }
@@ -816,7 +816,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | agent_event=\"tool_result\" or event_name=\"tool_result\" or event_name=\"codex.tool_result\" [$__range]))",
+          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | agent_event=\"tool_result\" or event_name=\"tool_result\" or event_name=\"codex.tool_result\" or tool!=\"\" [$__range]))",
           "queryType": "instant",
           "legendFormat": ""
         }
@@ -895,7 +895,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (agent_type, model) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"subagent_completed\" [$__range]))",
+          "expr": "sum by (agent_type, model) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\"} | event_name=\"subagent_completed\" or agent_event=\"subagent_completed\" or agent_type!=\"\" [$__range]))",
           "queryType": "instant",
           "legendFormat": ""
         }
@@ -948,7 +948,7 @@
     {
       "id": 17,
       "type": "table",
-      "title": "Subagent cost by agent (Claude Code)",
+      "title": "Subagent cost by agent role (all harnesses)",
       "description": "A spawn given a name (Agent tool `name`) carries no agent name in Claude Code telemetry and shows as (named spawn).",
       "datasource": {
         "type": "loki",
@@ -961,7 +961,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (agent_name, model) (sum_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"api_request\" | query_source=~\"agent:.*\" | label_format agent_name=`{{ if .agent_name }}{{ .agent_name }}{{ else }}(named spawn){{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum by (service_name, agent_name, model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\"} | (event_name=\"api_request\" or agent_event=\"api_request\") | query_source=~\"agent:.*\" | label_format agent_name=`{{ if .agent_name }}{{ .agent_name }}{{ else }}(named spawn){{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "legendFormat": ""
         }
