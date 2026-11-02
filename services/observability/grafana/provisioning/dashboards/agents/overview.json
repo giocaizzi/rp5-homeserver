@@ -1,6 +1,6 @@
 {
   "uid": "agents-overview",
-  "title": "Agent Overview",
+  "title": "Agents Overview",
   "description": "Cost, tokens and errors across every agent harness.",
   "tags": [
     "agents"
@@ -103,28 +103,29 @@
           ]
         },
         "options": [],
-        "hide": 0
+        "hide": 0,
+        "regex": "/^(.*?)(?:\\.local)?$/"
       },
       {
         "name": "model",
-        "label": "Model",
-        "type": "query",
-        "datasource": {
-          "type": "loki",
-          "uid": "loki"
+        "label": "Model regex",
+        "type": "textbox",
+        "query": ".*",
+        "current": {
+          "text": ".*",
+          "value": ".*"
         },
-        "definition": "label_values({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | agent_event=\"api_request\" or event_name=\"api_request\", model)",
-        "query": {
-          "label": "model",
-          "stream": "{service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | agent_event=\"api_request\" or event_name=\"api_request\"",
-          "type": 1,
-          "refId": "LokiVariableQueryEditor-VariableQuery-Model"
-        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "environment",
+        "label": "Environment / run mode",
+        "type": "custom",
+        "query": "production,kind",
         "includeAll": true,
         "multi": true,
         "allValue": ".*",
-        "refresh": 2,
-        "sort": 1,
         "current": {
           "text": [
             "All"
@@ -133,7 +134,23 @@
             "$__all"
           ]
         },
-        "options": [],
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "production",
+            "value": "production"
+          },
+          {
+            "selected": false,
+            "text": "kind",
+            "value": "kind"
+          }
+        ],
         "hide": 0
       },
       {
@@ -155,14 +172,14 @@
   },
   "links": [
     {
-      "title": "Agent Ops",
+      "title": "Agents Ops",
       "type": "link",
       "url": "/d/agents-ops"
     },
     {
-      "title": "Claude Code (detail)",
+      "title": "Agents Detail",
       "type": "link",
-      "url": "/d/claude-code-obs"
+      "url": "/d/agents-detail"
     }
   ],
   "panels": [
@@ -195,7 +212,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant"
         }
       ],
@@ -212,7 +229,8 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none"
+        "graphMode": "none",
+        "textMode": "value"
       },
       "gridPos": {
         "h": 4,
@@ -237,7 +255,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__range])) / ($__range_s / 86400)",
+          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__range])) / ($__range_s / 86400)",
           "queryType": "instant"
         }
       ],
@@ -271,7 +289,8 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none"
+        "graphMode": "none",
+        "textMode": "value"
       },
       "gridPos": {
         "h": 4,
@@ -296,7 +315,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant"
         }
       ],
@@ -313,7 +332,8 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none"
+        "graphMode": "none",
+        "textMode": "value"
       },
       "timeFrom": "24h",
       "gridPos": {
@@ -339,7 +359,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "count(sum by (session_id) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" [$__range])))",
+          "expr": "count(sum by (session_id) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -356,7 +376,8 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none"
+        "graphMode": "none",
+        "textMode": "value"
       },
       "gridPos": {
         "h": 4,
@@ -381,7 +402,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" [$__range]))",
+          "expr": "sum(count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" [$__range]))",
           "queryType": "instant"
         }
       ],
@@ -398,7 +419,8 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none"
+        "graphMode": "none",
+        "textMode": "value"
       },
       "gridPos": {
         "h": 4,
@@ -423,7 +445,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__range])) / (sum (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__range])) + sum (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__range])) + sum (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_creation_tokens | __error__=\"\" [$__range])))",
+          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__range])) / (sum (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__range])) + sum (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__range])) + sum (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_creation_tokens | __error__=\"\" [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -440,7 +462,8 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none"
+        "graphMode": "none",
+        "textMode": "value"
       },
       "gridPos": {
         "h": 4,
@@ -478,7 +501,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__interval]))",
+          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{service_name}}"
         },
@@ -574,7 +597,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "legendFormat": "{{service_name}}"
         }
@@ -624,7 +647,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" [$__interval]))",
+          "expr": "sum by (service_name) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{service_name}}"
         }
@@ -677,7 +700,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__interval]))",
+          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{service_name}} (input)"
         },
@@ -687,7 +710,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap output_tokens | __error__=\"\" [$__interval]))",
+          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap output_tokens | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{service_name}} (output)"
         },
@@ -697,7 +720,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__interval]))",
+          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{service_name}} (cache read)"
         }
@@ -763,7 +786,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__interval]))",
+          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{model}}"
         }
@@ -817,7 +840,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "legendFormat": "{{model}}"
         }
@@ -867,7 +890,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (model) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" [$__interval]))",
+          "expr": "sum by (model) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{model}}"
         }
@@ -920,7 +943,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__interval]))",
+          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{model}} (input)"
         },
@@ -930,7 +953,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap output_tokens | __error__=\"\" [$__interval]))",
+          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap output_tokens | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{model}} (output)"
         },
@@ -940,7 +963,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__interval]))",
+          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{model}} (cache read)"
         }
@@ -1007,9 +1030,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name, model, query_source) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format query_source=`{{ if .query_source }}{{ .query_source }}{{ else }}direct{{ end }}` | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum by (service_name, model, query_source) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format query_source=`{{ if .query_source }}{{ .query_source }}{{ else }}direct{{ end }}` | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -1082,7 +1105,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (query_source) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format query_source=`{{ if .query_source }}{{ .query_source }}{{ else }}direct{{ end }}` | unwrap cost_usd | __error__=\"\" [$__interval]))",
+          "expr": "sum by (query_source) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format query_source=`{{ if .query_source }}{{ .query_source }}{{ else }}direct{{ end }}` | unwrap cost_usd | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{query_source}}"
         }
@@ -1148,7 +1171,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__interval]))",
+          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "input_tokens"
         },
@@ -1158,7 +1181,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap output_tokens | __error__=\"\" [$__interval]))",
+          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap output_tokens | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "output_tokens"
         },
@@ -1168,7 +1191,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__interval]))",
+          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "cache_read_tokens"
         },
@@ -1178,7 +1201,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_creation_tokens | __error__=\"\" [$__interval]))",
+          "expr": "sum (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_creation_tokens | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "cache_creation_tokens"
         }
@@ -1231,9 +1254,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(20, sum by (service_name, session_id) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | label_format session_id=`{{ if .session_id }}{{ .session_id }}{{ else }}unknown-session{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range])))",
+          "expr": "topk(20, sum by (service_name, session_id) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | label_format session_id=`{{ if .session_id }}{{ .session_id }}{{ else }}unknown-session{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range])))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
