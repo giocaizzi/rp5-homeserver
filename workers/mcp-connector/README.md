@@ -96,7 +96,7 @@ Three independent gates protect the Pi origin; all must pass:
      the library's helpers bind it to the browser and forbid framing.
    - **Redirect allowlist:** DCR and `/authorize` accept only
      `https://claude.ai/api/mcp/auth_callback`, `https://claude.com/api/mcp/auth_callback`,
-     `https://vscode.dev/redirect` and loopback (`localhost`, `127.0.0.1`, `[::1]`)
+     `https://vscode.dev/redirect`, `https://antigravity.google/oauth-callback` and loopback (`localhost`, `127.0.0.1`, `[::1]`)
      callbacks (`src/policy.ts`). Without it, a phishing link to `/authorize` with
      an attacker-registered client could mint a token for the attacker. Add a
      client's callback there before connecting it.
