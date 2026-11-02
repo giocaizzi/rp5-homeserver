@@ -540,7 +540,8 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "currencyUSD"
+          "unit": "currencyUSD",
+          "displayName": "${__field.labels.service_name}"
         },
         "overrides": []
       },
@@ -782,7 +783,8 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "currencyUSD"
+          "unit": "currencyUSD",
+          "displayName": "${__field.labels.model}"
         },
         "overrides": []
       },
