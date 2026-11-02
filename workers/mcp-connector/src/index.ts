@@ -41,7 +41,7 @@ function providerFor(origin: string): OAuthProvider<Env> {
       clientRegistrationCallback: ({ clientMetadata }) => {
         const uris = clientMetadata.redirect_uris;
         if (!Array.isArray(uris) || uris.length === 0 || !uris.every((u) => typeof u === "string" && isAllowedRedirect(u))) {
-          return { description: "redirect_uris must be Claude, VS Code or loopback callbacks" };
+          return { description: "redirect_uris must be Claude, VS Code, Antigravity or loopback callbacks" };
         }
       },
       // A refresh re-checks the allowlist, so a removed address loses access within

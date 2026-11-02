@@ -18,6 +18,8 @@ const WEB_CALLBACKS = new Set([
   "https://claude.ai/api/mcp/auth_callback",
   "https://claude.com/api/mcp/auth_callback",
   "https://vscode.dev/redirect",
+  "https://antigravity.google/oauth-callback",
+  "https://cursor.com/api/mcp/oauth-callback",
 ]);
 
 const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
