@@ -533,7 +533,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "legendFormat": "{{service_name}}"
         }
@@ -623,7 +623,7 @@
     {
       "id": 12,
       "type": "timeseries",
-      "title": "Tokens by harness (all types combined)",
+      "title": "Tokens by harness (input, output, cache)",
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -635,9 +635,29 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__interval]) + sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap output_tokens | __error__=\"\" [$__interval]) + sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__interval]))",
+          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__interval]))",
           "queryType": "range",
-          "legendFormat": "{{service_name}}"
+          "legendFormat": "{{service_name}} (input)"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap output_tokens | __error__=\"\" [$__interval]))",
+          "queryType": "range",
+          "legendFormat": "{{service_name}} (output)"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (service_name) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__interval]))",
+          "queryType": "range",
+          "legendFormat": "{{service_name}} (cache read)"
         }
       ],
       "fieldConfig": {
@@ -755,7 +775,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "legendFormat": "{{model}}"
         }
@@ -845,7 +865,7 @@
     {
       "id": 17,
       "type": "timeseries",
-      "title": "Tokens by model",
+      "title": "Tokens by model (input, output, cache)",
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -857,9 +877,29 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__interval]) + sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap output_tokens | __error__=\"\" [$__interval]))",
+          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__interval]))",
           "queryType": "range",
-          "legendFormat": "{{model}}"
+          "legendFormat": "{{model}} (input)"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap output_tokens | __error__=\"\" [$__interval]))",
+          "queryType": "range",
+          "legendFormat": "{{model}} (output)"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__interval]))",
+          "queryType": "range",
+          "legendFormat": "{{model}} (cache read)"
         }
       ],
       "fieldConfig": {
@@ -924,7 +964,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name, model, query_source) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum by (service_name, model, query_source) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format query_source=`{{ if .query_source }}{{ .query_source }}{{ else }}direct{{ end }}` | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "legendFormat": ""
         }
@@ -961,8 +1001,17 @@
               "Time": true
             },
             "renameByName": {
+              "service_name": "Harness",
+              "model": "Model",
+              "query_source": "Role / Source",
               "Value": "Cost",
               "Value #A": "Cost"
+            },
+            "indexByName": {
+              "Harness": 0,
+              "Model": 1,
+              "Role / Source": 2,
+              "Cost": 3
             }
           }
         }
@@ -990,7 +1039,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (query_source) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | query_source!=\"\" | unwrap cost_usd | __error__=\"\" [$__interval]))",
+          "expr": "sum by (query_source) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format query_source=`{{ if .query_source }}{{ .query_source }}{{ else }}direct{{ end }}` | unwrap cost_usd | __error__=\"\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{query_source}}"
         }
@@ -1139,7 +1188,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(20, sum by (service_name, session_id) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__range])))",
+          "expr": "topk(20, sum by (service_name, session_id) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | label_format session_id=`{{ if .session_id }}{{ .session_id }}{{ else }}unknown-session{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range])))",
           "queryType": "instant",
           "legendFormat": ""
         }
@@ -1176,8 +1225,15 @@
               "Time": true
             },
             "renameByName": {
+              "service_name": "Harness",
+              "session_id": "Session ID",
               "Value": "Cost",
               "Value #A": "Cost"
+            },
+            "indexByName": {
+              "Harness": 0,
+              "Session ID": 1,
+              "Cost": 2
             }
           }
         }

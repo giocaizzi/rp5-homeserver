@@ -203,7 +203,23 @@
             },
             "renameByName": {
               "Value": "Decisions",
-              "Value #A": "Decisions"
+              "Value #A": "Decisions",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -269,7 +285,23 @@
             },
             "renameByName": {
               "Value": "Reminders",
-              "Value #A": "Reminders"
+              "Value #A": "Reminders",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -335,7 +367,23 @@
             },
             "renameByName": {
               "Value": "Checks",
-              "Value #A": "Checks"
+              "Value #A": "Checks",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -444,7 +492,23 @@
             },
             "renameByName": {
               "Value": "Asks",
-              "Value #A": "Asks"
+              "Value #A": "Asks",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -523,7 +587,23 @@
             },
             "renameByName": {
               "Value": "Loads",
-              "Value #A": "Loads"
+              "Value #A": "Loads",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -589,7 +669,23 @@
             },
             "renameByName": {
               "Value": "Loads",
-              "Value #A": "Loads"
+              "Value #A": "Loads",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -630,9 +726,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\"} | (event_name=\"tool_result\" or agent_event=\"tool_result\") | success=\"false\" [$__interval]))",
+          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\"} | (event_name=\"tool_result\" or agent_event=\"tool_result\") | success=\"false\" | label_format tool_name=`{{ if .tool_name }}{{ .tool_name }}{{ else }}unknown-tool{{ end }}` [$__interval]))",
           "queryType": "range",
-          "legendFormat": "{{tool_name}}"
+          "legendFormat": "{{service_name}} - {{tool_name}}"
         }
       ],
       "fieldConfig": {
@@ -722,7 +818,23 @@
             },
             "renameByName": {
               "Value": "Tool calls",
-              "Value #A": "Tool calls"
+              "Value #A": "Tool calls",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -788,7 +900,23 @@
             },
             "renameByName": {
               "Value": "Failures",
-              "Value #A": "Failures"
+              "Value #A": "Failures",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -816,7 +944,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | agent_event=\"tool_result\" or event_name=\"tool_result\" or event_name=\"codex.tool_result\" or tool!=\"\" [$__range]))",
+          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | agent_event=\"tool_result\" or event_name=\"tool_result\" or event_name=\"codex.tool_result\" or tool!=\"\" | label_format tool_name=`{{ if .tool_name }}{{ .tool_name }}{{ else }}{{ if .tool }}{{ .tool }}{{ else }}unknown-tool{{ end }}{{ end }}` | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` [$__range]))",
           "queryType": "instant",
           "legendFormat": ""
         }
@@ -854,7 +982,23 @@
             },
             "renameByName": {
               "Value": "Calls",
-              "Value #A": "Calls"
+              "Value #A": "Calls",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -895,7 +1039,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (agent_type, model) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\"} | event_name=\"subagent_completed\" or agent_event=\"subagent_completed\" or agent_type!=\"\" [$__range]))",
+          "expr": "sum by (agent_type, model) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\"} | event_name=\"subagent_completed\" or agent_event=\"subagent_completed\" or agent_type!=\"\" | label_format agent_type=`{{ if .agent_type }}{{ .agent_type }}{{ else }}general-purpose{{ end }}` | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` [$__range]))",
           "queryType": "instant",
           "legendFormat": ""
         }
@@ -933,7 +1077,23 @@
             },
             "renameByName": {
               "Value": "Runs",
-              "Value #A": "Runs"
+              "Value #A": "Runs",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -961,7 +1121,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name, agent_name, model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\"} | (event_name=\"api_request\" or agent_event=\"api_request\") | query_source=~\"agent:.*\" | label_format agent_name=`{{ if .agent_name }}{{ .agent_name }}{{ else }}(named spawn){{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum by (service_name, agent_name, model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\"} | (event_name=\"api_request\" or agent_event=\"api_request\") | query_source=~\"agent:.*\" | label_format agent_name=`{{ if .agent_name }}{{ .agent_name }}{{ else }}(named spawn){{ end }}` | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant",
           "legendFormat": ""
         }
@@ -999,7 +1159,23 @@
             },
             "renameByName": {
               "Value": "Cost",
-              "Value #A": "Cost"
+              "Value #A": "Cost",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -1065,7 +1241,23 @@
             },
             "renameByName": {
               "Value": "Runs",
-              "Value #A": "Runs"
+              "Value #A": "Runs",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -1131,7 +1323,23 @@
             },
             "renameByName": {
               "Value": "Spawns",
-              "Value #A": "Spawns"
+              "Value #A": "Spawns",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
