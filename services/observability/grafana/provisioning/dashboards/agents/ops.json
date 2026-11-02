@@ -30,7 +30,48 @@
             "$__all"
           ]
         },
-        "options": [],
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "claude-code",
+            "value": "claude-code"
+          },
+          {
+            "selected": false,
+            "text": "codex",
+            "value": "codex"
+          },
+          {
+            "selected": false,
+            "text": "github-copilot",
+            "value": "github-copilot"
+          },
+          {
+            "selected": false,
+            "text": "copilot-chat",
+            "value": "copilot-chat"
+          },
+          {
+            "selected": false,
+            "text": "opencode",
+            "value": "opencode"
+          },
+          {
+            "selected": false,
+            "text": "pi",
+            "value": "pi"
+          },
+          {
+            "selected": false,
+            "text": "antigravity",
+            "value": "antigravity"
+          }
+        ],
         "hide": 0
       },
       {
