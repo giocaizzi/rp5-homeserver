@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.7.0...mcp-connector-v0.8.0) (2026-11-02)
+
+
+### Features
+
+* **mcp-connector:** allow Antigravity and Cursor OAuth callback redirects ([#531](https://github.com/giocaizzi/rp5-homeserver/issues/531)) ([c8ae8d7](https://github.com/giocaizzi/rp5-homeserver/commit/c8ae8d7fb380e0245d174413cc0a703555d8da6f))
+
 ## [0.7.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.6.0...mcp-connector-v0.7.0) (2026-10-18)
 
 
