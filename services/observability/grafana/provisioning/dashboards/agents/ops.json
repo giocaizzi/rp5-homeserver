@@ -1,6 +1,6 @@
 {
   "uid": "agents-ops",
-  "title": "Agent Ops",
+  "title": "Agents Ops",
   "description": "Guard decisions, skill use, tool failures and subagent routing across agent harnesses.",
   "tags": [
     "agents"
@@ -103,7 +103,8 @@
           ]
         },
         "options": [],
-        "hide": 0
+        "hide": 0,
+        "regex": "/^(.*?)(?:\\.local)?$/"
       }
     ]
   },
@@ -112,14 +113,14 @@
   },
   "links": [
     {
-      "title": "Agent Overview",
+      "title": "Agents Overview",
       "type": "link",
       "url": "/d/agents-overview"
     },
     {
-      "title": "Claude Code (detail)",
+      "title": "Agents Detail",
       "type": "link",
-      "url": "/d/claude-code-obs"
+      "url": "/d/agents-detail"
     }
   ],
   "panels": [
@@ -152,7 +153,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (action) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.decision\" [$__interval]))",
+          "expr": "sum by (action) (count_over_time({service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.decision\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{action}}"
         }
@@ -206,9 +207,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (harness, rule, action) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.decision\" [$__range]))",
+          "expr": "sum by (harness, rule, action) (count_over_time({service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.decision\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -221,7 +222,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Decisions",
             "desc": true
           }
         ]
@@ -288,9 +289,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (harness, rule) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.reminder\" [$__range]))",
+          "expr": "sum by (harness, rule) (count_over_time({service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.reminder\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -303,7 +304,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Reminders",
             "desc": true
           }
         ]
@@ -370,9 +371,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (target, result) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.stop\" [$__range]))",
+          "expr": "sum by (target, result) (count_over_time({service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.stop\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -385,7 +386,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Checks",
             "desc": true
           }
         ]
@@ -452,9 +453,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "quantile_over_time(0.9, {service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.stop\" | duration_ms!=\"\" | unwrap duration_ms | __error__=\"\" [$__range]) by (target)",
+          "expr": "quantile_over_time(0.9, {service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.stop\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" | duration_ms!=\"\" | unwrap duration_ms | __error__=\"\" [$__range]) by (target)",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -470,7 +471,8 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none"
+        "graphMode": "none",
+        "textMode": "value"
       },
       "gridPos": {
         "h": 8,
@@ -495,9 +497,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (harness, cmd_class, result) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.ask_result\" [$__range]))",
+          "expr": "sum by (harness, cmd_class, result) (count_over_time({service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.ask_result\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -510,7 +512,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Asks",
             "desc": true
           }
         ]
@@ -590,9 +592,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (harness, skill, via) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.skill\" [$__range]))",
+          "expr": "sum by (harness, skill, via) (count_over_time({service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.skill\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -605,7 +607,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Loads",
             "desc": true
           }
         ]
@@ -672,9 +674,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (skill_name, invocation_trigger) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"skill_activated\" [$__range]))",
+          "expr": "sum by (skill_name, invocation_trigger) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"skill_activated\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -687,7 +689,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Loads",
             "desc": true
           }
         ]
@@ -767,7 +769,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\"} | (event_name=\"tool_result\" or agent_event=\"tool_result\") | success=\"false\" | label_format tool_name=`{{ if .tool_name }}{{ .tool_name }}{{ else }}unknown-tool{{ end }}` [$__interval]))",
+          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\"} | (event_name=\"tool_result\" or agent_event=\"tool_result\") | success=\"false\" | label_format tool_name=`{{ if .tool_name }}{{ .tool_name }}{{ else }}unknown-tool{{ end }}` [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{service_name}} - {{tool_name}}"
         }
@@ -821,9 +823,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (decision_source, decision_type) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"tool_result\" | decision_source!=\"\" [$__range]))",
+          "expr": "sum by (decision_source, decision_type) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"tool_result\" | decision_source!=\"\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -836,7 +838,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Tool calls",
             "desc": true
           }
         ]
@@ -903,9 +905,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(20, sum by (bash_command) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"tool_result\" | success=\"false\" | tool_name=\"Bash\" | line_format \"{{.tool_parameters}}\" | json bash_command [$__range])))",
+          "expr": "topk(20, sum by (bash_command) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"tool_result\" | success=\"false\" | tool_name=\"Bash\" | line_format \"{{.tool_parameters}}\" | json bash_command [$__range])))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -918,7 +920,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Failures",
             "desc": true
           }
         ]
@@ -985,9 +987,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | agent_event=\"tool_result\" or event_name=\"tool_result\" or event_name=\"codex.tool_result\" or tool!=\"\" | label_format tool_name=`{{ if .tool_name }}{{ .tool_name }}{{ else }}{{ if .tool }}{{ .tool }}{{ else }}unknown-tool{{ end }}{{ end }}` | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` [$__range]))",
+          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name!=\"test\"} | agent_event=\"tool_result\" or event_name=\"tool_result\" or event_name=\"codex.tool_result\" or tool!=\"\" | label_format tool_name=`{{ if .tool_name }}{{ .tool_name }}{{ else }}{{ if .tool }}{{ .tool }}{{ else }}unknown-tool{{ end }}{{ end }}` | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -1000,7 +1002,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Calls",
             "desc": true
           }
         ]
@@ -1080,9 +1082,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (agent_type, model) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\"} | event_name=\"subagent_completed\" or agent_event=\"subagent_completed\" or agent_type!=\"\" | label_format agent_type=`{{ if .agent_type }}{{ .agent_type }}{{ else }}general-purpose{{ end }}` | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` [$__range]))",
+          "expr": "sum by (agent_type, model) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"subagent_completed\" or agent_event=\"subagent_completed\" or agent_type!=\"\" | label_format agent_type=`{{ if .agent_type }}{{ .agent_type }}{{ else }}general-purpose{{ end }}` | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -1095,7 +1097,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Runs",
             "desc": true
           }
         ]
@@ -1162,9 +1164,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name, agent_name, model) (sum_over_time({service_name=~\"$harness\", host_name=~\"$host\"} | (event_name=\"api_request\" or agent_event=\"api_request\") | query_source=~\"agent:.*\" | label_format agent_name=`{{ if .agent_name }}{{ .agent_name }}{{ else }}(named spawn){{ end }}` | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum by (service_name, agent_name, model) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\"} | (event_name=\"api_request\" or agent_event=\"api_request\") | query_source=~\"agent:.*\" | label_format agent_name=`{{ if .agent_name }}{{ .agent_name }}{{ else }}(named spawn){{ end }}` | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -1177,7 +1179,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Cost",
             "desc": true
           }
         ]
@@ -1244,9 +1246,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (agent_type, model, final_model) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"subagent_completed\" | model_swapped=\"true\" [$__range]))",
+          "expr": "sum by (agent_type, model, final_model) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"subagent_completed\" | model_swapped=\"true\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -1259,7 +1261,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Runs",
             "desc": true
           }
         ]
@@ -1326,9 +1328,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (agent) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"tool_result\" | tool_name=\"Agent\" | line_format \"{{.tool_input}}\" !~ `\"model\":` | regexp `\"subagent_type\":\"(?P<agent>[^\"]+)\"` | label_format agent=`{{ if .agent }}{{ .agent }}{{ else }}general-purpose{{ end }}` [$__range]))",
+          "expr": "sum by (agent) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"tool_result\" | tool_name=\"Agent\" | line_format \"{{.tool_input}}\" !~ `\"model\":` | regexp `\"subagent_type\":\"(?P<agent>[^\"]+)\"` | label_format agent=`{{ if .agent }}{{ .agent }}{{ else }}general-purpose{{ end }}` [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -1341,7 +1343,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Spawns",
             "desc": true
           }
         ]
@@ -1408,7 +1410,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (trigger) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"compaction\" [$__interval]))",
+          "expr": "sum by (trigger) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"compaction\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{trigger}}"
         }
@@ -1462,9 +1464,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(sum_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"compaction\" | unwrap pre_tokens | __error__=\"\" [$__range])) / sum(count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"compaction\" | pre_tokens!=\"\" [$__range]))",
+          "expr": "sum(sum_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"compaction\" | unwrap pre_tokens | __error__=\"\" [$__range])) / sum(count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"compaction\" | pre_tokens!=\"\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -1480,7 +1482,8 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none"
+        "graphMode": "none",
+        "textMode": "value"
       },
       "gridPos": {
         "h": 8,
