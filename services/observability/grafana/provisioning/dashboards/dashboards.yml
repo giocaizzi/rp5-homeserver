@@ -34,7 +34,7 @@ providers:
     options:
       path: /etc/grafana/provisioning/dashboards/shared
 
-  # Every agent harness (Claude Code, Codex, Copilot, opencode, pi), the guard and the Claude Code detail
+  # Every agent harness (Claude Code, Codex, Copilot, opencode, pi), the guard and unified Agents Detail
   - name: 'agents'
     orgId: 1
     folder: 'Agents'
