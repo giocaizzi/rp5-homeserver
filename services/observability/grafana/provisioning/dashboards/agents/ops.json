@@ -1,6 +1,6 @@
 {
   "uid": "agents-ops",
-  "title": "Agent Ops",
+  "title": "Agents Ops",
   "description": "Guard decisions, skill use, tool failures and subagent routing across agent harnesses.",
   "tags": [
     "agents"
@@ -18,10 +18,10 @@
         "name": "harness",
         "label": "Harness",
         "type": "custom",
-        "query": "claude-code,codex,github-copilot,copilot-chat,opencode,pi",
+        "query": "claude-code,codex,github-copilot,copilot-chat,opencode,pi,antigravity",
         "includeAll": true,
         "multi": true,
-        "allValue": "claude-code|codex.*|github-copilot|copilot-chat|opencode|pi",
+        "allValue": "claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|antigravity.*",
         "current": {
           "text": [
             "All"
@@ -30,7 +30,48 @@
             "$__all"
           ]
         },
-        "options": [],
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "claude-code",
+            "value": "claude-code"
+          },
+          {
+            "selected": false,
+            "text": "codex",
+            "value": "codex"
+          },
+          {
+            "selected": false,
+            "text": "github-copilot",
+            "value": "github-copilot"
+          },
+          {
+            "selected": false,
+            "text": "copilot-chat",
+            "value": "copilot-chat"
+          },
+          {
+            "selected": false,
+            "text": "opencode",
+            "value": "opencode"
+          },
+          {
+            "selected": false,
+            "text": "pi",
+            "value": "pi"
+          },
+          {
+            "selected": false,
+            "text": "antigravity",
+            "value": "antigravity"
+          }
+        ],
         "hide": 0
       },
       {
@@ -41,10 +82,10 @@
           "type": "loki",
           "uid": "loki"
         },
-        "definition": "label_values({service_name=~\"claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|guard\"}, host_name)",
+        "definition": "label_values({service_name=~\"claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|guard|antigravity.*\"}, host_name)",
         "query": {
           "label": "host_name",
-          "stream": "{service_name=~\"claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|guard\"}",
+          "stream": "{service_name=~\"claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|guard|antigravity.*\"}",
           "type": 1,
           "refId": "LokiVariableQueryEditor-VariableQuery"
         },
@@ -62,7 +103,8 @@
           ]
         },
         "options": [],
-        "hide": 0
+        "hide": 0,
+        "regex": "/^(.*?)(?:\\.local)?$/"
       }
     ]
   },
@@ -71,14 +113,14 @@
   },
   "links": [
     {
-      "title": "Agent Overview",
+      "title": "Agents Overview",
       "type": "link",
       "url": "/d/agents-overview"
     },
     {
-      "title": "Claude Code (detail)",
+      "title": "Agents Detail",
       "type": "link",
-      "url": "/d/claude-code-obs"
+      "url": "/d/agents-detail"
     }
   ],
   "panels": [
@@ -111,7 +153,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (action) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.decision\" [$__interval]))",
+          "expr": "sum by (action) (count_over_time({service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.decision\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{action}}"
         }
@@ -165,9 +207,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (harness, rule, action) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.decision\" [$__range]))",
+          "expr": "sum by (harness, rule, action) (count_over_time({service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.decision\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -180,7 +222,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Decisions",
             "desc": true
           }
         ]
@@ -203,7 +245,23 @@
             },
             "renameByName": {
               "Value": "Decisions",
-              "Value #A": "Decisions"
+              "Value #A": "Decisions",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -231,9 +289,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (harness, rule) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.reminder\" [$__range]))",
+          "expr": "sum by (harness, rule) (count_over_time({service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.reminder\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -246,7 +304,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Reminders",
             "desc": true
           }
         ]
@@ -269,7 +327,23 @@
             },
             "renameByName": {
               "Value": "Reminders",
-              "Value #A": "Reminders"
+              "Value #A": "Reminders",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -297,9 +371,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (target, result) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.stop\" [$__range]))",
+          "expr": "sum by (target, result) (count_over_time({service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.stop\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -312,7 +386,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Checks",
             "desc": true
           }
         ]
@@ -335,7 +409,23 @@
             },
             "renameByName": {
               "Value": "Checks",
-              "Value #A": "Checks"
+              "Value #A": "Checks",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -363,9 +453,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "quantile_over_time(0.9, {service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.stop\" | duration_ms!=\"\" | unwrap duration_ms | __error__=\"\" [$__range]) by (target)",
+          "expr": "quantile_over_time(0.9, {service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.stop\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" | duration_ms!=\"\" | unwrap duration_ms | __error__=\"\" [$__range]) by (target)",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -381,7 +471,8 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none"
+        "graphMode": "none",
+        "textMode": "value"
       },
       "gridPos": {
         "h": 8,
@@ -406,9 +497,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (harness, cmd_class, result) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.ask_result\" [$__range]))",
+          "expr": "sum by (harness, cmd_class, result) (count_over_time({service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.ask_result\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -421,7 +512,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Asks",
             "desc": true
           }
         ]
@@ -444,7 +535,23 @@
             },
             "renameByName": {
               "Value": "Asks",
-              "Value #A": "Asks"
+              "Value #A": "Asks",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -485,9 +592,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (harness, skill, via) (count_over_time({service_name=\"guard\", host_name=~\"$host\"} | event_name=\"guard.skill\" [$__range]))",
+          "expr": "sum by (harness, skill, via) (count_over_time({service_name=\"guard\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"guard.skill\" | label_format harness=`{{ if eq .harness \"claude\" }}claude-code{{ else if eq .harness \"copilot\" }}github-copilot{{ else }}{{ .harness }}{{ end }}` | harness=~\"$harness\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -500,7 +607,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Loads",
             "desc": true
           }
         ]
@@ -523,7 +630,23 @@
             },
             "renameByName": {
               "Value": "Loads",
-              "Value #A": "Loads"
+              "Value #A": "Loads",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -551,9 +674,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (skill_name, invocation_trigger) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"skill_activated\" [$__range]))",
+          "expr": "sum by (skill_name, invocation_trigger) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"skill_activated\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -566,7 +689,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Loads",
             "desc": true
           }
         ]
@@ -589,7 +712,23 @@
             },
             "renameByName": {
               "Value": "Loads",
-              "Value #A": "Loads"
+              "Value #A": "Loads",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -617,7 +756,7 @@
     {
       "id": 11,
       "type": "timeseries",
-      "title": "Tool failures by tool (Claude Code)",
+      "title": "Tool failures by tool (all harnesses)",
       "description": "",
       "datasource": {
         "type": "loki",
@@ -630,9 +769,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (tool_name) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"tool_result\" | success=\"false\" [$__interval]))",
+          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\"} | (event_name=\"tool_result\" or agent_event=\"tool_result\") | success=\"false\" | label_format tool_name=`{{ if .tool_name }}{{ .tool_name }}{{ else }}unknown-tool{{ end }}` [$__interval]))",
           "queryType": "range",
-          "legendFormat": "{{tool_name}}"
+          "legendFormat": "{{service_name}} - {{tool_name}}"
         }
       ],
       "fieldConfig": {
@@ -684,9 +823,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (decision_source, decision_type) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"tool_result\" | decision_source!=\"\" [$__range]))",
+          "expr": "sum by (decision_source, decision_type) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"tool_result\" | decision_source!=\"\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -699,7 +838,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Tool calls",
             "desc": true
           }
         ]
@@ -722,7 +861,23 @@
             },
             "renameByName": {
               "Value": "Tool calls",
-              "Value #A": "Tool calls"
+              "Value #A": "Tool calls",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -750,9 +905,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(20, sum by (bash_command) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"tool_result\" | success=\"false\" | tool_name=\"Bash\" | line_format \"{{.tool_parameters}}\" | json bash_command [$__range])))",
+          "expr": "topk(20, sum by (bash_command) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"tool_result\" | success=\"false\" | tool_name=\"Bash\" | line_format \"{{.tool_parameters}}\" | json bash_command [$__range])))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -765,7 +920,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Failures",
             "desc": true
           }
         ]
@@ -788,7 +943,23 @@
             },
             "renameByName": {
               "Value": "Failures",
-              "Value #A": "Failures"
+              "Value #A": "Failures",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -816,9 +987,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"$host\", deployment_environment_name!=\"test\"} | agent_event=\"tool_result\" or event_name=\"tool_result\" or event_name=\"codex.tool_result\" [$__range]))",
+          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name!=\"test\"} | agent_event=\"tool_result\" or event_name=\"tool_result\" or event_name=\"codex.tool_result\" or tool!=\"\" | label_format tool_name=`{{ if .tool_name }}{{ .tool_name }}{{ else }}{{ if .tool }}{{ .tool }}{{ else }}unknown-tool{{ end }}{{ end }}` | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -831,7 +1002,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Calls",
             "desc": true
           }
         ]
@@ -854,7 +1025,23 @@
             },
             "renameByName": {
               "Value": "Calls",
-              "Value #A": "Calls"
+              "Value #A": "Calls",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -895,9 +1082,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (agent_type, model) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"subagent_completed\" [$__range]))",
+          "expr": "sum by (agent_type, model) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"subagent_completed\" or agent_event=\"subagent_completed\" or agent_type!=\"\" | label_format agent_type=`{{ if .agent_type }}{{ .agent_type }}{{ else }}general-purpose{{ end }}` | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -910,7 +1097,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Runs",
             "desc": true
           }
         ]
@@ -933,7 +1120,23 @@
             },
             "renameByName": {
               "Value": "Runs",
-              "Value #A": "Runs"
+              "Value #A": "Runs",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -948,7 +1151,7 @@
     {
       "id": 17,
       "type": "table",
-      "title": "Subagent cost by agent (Claude Code)",
+      "title": "Subagent cost by agent role (all harnesses)",
       "description": "A spawn given a name (Agent tool `name`) carries no agent name in Claude Code telemetry and shows as (named spawn).",
       "datasource": {
         "type": "loki",
@@ -961,9 +1164,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (agent_name, model) (sum_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"api_request\" | query_source=~\"agent:.*\" | label_format agent_name=`{{ if .agent_name }}{{ .agent_name }}{{ else }}(named spawn){{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "expr": "sum by (service_name, agent_name, model) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\"} | (event_name=\"api_request\" or agent_event=\"api_request\") | query_source=~\"agent:.*\" | label_format agent_name=`{{ if .agent_name }}{{ .agent_name }}{{ else }}(named spawn){{ end }}` | label_format service_name=`{{ if .service_name }}{{ .service_name }}{{ else }}unknown{{ end }}` | label_format model=`{{ if .model }}{{ .model }}{{ else }}unspecified{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -976,7 +1179,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Cost",
             "desc": true
           }
         ]
@@ -999,7 +1202,23 @@
             },
             "renameByName": {
               "Value": "Cost",
-              "Value #A": "Cost"
+              "Value #A": "Cost",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -1027,9 +1246,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (agent_type, model, final_model) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"subagent_completed\" | model_swapped=\"true\" [$__range]))",
+          "expr": "sum by (agent_type, model, final_model) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"subagent_completed\" | model_swapped=\"true\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -1042,7 +1261,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Runs",
             "desc": true
           }
         ]
@@ -1065,7 +1284,23 @@
             },
             "renameByName": {
               "Value": "Runs",
-              "Value #A": "Runs"
+              "Value #A": "Runs",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -1093,9 +1328,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (agent) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"tool_result\" | tool_name=\"Agent\" | line_format \"{{.tool_input}}\" !~ `\"model\":` | regexp `\"subagent_type\":\"(?P<agent>[^\"]+)\"` | label_format agent=`{{ if .agent }}{{ .agent }}{{ else }}general-purpose{{ end }}` [$__range]))",
+          "expr": "sum by (agent) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"tool_result\" | tool_name=\"Agent\" | line_format \"{{.tool_input}}\" !~ `\"model\":` | regexp `\"subagent_type\":\"(?P<agent>[^\"]+)\"` | label_format agent=`{{ if .agent }}{{ .agent }}{{ else }}general-purpose{{ end }}` [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -1108,7 +1343,7 @@
         "showHeader": true,
         "sortBy": [
           {
-            "displayName": "Value",
+            "displayName": "Spawns",
             "desc": true
           }
         ]
@@ -1131,7 +1366,23 @@
             },
             "renameByName": {
               "Value": "Spawns",
-              "Value #A": "Spawns"
+              "Value #A": "Spawns",
+              "service_name": "Harness",
+              "harness": "Harness",
+              "model": "Model",
+              "agent_name": "Agent Role",
+              "agent_type": "Agent Role",
+              "tool_name": "Tool",
+              "tool": "Tool",
+              "rule": "Rule",
+              "action": "Action",
+              "result": "Result",
+              "cmd_class": "Command Class",
+              "skill": "Skill",
+              "skill_name": "Skill",
+              "via": "Via",
+              "session_id": "Session ID",
+              "target": "Target"
             }
           }
         }
@@ -1159,7 +1410,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (trigger) (count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"compaction\" [$__interval]))",
+          "expr": "sum by (trigger) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"compaction\" [$__interval]))",
           "queryType": "range",
           "legendFormat": "{{trigger}}"
         }
@@ -1213,9 +1464,9 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(sum_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"compaction\" | unwrap pre_tokens | __error__=\"\" [$__range])) / sum(count_over_time({service_name=\"claude-code\", host_name=~\"$host\"} | event_name=\"compaction\" | pre_tokens!=\"\" [$__range]))",
+          "expr": "sum(sum_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"compaction\" | unwrap pre_tokens | __error__=\"\" [$__range])) / sum(count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"compaction\" | pre_tokens!=\"\" [$__range]))",
           "queryType": "instant",
-          "legendFormat": ""
+          "legendFormat": "Value"
         }
       ],
       "fieldConfig": {
@@ -1231,7 +1482,8 @@
           ]
         },
         "colorMode": "value",
-        "graphMode": "none"
+        "graphMode": "none",
+        "textMode": "value"
       },
       "gridPos": {
         "h": 8,

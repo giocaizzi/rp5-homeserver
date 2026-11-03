@@ -1,0 +1,1891 @@
+{
+  "uid": "agents-detail",
+  "title": "Agents Detail",
+  "description": "Cross-harness drill-down for sessions, models, tools, subagents, cost, tokens and errors, with Claude Code-only signals that have no common equivalent.",
+  "tags": [
+    "agents"
+  ],
+  "editable": true,
+  "schemaVersion": 39,
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "refresh": "1m",
+  "templating": {
+    "list": [
+      {
+        "name": "harness",
+        "label": "Harness",
+        "type": "custom",
+        "query": "claude-code,codex,github-copilot,copilot-chat,opencode,pi,antigravity",
+        "includeAll": true,
+        "multi": true,
+        "allValue": "claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|antigravity.*",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "claude-code",
+            "value": "claude-code"
+          },
+          {
+            "selected": false,
+            "text": "codex",
+            "value": "codex"
+          },
+          {
+            "selected": false,
+            "text": "github-copilot",
+            "value": "github-copilot"
+          },
+          {
+            "selected": false,
+            "text": "copilot-chat",
+            "value": "copilot-chat"
+          },
+          {
+            "selected": false,
+            "text": "opencode",
+            "value": "opencode"
+          },
+          {
+            "selected": false,
+            "text": "pi",
+            "value": "pi"
+          },
+          {
+            "selected": false,
+            "text": "antigravity",
+            "value": "antigravity"
+          }
+        ],
+        "hide": 0
+      },
+      {
+        "name": "host",
+        "label": "Host",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "definition": "label_values({service_name=~\"claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|guard|antigravity.*\"}, host_name)",
+        "query": {
+          "label": "host_name",
+          "stream": "{service_name=~\"claude-code|codex.*|github-copilot|copilot-chat|opencode|pi|guard|antigravity.*\"}",
+          "type": 1,
+          "refId": "LokiVariableQueryEditor-VariableQuery-Host"
+        },
+        "regex": "/^(.*?)(?:\\.local)?$/",
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "refresh": 2,
+        "sort": 1,
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "session_id",
+        "label": "Session",
+        "type": "textbox",
+        "query": ".*",
+        "current": {
+          "text": ".*",
+          "value": ".*"
+        },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "name": "environment",
+        "label": "Environment / run mode",
+        "type": "custom",
+        "query": "production,kind",
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "production",
+            "value": "production"
+          },
+          {
+            "selected": false,
+            "text": "kind",
+            "value": "kind"
+          }
+        ],
+        "hide": 0
+      },
+      {
+        "name": "model",
+        "label": "Model regex",
+        "type": "textbox",
+        "query": ".*",
+        "current": {
+          "text": ".*",
+          "value": ".*"
+        },
+        "options": [],
+        "hide": 0
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Agents Overview",
+      "type": "link",
+      "url": "/d/agents-overview"
+    },
+    {
+      "title": "Agents Ops",
+      "type": "link",
+      "url": "/d/agents-ops"
+    }
+  ],
+  "panels": [
+    {
+      "id": 100,
+      "type": "row",
+      "title": "Overview",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "panels": []
+    },
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Sessions",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(sum by (service_name, session_id) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | session_id!=\"\" | model=~\"$model\" [$__range])))",
+          "legendFormat": "Sessions"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 1
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Requests",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" [$__range]))",
+          "legendFormat": "Requests"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 5,
+        "y": 1
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Cost",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "legendFormat": "Cost"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 10,
+        "y": 1
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Errors",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | model=~\"$model\" | (agent_event=~\".*error.*\" or event_name=~\".*error.*\" or success=\"false\") [$__range]))",
+          "legendFormat": "Errors"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 15,
+        "y": 1
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Cache read share",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__range])) / (sum(sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__range])) + sum(sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__range])) + sum(sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_creation_tokens | __error__=\"\" [$__range])))",
+          "legendFormat": "Cache read share"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 19,
+        "y": 1
+      }
+    },
+    {
+      "id": 101,
+      "type": "row",
+      "title": "Models, tokens and cost",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "panels": []
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Cost by model",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service_name, model) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cost_usd | __error__=\"\" [$__interval]))",
+          "legendFormat": "{{service_name}} - {{model}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Tokens by model",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service_name, model) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap input_tokens | __error__=\"\" [$__interval]))",
+          "legendFormat": "{{service_name}} - {{model}} input"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (service_name, model) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap output_tokens | __error__=\"\" [$__interval]))",
+          "legendFormat": "{{service_name}} - {{model}} output"
+        },
+        {
+          "refId": "C",
+          "expr": "sum by (service_name, model) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | unwrap cache_read_tokens | __error__=\"\" [$__interval]))",
+          "legendFormat": "{{service_name}} - {{model}} cache"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Requests by model",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service_name, model) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" [$__interval]))",
+          "legendFormat": "{{service_name}} - {{model}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      }
+    },
+    {
+      "id": 102,
+      "type": "row",
+      "title": "Tools and failures",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 23
+      },
+      "panels": []
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Tool calls",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"tool_result\" or event_name=\"tool_result\" or event_name=\"codex.tool_result\" or tool_name!=\"\") | label_format tool_name=`{{ if .tool_name }}{{ .tool_name }}{{ else }}unknown-tool{{ end }}` [$__range]))",
+          "legendFormat": "Value"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Calls",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "merge"
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "service_name": "Harness",
+              "tool_name": "Tool",
+              "Value": "Calls",
+              "Value #A": "Calls"
+            },
+            "indexByName": {
+              "Harness": 0,
+              "Tool": 1,
+              "Calls": 2
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      }
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "Tool failures",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service_name, tool_name, error_type) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"tool_result\" or event_name=\"tool_result\" or event_name=\"codex.tool_result\") | success=\"false\" | label_format tool_name=`{{ if .tool_name }}{{ .tool_name }}{{ else }}unknown-tool{{ end }}` | label_format error_type=`{{ if .error_type }}{{ .error_type }}{{ else }}unspecified{{ end }}` [$__range]))",
+          "legendFormat": "Value"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Failures",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "merge"
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "service_name": "Harness",
+              "tool_name": "Tool",
+              "error_type": "Error type",
+              "Value": "Failures",
+              "Value #A": "Failures"
+            },
+            "indexByName": {
+              "Harness": 0,
+              "Tool": 1,
+              "Error type": 2,
+              "Failures": 3
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Tool failures over time",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service_name, tool_name) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"tool_result\" or event_name=\"tool_result\" or event_name=\"codex.tool_result\") | success=\"false\" | label_format tool_name=`{{ if .tool_name }}{{ .tool_name }}{{ else }}unknown-tool{{ end }}` [$__interval]))",
+          "legendFormat": "{{service_name}} - {{tool_name}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 34
+      }
+    },
+    {
+      "id": 103,
+      "type": "row",
+      "title": "Subagents",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 42
+      },
+      "panels": []
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "Subagent cost by role",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service_name, agent_name, model) (sum_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"api_request\" or event_name=\"api_request\") and model=~\"$model\" | query_source=~\"agent:.*\" | label_format agent_name=`{{ if .agent_name }}{{ .agent_name }}{{ else }}named-spawn{{ end }}` | unwrap cost_usd | __error__=\"\" [$__range]))",
+          "legendFormat": "Value"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Cost",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "merge"
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "service_name": "Harness",
+              "agent_name": "Agent",
+              "model": "Model",
+              "Value": "Cost",
+              "Value #A": "Cost"
+            },
+            "indexByName": {
+              "Harness": 0,
+              "Agent": 1,
+              "Model": 2,
+              "Cost": 3
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 43
+      }
+    },
+    {
+      "id": 13,
+      "type": "table",
+      "title": "Subagent runs by role",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service_name, agent_name, agent_type, model) (count_over_time({service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | (agent_event=\"subagent_completed\" or event_name=\"subagent_completed\" or agent_name!=\"\" or agent_type!=\"\") and model=~\"$model\" | label_format agent_name=`{{ if .agent_name }}{{ .agent_name }}{{ else }}unnamed{{ end }}` | label_format agent_type=`{{ if .agent_type }}{{ .agent_type }}{{ else }}unspecified{{ end }}` [$__range]))",
+          "legendFormat": "Value"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Runs",
+            "desc": true
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "merge"
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "service_name": "Harness",
+              "agent_name": "Agent",
+              "agent_type": "Agent type",
+              "model": "Model",
+              "Value": "Runs",
+              "Value #A": "Runs"
+            },
+            "indexByName": {
+              "Harness": 0,
+              "Agent": 1,
+              "Agent type": 2,
+              "Model": 3,
+              "Runs": 4
+            }
+          }
+        }
+      ],
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 43
+      }
+    },
+    {
+      "id": 104,
+      "type": "row",
+      "title": "Events and errors",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 53
+      },
+      "panels": []
+    },
+    {
+      "id": 16,
+      "type": "logs",
+      "title": "Agent events",
+      "description": "Trace IDs are rendered in the log line so Loki's configured Tempo derived field links to the trace.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | model=~\"$model\" | line_format \"[{{.service_name}}] session={{.session_id}} event={{if .event_name}}{{.event_name}}{{else}}{{.agent_event}}{{end}} model={{.model}} tool={{.tool_name}} agent={{.agent_name}} trace_id={{.trace_id}}\""
+        }
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 0,
+        "y": 54
+      }
+    },
+    {
+      "id": 17,
+      "type": "logs",
+      "title": "Errors and failed tools",
+      "description": "Trace IDs are rendered in the log line so Loki's configured Tempo derived field links to the trace.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{service_name=~\"$harness\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | model=~\"$model\" | (agent_event=~\".*error.*\" or event_name=~\".*error.*\" or success=\"false\") | line_format \"[{{.service_name}}] session={{.session_id}} event={{if .event_name}}{{.event_name}}{{else}}{{.agent_event}}{{end}} model={{.model}} tool={{.tool_name}} error={{if .error}}{{.error}}{{else}}{{.error_type}}{{end}} trace_id={{.trace_id}}\""
+        }
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 12,
+        "y": 54
+      }
+    },
+    {
+      "type": "row",
+      "title": "Claude Code only \u2014 Coding and context",
+      "id": 105,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "panels": []
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 500
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 67
+      },
+      "id": 18,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum( (max_over_time(claude_code_lines_of_code_count_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_lines_of_code_count_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\"}[$__range])) )",
+          "interval": "",
+          "legendFormat": "Lines Changed",
+          "refId": "A"
+        }
+      ],
+      "title": "Claude Code \u00b7 Lines of Code (range)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 67
+      },
+      "id": 19,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "100 * sum((max_over_time(claude_code_code_edit_tool_decision_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\", decision=\"accept\"}[$__range]) - min_over_time(claude_code_code_edit_tool_decision_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\", decision=\"accept\"}[$__range]))) / clamp_min(sum((max_over_time(claude_code_code_edit_tool_decision_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_code_edit_tool_decision_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\"}[$__range]))), 1)",
+          "interval": "",
+          "legendFormat": "Accept %",
+          "refId": "A"
+        }
+      ],
+      "title": "Claude Code \u00b7 Edit/Write Accept Rate",
+      "type": "stat",
+      "description": "Accepted edit/write decisions over total (windowed delta). Denominator clamped to >=1 to avoid divide-by-zero."
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Claude Code \u00b7 Compactions",
+      "description": "Claude-only context compaction signal with no common cross-harness equivalent.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (trigger) (count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | event_name=\"compaction\" [$__interval]))",
+          "legendFormat": "{{trigger}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "sum"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 67
+      }
+    },
+    {
+      "id": 15,
+      "type": "stat",
+      "title": "Claude Code \u00b7 Average Tokens Before Compaction",
+      "description": "Claude-only context compaction signal with no common cross-harness equivalent.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(sum_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | event_name=\"compaction\" | unwrap pre_tokens | __error__=\"\" [$__range])) / sum(count_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\", deployment_environment_name=~\"$environment|\"} | session_id=~\"$session_id\" | event_name=\"compaction\" | pre_tokens!=\"\" [$__range]))",
+          "legendFormat": "Value"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 67
+      }
+    },
+    {
+      "type": "row",
+      "title": "Claude Code only \u2014 Cost and latency",
+      "id": 106,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 71
+      },
+      "panels": []
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "unit": "currencyUSD",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 72
+      },
+      "id": 20,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "showUnfilled": true
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (mcp_server_name) ((max_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\", mcp_server_name!=\"\"}[$__range]) - min_over_time(claude_code_cost_usage_USD_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\", mcp_server_name!=\"\"}[$__range])))",
+          "interval": "",
+          "legendFormat": "{{mcp_server_name}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Claude Code \u00b7 Cost by MCP Server",
+      "type": "bargauge",
+      "description": "Cost per MCP server. Empty mcp_server_name = no MCP attribution."
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Milliseconds",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 72
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.50, {service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"api_request\" | session_id=~\"$session_id\" | model=~\"$model\" | unwrap duration_ms | __error__=\"\" [$__interval]) by (model)",
+          "interval": "",
+          "legendFormat": "p50 {{model}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.95, {service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"api_request\" | session_id=~\"$session_id\" | model=~\"$model\" | unwrap duration_ms | __error__=\"\" [$__interval]) by (model)",
+          "interval": "",
+          "legendFormat": "p95 {{model}}",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.99, {service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"api_request\" | session_id=~\"$session_id\" | model=~\"$model\" | unwrap duration_ms | __error__=\"\" [$__interval]) by (model)",
+          "interval": "",
+          "legendFormat": "p99 {{model}}",
+          "refId": "C"
+        }
+      ],
+      "title": "Claude Code \u00b7 API Latency p50/p95/p99",
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
+    },
+    {
+      "type": "row",
+      "title": "Claude Code only \u2014 Productivity",
+      "id": 107,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 80
+      },
+      "panels": []
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 81
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (type) (max_over_time(claude_code_lines_of_code_count_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\"}[$__rate_interval]) - min_over_time(claude_code_lines_of_code_count_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\"}[$__rate_interval]))",
+          "interval": "",
+          "legendFormat": "{{type}} lines/interval",
+          "refId": "A"
+        }
+      ],
+      "title": "Claude Code \u00b7 Code Changes Rate",
+      "type": "timeseries",
+      "interval": "2m"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 81
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [
+            "sum"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(max_over_time(claude_code_commit_count_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\"}[$__rate_interval]) - min_over_time(claude_code_commit_count_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\"}[$__rate_interval])) or vector(0)",
+          "interval": "",
+          "legendFormat": "Commits",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(max_over_time(claude_code_pull_request_count_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\"}[$__rate_interval]) - min_over_time(claude_code_pull_request_count_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\"}[$__rate_interval])) or vector(0)",
+          "interval": "",
+          "legendFormat": "Pull Requests",
+          "refId": "B"
+        }
+      ],
+      "title": "Claude Code \u00b7 Development Activity (commits/PRs)",
+      "type": "timeseries",
+      "interval": "2m"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Seconds",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 89
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (type) ((max_over_time(claude_code_active_time_seconds_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\"}[$__range]) - min_over_time(claude_code_active_time_seconds_total{job=~\".*/claude-code\", host_name=~\"${host}(\\\\.local)?|\", session_id=~\"$session_id\"}[$__range])))",
+          "interval": "",
+          "legendFormat": "{{type}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Claude Code \u00b7 Active Time (CLI vs user)",
+      "type": "timeseries",
+      "description": "Active time per type (cli vs user) over range (windowed delta).",
+      "interval": "2m"
+    },
+    {
+      "type": "row",
+      "title": "Claude Code only \u2014 Subagents",
+      "id": 108,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 97
+      },
+      "panels": []
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "Milliseconds",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 98
+      },
+      "id": 25,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "avg_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"subagent_completed\" | session_id=~\"$session_id\" | unwrap duration_ms | __error__=\"\" [$__interval]) by (agent_type)",
+          "interval": "",
+          "legendFormat": "{{agent_type}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Claude Code \u00b7 Subagent Average Duration",
+      "type": "timeseries",
+      "maxDataPoints": 500,
+      "interval": "1m"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 98
+      },
+      "id": 26,
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Tokens",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum by (agent_type) (sum_over_time({service_name=\"claude-code\", host_name=~\"${host}(\\\\.local)?|\"} | event_name=\"subagent_completed\" | session_id=~\"$session_id\" | unwrap total_tokens | __error__=\"\" [$__range]))",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "Value",
+          "refId": "A"
+        }
+      ],
+      "title": "Claude Code \u00b7 Subagent Token Usage",
+      "type": "table",
+      "maxDataPoints": 500,
+      "description": "Total tokens per subagent type over range.",
+      "transformations": [
+        {
+          "id": "labelsToFields",
+          "options": {
+            "mode": "columns"
+          }
+        },
+        {
+          "id": "merge"
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "agent_type": "Agent type",
+              "Value": "Tokens",
+              "Value #A": "Tokens"
+            },
+            "indexByName": {
+              "Agent type": 0,
+              "Tokens": 1
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "version": 1
+}
