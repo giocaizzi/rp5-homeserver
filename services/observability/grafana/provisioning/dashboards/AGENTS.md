@@ -15,32 +15,30 @@ rules (Swarm, Portainer, secrets) see the repo-root `AGENTS.md`.
   ≈ $344 vs true ≈ $95).
 - Compute a total as a windowed delta summed across series:
   ```
-  sum( (max_over_time(M[$__range]) - min_over_time(M[$__range])) * <host-join> )
+  sum(max_over_time(M[$__range]) - min_over_time(M[$__range]))
   ```
 - Per-hour average = total divided by `($__range_s / 3600)`. `$__range_s` is the
   range in integer seconds (Grafana Prometheus macro).
 
-## The `target_info` host-filter join
+## Host and session filtering
 
-- Resource attributes (`host.name`, `service.version`, `os.version`, …) are **not**
-  labels on each metric — Alloy's Prometheus exporter puts them only in `target_info`.
-  Filter by host via a join.
-- **ALWAYS** write the join as:
+- Alloy promotes `host.name` onto metric datapoints as the `host_name` label. Filter
+  Claude Code Prometheus metrics directly:
   ```
-  * on (job) group_left() max by (job) (target_info{host_name=~"$host_name"})
+  M{job=~".*/claude-code", host_name=~"${host}(\\.local)?|", session_id=~"$session_id"}
   ```
-- **NEVER** write `* on (job, instance) group_left() target_info{...}`. It returns
-  **HTTP 422 as a RANGE query**: multiple Claude Code versions emit duplicate
-  `target_info` series per `(job,instance)` (identity includes
-  service_version/os_version). `max by (job)` collapses that churn. Instant queries
-  mask the bug; range queries — i.e. real panels — fail.
-- Alloy now also promotes `host.name` onto every metric datapoint going forward
-  (uniform `host_name` label), but historical series predating that change lack it
-  on some metrics. Keep using the join for robustness.
+- Filter metric labels directly; dashboard queries must remain valid as range queries
+  without relying on target metadata series.
+- `session_id` is structured metadata in Loki, not a stream label. Keep the Session
+  selector as a textbox (default `.*`) and filter it in the pipeline.
+- `model` is structured metadata in Loki, not a stream label. Keep the Model selector
+  as a regex textbox (default `.*`), not `label_values` or a static model inventory.
 
 ## Loki panels
 
-- Filter `service_name="claude-code"` and **never** join. Keep them simple.
+- Claude Code-only queries use
+  `{service_name="claude-code", host_name=~"${host}(\\.local)?|"} | session_id=~"$session_id"`.
+  Keep them simple and never join.
 
 ---
 
@@ -75,14 +73,15 @@ rules (Swarm, Portainer, secrets) see the repo-root `AGENTS.md`.
 
 ## Agents folder (`agents/`)
 
-- One folder for every agent dashboard. A signal lives on exactly one dashboard: cost, tokens,
-  sessions and errors for every harness on Agent Overview; guard, skills, tool approvals and
-  subagents on Agent Ops; signals only Claude Code emits on Claude Code (detail). Add a panel
-  to the detail dashboard only when no harness-agnostic equivalent exists.
+- One folder contains the unified agent dashboards. A signal lives on exactly one dashboard:
+  cost, tokens, sessions and errors for every harness on Agent Overview; guard, skills and
+  tool approvals on Agent Ops; cross-harness drill-down on Agents Detail. Claude Code-only
+  panels belong on Agents Detail only when the signal has no harness-agnostic equivalent.
 - Overview and Ops are harness-agnostic, Loki only. A model call is `agent_event="api_request" or event_name="api_request"`
   (the second covers Claude Code records from before the Alloy `agent_usage` transform).
 - Every `unwrap` is followed by `| __error__=""`: harnesses leave fields such as `cost_usd`
   or `cache_creation_tokens` out, and the conversion error would otherwise show as a series.
-- Schema and price table: `docs/monitoring.md`, Agent cost. Dashboard uids: `agents-overview`, `agents-ops`,
-  `claude-code-obs` (`agents/claude-code.json`, Prometheus + Loki; the Data model and join rules above apply).
+- Schema and price table: `docs/monitoring.md`, Agent cost. Dashboard uids: `agents-overview`,
+  `agents-ops`, `agents-detail` (`agents/detail.json`; Loki plus Claude Code-only Prometheus
+  panels, following the data-model and selector rules above).
 - Verify each query against live Loki (instant and range) before shipping.
