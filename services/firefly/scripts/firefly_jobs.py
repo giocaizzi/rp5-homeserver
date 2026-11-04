@@ -172,7 +172,8 @@ def balance_check(alerts):
             last_bank = max(t["date"][:10] for t in txs)
             mine_rows = splits(fid, (today - timedelta(days=30)).isoformat(), today.isoformat())
             last_mine = max((s["date"][:10] for s in mine_rows), default="none")
-            if last_mine == "none" or date.fromisoformat(last_bank) > date.fromisoformat(last_mine) + timedelta(days=1):
+            recent = date.fromisoformat(last_bank) >= today - timedelta(days=30)
+            if recent and (last_mine == "none" or date.fromisoformat(last_bank) > date.fromisoformat(last_mine) + timedelta(days=1)):
                 alerts.append(f"{name}: provider has transactions up to {last_bank}, Firefly up to {last_mine} (import behind)")
 
 
