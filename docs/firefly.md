@@ -34,7 +34,7 @@ Caveat: a top-up booked from the receiving account carries that account's date; 
 | Card residuals | itemized spending exceeds a statement |
 | Balance | provider balance ≠ Firefly current balance for any mapped account |
 | Connection | provider account not `ACTIVE` (bank consent expired) or no longer listed |
-| Import lag | provider has transactions more than a day newer than Firefly's latest |
+| Import lag | provider has transactions within the last 30 days that are more than a day newer than Firefly's latest (a dormant account does not alert) |
 | API token | `firefly_access_token` expires within 30 days |
 | Review (Mondays) | transactions carry a tag listed in `FIREFLY_REVIEW_TAGS` |
 
