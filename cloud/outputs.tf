@@ -289,3 +289,10 @@ output "claude_lamma_mcp_client_secret" {
   value       = cloudflare_zero_trust_access_service_token.claude_lamma_mcp.client_secret
   sensitive   = true
 }
+
+# DNSSEC DS record to add at the registrar (also in the dashboard).
+output "dnssec_ds" {
+  description = "DNSSEC DS record for the registrar"
+  value       = cloudflare_zone_dnssec.this.ds
+  sensitive   = true
+}

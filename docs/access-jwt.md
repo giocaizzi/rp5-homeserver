@@ -31,7 +31,7 @@ Access issues no JWT for a request let through by a **bypass** policy, so these 
 | `firefly` | users | `/api/v1/mcp` (service token) |
 | `grafana` | users | `/mcp` (service token) |
 | `greenhouse` | users | `/mcp` (service token or users) |
-| `crm` | users | `/rest` (service token or users); `/mcp`, `/oauth`, `/.well-known/oauth-protected-resource`, `/.well-known/oauth-authorization-server` (claude.ai egress IPs) |
+| `crm` | users | `/rest` (service token or users); `/mcp`, `/oauth`, `/.well-known/oauth-protected-resource`, `/.well-known/oauth-authorization-server` (Anthropic egress ranges `160.79.104.0/21` and `153.61.208.0/20`, [published list](https://platform.claude.com/docs/en/api/ip-addresses)) |
 | `calibre` | users | `/opds`, `/kosync`, `/kobo` (everyone) |
 | `mcp-stdio` | owner | `/fli/mcp`, `/garmin/mcp` (service token); one entry per path-scoped server app |
 | `otel`, `ntfy`, `netdata-mcp`, `langfuse-mcp`, `id` | no host-wide app | not checked (not in the flag map) |

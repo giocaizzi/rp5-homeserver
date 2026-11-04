@@ -46,12 +46,15 @@ vim terraform.tfvars
 - `cloudflare_api_token` - Create at [API Tokens](https://dash.cloudflare.com/profile/api-tokens)
 
    > **Required Permissions:** 
-   > - `Zone:Zone Settings:Edit`
+   > - `Zone:Zone Settings:Edit` *(zone settings, HSTS)*
    > - `Zone:Zone:Read`
-   > - `Zone:DNS:Edit` 
+   > - `Zone:DNS:Edit` *(records, CAA, DNSSEC)*
    > - `Account:Cloudflare Tunnel:Edit`
    > - `Account:Access: Apps and Policies:Edit`
-   > - `Account:Access: Service Tokens:Edit` *(required for GitOps webhooks)*
+   > - `Account:Access: Service Tokens:Edit`
+   > - `Account:Access: Organizations, Identity Providers, and Groups:Edit`
+   >
+   > Split, expiry and rotation: [docs/cloud.md](../docs/cloud.md#token-scopes-and-rotation).
 
 - `cloudflare_account_id` - From Cloudflare dashboard
 - `zone_name` - Your domain (e.g., example.com)

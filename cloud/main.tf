@@ -513,10 +513,11 @@ resource "cloudflare_zero_trust_access_policy" "miniflux_users" {
 
 # Creates an Access application to control who can connect to the public hostname.
 resource "cloudflare_zero_trust_access_application" "n8n_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "n8n.${var.zone_name}"
-  domain     = "n8n.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "n8n.${var.zone_name}"
+  domain           = "n8n.${var.zone_name}"
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.n8n_users.id
@@ -530,9 +531,9 @@ resource "cloudflare_zero_trust_access_application" "n8n_policy" {
 resource "cloudflare_zero_trust_access_application" "portainer_policy" {
   account_id       = var.cloudflare_account_id
   type             = "self_hosted"
+  session_duration = "8h"
   name             = "portainer.${var.zone_name}"
   domain           = "portainer.${var.zone_name}"
-  session_duration = "24h"
 
   policies = [
     {
@@ -543,10 +544,11 @@ resource "cloudflare_zero_trust_access_application" "portainer_policy" {
 }
 
 resource "cloudflare_zero_trust_access_application" "backrest_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "backrest.${var.zone_name}"
-  domain     = "backrest.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "8h"
+  name             = "backrest.${var.zone_name}"
+  domain           = "backrest.${var.zone_name}"
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.backrest_users.id
@@ -556,10 +558,11 @@ resource "cloudflare_zero_trust_access_application" "backrest_policy" {
 }
 
 resource "cloudflare_zero_trust_access_application" "firefly_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "firefly.${var.zone_name}"
-  domain     = "firefly.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "firefly.${var.zone_name}"
+  domain           = "firefly.${var.zone_name}"
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.firefly_users.id
@@ -569,10 +572,11 @@ resource "cloudflare_zero_trust_access_application" "firefly_policy" {
 }
 
 resource "cloudflare_zero_trust_access_application" "homepage_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "homepage.${var.zone_name}"
-  domain     = "homepage.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "homepage.${var.zone_name}"
+  domain           = "homepage.${var.zone_name}"
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.homepage_users.id
@@ -582,10 +586,11 @@ resource "cloudflare_zero_trust_access_application" "homepage_policy" {
 }
 
 resource "cloudflare_zero_trust_access_application" "openclaw_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "openclaw.${var.zone_name}"
-  domain     = "openclaw.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "8h"
+  name             = "openclaw.${var.zone_name}"
+  domain           = "openclaw.${var.zone_name}"
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.openclaw_users.id
@@ -595,10 +600,11 @@ resource "cloudflare_zero_trust_access_application" "openclaw_policy" {
 }
 
 resource "cloudflare_zero_trust_access_application" "grafana_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "grafana.${var.zone_name}"
-  domain     = "grafana.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "grafana.${var.zone_name}"
+  domain           = "grafana.${var.zone_name}"
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.grafana_users.id
@@ -612,10 +618,11 @@ resource "cloudflare_zero_trust_access_application" "grafana_policy" {
 # fail-closed since v2.0.0), so public /mcp is double-gated. LAN MCP keeps
 # using greenhouse.home (plain HTTP, no CF Access).
 resource "cloudflare_zero_trust_access_application" "greenhouse_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "greenhouse.${var.zone_name}"
-  domain     = "greenhouse.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "greenhouse.${var.zone_name}"
+  domain           = "greenhouse.${var.zone_name}"
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.greenhouse_users.id
@@ -627,10 +634,11 @@ resource "cloudflare_zero_trust_access_application" "greenhouse_policy" {
 # Code dev environment (CloudCLI). Whole-host email gate — this hostname exposes
 # a shell-equivalent UI, so it must never be reachable without Access auth.
 resource "cloudflare_zero_trust_access_application" "code_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "code.${var.zone_name}"
-  domain     = "code.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "8h"
+  name             = "code.${var.zone_name}"
+  domain           = "code.${var.zone_name}"
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.code_users.id
@@ -642,10 +650,11 @@ resource "cloudflare_zero_trust_access_application" "code_policy" {
 # Twenty CRM UI. Whole-host email gate; machine paths (/rest, /mcp)
 # get their own path-scoped apps below.
 resource "cloudflare_zero_trust_access_application" "crm_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "crm.${var.zone_name}"
-  domain     = "crm.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "crm.${var.zone_name}"
+  domain           = "crm.${var.zone_name}"
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.crm_users.id
@@ -657,10 +666,11 @@ resource "cloudflare_zero_trust_access_application" "crm_policy" {
 # Calibre-Web-Automated UI. Whole-host email gate; reader-app endpoints get a
 # path-scoped bypass app below.
 resource "cloudflare_zero_trust_access_application" "calibre_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "calibre.${var.zone_name}"
-  domain     = "calibre.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "calibre.${var.zone_name}"
+  domain           = "calibre.${var.zone_name}"
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.calibre_users.id
@@ -684,9 +694,10 @@ resource "cloudflare_zero_trust_access_policy" "calibre_devices_bypass" {
 }
 
 resource "cloudflare_zero_trust_access_application" "calibre_devices_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "calibre-devices.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "calibre-devices.${var.zone_name}"
 
   destinations = [
     { type = "public", uri = "calibre.${var.zone_name}/opds" },
@@ -704,10 +715,11 @@ resource "cloudflare_zero_trust_access_application" "calibre_devices_policy" {
 
 # Miniflux. Whole-host email gate, no bypassed paths (APIs included).
 resource "cloudflare_zero_trust_access_application" "miniflux_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "miniflux.${var.zone_name}"
-  domain     = "miniflux.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "miniflux.${var.zone_name}"
+  domain           = "miniflux.${var.zone_name}"
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.miniflux_users.id
@@ -771,9 +783,10 @@ resource "cloudflare_zero_trust_access_policy" "claude_n8n_mcp_bypass" {
 # cloudflare_zero_trust_access_application.n8n_policy + n8n_users).
 # CF Access matches the most-specific path first.
 resource "cloudflare_zero_trust_access_application" "n8n_mcp_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "n8n-mcp.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "n8n-mcp.${var.zone_name}"
 
   destinations = [
     {
@@ -820,9 +833,10 @@ resource "cloudflare_zero_trust_access_policy" "otel_ingest_bypass" {
 # no Access app, so nginx answers them with 404 (otel.conf) instead of proxying
 # to Alloy; scoping the bypass narrows the blast radius if a token leaks.
 resource "cloudflare_zero_trust_access_application" "otel_ingest_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "otel-ingest.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "otel-ingest.${var.zone_name}"
 
   destinations = [
     {
@@ -865,9 +879,10 @@ resource "cloudflare_zero_trust_access_policy" "claude_firefly_mcp_bypass" {
 # gated by the existing firefly Access app). CF Access matches the most-specific
 # path first, so this takes precedence on /api/v1/mcp* requests.
 resource "cloudflare_zero_trust_access_application" "firefly_mcp_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "firefly-mcp.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "firefly-mcp.${var.zone_name}"
 
   destinations = [
     {
@@ -912,9 +927,10 @@ resource "cloudflare_zero_trust_access_policy" "claude_greenhouse_mcp_bypass" {
 # for machine clients, email fallthrough (precedence 2) so browser /mcp still works.
 # More specific than greenhouse_policy, so CF Access evaluates this first for /mcp.
 resource "cloudflare_zero_trust_access_application" "greenhouse_mcp_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "greenhouse-mcp.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "greenhouse-mcp.${var.zone_name}"
 
   destinations = [
     {
@@ -947,19 +963,23 @@ resource "cloudflare_zero_trust_access_policy" "crm_mcp_bypass" {
   name       = "crm-mcp-bypass"
   decision   = "bypass"
 
-  # Anthropic's published outbound range (MCP tool calls from claude.ai):
+  # Anthropic's published outbound ranges (MCP tool calls from claude.ai):
   # https://platform.claude.com/docs/en/api/ip-addresses
   include = [
     {
       ip = { ip = "160.79.104.0/21" }
+    },
+    {
+      ip = { ip = "153.61.208.0/20" }
     }
   ]
 }
 
 resource "cloudflare_zero_trust_access_application" "crm_mcp_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "crm-mcp.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "crm-mcp.${var.zone_name}"
 
   destinations = [
     { type = "public", uri = "crm.${var.zone_name}/mcp" },
@@ -1002,9 +1022,10 @@ resource "cloudflare_zero_trust_access_policy" "external_crm_api_bypass" {
 }
 
 resource "cloudflare_zero_trust_access_application" "crm_api_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "crm-api.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "crm-api.${var.zone_name}"
 
   destinations = [
     {
@@ -1120,9 +1141,10 @@ resource "cloudflare_zero_trust_access_policy" "claude_grafana_mcp_bypass" {
 }
 
 resource "cloudflare_zero_trust_access_application" "grafana_mcp_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "grafana-mcp.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "grafana-mcp.${var.zone_name}"
 
   destinations = [
     {
@@ -1163,9 +1185,10 @@ resource "cloudflare_zero_trust_access_policy" "claude_netdata_mcp_bypass" {
 }
 
 resource "cloudflare_zero_trust_access_application" "netdata_mcp_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "netdata-mcp.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "netdata-mcp.${var.zone_name}"
 
   destinations = [
     {
@@ -1207,9 +1230,10 @@ resource "cloudflare_zero_trust_access_policy" "claude_portainer_mcp_bypass" {
 }
 
 resource "cloudflare_zero_trust_access_application" "portainer_mcp_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "portainer-mcp.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "portainer-mcp.${var.zone_name}"
 
   destinations = [
     {
@@ -1250,9 +1274,10 @@ resource "cloudflare_zero_trust_access_policy" "claude_langfuse_mcp_bypass" {
 }
 
 resource "cloudflare_zero_trust_access_application" "langfuse_mcp_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "langfuse-mcp.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "langfuse-mcp.${var.zone_name}"
 
   destinations = [
     {
@@ -1288,10 +1313,11 @@ resource "cloudflare_zero_trust_access_policy" "mcp_stdio_users" {
 }
 
 resource "cloudflare_zero_trust_access_application" "mcp_stdio_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "mcp-stdio.${var.zone_name}"
-  domain     = "mcp-stdio.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "mcp-stdio.${var.zone_name}"
+  domain           = "mcp-stdio.${var.zone_name}"
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.mcp_stdio_users.id
@@ -1320,9 +1346,10 @@ resource "cloudflare_zero_trust_access_policy" "claude_fli_mcp_bypass" {
 }
 
 resource "cloudflare_zero_trust_access_application" "fli_mcp_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "fli-mcp.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "fli-mcp.${var.zone_name}"
 
   destinations = [
     {
@@ -1363,9 +1390,10 @@ resource "cloudflare_zero_trust_access_policy" "claude_garmin_mcp_bypass" {
 }
 
 resource "cloudflare_zero_trust_access_application" "garmin_mcp_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "garmin-mcp.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "garmin-mcp.${var.zone_name}"
 
   destinations = [
     {
@@ -1406,9 +1434,10 @@ resource "cloudflare_zero_trust_access_policy" "claude_surfline_mcp_bypass" {
 }
 
 resource "cloudflare_zero_trust_access_application" "surfline_mcp_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "surfline-mcp.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "surfline-mcp.${var.zone_name}"
 
   destinations = [
     {
@@ -1449,9 +1478,10 @@ resource "cloudflare_zero_trust_access_policy" "claude_lamma_mcp_bypass" {
 }
 
 resource "cloudflare_zero_trust_access_application" "lamma_mcp_policy" {
-  account_id = var.cloudflare_account_id
-  type       = "self_hosted"
-  name       = "lamma-mcp.${var.zone_name}"
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "lamma-mcp.${var.zone_name}"
 
   destinations = [
     {
