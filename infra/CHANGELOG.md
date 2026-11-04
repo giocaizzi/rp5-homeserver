@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.25.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.24.3...v1.25.0) (2026-11-04)
+
+
+### Features
+
+* **infra:** route id.&lt;domain&gt; to Pocket ID and back up its data ([#523](https://github.com/giocaizzi/rp5-homeserver/issues/523)) ([b98df99](https://github.com/giocaizzi/rp5-homeserver/commit/b98df995ba9e99496bc9470d597c4d0390637847))
+
 ## [1.24.3](https://github.com/giocaizzi/rp5-homeserver/compare/v1.24.2...v1.24.3) (2026-10-23)
 
 
