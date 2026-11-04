@@ -367,8 +367,8 @@ services:
       - '-loglevel=info'
       - '-proxysocketendpoint=/docker-proxy/docker.sock'
       - '-allowHEAD=/_ping'
-      - '-allowGET=/(_ping|v1\.\d+/(containers/json|containers/(firefly_db|crm_db|n8n_db|miniflux_db|greenhouse_app)\.1\.\w+/json|services/(firefly_db|crm_db|n8n_db|miniflux_db|greenhouse_app)|exec/\w+/json))'
-      - '-allowPOST=/v1\.\d+/(containers/(firefly_db|crm_db|n8n_db|miniflux_db|greenhouse_app)\.1\.\w+/exec|exec/\w+/start|(containers|images)/prune)'
+      - '-allowGET=/(_ping|v1\.\d+/(containers/json|containers/(firefly_db|crm_db|n8n_db|miniflux_db|greenhouse_app|pocket-id_app)\.1\.\w+/json|services/(firefly_db|crm_db|n8n_db|miniflux_db|greenhouse_app|pocket-id_app)|exec/\w+/json))'
+      - '-allowPOST=/v1\.\d+/(containers/(firefly_db|crm_db|n8n_db|miniflux_db|greenhouse_app|pocket-id_app)\.1\.\w+/exec|exec/\w+/start|(containers|images)/prune)'
       - '-watchdoginterval=3600'
       - '-stoponwatchdog'
     volumes:

@@ -43,5 +43,9 @@ dump miniflux_db miniflux.sql 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' || fa
 # SQLite online backup into memory, streamed out (no temp file in the container)
 dump greenhouse_app greenhouse.db \
   "python3 -c 'import sqlite3, sys; s = sqlite3.connect(\"/app/data/irrigation.db\"); d = sqlite3.connect(\":memory:\"); s.backup(d); sys.stdout.buffer.write(d.serialize())'" || fail=1
+# Pocket ID CLI export (SQLite DB + uploads as a zip on stdout). Upstream marks
+# export experimental, so the raw volume stays in the backup as a second copy.
+# su-exec runs it as the app user, so no root-owned files land in /app/data.
+dump pocket-id_app pocket-id.zip 'su-exec "${PUID:-1000}:${PGID:-1000}" /app/pocket-id export --path -' || fail=1
 
 exit "$fail"
