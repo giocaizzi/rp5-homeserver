@@ -314,6 +314,8 @@ Both sources push to ntfy (`https://ntfy.<domain>`, publisher user `alerts`):
 | Grafana | `grafana` | App/DB/exporter/observability rules (Prometheus), HTTP 5xx + container error logs (Loki) | Priority from `severity` via ntfy template `grafana-alert` (critical 5, warning 4, resolved 3); 4h repeat |
 | Netdata | `netdata` | Host + containers (temp, disk, RAM, OOM, `docker_container_unhealthy`) | Critical + clear only, no repeat |
 
+**Cloudflare notifications** (email, independent of the Pi and the tunnel, so they still arrive when the tunnel is down): tunnel health, Universal SSL and Cloudflare incidents are in Terraform (`cloud/notifications.tf`); DDoS Protection, Expiring Service Token and Leaked Service Token alerts are managed in the dashboard. See [cloud.md](cloud.md#cloudflare-notifications).
+
 Grafana's contact point and root policy are provisioned in `grafana/provisioning/alerting/{contact-points,policies}.yaml`; Netdata's in `infra/netdata/health_alarm_notify.conf`.
 
 **Provisioned Alert Rules:**

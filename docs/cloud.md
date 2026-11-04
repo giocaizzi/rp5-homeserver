@@ -13,6 +13,8 @@ Terraform manages Cloudflare and GCP resources.
 | Cloudflare | Identity provider | Pocket ID login method for Access |
 | Cloudflare | Zone settings (`cloud/zone.tf`) | TLS/HTTPS settings as code, HSTS |
 | Cloudflare | DNSSEC (`cloud/zone.tf`) | Zone signing |
+| Cloudflare | WAF custom rules (`cloud/waf.tf`) | Scanner paths, machine-only host allowlist |
+| Cloudflare | Notification policies (`cloud/notifications.tf`) | Email alerts |
 | GCP | GCS Bucket | Backup storage (Archive class) |
 | GCP | Service Account | Backup credentials with minimal permissions |
 
@@ -70,6 +72,8 @@ The Terraform token is account-owned. Permissions `cloud/` needs today:
 | Account: Access: Apps and Policies Write | Access apps and policies |
 | Account: Access: Service Tokens Write | service tokens |
 | Account: Access: Organizations, Identity Providers, and Groups Write | Pocket ID identity provider |
+| Account: Notifications Write | notification policies |
+| Zone: Zone WAF Write | WAF custom rules |
 
 Steps for the owner (dashboard only; nothing here changes tokens by itself):
 
@@ -108,6 +112,23 @@ Each setting is one `cloudflare_zone_setting`, codifying the live value (`ssl` s
 ### Access session duration
 
 Set per app: 8 h for `code`, `portainer`, `backrest`, `openclaw`; 24 h for every other app. Service-token paths are unaffected. New apps must set `session_duration` explicitly.
+
+### Cloudflare notifications
+
+Terraform manages the email policies for tunnel health (this tunnel), Universal SSL and Cloudflare incidents. The destination is the `alert_email` input (secret `ALERT_EMAIL` on `cloud-plan` and `cloud-production`). Dashboard-managed, not in Terraform (do not recreate them): DDoS Protection, Expiring Service Token Alert, Leaked Service Token Alert. A webhook to ntfy is deliberately not used: it would be dead exactly when the tunnel is down.
+
+### WAF custom rules
+
+`cloud/waf.tf` holds the one `http_request_firewall_custom` ruleset (Free: 5 rules, no regex, no Log action). It runs before Access.
+
+| Rule | Action | Matches |
+|---|---|---|
+| R1 | block | scanner and probe paths on every host (`/wp-`, `/.env`, `/.git`, `xmlrpc.php`, `phpmyadmin`, `/cgi-bin/`) |
+| R2 | block | on `otel`, `netdata-mcp`, `langfuse-mcp`, `mcp-stdio`: any path nginx would 404 (`/v1/`, `/mcp`, `/api/public/mcp`, `*/mcp`), except `/cdn-cgi/` |
+
+R2 mirrors the nginx `location` blocks: a new MCP path added in nginx needs the same change in R2. Rollback: set `enabled = false` on the rule, or revert. Check Security, Events after a change.
+
+Rate limiting is not managed in Terraform: the single Free `http_ratelimit` slot is taken by a dashboard-managed rule ("Leaked credential check"), which Terraform must not touch.
 
 ## Troubleshooting
 

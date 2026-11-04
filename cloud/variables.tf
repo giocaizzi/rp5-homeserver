@@ -188,3 +188,8 @@ variable "backup_retention_days" {
     error_message = "backup_retention_days must be 0 (disabled) or a positive number of days."
   }
 }
+variable "alert_email" {
+  description = "Email address that receives Cloudflare notifications"
+  type        = string
+  sensitive   = true
+}
