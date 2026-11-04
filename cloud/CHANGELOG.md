@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.12.0...cloud-v0.13.0) (2026-11-04)
+
+
+### Features
+
+* **cloud:** add the Pocket ID hostname behind a temporary Access gate ([#524](https://github.com/giocaizzi/rp5-homeserver/issues/524)) ([648cf62](https://github.com/giocaizzi/rp5-homeserver/commit/648cf62c5e3955e1fd0e7eaf1d8df921ec9b64a1))
+
 ## [0.12.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.11.0...cloud-v0.12.0) (2026-10-19)
 
 
