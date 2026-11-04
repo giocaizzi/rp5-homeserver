@@ -52,7 +52,7 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 | Path | Purpose |
 |------|---------|
 | `infra/` | Always-on infra stack (nginx, portainer, cloudflared, netdata, backrest, homepage, shepherd). Single `docker-compose.yml` + `VERSION`; file-based `secrets/` live only on the Pi, written from Secrets Manager by `sync_infra.sh`. |
-| `services/<stack>/` | One folder per service stack (n8n, firefly, adguard, ai, langfuse, ntfy, observability, openclaw, greenhouse, code, crm, calibre, miniflux, mcp-stdio). Each ships a `docker-compose.yml` and a README; secrets come from Secrets Manager (project `rp5-homeserver`), never from files in the stack folder. |
+| `services/<stack>/` | One folder per service stack (n8n, firefly, adguard, ai, langfuse, ntfy, observability, openclaw, greenhouse, code, crm, calibre, miniflux, pocket-id, mcp-stdio). Each ships a `docker-compose.yml` and a README; secrets come from Secrets Manager (project `rp5-homeserver`), never from files in the stack folder. |
 | `scripts/` | Operational scripts — see Common Commands. |
 | `cloud/` | Terraform for Cloudflare Tunnel + GCS backup bucket. |
 | `docs/` | Documentation (source of truth): see "Where to find what". |
@@ -159,6 +159,7 @@ This repo is **public**, and so are its PRs, issues, comments, releases and Acti
 | Setup, networking, backup, cloud, monitoring | [docs/setup.md](docs/setup.md), [docs/networking.md](docs/networking.md), [docs/backup.md](docs/backup.md), [docs/cloud.md](docs/cloud.md), [docs/monitoring.md](docs/monitoring.md) |
 | Documentation and README conventions, file management | [docs/README.md](docs/README.md#documentation-conventions) |
 | OpenClaw runbook | `.claude/skills/openclaw-cli/SKILL.md` (auth gateway, channel tokens, `openclaw.sh pull-config` / `push-config`) |
+| Pocket ID (Access passkey login, bootstrap, recovery) | [docs/pocket-id.md](docs/pocket-id.md) |
 | Stdio MCP servers (add one, Garmin notes) | [docs/mcp-stdio.md](docs/mcp-stdio.md) |
 | Firefly runbook | `.claude/skills/firefly/SKILL.md` (not present in this checkout; referenced as before) |
 
