@@ -6,6 +6,7 @@
 ## How it is set up
 - `cloud/main.tf`: Access application `n8n-webhook` with a bypass policy on `n8n.<domain>/webhook/` only. The UI, `/webhook-test/` and every other path stay behind the email login.
 - `cloud/waf.tf`, rule `R3`: blocks any request to `/webhook/` on the n8n host that does not come from Telegram's networks (`149.154.160.0/20` and `91.108.4.0/22`, from <https://core.telegram.org/bots/webhooks>).
+- `infra/nginx/conf.d/cf-access.conf`, `$cf_access_bypass`: nginx skips the Access JWT check on `/webhook/` for the n8n host, because a bypass policy issues no JWT (without this line nginx answers 401 even though Cloudflare let the request through).
 - The Telegram Trigger node restricts the chat ids it answers to, and its webhook path contains an unguessable id. Nothing depends on that id: recreating the workflow or adding another Telegram Trigger needs no Terraform change.
 
 ## Steps

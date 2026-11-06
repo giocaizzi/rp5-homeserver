@@ -29,7 +29,7 @@ Access issues no JWT for a request let through by a **bypass** policy, so those 
 |---|---|---|---|
 | `portainer` | users | `/mcp` (`portainer-mcp`) | none |
 | `backrest`, `homepage`, `code`, `miniflux` | users | none | none |
-| `n8n` | users | `/mcp-server` (`n8n-mcp`) | none |
+| `n8n` | users | `/mcp-server` (`n8n-mcp`) | `/webhook/` (everyone; the WAF allows only Telegram's networks, [runbook](./RUNBOOKS/n8n-telegram-webhook.md)) |
 | `firefly` | users | `/api/v1/mcp` (`firefly-mcp`) | none |
 | `grafana` | users | `/mcp` (`grafana-mcp`) | none |
 | `greenhouse` | users | `/mcp` (`greenhouse-mcp`) | none |
