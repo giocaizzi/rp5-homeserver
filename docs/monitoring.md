@@ -355,6 +355,10 @@ Alert rules are provisioned via `grafana/provisioning/alerting/rules.yaml`. Remo
 
 Host swap baseline (not managed by this repo): zram `/dev/zram0` 2 GiB (priority 100) plus `/swapfile` 16 GiB (priority -2), `vm.swappiness=60`. Check with `cat /proc/swaps /proc/sys/vm/swappiness`.
 
+**`cgroup_ram_near_limit` (Netdata, [`health.d/cgroup_ram.conf`](../infra/netdata/health.d/cgroup_ram.conf)):** 5-minute average of a container's RAM against its limit: warning above 90%, critical (ntfy) above 95%. The stock `cgroup_ram_in_use` is silent; this sustained variant pages. Raise the container's `deploy.resources.limits.memory` or fix the leak.
+
+Grafana runs with a 768M limit and `GOMEMLIMIT=512MiB`: without it the Go heap grows to ~2x live heap (GC target) and outgrows the cgroup, and ~120 MiB of plugin processes sit outside the Go cap. `GF_DASHBOARDS_MIN_REFRESH_INTERVAL=30s` overrides the 10s refresh of provisioned dashboards.
+
 **High memory usage:**
 - Reduce Loki retention period
 - Adjust Prometheus scrape intervals

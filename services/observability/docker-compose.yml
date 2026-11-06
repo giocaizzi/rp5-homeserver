@@ -276,6 +276,11 @@ services:
       - GF_ANALYTICS_CHECK_FOR_UPDATES=false
       - GF_DATABASE_WAL=true
       - GF_LOG_LEVEL=warn
+      # Soft Go heap cap so GC runs before the cgroup limit (default GOGC=100 targets ~2x live heap);
+      # ~120MiB of backend plugin processes sit outside it
+      - GOMEMLIMIT=512MiB
+      # Provisioned dashboards default to 10s refresh
+      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=30s
     secrets:
       - grafana_admin_password
       - ntfy_token
@@ -312,7 +317,9 @@ services:
         com.giocaizzi.tier: "core"
       resources:
         limits:
-          memory: 512M # Grafana 13 idles at ~300MiB
+          memory: 768M # Grafana 13: ~370MiB main process (Go heap ~290MiB) + ~120MiB plugin processes
+        reservations:
+          memory: 384M
     logging:
       <<: *logging-base
 
