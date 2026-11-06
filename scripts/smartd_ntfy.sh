@@ -9,7 +9,7 @@
 #
 # Config file (root-only, mode 600): ${SMARTD_NTFY_ENV:-/etc/smartd_ntfy.env}
 #   NTFY_URL         - ntfy base URL, e.g. https://ntfy.<domain>
-#   NTFY_TOPIC       - topic to publish to
+#   NTFY_TOPIC       - topic to publish to (`rp5`)
 #   NTFY_TOKEN_FILE  - file holding the ntfy access token (root-only, mode 600)
 #
 # Environment set by smartd: SMARTD_DEVICE, SMARTD_FAILTYPE, SMARTD_MESSAGE,
@@ -39,6 +39,6 @@ printf '%s' "$message" | curl --silent --show-error --fail --max-time 20 \
   -H @<(printf 'Authorization: Bearer %s\n' "$auth") \
   -H "Title: $title" \
   -H "Priority: high" \
-  -H "Tags: warning,floppy_disk" \
+  -H "Tags: warning,floppy_disk,smartd" \
   --data-binary @- \
   "${NTFY_URL%/}/${NTFY_TOPIC}" >/dev/null
