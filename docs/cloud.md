@@ -111,7 +111,7 @@ Each setting is one `cloudflare_zone_setting`, codifying the live value (`ssl` s
 
 ### Access session duration
 
-Set per app: 8 h for `code`, `portainer`, `backrest`, `openclaw`; 24 h for every other app. Service-token paths are unaffected. New apps must set `session_duration` explicitly.
+Set per app: 8 h for `code`, `portainer`, `backrest`; 24 h for every other app. Service-token paths are unaffected. New apps must set `session_duration` explicitly.
 
 ### Cloudflare notifications
 

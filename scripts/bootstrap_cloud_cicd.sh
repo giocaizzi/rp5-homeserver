@@ -169,7 +169,6 @@ GitHub Actions ENVIRONMENT SECRETS on cloud-plan AND cloud-production
   BACKREST_USERS            <JSON array string>
   FIREFLY_USERS             <JSON array string>
   HOMEPAGE_USERS            <JSON array string>
-  OPENCLAW_USERS            <JSON array string>
   GRAFANA_USERS             <JSON array string>
   GREENHOUSE_USERS          <JSON array string>
   CODE_USERS                <JSON array string>
