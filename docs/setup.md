@@ -68,10 +68,12 @@ Netdata runs in Swarm and cannot read `/dev/nvme0`, so SMART health is checked o
 1. Install the hook (from a repo checkout): `sudo install -m 755 scripts/smartd_ntfy.sh /usr/local/bin/smartd_ntfy.sh`
 2. Create `/etc/smartd_ntfy.env` (root, mode 600):
    ```
-   NTFY_URL=https://ntfy.<domain>
+   NTFY_URL=https://ntfy.home
    NTFY_TOPIC=rp5
    NTFY_TOKEN_FILE=/etc/smartd_ntfy.token
+   NTFY_CURL_OPTS="-k --resolve ntfy.home:443:127.0.0.1"
    ```
+   The hook runs on the host and posts to the internal endpoint, whose certificate is self-signed and does not cover `ntfy.home`, so it skips verification and pins the name to loopback (nginx), the same as the swarm-health workflow.
 3. Create `/etc/smartd_ntfy.token` (root, mode 600) holding an ntfy access token allowed to publish to `rp5`. Alerts arrive on `rp5` tagged `smartd`. Take it from Secrets Manager (project `rp5-homeserver`, the ntfy publisher token item); never paste it into chat or commit it.
 4. In `/etc/smartd.conf`, replace the stock `DEVICESCAN ...` line with an explicit device line. `<nomailer>` is the literal smartd keyword for "no mail address", valid with `-M exec`. The trailing `-M test` fires one test notification at startup:
    ```
