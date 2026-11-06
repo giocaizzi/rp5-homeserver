@@ -1,5 +1,7 @@
 # 🤖 Code — Remote Claude Code dev environment
 
+Status: not deployed (no Swarm or Portainer stack on the Pi). Deploy on demand: [Quick Start](#-quick-start) and [docs/gitops.md](../../docs/gitops.md).
+
 Self-hosted, always-on sandbox for running **Claude Code** on the Pi, driven from a
 web/mobile UI ([CloudCLI](https://github.com/siteboon/claudecodeui)) at
 `code.<domain>`. Spawn sessions against any git repo cloned into the
@@ -10,7 +12,7 @@ environment, then keep controlling them from the official Claude app via
 
 ## 🚀 Quick Start
 
-**1. Build & push the image** (Swarm ignores `build:`, so the image is prebuilt — mirrors OpenClaw):
+**1. Build & push the image** (Swarm ignores `build:`, so the image is prebuilt):
 
 ```sh
 docker buildx build --platform linux/arm64 \
@@ -81,7 +83,7 @@ Control), and SSH/tmux all act on the same `~/.claude` session store in `home_da
 ## 🔐 Secrets
 
 **None.** Auth is CLI-managed and persisted in the `home_data` volume (see
-First-run auth above) — the same approach as OpenClaw. There are no Swarm secrets
+First-run auth above). There are no Swarm secrets
 and no tokens in the repo.
 
 > If you ever recreate/wipe `home_data`, re-run the First-run auth steps.
