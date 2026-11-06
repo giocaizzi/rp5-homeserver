@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.16.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.15.0...cloud-v0.16.0) (2026-11-06)
+
+
+### Features
+
+* **cloud:** let Telegram reach the n8n Telegram Trigger through Access ([#567](https://github.com/giocaizzi/rp5-homeserver/issues/567)) ([4cdf065](https://github.com/giocaizzi/rp5-homeserver/commit/4cdf0658b8b1ae6c3f62efe93de542598355c267))
+
 ## [0.15.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.14.0...cloud-v0.15.0) (2026-11-06)
 
 
