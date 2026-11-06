@@ -16,4 +16,4 @@
 ## Rollback
 Set `N8N_OTEL_ENABLED=false` (or remove the `N8N_OTEL_*` lines and the `observability_network` entry from `app`) and redeploy. Nothing else changes; stored traces expire with Tempo's retention.
 
-**Last verified:** not yet verified after deploy
+**Last verified:** 2026-11-06 by Claude Code (n8n 2.46.6: `service.name=n8n` with `workflow.execute` traces in Tempo after production runs)
