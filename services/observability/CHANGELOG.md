@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.11.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.10.0...observability-v0.11.0) (2026-11-06)
+
+
+### Features
+
+* **observability:** send grafana alerts to the rp5 topic with a grafana tag ([#556](https://github.com/giocaizzi/rp5-homeserver/issues/556)) ([ebad917](https://github.com/giocaizzi/rp5-homeserver/commit/ebad917cfb3bddb2d86ffe09e6435a6b907cef74))
+
+
+### Bug Fixes
+
+* **observability:** cap Grafana Go heap and alert on container RAM near limit ([#546](https://github.com/giocaizzi/rp5-homeserver/issues/546)) ([f1ccf2d](https://github.com/giocaizzi/rp5-homeserver/commit/f1ccf2ddbab54935db399c4e3d1c2a55b6797a92))
+* **observability:** let tasks stop within their grace period ([#550](https://github.com/giocaizzi/rp5-homeserver/issues/550)) ([ba68a81](https://github.com/giocaizzi/rp5-homeserver/commit/ba68a817db27f228223c92c627dc52226601807d))
+
 ## [0.10.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.9.0...observability-v0.10.0) (2026-11-04)
 
 

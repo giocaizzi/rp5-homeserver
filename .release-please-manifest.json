@@ -1,6 +1,6 @@
 {
-  "infra": "1.26.0",
-  "cloud": "0.14.0",
+  "infra": "1.27.0",
+  "cloud": "0.15.0",
   "workers/mcp-connector": "0.8.0",
   "services/adguard": "0.2.3",
   "services/ai": "0.1.1",
@@ -9,7 +9,7 @@
   "services/langfuse": "0.2.2",
   "services/n8n": "0.1.5",
   "services/ntfy": "0.4.2",
-  "services/observability": "0.10.0",
+  "services/observability": "0.11.0",
   "services/openclaw": "0.1.1",
   "services/code": "0.2.0",
   "services/crm": "0.3.1",
