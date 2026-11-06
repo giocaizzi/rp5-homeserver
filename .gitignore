@@ -4,9 +4,6 @@
 *.key
 *.crt
 
-# OpenClaw runtime config (contains gateway tokens and auth profiles)
-**/openclaw.json
-
 # Logs
 *.log
 

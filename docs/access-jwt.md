@@ -26,7 +26,7 @@ Access issues no JWT for a request let through by a **bypass** policy, so these 
 | Host | Access app | Paths skipped (Access bypass) |
 |---|---|---|
 | `portainer` | users | `/mcp` (service token) |
-| `backrest`, `homepage`, `openclaw`, `code`, `miniflux` | users | none |
+| `backrest`, `homepage`, `code`, `miniflux` | users | none |
 | `n8n` | users | `/mcp-server` (service token) |
 | `firefly` | users | `/api/v1/mcp` (service token) |
 | `grafana` | users | `/mcp` (service token) |
@@ -58,7 +58,7 @@ Docker secrets are immutable: when an `aud` changes (an app recreated) or a host
 
 ## Rollout (one host at a time)
 
-Start with a low-traffic host without bypassed paths (`homepage`, then `backrest`, `code`, `openclaw`), then the hosts with bypassed paths. For each host:
+Start with a low-traffic host without bypassed paths (`homepage`, then `backrest`, `code`), then the hosts with bypassed paths. For each host:
 
 1. **Log.** Set the host to `log` in `infra/nginx/conf.d/cf-access.conf`, land it as `fix(infra): log the Access JWT check on <svc>` and cut the infra release (`sync_infra.sh` runs `nginx -t` and reloads).
 2. **Verify.** Use the host normally (browser, apps, MCP clients, sync clients) for at least a day, then check that no failures were logged for legitimate traffic:

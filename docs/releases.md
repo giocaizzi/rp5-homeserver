@@ -37,7 +37,7 @@ Manifest mode: [`release-please-config.json`](../release-please-config.json) + [
 | `mcp-connector` | `workers/mcp-connector` | `node` | `mcp-connector-vX.Y.Z` | `package.json` |
 | `<service>` | `services/<service>` | `simple` | `<service>-vX.Y.Z` | manifest-only |
 
-Services covered: `adguard`, `ai`, `calibre`, `code`, `crm`, `firefly`, `greenhouse`, `langfuse`, `mcp-stdio`, `miniflux`, `n8n`, `ntfy`, `observability`, `openclaw`, `pocket-id`. Stacks with repo bind mounts (`firefly`, `langfuse`, `observability`) also list `docker-compose.yml` under `extra-files`, so release-please bumps their `com.giocaizzi.config-rev` label and every release rolls the tasks.
+Services covered: `adguard`, `ai`, `calibre`, `code`, `crm`, `firefly`, `greenhouse`, `langfuse`, `mcp-stdio`, `miniflux`, `n8n`, `ntfy`, `observability`, `pocket-id`. Stacks with repo bind mounts (`firefly`, `langfuse`, `observability`) also list `docker-compose.yml` under `extra-files`, so release-please bumps their `com.giocaizzi.config-rev` label and every release rolls the tasks.
 
 Cross-cutting changes (CI, root docs, `scripts/`) use the `repo` scope, touch no component path, and cut **no** release.
 
@@ -113,7 +113,7 @@ Deploys are keyless (WIF) / Portainer; the only release-automation secrets are t
 - **`description`** — imperative, lowercase first word, no trailing period.
 - Breaking change: add `!` after the scope (`feat(greenhouse)!: …`) and/or a `BREAKING CHANGE:` footer.
 
-Examples: `feat(greenhouse): add humidity sensor` · `fix(infra): correct nginx healthcheck` · `ci(repo): add pr-title lint` · `chore(openclaw)!: drop legacy auth`.
+Examples: `feat(greenhouse): add humidity sensor` · `fix(infra): correct nginx healthcheck` · `ci(repo): add pr-title lint` · `chore(n8n)!: drop legacy auth`.
 
 Enforced on **three** layers: the **`pr-title.yml`** workflow (a plain regex — no third-party action) validates every PR title; the **`conventional-commit-guard.sh`** `PreToolUse` hook (wired per-developer in the gitignored `.claude/settings.local.json`) blocks any agent commit whose subject doesn't match; and the squash-merge setting makes the validated PR title the commit of record. release-please's own Release PRs (branch `release-please--*`, titled `chore(repo): release …`) are already compliant and additionally skipped by the lint as a safety net.
 
