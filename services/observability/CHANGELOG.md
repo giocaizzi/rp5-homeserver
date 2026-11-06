@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.11.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.10.0...observability-v0.11.0) (2026-11-06)
+
+
+### Features
+
+* **observability:** send grafana alerts to the rp5 topic with a grafana tag ([#556](https://github.com/giocaizzi/rp5-homeserver/issues/556)) ([ebad917](https://github.com/giocaizzi/rp5-homeserver/commit/ebad917cfb3bddb2d86ffe09e6435a6b907cef74))
+
+
+### Bug Fixes
+
+* **observability:** cap Grafana Go heap and alert on container RAM near limit ([#546](https://github.com/giocaizzi/rp5-homeserver/issues/546)) ([f1ccf2d](https://github.com/giocaizzi/rp5-homeserver/commit/f1ccf2ddbab54935db399c4e3d1c2a55b6797a92))
+* **observability:** let tasks stop within their grace period ([#550](https://github.com/giocaizzi/rp5-homeserver/issues/550)) ([ba68a81](https://github.com/giocaizzi/rp5-homeserver/commit/ba68a817db27f228223c92c627dc52226601807d))
+
+## [0.10.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.9.0...observability-v0.10.0) (2026-11-04)
+
+
+### Features
+
+* **observability:** update agent dashboards with full harness, model, and role splits ([#533](https://github.com/giocaizzi/rp5-homeserver/issues/533)) ([4eaa2e5](https://github.com/giocaizzi/rp5-homeserver/commit/4eaa2e529e05c6cd5431065e7111e6943e91f9d1))
+
+
+### Bug Fixes
+
+* **observability:** eliminate unlabeled series and format dashboard table columns ([#534](https://github.com/giocaizzi/rp5-homeserver/issues/534)) ([543cca8](https://github.com/giocaizzi/rp5-homeserver/commit/543cca8438e67a701d48fb4f44b6a467efe5eb9b))
+* **observability:** populate harness dropdown options with all supported harnesses ([#536](https://github.com/giocaizzi/rp5-homeserver/issues/536)) ([98a83b7](https://github.com/giocaizzi/rp5-homeserver/commit/98a83b7c08c7681692b7aa5392f2b9514c72ac5a))
+* **observability:** repair and unify agent dashboards ([#537](https://github.com/giocaizzi/rp5-homeserver/issues/537)) ([c2bc48e](https://github.com/giocaizzi/rp5-homeserver/commit/c2bc48ee9a15d47da257ed850b6753ec8f39b8b8))
+* **observability:** set explicit displayName on piecharts for harness and model labels ([#535](https://github.com/giocaizzi/rp5-homeserver/issues/535)) ([cda72da](https://github.com/giocaizzi/rp5-homeserver/commit/cda72da431c9106275a37d87cb8d3d0f49aa8293))
+
 ## [0.9.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.8.2...observability-v0.9.0) (2026-10-23)
 
 

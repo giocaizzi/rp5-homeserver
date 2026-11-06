@@ -25,16 +25,16 @@ Infrastructure and services for a single-node home server: reverse proxy, monito
 | **[N8N](./services/n8n/README.md)** | `https://n8n.home` | Workflow automation |
 | **[Firefly III](./services/firefly/README.md)** | `https://firefly.home` | Personal finance |
 | **[AdGuard Home](./services/adguard/README.md)** | `https://adguard.home` | DNS & ad blocking |
-| **[AI (Ollama + OpenWebUI)](./services/ai/README.md)** | `https://chat.home`, `https://ai.home` | Local LLM server and chat UI |
-| **[Langfuse](./services/langfuse/README.md)** | `https://langfuse.home` | LLM observability |
+| **[AI (Ollama + OpenWebUI)](./services/ai/README.md)** (not deployed) | `https://chat.home`, `https://ai.home` | Local LLM server and chat UI |
+| **[Langfuse](./services/langfuse/README.md)** (not deployed) | `https://langfuse.home` | LLM observability |
 | **[Ntfy](./services/ntfy/README.md)** | `https://ntfy.home` | Push notifications |
 | **[Observability](./services/observability/README.md)** | `https://grafana.home` | Grafana, Loki, Tempo, Prometheus |
 | **[Greenhouse](./services/greenhouse/README.md)** | `http://greenhouse.home` | Smart plant irrigation |
-| **[OpenClaw](./services/openclaw/README.md)** | `https://openclaw.home` | Personal AI assistant gateway |
-| **[Code](./services/code/README.md)** | `https://code.<domain>` | Remote Claude Code dev environment (CloudCLI) |
+| **[Code](./services/code/README.md)** (not deployed) | `https://code.<domain>` | Remote Claude Code dev environment (CloudCLI) |
 | **[CRM](./services/crm/README.md)** | `https://crm.<domain>` | Twenty CRM (sales pipeline, API + MCP for an external backend and Claude) |
 | **[Calibre](./services/calibre/README.md)** | `https://calibre.<domain>` | Ebook library (Send-to-Kindle, OPDS, reader sync) |
 | **[Miniflux](./services/miniflux/README.md)** | `https://miniflux.<domain>` | Feed reader (follow sites, ntfy on new articles) |
+| **[Pocket ID](./services/pocket-id/README.md)** | `https://id.<domain>` | Passkey login for Cloudflare Access (Pocket ID) |
 
 **Infrastructure** (deployed with `infra/`):
 - **Portainer** — Docker management (`https://portainer.home`)

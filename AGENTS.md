@@ -2,7 +2,7 @@
 
 This file is the source of repo-specific rules for Claude Code (claude.ai/code) and other AI coding assistants.
 
-**Authoritative runbooks:** load the `openclaw-cli` skill (`.claude/skills/`) before touching that stack; for Firefly read [docs/firefly.md](docs/firefly.md) and [docs/RUNBOOKS/](docs/RUNBOOKS/).
+**Authoritative runbooks:** for Firefly read [docs/firefly.md](docs/firefly.md) and [docs/RUNBOOKS/](docs/RUNBOOKS/).
 
 ---
 
@@ -52,11 +52,11 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 | Path | Purpose |
 |------|---------|
 | `infra/` | Always-on infra stack (nginx, portainer, cloudflared, netdata, backrest, homepage, shepherd). Single `docker-compose.yml` + `VERSION`; file-based `secrets/` live only on the Pi, written from Secrets Manager by `sync_infra.sh`. |
-| `services/<stack>/` | One folder per service stack (n8n, firefly, adguard, ai, langfuse, ntfy, observability, openclaw, greenhouse, code, crm, calibre, miniflux, mcp-stdio). Each ships a `docker-compose.yml` and a README; secrets come from Secrets Manager (project `rp5-homeserver`), never from files in the stack folder. |
+| `services/<stack>/` | One folder per service stack (n8n, firefly, adguard, ai, langfuse, ntfy, observability, greenhouse, code, crm, calibre, miniflux, pocket-id, mcp-stdio). Each ships a `docker-compose.yml` and a README; secrets come from Secrets Manager (project `rp5-homeserver`), never from files in the stack folder. |
 | `scripts/` | Operational scripts — see Common Commands. |
 | `cloud/` | Terraform for Cloudflare Tunnel + GCS backup bucket. |
 | `docs/` | Documentation (source of truth): see "Where to find what". |
-| `.claude/skills/` | Repo-local agent skills (e.g. `firefly`, `openclaw-cli`). |
+| `.claude/skills/` | Repo-local agent skills (e.g. `firefly`). |
 | `.github/workflows/` | CI/CD. Workflow list and triggers: [docs/ci_cd.md](docs/ci_cd.md). |
 
 **Branch protection:** commits to `main` are blocked. All changes go through feature branches + PRs. **Every PR title and commit subject MUST be `type(scope): description`** — a Conventional Commit with a mandatory scope (release-please parses it; `main` is squash-only with title = PR title; `pr-title.yml` lints it). Format, scope vocabulary and bump rules: [docs/releases.md](docs/releases.md#pull-requests--commit-titles-mandatory-format). Never hand-edit `.release-please-manifest.json`, `infra/VERSION`, or any generated `CHANGELOG.md`.
@@ -91,10 +91,6 @@ ssh pi@pi.local 'docker stack ls'
 ssh pi@pi.local 'docker stack services <stack>'
 ssh pi@pi.local 'docker service logs --tail 200 -f <stack>_<service>'
 
-# OpenClaw (auth gateway) — always sync before editing config
-./services/openclaw/openclaw.sh pull-config
-./services/openclaw/openclaw.sh push-config
-
 # Cloudflare / GCS infrastructure (from cloud/)
 cd cloud && terraform plan
 cd cloud && terraform apply
@@ -111,7 +107,6 @@ There is no application test/lint/build suite — this repo is configuration. "T
 - `BWS_ACCESS_TOKEN` is never pasted, exported or printed: inject it from the OS keyring for the one command (a local wrapper, or `BWS_ACCESS_TOKEN="$(<keyring read>)" ./scripts/...`). An empty variable in your shell does not mean there is no token: look for the wrapper first.
 - Local `terraform` in `cloud/` failing with `UserProjectAccountProblem`: set `GOOGLE_CLOUD_QUOTA_PROJECT` to the GCP project in `terraform.tfvars` (why: [docs/cloud.md](docs/cloud.md#troubleshooting)).
 - Source of truth for `services/` secrets: Bitwarden Secrets Manager project `rp5-homeserver` (key = Swarm secret name). Never keep them as local files. `infra/` secrets stay file-based on the Pi (`file:`) but are generated from the same project (key `infra_<file stem>`, e.g. `infra_cert` for `cert.pem`): `sync_infra.sh` (without `--local`) writes them on the Pi when their hash differs; the Mac and the CI checkout hold no secret files. `*.pem`/`*.json` files end with a newline, the others don't — keep that, or Docker sees a changed (immutable) secret.
-- OpenClaw exception: prefer OpenClaw CLI-managed auth (gateway/config/auth profiles/channel tokens) persisted in `config_data` over custom entrypoint secret-export wrappers.
 - Use configs only for non-secret, user-level configuration.
 - ARM64 compatibility and optimization required for all images.
 
@@ -158,7 +153,7 @@ This repo is **public**, and so are its PRs, issues, comments, releases and Acti
 | GitOps / Portainer webhooks | [docs/gitops.md](docs/gitops.md) |
 | Setup, networking, backup, cloud, monitoring | [docs/setup.md](docs/setup.md), [docs/networking.md](docs/networking.md), [docs/backup.md](docs/backup.md), [docs/cloud.md](docs/cloud.md), [docs/monitoring.md](docs/monitoring.md) |
 | Documentation and README conventions, file management | [docs/README.md](docs/README.md#documentation-conventions) |
-| OpenClaw runbook | `.claude/skills/openclaw-cli/SKILL.md` (auth gateway, channel tokens, `openclaw.sh pull-config` / `push-config`) |
+| Pocket ID (Access passkey login, bootstrap, recovery) | [docs/pocket-id.md](docs/pocket-id.md) |
 | Stdio MCP servers (add one, Garmin notes) | [docs/mcp-stdio.md](docs/mcp-stdio.md) |
 | Firefly runbook | `.claude/skills/firefly/SKILL.md` (not present in this checkout; referenced as before) |
 

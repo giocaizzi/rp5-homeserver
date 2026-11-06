@@ -169,7 +169,6 @@ GitHub Actions ENVIRONMENT SECRETS on cloud-plan AND cloud-production
   BACKREST_USERS            <JSON array string>
   FIREFLY_USERS             <JSON array string>
   HOMEPAGE_USERS            <JSON array string>
-  OPENCLAW_USERS            <JSON array string>
   GRAFANA_USERS             <JSON array string>
   GREENHOUSE_USERS          <JSON array string>
   CODE_USERS                <JSON array string>
@@ -177,6 +176,9 @@ GitHub Actions ENVIRONMENT SECRETS on cloud-plan AND cloud-production
   CALIBRE_USERS             <JSON array string>
   MINIFLUX_USERS            <JSON array string>
   MCP_STDIO_USERS           <JSON array string>
+  POCKET_ID_CLIENT_ID       <OIDC client ID of the Access client in Pocket ID>
+  POCKET_ID_CLIENT_SECRET   <OIDC client secret of the Access client in Pocket ID>
+  ALERT_EMAIL               <email that receives Cloudflare notifications>
   (domain and emails are secrets, not variables: variable values are printed
    in the public Actions logs)
 

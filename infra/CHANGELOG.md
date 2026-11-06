@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.27.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.26.0...v1.27.0) (2026-11-06)
+
+
+### Features
+
+* **infra:** send netdata alerts to the rp5 topic with a netdata tag ([#557](https://github.com/giocaizzi/rp5-homeserver/issues/557)) ([b470b2a](https://github.com/giocaizzi/rp5-homeserver/commit/b470b2a13484b8a6a52c6f7bfebe7840d4bb0f81))
+* **infra:** verify the Access JWT on service-token paths in log mode ([#551](https://github.com/giocaizzi/rp5-homeserver/issues/551)) ([81d0e27](https://github.com/giocaizzi/rp5-homeserver/commit/81d0e27e03bf137e63e0d293851c697ae903c0e3))
+
+
+### Bug Fixes
+
+* **infra:** stop the tunnel cleanly and drop the openclaw routes ([#548](https://github.com/giocaizzi/rp5-homeserver/issues/548)) ([590bf1b](https://github.com/giocaizzi/rp5-homeserver/commit/590bf1bed2e8b90a237f78f0b1177107ee1ec92f))
+* **observability:** cap Grafana Go heap and alert on container RAM near limit ([#546](https://github.com/giocaizzi/rp5-homeserver/issues/546)) ([f1ccf2d](https://github.com/giocaizzi/rp5-homeserver/commit/f1ccf2ddbab54935db399c4e3d1c2a55b6797a92))
+
+## [1.26.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.25.0...v1.26.0) (2026-11-04)
+
+
+### Features
+
+* **infra:** key nginx rate limits on the real client address ([#542](https://github.com/giocaizzi/rp5-homeserver/issues/542)) ([949ada6](https://github.com/giocaizzi/rp5-homeserver/commit/949ada6a5d6ba5523a1458e56d851ff71a692c68))
+
+## [1.25.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.24.3...v1.25.0) (2026-11-04)
+
+
+### Features
+
+* **infra:** route id.&lt;domain&gt; to Pocket ID and back up its data ([#523](https://github.com/giocaizzi/rp5-homeserver/issues/523)) ([b98df99](https://github.com/giocaizzi/rp5-homeserver/commit/b98df995ba9e99496bc9470d597c4d0390637847))
+
 ## [1.24.3](https://github.com/giocaizzi/rp5-homeserver/compare/v1.24.2...v1.24.3) (2026-10-23)
 
 

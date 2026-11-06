@@ -42,11 +42,11 @@
     "services/n8n": { "release-type": "simple", "component": "n8n" },
     "services/ntfy": { "release-type": "simple", "component": "ntfy", "extra-files": ["docker-compose.yml"] },
     "services/observability": { "release-type": "simple", "component": "observability", "extra-files": ["docker-compose.yml"] },
-    "services/openclaw": { "release-type": "simple", "component": "openclaw" },
     "services/code": { "release-type": "simple", "component": "code" },
     "services/crm": { "release-type": "simple", "component": "crm" },
     "services/calibre": { "release-type": "simple", "component": "calibre" },
     "services/miniflux": { "release-type": "simple", "component": "miniflux" },
-    "services/mcp-stdio": { "release-type": "simple", "component": "mcp-stdio" }
+    "services/mcp-stdio": { "release-type": "simple", "component": "mcp-stdio" },
+    "services/pocket-id": { "release-type": "simple", "component": "pocket-id" }
   }
 }

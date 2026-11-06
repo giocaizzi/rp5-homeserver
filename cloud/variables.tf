@@ -29,11 +29,6 @@ variable "tunnel_secret" {
   description = "Base64 encoded secret for the tunnel"
   type        = string
   sensitive   = true
-  # weird: fails TODO: investigate
-  # validation {
-  #   condition     = can(base64decode(var.tunnel_secret))
-  #   error_message = "Tunnel secret must be a valid base64 encoded string."
-  # }
 }
 
 # ---- Optional ----
@@ -67,13 +62,6 @@ variable "firefly_users" {
 
 variable "homepage_users" {
   description = "List of email addresses allowed to access Homepage"
-  type        = list(string)
-  default     = []
-  sensitive   = true
-}
-
-variable "openclaw_users" {
-  description = "List of email addresses allowed to access OpenClaw"
   type        = list(string)
   default     = []
   sensitive   = true
@@ -135,6 +123,30 @@ variable "mcp_stdio_users" {
   }
 }
 
+variable "pocket_id_client_id" {
+  description = "OIDC client ID of the Cloudflare Access client created in Pocket ID"
+  type        = string
+  sensitive   = true
+
+  # An unset GitHub secret arrives as "": fail the plan instead of creating a broken login method.
+  validation {
+    condition     = length(var.pocket_id_client_id) > 0
+    error_message = "Set the POCKET_ID_CLIENT_ID secret on cloud-plan and cloud-production (docs/pocket-id.md)."
+  }
+}
+
+variable "pocket_id_client_secret" {
+  description = "OIDC client secret of the Cloudflare Access client created in Pocket ID"
+  type        = string
+  sensitive   = true
+
+  # An unset GitHub secret arrives as "": fail the plan instead of creating a broken login method.
+  validation {
+    condition     = length(var.pocket_id_client_secret) > 0
+    error_message = "Set the POCKET_ID_CLIENT_SECRET secret on cloud-plan and cloud-production (docs/pocket-id.md)."
+  }
+}
+
 # ============================================================================
 # GCP Variables
 # ============================================================================
@@ -163,4 +175,9 @@ variable "backup_retention_days" {
     condition     = var.backup_retention_days >= 0
     error_message = "backup_retention_days must be 0 (disabled) or a positive number of days."
   }
+}
+variable "alert_email" {
+  description = "Email address that receives Cloudflare notifications"
+  type        = string
+  sensitive   = true
 }

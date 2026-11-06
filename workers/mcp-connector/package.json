@@ -1,6 +1,6 @@
 {
   "name": "mcp-connector",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "description": "Single-origin OAuth + MCP reverse-proxy Worker fronting self-hosted MCP servers for Claude.ai connectors",
@@ -14,6 +14,6 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261030.1",
     "typescript": "^7.0.2",
-    "wrangler": "^4.156.0"
+    "wrangler": "^4.156.2"
   }
 }

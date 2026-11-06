@@ -2,6 +2,8 @@
 
 > LLM observability and tracing platform
 
+Status: not deployed (no Swarm or Portainer stack on the Pi). Deploy on demand: [Quick Start](#-quick-start) and [docs/gitops.md](../../docs/gitops.md).
+
 **URL**: `https://langfuse.home`
 
 ---

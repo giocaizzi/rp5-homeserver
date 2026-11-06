@@ -70,3 +70,5 @@ gcp_backup_bucket_name = "your-unique-backup-bucket-name"
 
 # Backup retention in days for GCS lifecycle deletion (0 = rely on Backrest retention)
 backup_retention_days = 0
+# Email address that receives Cloudflare notifications (tunnel health, Universal SSL, incidents)
+alert_email = "you@example.com"

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.3.2...firefly-v0.3.3) (2026-11-04)
+
+
+### Bug Fixes
+
+* **firefly:** skip import-lag alert for dormant accounts ([#538](https://github.com/giocaizzi/rp5-homeserver/issues/538)) ([532b460](https://github.com/giocaizzi/rp5-homeserver/commit/532b460bd3c42c2b34b09b00735a7485ffb668a6))
+
 ## [0.3.2](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.3.1...firefly-v0.3.2) (2026-10-18)
 
 

@@ -71,7 +71,7 @@ flowchart TB
 | `observability_alloy_otel_bearer_token` | `bws secret create observability_alloy_otel_bearer_token "$(openssl rand -base64 48 \| tr -d '\n=' \| tr '+/' '-_')" <project-id>` |
 | `observability_grafana_mcp_token` | Grafana service-account token, **Viewer** role (Grafana → Administration → Service accounts); used by the sidecar to reach Grafana |
 | `observability_grafana_mcp_server_token` | Caller token for the MCP sidecar (`MCP_GRAFANA_SERVER_TOKEN`): `bws secret create observability_grafana_mcp_server_token "$(openssl rand -base64 48 \| tr -d '\n=' \| tr '+/' '-_')" <project-id>`. Must equal the Worker's `UPSTREAM_BEARER` for grafana |
-| `observability_ntfy_token` | ntfy token for user `alerts` (`ntfy token add --label grafana alerts`, see [ntfy](../ntfy/README.md#-alert-topics)) |
+| `observability_ntfy_token` | ntfy token for user `alerts` (`ntfy token add --label grafana alerts`; alerts go to topic `rp5`, tag `grafana`, see [ntfy](../ntfy/README.md#-alert-topics)) |
 
 Then sync them to Swarm: `./scripts/create_secrets.sh observability` (needs `BWS_ACCESS_TOKEN`).
 

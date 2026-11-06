@@ -314,6 +314,8 @@ Both sources push to ntfy (`https://ntfy.<domain>`, publisher user `alerts`):
 | Grafana | `grafana` | App/DB/exporter/observability rules (Prometheus), HTTP 5xx + container error logs (Loki) | Priority from `severity` via ntfy template `grafana-alert` (critical 5, warning 4, resolved 3); 4h repeat |
 | Netdata | `netdata` | Host + containers (temp, disk, RAM, OOM, `docker_container_unhealthy`) | Critical + clear only, no repeat |
 
+**Cloudflare notifications** (email, independent of the Pi and the tunnel, so they still arrive when the tunnel is down): tunnel health, Universal SSL and Cloudflare incidents are in Terraform (`cloud/notifications.tf`); DDoS Protection, Expiring Service Token and Leaked Service Token alerts are managed in the dashboard. See [cloud.md](cloud.md#cloudflare-notifications).
+
 Grafana's contact point and root policy are provisioned in `grafana/provisioning/alerting/{contact-points,policies}.yaml`; Netdata's in `infra/netdata/health_alarm_notify.conf`.
 
 **Provisioned Alert Rules:**
@@ -352,6 +354,10 @@ Alert rules are provisioned via `grafana/provisioning/alerting/rules.yaml`. Remo
 3. A container thrashing at its limit swaps in and out heavily, which also raises `30min_ram_swapped_out`; fix the limit first, the swap alert follows.
 
 Host swap baseline (not managed by this repo): zram `/dev/zram0` 2 GiB (priority 100) plus `/swapfile` 16 GiB (priority -2), `vm.swappiness=60`. Check with `cat /proc/swaps /proc/sys/vm/swappiness`.
+
+**`cgroup_ram_near_limit` (Netdata, [`health.d/cgroup_ram.conf`](../infra/netdata/health.d/cgroup_ram.conf)):** 5-minute average of a container's RAM against its limit: warning above 90%, critical (ntfy) above 95%. The stock `cgroup_ram_in_use` is silent; this sustained variant pages. Raise the container's `deploy.resources.limits.memory` or fix the leak.
+
+Grafana runs with a 768M limit and `GOMEMLIMIT=512MiB`: without it the Go heap grows to ~2x live heap (GC target) and outgrows the cgroup, and ~120 MiB of plugin processes sit outside the Go cap. `GF_DASHBOARDS_MIN_REFRESH_INTERVAL=30s` overrides the 10s refresh of provisioned dashboards.
 
 **High memory usage:**
 - Reduce Loki retention period

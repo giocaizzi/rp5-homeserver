@@ -111,7 +111,7 @@ Secure external access without port forwarding. Requires tunnel token from Cloud
 
 Real-time monitoring at `https://netdata.home`. Metrics, alerts, dashboards.
 
-Critical health alarms (and their clear) push to ntfy topic `netdata` via `./netdata/health_alarm_notify.conf`. Test: `docker exec $(docker ps -qf name=infra_monitoring) /usr/libexec/netdata/plugins.d/alarm-notify.sh test`.
+Critical health alarms (and their clear) push to ntfy topic `rp5` with tag `netdata` via `./netdata/health_alarm_notify.conf` (the tag is set through `curl_options` as an `X-Tags` header, because Netdata's ntfy sender hardcodes `Tags`). Re-check this override on every Netdata major upgrade (it depends on `alarm-notify.sh` internals). Test: `docker exec $(docker ps -qf name=infra_monitoring) /usr/libexec/netdata/plugins.d/alarm-notify.sh test`.
 
 ### Backrest
 
@@ -132,7 +132,7 @@ Automatically checks and updates Swarm services with tiered strategy to stay wit
 | Tier | Services | Check Interval | Pull Volume |
 |------|----------|----------------|-------------|
 | **Critical** | Infra (proxy, tunnel, portainer, netdata, backrest, homepage) | 24h | ~8 pulls/day |
-| **Core** | Main apps (observability, ntfy, adguard, openclaw, firefly, n8n) | 48h | ~12 pulls/2 days |
+| **Core** | Main apps (observability, ntfy, adguard, firefly, n8n) | 48h | ~12 pulls/2 days |
 | **Extra** | Exporters, workers, optional services | 72h | ~6 pulls/3 days |
 
 **Total:** ~26 pulls spread over 24h window = **well within 100 pulls/6h limit**.
