@@ -671,6 +671,42 @@ resource "cloudflare_zero_trust_access_application" "calibre_devices_policy" {
   ]
 }
 
+# n8n production webhooks (Telegram Trigger). Telegram's servers POST updates to
+# https://n8n.<zone>/webhook/<webhook id>/webhook and cannot do the Access email
+# login, so Access is bypassed on /webhook/ only (the UI, /webhook-test/ and the
+# rest of the host stay behind the login). The gate for this path is the WAF rule
+# R3 in waf.tf, which blocks every source but Telegram's networks; the trigger
+# itself also answers only the owner's chat id.
+resource "cloudflare_zero_trust_access_policy" "n8n_webhook_bypass" {
+  account_id = var.cloudflare_account_id
+  name       = "n8n-webhook-bypass"
+  decision   = "bypass"
+
+  include = [
+    {
+      everyone = {}
+    }
+  ]
+}
+
+resource "cloudflare_zero_trust_access_application" "n8n_webhook_policy" {
+  account_id       = var.cloudflare_account_id
+  type             = "self_hosted"
+  session_duration = "24h"
+  name             = "n8n-webhook.${var.zone_name}"
+
+  destinations = [
+    { type = "public", uri = "n8n.${var.zone_name}/webhook/" },
+  ]
+
+  policies = [
+    {
+      id         = cloudflare_zero_trust_access_policy.n8n_webhook_bypass.id
+      precedence = 1
+    }
+  ]
+}
+
 # Miniflux. Whole-host email gate, no bypassed paths (APIs included).
 resource "cloudflare_zero_trust_access_application" "miniflux_policy" {
   account_id       = var.cloudflare_account_id

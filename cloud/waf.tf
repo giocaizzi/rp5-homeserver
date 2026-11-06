@@ -45,5 +45,19 @@ resource "cloudflare_ruleset" "custom" {
         ") and not starts_with(http.request.uri.path, \"/cdn-cgi/\")",
       ])
     },
+    {
+      # R3: n8n production webhooks (/webhook/) bypass Access (main.tf, n8n_webhook_policy),
+      # so only Telegram's webhook networks may reach them. Ranges from
+      # https://core.telegram.org/bots/webhooks (they say to recheck it when deliveries
+      # stop). A non-Telegram webhook source needs its own allowance here.
+      description = "R3 n8n webhooks from Telegram networks only"
+      action      = "block"
+      enabled     = true
+      expression = join(" ", [
+        "http.host eq \"n8n.${var.zone_name}\"",
+        "and starts_with(http.request.uri.path, \"/webhook/\")",
+        "and not ip.src in {149.154.160.0/20 91.108.4.0/22}",
+      ])
+    },
   ]
 }
