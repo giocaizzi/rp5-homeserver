@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.3](https://github.com/giocaizzi/rp5-homeserver/compare/ntfy-v0.4.2...ntfy-v0.4.3) (2026-11-06)
+
+
+### Documentation
+
+* **ntfy:** retire legacy grafana, netdata and swarm alert topics ([#560](https://github.com/giocaizzi/rp5-homeserver/issues/560)) ([9a11d32](https://github.com/giocaizzi/rp5-homeserver/commit/9a11d3243dd624e0eac395b295d907b22eaff5a7))
+
 ## [0.4.2](https://github.com/giocaizzi/rp5-homeserver/compare/ntfy-v0.4.1...ntfy-v0.4.2) (2026-10-20)
 
 
