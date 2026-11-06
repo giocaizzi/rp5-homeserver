@@ -175,6 +175,12 @@ CPU_THRESHOLD=5 RUNTIME_THRESHOLD=120 PI_SSH_USER=pi ./kill_stuck_processes.sh
 
 ---
 
+### smartd_ntfy.sh
+
+`smartd -M exec` hook that publishes NVMe/SMART alerts to ntfy (priority high). Runs on the Pi host as root, called by `smartd`, not by hand. Reads `NTFY_URL`, `NTFY_TOPIC` and `NTFY_TOKEN_FILE` from `/etc/smartd_ntfy.env` (root-only); the credential never appears on a command line. Install and wiring: [docs/setup.md](../docs/setup.md#nvme-health-smart).
+
+---
+
 ## Adding New Scripts
 
 When adding new scripts to this directory:
