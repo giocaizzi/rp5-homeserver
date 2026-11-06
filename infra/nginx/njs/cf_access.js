@@ -1,12 +1,13 @@
 // Cloudflare Access JWT check at the origin (#393), run as the auth_request
 // subrequest of snippets/cf-access.conf. Runbook: docs/access-jwt.md.
 //
-// Mode per host comes from $cf_access_mode (conf.d/cf-access.conf):
+// Mode per host comes from $cf_access_mode (conf.d/cf-access.conf); a request on a
+// Service Auth path ($cf_access_app) uses that path app's mode and aud instead:
 //   off     - allow, nothing checked (no config read, no fetch)
 //   log     - check, allow, log failures at warn
 //   enforce - check, deny failures (401 no token, 403 anything else)
 // Config is the cf_access secret (never committed):
-//   {"team_domain": "<team>.cloudflareaccess.com", "aud": {"<subdomain>": "<aud tag>", ...}}
+//   {"team_domain": "<team>.cloudflareaccess.com", "aud": {"<subdomain>": "<aud tag>", "<path app key>": "<aud tag>", ...}}
 
 import fs from 'fs';
 
@@ -15,18 +16,19 @@ const SKEW = 60;             // seconds tolerated on exp/nbf
 const REFETCH_MS = 60000;    // at most one JWKS refetch per minute on an unknown kid
 
 // r is the auth subrequest: it carries the client's headers and shares the
-// main request's variables ($cf_access_skip/$cf_access_path are pinned in
+// main request's variables ($cf_access_skip/$cf_access_path/$cf_access_path_app/$cf_access_path_mode are pinned in
 // snippets/cf-access.conf, since its own $uri is /_cf_access).
 async function verify(r) {
     const v = r.variables;
-    const mode = v.cf_access_mode;
+    const app = v.cf_access_path_app;
+    const mode = app ? v.cf_access_path_mode : v.cf_access_mode;
     if ((mode !== 'log' && mode !== 'enforce') || v.cf_access_skip === '1') {
         return r.return(204);
     }
 
     let result;
     try {
-        result = await check(r);
+        result = await check(r, app);
     } catch (e) {
         result = 'error: ' + e.message;
     }
@@ -35,14 +37,14 @@ async function verify(r) {
     }
 
     ngx.log(ngx.WARN, `cf_access ${mode}: ${result} (host=${v.host} `
-        + `path=${v.cf_access_path} client=${r.remoteAddress})`);
+        + `path=${v.cf_access_path} app=${app || '-'} client=${r.remoteAddress})`);
     if (mode === 'log') {
         return r.return(204);
     }
     r.return(result === 'missing token' ? 401 : 403);
 }
 
-async function check(req) {
+async function check(req, app) {
     const token = req.headersIn['Cf-Access-Jwt-Assertion'];
     if (!token) {
         return 'missing token';
@@ -55,7 +57,7 @@ async function check(req) {
     const claims = decode(parts[1]);
 
     const config = JSON.parse(fs.readFileSync(CONFIG_FILE));
-    const want = config.aud[req.variables.host.split('.')[0]];
+    const want = config.aud[app || req.variables.host.split('.')[0]];
     if (!want) {
         return 'no aud configured for host';
     }
