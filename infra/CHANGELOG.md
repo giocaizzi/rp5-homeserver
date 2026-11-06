@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.26.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.25.0...v1.26.0) (2026-11-04)
+
+
+### Features
+
+* **infra:** key nginx rate limits on the real client address ([#542](https://github.com/giocaizzi/rp5-homeserver/issues/542)) ([949ada6](https://github.com/giocaizzi/rp5-homeserver/commit/949ada6a5d6ba5523a1458e56d851ff71a692c68))
+
 ## [1.25.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.24.3...v1.25.0) (2026-11-04)
 
 
