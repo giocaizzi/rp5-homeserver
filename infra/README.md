@@ -111,7 +111,7 @@ Secure external access without port forwarding. Requires tunnel token from Cloud
 
 Real-time monitoring at `https://netdata.home`. Metrics, alerts, dashboards.
 
-Critical health alarms (and their clear) push to ntfy topic `netdata` via `./netdata/health_alarm_notify.conf`. Test: `docker exec $(docker ps -qf name=infra_monitoring) /usr/libexec/netdata/plugins.d/alarm-notify.sh test`.
+Critical health alarms (and their clear) push to ntfy topic `rp5` with tag `netdata` via `./netdata/health_alarm_notify.conf` (the tag is set through `curl_options` as an `X-Tags` header, because Netdata's ntfy sender hardcodes `Tags`). Re-check this override on every Netdata major upgrade (it depends on `alarm-notify.sh` internals). Test: `docker exec $(docker ps -qf name=infra_monitoring) /usr/libexec/netdata/plugins.d/alarm-notify.sh test`.
 
 ### Backrest
 
