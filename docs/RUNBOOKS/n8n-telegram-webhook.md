@@ -21,4 +21,4 @@
 ## Rollback
 Remove the `n8n_webhook_*` resources from `cloud/main.tf` and rule `R3` from `cloud/waf.tf`, then merge: Telegram can no longer reach n8n and the host is fully behind the login again.
 
-**Last verified:** not yet verified after apply
+**Last verified:** 2026-11-06 by Claude Code (Telegram messages start the workflow; a request from another network gets 403 from the WAF, the UI and `/webhook-test/` still redirect to the login)
