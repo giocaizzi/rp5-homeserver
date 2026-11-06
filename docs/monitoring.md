@@ -183,7 +183,7 @@ Distributed tracing backend for OTLP-compatible traces.
 
 **Instrumented Services:**
 - Langfuse (auto-instrumented)
-- n8n (via OTEL SDK)
+- n8n (native OTLP tracing of workflow runs, [runbook](./RUNBOOKS/n8n-otel-tracing.md))
 - Custom applications with OTEL SDK
 
 **Restart log lines (#290):** shutdown is graceful (`stop_grace_period: 90s`, "Tempo stopped" in a few seconds). Expected on every restart, all benign upstream behaviour:
