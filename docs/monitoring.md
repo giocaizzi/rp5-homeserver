@@ -307,12 +307,16 @@ The daily budget is the `budget` variable on Agent Overview and the `agent-daily
 
 ## Alerting
 
-Both sources push to ntfy (`https://ntfy.<domain>`, publisher user `alerts`):
+All alert sources push to the single ntfy topic `rp5` (`https://ntfy.<domain>`, publisher user `alerts`), distinguished by a per-source tag:
 
-| Source | Topic | Covers | Routing |
-|--------|-------|--------|---------|
+| Source | Tag | Covers | Routing |
+|--------|-----|--------|---------|
 | Grafana | `grafana` | App/DB/exporter/observability rules (Prometheus), HTTP 5xx + container error logs (Loki) | Priority from `severity` via ntfy template `grafana-alert` (critical 5, warning 4, resolved 3); 4h repeat |
 | Netdata | `netdata` | Host + containers (temp, disk, RAM, OOM, `docker_container_unhealthy`) | Critical + clear only, no repeat |
+| `swarm-health.yml` workflow | `swarm` | Swarm service below desired replicas | Workflow-defined |
+| smartd hook | `smartd` | Disk SMART health | smartd-defined |
+
+The former topics `grafana`, `netdata` and `swarm` are retired. See [services/ntfy/README.md](../services/ntfy/README.md#-alert-topics).
 
 **Cloudflare notifications** (email, independent of the Pi and the tunnel, so they still arrive when the tunnel is down): tunnel health, Universal SSL and Cloudflare incidents are in Terraform (`cloud/notifications.tf`); DDoS Protection, Expiring Service Token and Leaked Service Token alerts are managed in the dashboard. See [cloud.md](cloud.md#cloudflare-notifications).
 
