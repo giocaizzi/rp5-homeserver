@@ -52,6 +52,8 @@ vim terraform.tfvars
    > - `Account:Cloudflare Tunnel:Edit`
    > - `Account:Access: Apps and Policies:Edit`
    > - `Account:Access: Service Tokens:Edit`
+   > - `Zone:Zone WAF:Edit` *(custom rules)*
+   > - `Account:Notifications:Edit` *(notification policies)*
    > - `Account:Access: Organizations, Identity Providers, and Groups:Edit`
    >
    > Split, expiry and rotation: [docs/cloud.md](../docs/cloud.md#token-scopes-and-rotation).
