@@ -92,18 +92,6 @@ Host state around the runs: `vcgencmd get_throttled` went from `0x0` before to `
 - `gemma4:e2b` is the fastest warm and `minicpm5-2b` the lightest and quickest to start; `granite4.2:3b` is the slowest but the most conventional (official Ollama tag, tool-calling tag). A final choice needs a larger sample (several rounds, more cases, a real MCP tool from n8n).
 - Heat is the limiting factor on this board: check the cooler before scheduling regular runs.
 
-## Field test: scheduled n8n report (2026-11-06)
-
-A daily n8n workflow (hybrid design: code computes thresholds and windows from a surf-forecast MCP server, the local model only writes the text) ran against the `ai_llm` service at `http://llm:11434`, with the three models compared on the same facts.
-
-- `gemma4:e2b`: report in 37 to 51 s warm (about 30 s more on a cold load), the most fluent Italian. Given a conversational prompt it converted numbers to words and made mistakes (a range "1.8-2.4 m" read as "between one and two metres", a time shifted by an hour). The prompt now requires numbers, days and times copied as digits; only ratings and wind type are rephrased.
-- `minicpm5-2b`: faster, but echoed the flag line of the prompt; needs it removed.
-- `granite4.2:3b`: slowest.
-- Image input (`gemma4:e2b`, one wave-height chart PNG): accepted, but 99 s per image (85 s of prefill) and a vague reading (a plausible maximum, no direction, no location of the peak). Not usable for numbers. `minicpm5-2b` and `granite4.2:3b` are text-only.
-- The chart tool returns the PNG plus summary values (value and direction at the point, minimum, maximum, mean, bounding box), not the grid, so a text-only model cannot get the spatial picture from data.
-
-Rule of thumb: let code produce every number and let the model only phrase them.
-
 ## Optimizations considered
 
 Applied per request in `tuned` (no repo change): smaller context, explicit thread count, low temperature, capped output, thinking off. To evaluate after the numbers: CPU governor `performance` (host change), `OLLAMA_KEEP_ALIVE`, removing the unused `chat` service from the stack, a larger container limit, and `llama-server` as an alternative runtime (reported 10 to 20 percent faster in third-party tests, unverified here).
