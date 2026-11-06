@@ -103,6 +103,7 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--web.enable-lifecycle'
       - '--web.enable-remote-write-receiver'
+    stop_grace_period: 60s # TSDB/WAL flush on shutdown; default 10s SIGKILLs (#316)
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -140,6 +141,7 @@ services:
     expose:
       - "3100"
     command: -config.file=/etc/loki/loki-config.yaml
+    stop_grace_period: 60s # ingester flush on shutdown; default 10s SIGKILLs (#316)
     environment:
       - GOMEMLIMIT=520MiB # soft Go heap cap; ~80% of container limit
     volumes:
@@ -222,6 +224,7 @@ services:
       - --server.http.listen-addr=0.0.0.0:12345
       - --storage.path=/var/lib/alloy/data
       - /etc/alloy/config.alloy
+    stop_grace_period: 30s # default 10s SIGKILLs (#316)
     environment:
       - DEPLOYMENT_ENV=production
       - GOMEMLIMIT=480MiB # GC before memory_limiter soft limit (512MiB); ~62% of container limit
@@ -281,6 +284,7 @@ services:
       - GOMEMLIMIT=512MiB
       # Provisioned dashboards default to 10s refresh
       - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=30s
+    stop_grace_period: 30s # default 10s SIGKILLs (#316)
     secrets:
       - grafana_admin_password
       - ntfy_token
@@ -335,6 +339,8 @@ services:
     environment:
       - GRAFANA_URL=http://observability-dashboard:3000
       - GRAFANA_ORG_ID=1
+    init: true # entrypoint is a shell wrapper; tini forwards SIGTERM (#316)
+    stop_grace_period: 15s
     secrets:
       - grafana_mcp_token
       - grafana_mcp_server_token
