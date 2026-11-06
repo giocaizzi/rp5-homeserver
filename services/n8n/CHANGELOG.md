@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/n8n-v0.1.5...n8n-v0.2.0) (2026-11-06)
+
+
+### Features
+
+* **n8n:** export workflow traces over OTLP to the collector ([#565](https://github.com/giocaizzi/rp5-homeserver/issues/565)) ([24efdcf](https://github.com/giocaizzi/rp5-homeserver/commit/24efdcf6d89314501b34e2e91b2bf29295a1fa42))
+
 ## [0.1.5](https://github.com/giocaizzi/rp5-homeserver/compare/n8n-v0.1.4...n8n-v0.1.5) (2026-10-12)
 
 
