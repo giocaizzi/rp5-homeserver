@@ -103,10 +103,7 @@ ntfy access everyone "up*" write
 | Topic | Publisher | Token stored as (Secrets Manager) |
 |-------|-----------|-----------------------------------|
 | `rp5` | Host and stack alerts, one tag per source: Grafana (`grafana`, via `?tags=grafana` on the webhook), Netdata (`netdata`, `X-Tags` header), swarm-health workflow (`swarm`), smartd hook (`smartd`) | `observability_ntfy_token`, `infra_ntfy_token`, GitHub secret `NTFY_SWARM_TOKEN`, smartd's root-only token file on the Pi |
-| `grafana` | Legacy (publishers moved to `rp5`; retire after a quiet window). Grafana webhook (`?template=grafana-alert` — `templates/grafana-alert.yml`, priority from `severity`) | `observability_ntfy_token` |
-| `netdata` | Legacy (publishers moved to `rp5`; retire after a quiet window). Netdata `health_alarm_notify.conf` (critical only) | `infra_ntfy_token` |
 | `greenhouse` | greenhouse server (irrigation runs, new warning/critical alerts) | `greenhouse_ntfy_token` |
-| `swarm` | Legacy (publishers moved to `rp5`; retire after a quiet window). `swarm-health.yml` workflow (service below desired replicas ≥10 min) | GitHub repo secret `NTFY_SWARM_TOKEN` |
 | `firefly` | Firefly scheduler `firefly_jobs.py` (balance mismatch, bank consent, import lag, card residual, token expiry) | `firefly_ntfy_token` |
 | `miniflux` | Miniflux ntfy integration (new entries of feeds with ntfy enabled) | `miniflux_ntfy_token` (pasted into Miniflux Settings → Integrations) |
 | `factory*` | factory-runtime notify sink (questions, halts, auth, done…); `factory` plus per-repo `factory-<repo>` topics | Mac Keychain, service `factory-runtime`, account `ntfy` (the publish URL; token label `factory-runtime`), not Secrets Manager |
@@ -116,10 +113,6 @@ All publish as user `alerts` (write-only), one token per source so each can be r
 ```bash
 ntfy user add alerts
 ntfy access alerts rp5 wo
-# legacy, retire after a quiet window
-ntfy access alerts grafana wo
-ntfy access alerts netdata wo
-ntfy access alerts swarm wo
 ntfy access alerts greenhouse wo
 ntfy access alerts firefly wo
 ntfy access alerts miniflux wo
@@ -131,6 +124,12 @@ ntfy token add --label greenhouse alerts
 ntfy token add --label firefly alerts
 ntfy token add --label miniflux alerts
 ntfy token add --label factory-runtime alerts
+```
+
+The legacy topics `grafana`, `netdata` and `swarm` were retired (all publishers use `rp5` with a tag) and the `alerts` user's ACLs on them revoked:
+
+```bash
+ntfy access --reset alerts <topic>   # run for grafana, netdata, swarm
 ```
 
 Subscribe the phone to `rp5`; filter by tag in the app.
