@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.27.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.27.0...v1.27.1) (2026-11-06)
+
+
+### Bug Fixes
+
+* **infra:** skip the Access JWT check on n8n /webhook/ ([#569](https://github.com/giocaizzi/rp5-homeserver/issues/569)) ([d6b6602](https://github.com/giocaizzi/rp5-homeserver/commit/d6b66025af9e15c3709c68e0b2fc7d595d6fd102))
+
 ## [1.27.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.26.0...v1.27.0) (2026-11-06)
 
 
