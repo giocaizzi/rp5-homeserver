@@ -1,6 +1,6 @@
 # Service Auth migration (WIP, not implemented)
 
-Status: design note. Nothing here is applied.
+Status: In progress: all service-token policies switched to Service Auth in one change (cloud); nginx verification follows (infra).
 
 ## What and why
 
@@ -15,19 +15,19 @@ Service Auth (`non_identity`) for machine clients. Today, therefore:
 Switching a policy to Service Auth gives Access logs and a JWT with the path app's `aud`, so nginx
 can verify the call instead of skipping it.
 
-## Shape: one cloud + infra pair per app
+## Shape: three PRs
 
 The `cf_access` secret format (one `aud` per path-scoped app), the `$cf_access_bypass` skip list
-and the verifier's `aud` lookup all change, so each app is two PRs, in order:
+and the verifier's `aud` lookup all change, so the work is three PRs, in order:
 
-1. `feat(cloud)`: switch that app's policy from `bypass` to `non_identity`. nginx still skips the
-   path, so this is safe on its own.
-2. `feat(infra)`: stop skipping the path, add its `aud` to the secret, verify in `log` mode, then
-   switch to `enforce`. An infra release applies it.
+1. `feat(cloud)`: switch every service-token policy from `bypass` to `non_identity`. nginx still
+   skips the paths, so this is safe on its own.
+2. `feat(infra)`: stop skipping the migrated paths, add their `aud` values to the secret and verify
+   all of them in `log` mode. An infra release applies it.
+3. `feat(infra)`: switch the migrated hosts to `enforce`.
 
-Start with one low-stakes app (`netdata-mcp`), then proceed app by app. Excluded: policies that are
-bypass for a reason other than a service token (IP-scoped `crm` MCP bypass, the everyone-bypass on
-Calibre device paths).
+Excluded: policies that are bypass for a reason other than a service token (IP-scoped `crm` MCP
+bypass, the everyone-bypass on Calibre device paths).
 
 ## Risks
 
@@ -39,8 +39,8 @@ Calibre device paths).
 
 ## Rollback
 
-Per app: revert the `feat(cloud)` PR (policy back to `bypass`); if the infra PR already enforces,
-revert it first and cut an infra release, or set the host back to `log`/`off` in
+Revert the `feat(cloud)` PR (policies back to `bypass`); if the enforce PR is live, revert it first
+and cut an infra release, or set the host back to `log`/`off` in
 `$cf_access_mode`.
 
 ## Open before starting
