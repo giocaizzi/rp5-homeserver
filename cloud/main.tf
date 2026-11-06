@@ -94,16 +94,6 @@ resource "cloudflare_dns_record" "homepage" {
   proxied = true
 }
 
-# Creates the CNAME record that routes openclaw.${var.zone_name} to the tunnel.
-resource "cloudflare_dns_record" "openclaw" {
-  zone_id = var.zone_id
-  name    = "openclaw"
-  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
-  type    = "CNAME"
-  ttl     = 1
-  proxied = true
-}
-
 # Creates the CNAME record that routes grafana.${var.zone_name} to the tunnel.
 resource "cloudflare_dns_record" "grafana" {
   zone_id = var.zone_id
@@ -175,7 +165,7 @@ resource "cloudflare_dns_record" "pocket_id" {
 }
 
 # Creates the CNAME record that routes otel.${var.zone_name} to the tunnel.
-# OTLP HTTP ingestion: CF Access bypass on /v1/* + Alloy bearer auth.
+# OTLP HTTP ingestion: CF Access Service Auth on /v1/* + Alloy bearer auth.
 resource "cloudflare_dns_record" "otel" {
   zone_id = var.zone_id
   name    = "otel"
@@ -276,15 +266,6 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
           no_tls_verify      = true
           http_host_header   = "homepage.${var.zone_name}"
           origin_server_name = "homepage.${var.zone_name}"
-        }
-      },
-      {
-        hostname = "openclaw.${var.zone_name}"
-        service  = "https://infra-proxy:443"
-        origin_request = {
-          no_tls_verify      = true
-          http_host_header   = "openclaw.${var.zone_name}"
-          origin_server_name = "openclaw.${var.zone_name}"
         }
       },
       {
@@ -448,15 +429,6 @@ resource "cloudflare_zero_trust_access_policy" "homepage_users" {
   ]
 }
 
-resource "cloudflare_zero_trust_access_policy" "openclaw_users" {
-  account_id = var.cloudflare_account_id
-  name       = "openclaw-users"
-  decision   = "allow"
-  include = [
-    for email in var.openclaw_users : { email = { email = email } }
-  ]
-}
-
 resource "cloudflare_zero_trust_access_policy" "grafana_users" {
   account_id = var.cloudflare_account_id
   name       = "grafana-users"
@@ -527,7 +499,7 @@ resource "cloudflare_zero_trust_access_application" "n8n_policy" {
 }
 
 # Portainer access application (email-gated; webhook deploys hit Portainer
-# locally from the Pi runner, so no service-token bypass is needed).
+# locally from the Pi runner, so no service-token policy is needed).
 resource "cloudflare_zero_trust_access_application" "portainer_policy" {
   account_id       = var.cloudflare_account_id
   type             = "self_hosted"
@@ -580,20 +552,6 @@ resource "cloudflare_zero_trust_access_application" "homepage_policy" {
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.homepage_users.id
-      precedence = 1
-    }
-  ]
-}
-
-resource "cloudflare_zero_trust_access_application" "openclaw_policy" {
-  account_id       = var.cloudflare_account_id
-  type             = "self_hosted"
-  session_duration = "8h"
-  name             = "openclaw.${var.zone_name}"
-  domain           = "openclaw.${var.zone_name}"
-  policies = [
-    {
-      id         = cloudflare_zero_trust_access_policy.openclaw_users.id
       precedence = 1
     }
   ]
@@ -750,12 +708,17 @@ resource "cloudflare_zero_trust_access_identity_provider" "pocket_id" {
 }
 
 # ============================================================================
-# Claude Code MCP — per-endpoint service tokens + path-scoped bypass apps
+# Claude Code MCP — per-endpoint service tokens + path-scoped Service Auth apps
 # ============================================================================
 # One service token per MCP endpoint, so a leaked token for n8n cannot reach
 # Firefly III's MCP (and vice versa). Each endpoint's app references only its
-# own bypass policy. Application-layer auth (n8n MCP token / Firefly III PAT)
-# remains the second factor on top of CF Access bypass.
+# own Service Auth policy (decision non_identity: Access validates the token, logs
+# the request and adds a JWT with the path app's aud; nginx verifies it, see
+# docs/access-jwt.md). Application-layer auth (n8n MCP token / Firefly III PAT)
+# remains the second factor on top of CF Access.
+#
+# Resource addresses keep the old `_bypass` suffix on purpose: renaming them
+# would recreate the policies.
 
 # --- n8n MCP --------------------------------------------------------------
 
@@ -766,8 +729,8 @@ resource "cloudflare_zero_trust_access_service_token" "claude_n8n_mcp" {
 
 resource "cloudflare_zero_trust_access_policy" "claude_n8n_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-n8n-mcp-bypass"
-  decision   = "bypass"
+  name       = "claude-n8n-mcp-service-auth"
+  decision   = "non_identity"
 
   include = [
     {
@@ -804,8 +767,8 @@ resource "cloudflare_zero_trust_access_application" "n8n_mcp_policy" {
 }
 
 # --- OTLP ingestion (Alloy) ----------------------------------------------
-# Public OTLP HTTP endpoint. CF Access bypass is the OUTER gate (short-circuits
-# CF's SSO so SDK clients can POST without a browser), Alloy's bearer auth on
+# Public OTLP HTTP endpoint. CF Access Service Auth is the OUTER gate (lets
+# SDK clients POST with a token and no browser login), Alloy's bearer auth on
 # the OTLP HTTP receiver is the INNER gate (validates the actual identity).
 # Two independent secrets — leaking one alone does not grant ingestion.
 
@@ -816,8 +779,8 @@ resource "cloudflare_zero_trust_access_service_token" "otel_ingest" {
 
 resource "cloudflare_zero_trust_access_policy" "otel_ingest_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "otel-ingest-bypass"
-  decision   = "bypass"
+  name       = "otel-ingest-service-auth"
+  decision   = "non_identity"
 
   include = [
     {
@@ -831,7 +794,7 @@ resource "cloudflare_zero_trust_access_policy" "otel_ingest_bypass" {
 # Path-scoped Access app: matches only https://otel.<zone>/v1/* (OTLP HTTP
 # paths: /v1/traces, /v1/metrics, /v1/logs). Other paths on this hostname match
 # no Access app, so nginx answers them with 404 (otel.conf) instead of proxying
-# to Alloy; scoping the bypass narrows the blast radius if a token leaks.
+# to Alloy; scoping the Service Auth app narrows the blast radius if a token leaks.
 resource "cloudflare_zero_trust_access_application" "otel_ingest_policy" {
   account_id       = var.cloudflare_account_id
   type             = "self_hosted"
@@ -862,8 +825,8 @@ resource "cloudflare_zero_trust_access_service_token" "claude_firefly_mcp" {
 
 resource "cloudflare_zero_trust_access_policy" "claude_firefly_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-firefly-mcp-bypass"
-  decision   = "bypass"
+  name       = "claude-firefly-mcp-service-auth"
+  decision   = "non_identity"
 
   include = [
     {
@@ -911,8 +874,8 @@ resource "cloudflare_zero_trust_access_service_token" "claude_greenhouse_mcp" {
 
 resource "cloudflare_zero_trust_access_policy" "claude_greenhouse_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-greenhouse-mcp-bypass"
-  decision   = "bypass"
+  name       = "claude-greenhouse-mcp-service-auth"
+  decision   = "non_identity"
 
   include = [
     {
@@ -923,7 +886,7 @@ resource "cloudflare_zero_trust_access_policy" "claude_greenhouse_mcp_bypass" {
   ]
 }
 
-# Path-scoped app on greenhouse.<zone>/mcp: service-token bypass (precedence 1)
+# Path-scoped app on greenhouse.<zone>/mcp: service-token Service Auth (precedence 1)
 # for machine clients, email fallthrough (precedence 2) so browser /mcp still works.
 # More specific than greenhouse_policy, so CF Access evaluates this first for /mcp.
 resource "cloudflare_zero_trust_access_application" "greenhouse_mcp_policy" {
@@ -1009,8 +972,8 @@ resource "cloudflare_zero_trust_access_service_token" "external_crm_api" {
 
 resource "cloudflare_zero_trust_access_policy" "external_crm_api_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "external-crm-api-bypass"
-  decision   = "bypass"
+  name       = "external-crm-api-service-auth"
+  decision   = "non_identity"
 
   include = [
     {
@@ -1128,8 +1091,8 @@ resource "cloudflare_zero_trust_access_service_token" "claude_grafana_mcp" {
 
 resource "cloudflare_zero_trust_access_policy" "claude_grafana_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-grafana-mcp-bypass"
-  decision   = "bypass"
+  name       = "claude-grafana-mcp-service-auth"
+  decision   = "non_identity"
 
   include = [
     {
@@ -1172,8 +1135,8 @@ resource "cloudflare_zero_trust_access_service_token" "claude_netdata_mcp" {
 
 resource "cloudflare_zero_trust_access_policy" "claude_netdata_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-netdata-mcp-bypass"
-  decision   = "bypass"
+  name       = "claude-netdata-mcp-service-auth"
+  decision   = "non_identity"
 
   include = [
     {
@@ -1217,8 +1180,8 @@ resource "cloudflare_zero_trust_access_service_token" "claude_portainer_mcp" {
 
 resource "cloudflare_zero_trust_access_policy" "claude_portainer_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-portainer-mcp-bypass"
-  decision   = "bypass"
+  name       = "claude-portainer-mcp-service-auth"
+  decision   = "non_identity"
 
   include = [
     {
@@ -1261,8 +1224,8 @@ resource "cloudflare_zero_trust_access_service_token" "claude_langfuse_mcp" {
 
 resource "cloudflare_zero_trust_access_policy" "claude_langfuse_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-langfuse-mcp-bypass"
-  decision   = "bypass"
+  name       = "claude-langfuse-mcp-service-auth"
+  decision   = "non_identity"
 
   include = [
     {
@@ -1333,8 +1296,8 @@ resource "cloudflare_zero_trust_access_service_token" "claude_fli_mcp" {
 
 resource "cloudflare_zero_trust_access_policy" "claude_fli_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-fli-mcp-bypass"
-  decision   = "bypass"
+  name       = "claude-fli-mcp-service-auth"
+  decision   = "non_identity"
 
   include = [
     {
@@ -1377,8 +1340,8 @@ resource "cloudflare_zero_trust_access_service_token" "claude_garmin_mcp" {
 
 resource "cloudflare_zero_trust_access_policy" "claude_garmin_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-garmin-mcp-bypass"
-  decision   = "bypass"
+  name       = "claude-garmin-mcp-service-auth"
+  decision   = "non_identity"
 
   include = [
     {
@@ -1421,8 +1384,8 @@ resource "cloudflare_zero_trust_access_service_token" "claude_surfline_mcp" {
 
 resource "cloudflare_zero_trust_access_policy" "claude_surfline_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-surfline-mcp-bypass"
-  decision   = "bypass"
+  name       = "claude-surfline-mcp-service-auth"
+  decision   = "non_identity"
 
   include = [
     {
@@ -1465,8 +1428,8 @@ resource "cloudflare_zero_trust_access_service_token" "claude_lamma_mcp" {
 
 resource "cloudflare_zero_trust_access_policy" "claude_lamma_mcp_bypass" {
   account_id = var.cloudflare_account_id
-  name       = "claude-lamma-mcp-bypass"
-  decision   = "bypass"
+  name       = "claude-lamma-mcp-service-auth"
+  decision   = "non_identity"
 
   include = [
     {

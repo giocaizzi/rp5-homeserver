@@ -119,3 +119,12 @@ See [Naming & Labeling Standards](./naming_labels.md) for complete reference.
 4. Named overlay networks only for required inter-service communication.
 5. Named volumes for persistent data; absolute host paths only for backup targets (`/home/pi/`, `/var/lib/docker/volumes`).
 6. Preserve original entrypoints when wrapping secrets.
+
+### Clean stops (stop_grace_period, init, stop_signal)
+
+Swarm sends SIGTERM, waits 10s by default, then SIGKILLs (exit 137).
+
+- Set `stop_grace_period` to cover the process's real shutdown: 30-90s for databases and flushers; cloudflared needs more than its 30s connection drain.
+- Set `init: true` when PID 1 is a shell, `sleep`, crond or another process that ignores SIGTERM.
+- Never set `init: true` on s6-overlay images: s6 must be PID 1. Set `stop_signal: SIGTERM` there if the image's `STOPSIGNAL` handler is a no-op (firefly app/importer, #316).
+- Verify with `docker service update --force <stack>_<svc>`; the old task must exit 0 or 143.

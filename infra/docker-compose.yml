@@ -70,7 +70,7 @@ services:
     secrets:
       - ssl_cert
       - ssl_key
-      - source: cf_access_v2   # Access team domain + aud per host (njs/cf_access.js)
+      - source: cf_access_v3   # Access team domain + aud per host (njs/cf_access.js)
         target: cf_access
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -213,6 +213,7 @@ services:
     image: cloudflare/cloudflared:latest
     hostname: infra-tunnel
     command: tunnel --no-autoupdate run
+    stop_grace_period: 45s # cloudflared drains connections for its default 30s --grace-period; Swarm's 10s default SIGKILLed it (exit 137, #316)
     environment:
       - TUNNEL_TOKEN_FILE=/run/secrets/cloudflared_token
     secrets:
@@ -266,6 +267,7 @@ services:
       - ./netdata/health_alarm_notify.conf:/etc/netdata/health_alarm_notify.conf:ro  # ntfy alerts
       - ./netdata/health.d/pi_temp.conf:/etc/netdata/health.d/pi_temp.conf:ro  # custom alarm (file mount: a :ro dir mount breaks the entrypoint's stock-config copy)
       - ./netdata/health.d/disk_used.conf:/etc/netdata/health.d/disk_used.conf:ro  # custom alarm (file mount, as above)
+      - ./netdata/health.d/cgroup_ram.conf:/etc/netdata/health.d/cgroup_ram.conf:ro  # custom alarm (file mount, as above)
       - netdata_config:/etc/netdata         # config directory
       - netdata_cache:/var/cache/netdata    # persistent cache
       - netdata_lib:/var/lib/netdata        # persistent data
@@ -655,8 +657,8 @@ secrets:
     file: ./secrets/cert.pem
   ssl_key:
     file: ./secrets/key.pem
-  cf_access_v2:
-    file: ./secrets/cf_access_v2.json
+  cf_access_v3:
+    file: ./secrets/cf_access_v3.json
   ntfy_token:
     file: ./secrets/ntfy_token.txt
   portainer_mcp_auth_token:

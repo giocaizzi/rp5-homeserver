@@ -132,7 +132,7 @@ Automatically checks and updates Swarm services with tiered strategy to stay wit
 | Tier | Services | Check Interval | Pull Volume |
 |------|----------|----------------|-------------|
 | **Critical** | Infra (proxy, tunnel, portainer, netdata, backrest, homepage) | 24h | ~8 pulls/day |
-| **Core** | Main apps (observability, ntfy, adguard, openclaw, firefly, n8n) | 48h | ~12 pulls/2 days |
+| **Core** | Main apps (observability, ntfy, adguard, firefly, n8n) | 48h | ~12 pulls/2 days |
 | **Extra** | Exporters, workers, optional services | 72h | ~6 pulls/3 days |
 
 **Total:** ~26 pulls spread over 24h window = **well within 100 pulls/6h limit**.
