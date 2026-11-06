@@ -94,16 +94,6 @@ resource "cloudflare_dns_record" "homepage" {
   proxied = true
 }
 
-# Creates the CNAME record that routes openclaw.${var.zone_name} to the tunnel.
-resource "cloudflare_dns_record" "openclaw" {
-  zone_id = var.zone_id
-  name    = "openclaw"
-  content = "${cloudflare_zero_trust_tunnel_cloudflared.homeserver.id}.cfargotunnel.com"
-  type    = "CNAME"
-  ttl     = 1
-  proxied = true
-}
-
 # Creates the CNAME record that routes grafana.${var.zone_name} to the tunnel.
 resource "cloudflare_dns_record" "grafana" {
   zone_id = var.zone_id
@@ -279,15 +269,6 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
         }
       },
       {
-        hostname = "openclaw.${var.zone_name}"
-        service  = "https://infra-proxy:443"
-        origin_request = {
-          no_tls_verify      = true
-          http_host_header   = "openclaw.${var.zone_name}"
-          origin_server_name = "openclaw.${var.zone_name}"
-        }
-      },
-      {
         hostname = "otel.${var.zone_name}"
         service  = "https://infra-proxy:443"
         origin_request = {
@@ -448,15 +429,6 @@ resource "cloudflare_zero_trust_access_policy" "homepage_users" {
   ]
 }
 
-resource "cloudflare_zero_trust_access_policy" "openclaw_users" {
-  account_id = var.cloudflare_account_id
-  name       = "openclaw-users"
-  decision   = "allow"
-  include = [
-    for email in var.openclaw_users : { email = { email = email } }
-  ]
-}
-
 resource "cloudflare_zero_trust_access_policy" "grafana_users" {
   account_id = var.cloudflare_account_id
   name       = "grafana-users"
@@ -580,20 +552,6 @@ resource "cloudflare_zero_trust_access_application" "homepage_policy" {
   policies = [
     {
       id         = cloudflare_zero_trust_access_policy.homepage_users.id
-      precedence = 1
-    }
-  ]
-}
-
-resource "cloudflare_zero_trust_access_application" "openclaw_policy" {
-  account_id       = var.cloudflare_account_id
-  type             = "self_hosted"
-  session_duration = "8h"
-  name             = "openclaw.${var.zone_name}"
-  domain           = "openclaw.${var.zone_name}"
-  policies = [
-    {
-      id         = cloudflare_zero_trust_access_policy.openclaw_users.id
       precedence = 1
     }
   ]
