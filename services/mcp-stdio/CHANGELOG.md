@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.5.2...mcp-stdio-v1.6.0) (2026-11-06)
+
+
+### Features
+
+* **mcp-stdio:** ship the Surfline summary tool in the gateway image ([#571](https://github.com/giocaizzi/rp5-homeserver/issues/571)) ([23caeb5](https://github.com/giocaizzi/rp5-homeserver/commit/23caeb506ac87e5767bb773b723b84bc050d247e))
+
 ## [1.5.2](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-stdio-v1.5.1...mcp-stdio-v1.5.2) (2026-10-23)
 
 
