@@ -167,7 +167,7 @@ output "external_crm_api_client_secret" {
 }
 
 # ============================================================================
-# OTLP ingestion outputs (CF Access bypass for otel.<zone>/v1/*)
+# OTLP ingestion outputs (CF Access Service Auth for otel.<zone>/v1/*)
 # ============================================================================
 
 output "otel_ingest_url" {

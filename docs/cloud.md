@@ -8,7 +8,7 @@ Terraform manages Cloudflare and GCP resources.
 |----------|----------|---------|
 | Cloudflare | Zero Trust Tunnel | Secure external access without port forwarding |
 | Cloudflare | DNS Records | Public domain routing (`*.<domain>`), CAA records |
-| Cloudflare | Access apps and policies | Email-gated apps, path-scoped bypass apps, per-app `session_duration` |
+| Cloudflare | Access apps and policies | Email-gated apps, path-scoped apps (service-token paths use Service Auth, a few paths bypass), per-app `session_duration` |
 | Cloudflare | Service Tokens | One per machine client (MCP connectors, OTLP ingest, CRM API) |
 | Cloudflare | Identity provider | Pocket ID login method for Access |
 | Cloudflare | Zone settings (`cloud/zone.tf`) | TLS/HTTPS settings as code, HSTS |
