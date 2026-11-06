@@ -121,7 +121,7 @@ Non-service releases (`infra`, `cloud`, `mcp-connector`) no-op.
 - `WEBHOOK_ID_<STACK>` — the webhook id per stack
   (`WEBHOOK_ID_N8N`, `WEBHOOK_ID_FIREFLY`, `WEBHOOK_ID_ADGUARD`, …)
 
-> **On-demand stacks** (`ai`, `code`, `langfuse`, `openclaw`) are started/stopped
+> **On-demand stacks** (`ai`, `code`, `langfuse`) are started/stopped
 > manually and have **no** `WEBHOOK_ID_<STACK>` secret. Their releases are
 > expected to log `No webhook secret … — skipping` and exit green without
 > redeploying; redeploy them from Portainer when started. To make one

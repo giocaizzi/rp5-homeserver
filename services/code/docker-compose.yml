@@ -47,7 +47,7 @@ networks:
 #   ~/.config/gh     GitHub CLI auth (clone/push)
 #   ~/workspace      cloned repos Claude operates on
 # Auth is established interactively once (see README) and persists here — no
-# Swarm secrets, mirroring the OpenClaw CLI-managed-auth pattern.
+# Swarm secrets (CLI-managed auth persisted in a named volume).
 volumes:
   home_data:
 
