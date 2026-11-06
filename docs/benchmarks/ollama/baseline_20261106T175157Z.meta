@@ -1,0 +1,20 @@
+date_utc=20261106T175157Z mode=baseline runs=1 options={} think=null
+ollama version is 0.40.15
+NAME                  ID              SIZE      MODIFIED       
+minicpm5-2b:latest    48441fda9064    1.6 GB    6 minutes ago     
+gemma4:e2b            b37049369adf    4.6 GB    7 minutes ago     
+granite4.2:3b         40577dc168a3    2.2 GB    12 minutes ago    
+env=OLLAMA_CONTEXT_LENGTH=4096
+OLLAMA_DEBUG=false
+OLLAMA_FLASH_ATTENTION=1
+OLLAMA_HOST=0.0.0.0
+OLLAMA_KEEP_ALIVE=5m
+OLLAMA_KV_CACHE_TYPE=q8_0
+OLLAMA_MAX_LOADED_MODELS=1
+OLLAMA_MODELS=/root/.ollama
+OLLAMA_NUM_PARALLEL=1
+4
+ondemand
+temp=57.6'C
+Mem:            8063        6191         231          61        1789        1871
+end_utc=2026-11-06T17:59:36Z

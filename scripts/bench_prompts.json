@@ -1,0 +1,22 @@
+[
+  {
+    "id": "classify",
+    "user": "Classify the sentiment of this review as exactly one word: positive, negative or neutral.\n\nReview: The delivery was two weeks late and the box was crushed, but the product itself works fine.",
+    "check": {"type": "contains_any", "expect": ["negative", "neutral"]}
+  },
+  {
+    "id": "extract_json",
+    "user": "Extract the fields from the text and reply with only a JSON object with keys \"title\", \"author\", \"year\".\n\nText: 'Dune' is a science fiction novel written by Frank Herbert and first published in 1965.",
+    "check": {"type": "json_keys", "expect": ["title", "author", "year"]}
+  },
+  {
+    "id": "tool_call",
+    "system": "You are an automation agent. Use the provided tools to act. Do not answer in prose.",
+    "user": "Save a note titled 'Groceries' with the content 'milk, eggs, bread'.",
+    "tools": [
+      {"type": "function", "function": {"name": "create_note", "description": "Create a note", "parameters": {"type": "object", "properties": {"title": {"type": "string"}, "content": {"type": "string"}}, "required": ["title", "content"]}}},
+      {"type": "function", "function": {"name": "search_notes", "description": "Search existing notes by keyword", "parameters": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}}}
+    ],
+    "check": {"type": "tool", "expect": "create_note", "args": ["title", "content"]}
+  }
+]

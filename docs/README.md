@@ -73,6 +73,7 @@ flowchart TB
 | [CI/CD](./ci_cd.md) | Workflows, cloud/ Terraform auth and wiring, adding a public service |
 | [Pocket ID](./pocket-id.md) | Runbook: passkey login for Cloudflare Access (setup, day-to-day, recovery, rollback) |
 | [MCP stdio](./mcp-stdio.md) | Runbook: add a stdio-only MCP server (supergateway stack, Access, connector) |
+| [Ollama benchmark](./ollama-benchmark.md) | Small-model benchmark on the Pi: method, results, Netdata data; runbook in [RUNBOOKS](./RUNBOOKS/run-ollama-benchmark.md) |
 
 ## Services
 
