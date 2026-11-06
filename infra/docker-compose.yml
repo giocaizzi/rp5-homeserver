@@ -213,6 +213,7 @@ services:
     image: cloudflare/cloudflared:latest
     hostname: infra-tunnel
     command: tunnel --no-autoupdate run
+    stop_grace_period: 45s # cloudflared drains connections for its default 30s --grace-period; Swarm's 10s default SIGKILLed it (exit 137, #316)
     environment:
       - TUNNEL_TOKEN_FILE=/run/secrets/cloudflared_token
     secrets:
