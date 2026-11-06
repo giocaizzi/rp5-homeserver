@@ -26,7 +26,6 @@ Component → workflow mapping, Portainer Remote Stack mounts, infra versioning 
 
 **Config mount decision:**
 - Static configs (nginx, ntfy): Bind mount from repo
-- Runtime-modified configs (openclaw): Named volume, edit via SSH
 
 > **Portainer re-clone trap.** A Portainer redeploy deletes and re-clones the repo; tasks whose spec didn't change keep the old (deleted) bind-mount inode — directories go empty, files stay stale. Stacks with repo bind mounts carry `com.giocaizzi.config-rev: "<ver>" # x-release-please-version` in `x-labels-base`, listed under that package's `extra-files` in `release-please-config.json`, so every release changes the container spec and rolls the tasks. Out-of-band redeploys still need `docker service update --force <stack>_<svc>`.
 

@@ -6,7 +6,7 @@
 # on the Pi runner. The "10 min" is stateless: a service whose spec was updated
 # <10 min ago (UpdatedAt) is still converging and is skipped.
 #
-# Needs repo secret NTFY_SWARM_TOKEN (write-only token for topic `swarm`, see
+# Needs repo secret NTFY_SWARM_TOKEN (write-only token for topic `rp5`, tag `swarm`, see
 # services/ntfy/README.md#-alert-topics). Re-alerts every run while degraded.
 name: swarm-health
 
@@ -47,5 +47,5 @@ jobs:
           # Resolve ntfy.home to loopback -> nginx (same pattern as deploy-services.yml).
           curl -sSfk --resolve ntfy.home:443:127.0.0.1 \
             -H "Authorization: Bearer ${NTFY_SWARM_TOKEN}" \
-            -H "Title: Swarm service degraded" -H "Priority: high" -H "Tags: warning" \
-            -d "$degraded" https://ntfy.home/swarm
+            -H "Title: Swarm service degraded" -H "Priority: high" -H "Tags: warning,swarm" \
+            -d "$degraded" https://ntfy.home/rp5

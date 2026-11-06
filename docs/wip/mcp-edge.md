@@ -2,7 +2,7 @@
 
 Design for exposing self-hosted MCP servers to claude.ai and to local CLIs from one
 place, with per-user identity, per-connector and per-tool ACLs, and selective sharing.
-Tracker: #261. Status: Phase 0 in progress; Phase 1 done without the single deployment (#395); Phase 3 built, fli not yet deployed (#397); Phases 2 and 4 are proposals.
+Tracker: #261. Status: Phase 0 done except #392; Phase 1 done without the single deployment (#395); Phase 3 deployed (fli results blocked upstream until flights 0.10.0, #434); Phases 2 and 4 are proposals.
 
 ## Where we are
 
@@ -71,9 +71,9 @@ revisit mcphub only if friends need their own credentials on a shared server.
 |---|---|---|---|
 | 1 | Open DCR + no consent → one-click token theft (confused deputy) | High | Fixed in #388 |
 | 2 | Portainer connector carries a full-access token (root on the Pi) | High | #392 |
-| 3 | nginx doesn't validate the Access JWT; direct-to-origin traffic skips Access | Medium | #393 |
+| 3 | nginx doesn't validate the Access JWT; direct-to-origin traffic skips Access | Medium | Fixed in #393 |
 | 4 | Allowlist removal didn't revoke existing grants | Medium | Fixed in #388 |
-| 5 | Calibre reader paths public, Basic auth only, Kobo token in URL | Medium | #394 |
+| 5 | Calibre reader paths public, Basic auth only, Kobo token in URL | Medium | Fixed in #394 |
 | 6 | CRM bypass trusts the whole claude.ai egress range | Medium | Accepted (see above) |
 | 7 | `otel.<domain>` outside `/v1/` reached Alloy without Access (verified: 401 from Alloy) | Low | #389, #391 |
 | 8 | Path variants vs path-scoped Access apps | Low | Not vulnerable: `//mcp`, `/%6Dcp`, `/MCP`, `/x/../mcp` all stopped by Access |

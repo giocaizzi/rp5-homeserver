@@ -2,6 +2,8 @@
 
 > Local LLM inference and chat UI stack optimized for Raspberry Pi 5
 
+Status: not deployed (no Swarm or Portainer stack on the Pi). Deploy on demand: [Quick Start](#-quick-start) and [docs/gitops.md](../../docs/gitops.md).
+
 **URLs**: `https://chat.home` (OpenWebUI), `https://ai.home` (Ollama API)
 
 ---
