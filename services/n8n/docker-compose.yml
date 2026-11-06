@@ -41,7 +41,7 @@ networks:
     external: true
     name: rp5_public
   
-  # External network for observability (Alloy scraping)
+  # External network for observability (Alloy scraping, OTLP traces to Alloy)
   observability_network:
     external: true
     name: rp5_observability
@@ -178,6 +178,14 @@ services:
       - N8N_LOG_OUTPUT=console
       # Telemetry host (telemetry.n8n.io) is DNS-blocked (0.0.0.0) -> ECONNREFUSED 0.0.0.0:443 spam
       - N8N_DIAGNOSTICS_ENABLED=false
+      # OpenTelemetry traces of workflow runs (Preview) -> Alloy -> Tempo. Production
+      # executions only; agent prompts and tool I/O stay out of the spans.
+      - N8N_OTEL_ENABLED=true
+      - N8N_OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - N8N_OTEL_EXPORTER_OTLP_ENDPOINT=http://observability-collector:4317
+      - N8N_OTEL_EXPORTER_SERVICE_NAME=n8n
+      - N8N_AGENTS_TRACING_RECORD_INPUTS=false
+      - N8N_AGENTS_TRACING_RECORD_OUTPUTS=false
       # Main heap bounded under the 1536M limit; the JS runner does not inherit
       # NODE_OPTIONS (allowlisted env), it gets N8N_RUNNERS_MAX_OLD_SPACE_SIZE.
       - NODE_OPTIONS=--max-old-space-size=896
@@ -200,6 +208,7 @@ services:
     networks:
       - n8n_network
       - public_network
+      - observability_network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:5678/healthz"]
       interval: 30s
