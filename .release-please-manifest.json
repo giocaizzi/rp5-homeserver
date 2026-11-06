@@ -14,7 +14,7 @@
   "services/code": "0.2.0",
   "services/crm": "0.3.1",
   "services/calibre": "0.2.0",
-  "services/mcp-stdio": "1.5.2",
+  "services/mcp-stdio": "1.6.0",
   "services/miniflux": "1.0.1",
   "services/pocket-id": "1.0.0"
 }
