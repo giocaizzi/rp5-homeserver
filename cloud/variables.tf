@@ -135,6 +135,18 @@ variable "pocket_id_client_id" {
   }
 }
 
+variable "n8n_telegram_webhook_id" {
+  description = "Webhook ID of the n8n Telegram Trigger: its path /webhook/<id>/webhook is the only n8n path Telegram may reach without the Access login"
+  type        = string
+  sensitive   = true
+
+  # An unset GitHub secret arrives as "": fail the plan instead of publishing a broken or too-wide path.
+  validation {
+    condition     = length(var.n8n_telegram_webhook_id) > 0
+    error_message = "Set the N8N_TELEGRAM_WEBHOOK_ID secret on cloud-plan and cloud-production (docs/RUNBOOKS/n8n-telegram-webhook.md)."
+  }
+}
+
 variable "pocket_id_client_secret" {
   description = "OIDC client secret of the Cloudflare Access client created in Pocket ID"
   type        = string
