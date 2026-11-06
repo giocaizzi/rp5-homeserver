@@ -38,12 +38,6 @@ output "firefly_url" {
   sensitive   = true
 }
 
-output "openclaw_url" {
-  description = "The public URL for OpenClaw"
-  value       = "https://openclaw.${var.zone_name}"
-  sensitive   = true
-}
-
 output "grafana_url" {
   description = "The public URL for Grafana"
   value       = "https://grafana.${var.zone_name}"

@@ -29,11 +29,6 @@ variable "tunnel_secret" {
   description = "Base64 encoded secret for the tunnel"
   type        = string
   sensitive   = true
-  # weird: fails TODO: investigate
-  # validation {
-  #   condition     = can(base64decode(var.tunnel_secret))
-  #   error_message = "Tunnel secret must be a valid base64 encoded string."
-  # }
 }
 
 # ---- Optional ----
@@ -67,13 +62,6 @@ variable "firefly_users" {
 
 variable "homepage_users" {
   description = "List of email addresses allowed to access Homepage"
-  type        = list(string)
-  default     = []
-  sensitive   = true
-}
-
-variable "openclaw_users" {
-  description = "List of email addresses allowed to access OpenClaw"
   type        = list(string)
   default     = []
   sensitive   = true
