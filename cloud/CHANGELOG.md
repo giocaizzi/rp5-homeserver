@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.15.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.14.0...cloud-v0.15.0) (2026-11-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cloud:** the openclaw.<domain> hostname and its Access app are removed Closes #427
+
+### Features
+
+* **cloud:** add Cloudflare notifications and WAF custom rules ([#543](https://github.com/giocaizzi/rp5-homeserver/issues/543)) ([fc2627d](https://github.com/giocaizzi/rp5-homeserver/commit/fc2627d4660101556c41415f94498e6c733df504))
+* **cloud:** switch service-token Access policies to Service Auth ([#549](https://github.com/giocaizzi/rp5-homeserver/issues/549)) ([79903db](https://github.com/giocaizzi/rp5-homeserver/commit/79903db649f1df8a1a334344656f345d25529dd5))
+
+
+### Code Refactoring
+
+* **cloud:** remove the openclaw hostname and access app ([#554](https://github.com/giocaizzi/rp5-homeserver/issues/554)) ([70a6d71](https://github.com/giocaizzi/rp5-homeserver/commit/70a6d710afd78e4a2855255c231c414e13d14613))
+
 ## [0.14.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.13.0...cloud-v0.14.0) (2026-11-04)
 
 
