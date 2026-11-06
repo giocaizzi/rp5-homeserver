@@ -17,11 +17,12 @@ Live connectors:
 | Grafana    | `https://mcp-connector-grafana.<account>.workers.dev/mcp`      | `https://grafana.<domain>/mcp` (sidecar, read-only) |
 | Netdata    | `https://mcp-connector-netdata.<account>.workers.dev/mcp`  | `https://netdata-mcp.<domain>/mcp` (native)  |
 | Portainer  | `https://mcp-connector-portainer.<account>.workers.dev/mcp`    | `https://portainer.<domain>/mcp` (sidecar, full access) |
-| Langfuse   | `https://mcp-connector-langfuse.<account>.workers.dev/mcp`     | `https://langfuse-mcp.<domain>/api/public/mcp` (native) |
 | Google Flights | `https://mcp-connector-fli.<account>.workers.dev/mcp`      | `https://mcp-stdio.<domain>/fli/mcp` ([stdio via supergateway](../../services/mcp-stdio/README.md)) |
 | Garmin Connect | `https://mcp-connector-garmin.<account>.workers.dev/mcp`   | `https://mcp-stdio.<domain>/garmin/mcp` ([stdio via supergateway](../../services/mcp-stdio/README.md)) |
 | Surfline   | `https://mcp-connector-surfline.<account>.workers.dev/mcp`     | `https://mcp-stdio.<domain>/surfline/mcp` ([stdio via supergateway](../../services/mcp-stdio/README.md)) |
 | LaMMA Toscana | `https://mcp-connector-lamma.<account>.workers.dev/mcp` | `https://mcp-stdio.<domain>/lamma/mcp` ([stdio via supergateway](../../services/mcp-stdio/README.md)) |
+
+Langfuse was removed while its stack is not deployed; to restore it, re-add its registry entry (upstream `https://langfuse-mcp.<domain>/api/public/mcp`, `auth: Basic`) and its secrets. The already deployed `mcp-connector-langfuse` Worker is not deleted by CI: the owner removes it by hand (`npx wrangler delete --env langfuse`).
 
 ---
 
@@ -133,7 +134,6 @@ never in `wrangler.jsonc`, never in argv with the value inline):
 - **grafana** — the sidecar's caller token (`observability_grafana_mcp_server_token`, `MCP_GRAFANA_SERVER_TOKEN`), **not** the Grafana service-account token (that one stays inside the sidecar); the sidecar is also started `--disable-write`.
 - **netdata** — the agent's MCP key: `docker exec $(docker ps -qf name=infra_monitoring) cat /var/lib/netdata/mcp_dev_preview_api_key`.
 - **portainer** — the `infra_portainer_mcp_auth_token` gate token (the sidecar's `PORTAINER_MCP_AUTH_TOKEN`). Also set `UPSTREAM_EXTRA_HEADERS` (secret, JSON) to `{"X-Portainer-API-Key":"ptr_…"}` — a dedicated Portainer access token (My Account → Access tokens); it carries the full Portainer permissions of that user.
-- **langfuse** — `base64(public_key:secret_key)` of the project key pair (`langfuse_public_key` / `langfuse_secret_key`), sent as `Authorization: Basic …` (`UPSTREAM_AUTH_SCHEME=Basic` in `wrangler.jsonc`). Langfuse MCP exposes write tools too.
 
 **Google OAuth client** — one "Web application" client, with every callback
 URL registered as Authorized redirect URIs (one per env, `https://mcp-connector-<env>.<account>.workers.dev/callback`):
@@ -144,7 +144,6 @@ https://mcp-connector-n8n.<account>.workers.dev/callback
 https://mcp-connector-grafana.<account>.workers.dev/callback
 https://mcp-connector-netdata.<account>.workers.dev/callback
 https://mcp-connector-portainer.<account>.workers.dev/callback
-https://mcp-connector-langfuse.<account>.workers.dev/callback
 ```
 
 ---
@@ -158,7 +157,7 @@ https://mcp-connector-langfuse.<account>.workers.dev/callback
 |---|---|
 | `name` | Display/log label (`SERVICE_NAME`). |
 | `upstream` | The **full** upstream MCP endpoint, path included, with `${DOMAIN}` for the zone. |
-| `auth` | Scheme for `UPSTREAM_BEARER`: `Bearer` or `Basic` (Langfuse). |
+| `auth` | Scheme for `UPSTREAM_BEARER`: `Bearer` or `Basic`. |
 | `mode` | Identity propagation ([design](../../docs/wip/mcp-edge.md)); only `shared` is implemented. |
 | `allow` | Groups whose members may use this connector. |
 | `extra_headers` | Optional `true`: `deploy.sh` also prompts for `UPSTREAM_EXTRA_HEADERS`. |
