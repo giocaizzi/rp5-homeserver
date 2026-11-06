@@ -38,12 +38,6 @@ output "firefly_url" {
   sensitive   = true
 }
 
-output "openclaw_url" {
-  description = "The public URL for OpenClaw"
-  value       = "https://openclaw.${var.zone_name}"
-  sensitive   = true
-}
-
 output "grafana_url" {
   description = "The public URL for Grafana"
   value       = "https://grafana.${var.zone_name}"
@@ -83,6 +77,12 @@ output "calibre_url" {
 output "miniflux_url" {
   description = "The public URL for Miniflux (BASE_URL)"
   value       = "https://miniflux.${var.zone_name}"
+  sensitive   = true
+}
+
+output "pocket_id_url" {
+  description = "The public URL for Pocket ID (OIDC issuer)"
+  value       = "https://id.${var.zone_name}"
   sensitive   = true
 }
 
@@ -167,7 +167,7 @@ output "external_crm_api_client_secret" {
 }
 
 # ============================================================================
-# OTLP ingestion outputs (CF Access bypass for otel.<zone>/v1/*)
+# OTLP ingestion outputs (CF Access Service Auth for otel.<zone>/v1/*)
 # ============================================================================
 
 output "otel_ingest_url" {
@@ -281,5 +281,12 @@ output "claude_lamma_mcp_client_id" {
 output "claude_lamma_mcp_client_secret" {
   description = "Client Secret for the lamma MCP service token (CF-Access-Client-Secret)"
   value       = cloudflare_zero_trust_access_service_token.claude_lamma_mcp.client_secret
+  sensitive   = true
+}
+
+# DNSSEC DS record to add at the registrar (also in the dashboard).
+output "dnssec_ds" {
+  description = "DNSSEC DS record for the registrar"
+  value       = cloudflare_zone_dnssec.this.ds
   sensitive   = true
 }

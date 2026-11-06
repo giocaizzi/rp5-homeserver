@@ -82,7 +82,6 @@ jobs:
           BACKREST_USERS: ${{ secrets.BACKREST_USERS }}
           FIREFLY_USERS: ${{ secrets.FIREFLY_USERS }}
           HOMEPAGE_USERS: ${{ secrets.HOMEPAGE_USERS }}
-          OPENCLAW_USERS: ${{ secrets.OPENCLAW_USERS }}
           GRAFANA_USERS: ${{ secrets.GRAFANA_USERS }}
           GREENHOUSE_USERS: ${{ secrets.GREENHOUSE_USERS }}
           CODE_USERS: ${{ secrets.CODE_USERS }}
@@ -91,7 +90,7 @@ jobs:
           MINIFLUX_USERS: ${{ secrets.MINIFLUX_USERS }}
           MCP_STDIO_USERS: ${{ secrets.MCP_STDIO_USERS }}
         run: |
-          for n in N8N_USERS PORTAINER_USERS BACKREST_USERS FIREFLY_USERS HOMEPAGE_USERS OPENCLAW_USERS GRAFANA_USERS GREENHOUSE_USERS CODE_USERS CRM_USERS CALIBRE_USERS MINIFLUX_USERS MCP_STDIO_USERS; do
+          for n in N8N_USERS PORTAINER_USERS BACKREST_USERS FIREFLY_USERS HOMEPAGE_USERS GRAFANA_USERS GREENHOUSE_USERS CODE_USERS CRM_USERS CALIBRE_USERS MINIFLUX_USERS MCP_STDIO_USERS; do
             [ -n "${!n:-}" ] || continue
             jq -r '.[]' <<< "${!n}" | while IFS= read -r e; do [ -n "$e" ] && echo "::add-mask::$e"; done
           done
@@ -103,13 +102,13 @@ jobs:
           TF_VAR_cloudflare_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TF_VAR_zone_name: ${{ secrets.CLOUDFLARE_ZONE_NAME }}
           TF_VAR_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          TF_VAR_alert_email: ${{ secrets.ALERT_EMAIL }}
           TF_VAR_tunnel_secret: ${{ secrets.TUNNEL_SECRET }}
           TF_VAR_n8n_users: ${{ secrets.N8N_USERS || '[]' }}
           TF_VAR_portainer_users: ${{ secrets.PORTAINER_USERS || '[]' }}
           TF_VAR_backrest_users: ${{ secrets.BACKREST_USERS || '[]' }}
           TF_VAR_firefly_users: ${{ secrets.FIREFLY_USERS || '[]' }}
           TF_VAR_homepage_users: ${{ secrets.HOMEPAGE_USERS || '[]' }}
-          TF_VAR_openclaw_users: ${{ secrets.OPENCLAW_USERS || '[]' }}
           TF_VAR_grafana_users: ${{ secrets.GRAFANA_USERS || '[]' }}
           TF_VAR_greenhouse_users: ${{ secrets.GREENHOUSE_USERS || '[]' }}
           TF_VAR_code_users: ${{ secrets.CODE_USERS || '[]' }}
@@ -117,6 +116,8 @@ jobs:
           TF_VAR_calibre_users: ${{ secrets.CALIBRE_USERS || '[]' }}
           TF_VAR_miniflux_users: ${{ secrets.MINIFLUX_USERS || '[]' }}
           TF_VAR_mcp_stdio_users: ${{ secrets.MCP_STDIO_USERS || '[]' }}
+          TF_VAR_pocket_id_client_id: ${{ secrets.POCKET_ID_CLIENT_ID }}
+          TF_VAR_pocket_id_client_secret: ${{ secrets.POCKET_ID_CLIENT_SECRET }}
           TF_VAR_gcp_project_id: ${{ secrets.GCP_PROJECT_ID }}
           TF_VAR_gcp_region: ${{ vars.GCP_REGION }}
           TF_VAR_gcp_backup_bucket_name: ${{ secrets.GCP_BACKUP_BUCKET_NAME }}
@@ -134,6 +135,7 @@ jobs:
           for k, v in os.environ.items():
               if k.startswith("TF_VAR_") and k.endswith("_users"):
                   vals += json.loads(v or "[]")
+          vals.append(os.environ.get("TF_VAR_alert_email", ""))
           p = sys.argv[1]
           s = open(p).read()
           for v in sorted({v for v in vals if v}, key=len, reverse=True):

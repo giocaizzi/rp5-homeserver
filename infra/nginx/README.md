@@ -8,8 +8,8 @@ Modular nginx configuration for all services.
 nginx/
 ├── nginx.conf              # Main config (global settings only)
 ├── conf.d/
-│   ├── globals.conf        # Backend map + rate limits
-│   ├── cf-access.conf      # Access JWT check: per-host flag + bypassed paths
+│   ├── globals.conf        # Backend map + rate limits (keyed on the real client)
+│   ├── cf-access.conf      # Access JWT check: per-host flag + Service Auth path apps + bypassed paths
 │   ├── defaults.conf       # Default server + HTTP redirect
 │   ├── infra.conf          # Infra services (always up)
 │   └── services/           # One <service>.conf per service (may be down)

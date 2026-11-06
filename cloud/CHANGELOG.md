@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.14.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.13.0...cloud-v0.14.0) (2026-11-04)
+
+
+### Features
+
+* **cloud:** add Pocket ID as an Access login method ([#525](https://github.com/giocaizzi/rp5-homeserver/issues/525)) ([af8bd96](https://github.com/giocaizzi/rp5-homeserver/commit/af8bd962aef8b2c0b83490d04ed6ac52e7a2f674))
+* **cloud:** harden zone settings, DNSSEC, CAA, Access sessions and CRM bypass ([#541](https://github.com/giocaizzi/rp5-homeserver/issues/541)) ([c299b86](https://github.com/giocaizzi/rp5-homeserver/commit/c299b86178faf71a5d7e075636da52c223f037ae))
+
+## [0.13.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.12.0...cloud-v0.13.0) (2026-11-04)
+
+
+### Features
+
+* **cloud:** add the Pocket ID hostname behind a temporary Access gate ([#524](https://github.com/giocaizzi/rp5-homeserver/issues/524)) ([648cf62](https://github.com/giocaizzi/rp5-homeserver/commit/648cf62c5e3955e1fd0e7eaf1d8df921ec9b64a1))
+
 ## [0.12.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.11.0...cloud-v0.12.0) (2026-10-19)
 
 
