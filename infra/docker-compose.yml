@@ -444,8 +444,8 @@ services:
       - '-loglevel=info'
       - '-proxysocketendpoint=/docker-proxy/docker.sock'
       - '-allowHEAD=/_ping'
-      - '-allowGET=/(_ping|v1\.\d+/(containers/json|containers/(postgres|firefly_db|crm_db|n8n_db|miniflux_db|greenhouse_app|pocket-id_app)\.1\.\w+/json|services/(postgres|firefly_db|crm_db|n8n_db|miniflux_db|greenhouse_app|pocket-id_app)|exec/\w+/json))'
-      - '-allowPOST=/v1\.\d+/(containers/(postgres|firefly_db|crm_db|n8n_db|miniflux_db|greenhouse_app|pocket-id_app)\.1\.\w+/exec|exec/\w+/start|(containers|images)/prune)'
+      - '-allowGET=/(_ping|v1\.\d+/(containers/json|containers/(infra_postgres|postgres|firefly_db|crm_db|n8n_db|miniflux_db|greenhouse_app|pocket-id_app)\.1\.\w+/json|services/(infra_postgres|postgres|firefly_db|crm_db|n8n_db|miniflux_db|greenhouse_app|pocket-id_app)|exec/\w+/json))'
+      - '-allowPOST=/v1\.\d+/(containers/(infra_postgres|postgres|firefly_db|crm_db|n8n_db|miniflux_db|greenhouse_app|pocket-id_app)\.1\.\w+/exec|exec/\w+/start|(containers|images)/prune)'
       - '-watchdoginterval=3600'
       - '-stoponwatchdog'
     volumes:
