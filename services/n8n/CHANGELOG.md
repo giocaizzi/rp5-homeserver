@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/n8n-v0.2.0...n8n-v0.3.0) (2026-11-08)
+
+
+### Features
+
+* **n8n:** switch to shared postgresql database ([#578](https://github.com/giocaizzi/rp5-homeserver/issues/578)) ([e812e92](https://github.com/giocaizzi/rp5-homeserver/commit/e812e92c8cfc1ba46d7b7f38e21278879f5c387d))
+
+
+### Performance Improvements
+
+* **n8n:** clamp node heap size to 384mb ([#574](https://github.com/giocaizzi/rp5-homeserver/issues/574)) ([b265ae8](https://github.com/giocaizzi/rp5-homeserver/commit/b265ae8d21babb81c723e1c04b1fac402045712d))
+
 ## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/n8n-v0.1.5...n8n-v0.2.0) (2026-11-06)
 
 

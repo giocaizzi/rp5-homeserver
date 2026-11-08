@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/langfuse-v0.2.2...langfuse-v0.3.0) (2026-11-08)
+
+
+### Features
+
+* **langfuse:** point database and cache to shared postgres and redis ([#588](https://github.com/giocaizzi/rp5-homeserver/issues/588)) ([a716f05](https://github.com/giocaizzi/rp5-homeserver/commit/a716f05ec266ddeacac56358f47ec96b8f818dc5))
+
 ## [0.2.2](https://github.com/giocaizzi/rp5-homeserver/compare/langfuse-v0.2.1...langfuse-v0.2.2) (2026-10-12)
 
 

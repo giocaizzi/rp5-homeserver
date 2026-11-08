@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.12.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.11.0...observability-v0.12.0) (2026-11-08)
+
+
+### Features
+
+* **observability:** host shared postgres and redis exporters ([#585](https://github.com/giocaizzi/rp5-homeserver/issues/585)) ([9128427](https://github.com/giocaizzi/rp5-homeserver/commit/91284275e3324bcfa1f9febdb731d02c18ec56c5))
+* **observability:** remove retired mariadb alerting, dashboard and exporter targets ([#583](https://github.com/giocaizzi/rp5-homeserver/issues/583)) ([c438855](https://github.com/giocaizzi/rp5-homeserver/commit/c4388551062ec7af69cb2f84f78f76015a8c7542))
+
+
+### Bug Fixes
+
+* **observability:** format full dsn in postgres exporter entrypoint ([#589](https://github.com/giocaizzi/rp5-homeserver/issues/589)) ([b72a422](https://github.com/giocaizzi/rp5-homeserver/commit/b72a422993a38dfc798affb6f262208d16d5389a))
+* **observability:** pass postgres password via entrypoint in postgres exporter ([#586](https://github.com/giocaizzi/rp5-homeserver/issues/586)) ([68d5e02](https://github.com/giocaizzi/rp5-homeserver/commit/68d5e02387945cee15acdac38670a639420ac52f))
+
 ## [0.11.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.10.0...observability-v0.11.0) (2026-11-06)
 
 
