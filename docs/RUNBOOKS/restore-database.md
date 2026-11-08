@@ -18,15 +18,12 @@ task() { docker ps --format '{{.Names}}' -f "label=com.docker.swarm.service.name
    - greenhouse: `docker service scale greenhouse_app=0`
    - Pocket ID: `docker service scale pocket-id_app=0`
 3. **Load the dump:**
-   - Firefly (MariaDB):
+   - PostgreSQL (Firefly, CRM, n8n, Miniflux, Langfuse in `infra_postgres`):
      ```bash
-     sudo cat "$D/firefly.sql" | docker exec -i "$(task firefly_db)" sh -c 'MYSQL_PWD="$(cat /run/secrets/db_password)" mariadb -uroot "$MYSQL_DATABASE"'
-     ```
-   - CRM / n8n / Miniflux (Postgres; `crm_db`+`crm.sql`, `n8n_db`+`n8n.sql`, or `miniflux_db`+`miniflux.sql`):
-     ```bash
-     db=crm_db; f=crm.sql
-     docker exec "$(task $db)" sh -c 'psql -U "$POSTGRES_USER" -d postgres -c "DROP DATABASE \"$POSTGRES_DB\" WITH (FORCE)" -c "CREATE DATABASE \"$POSTGRES_DB\" OWNER \"$POSTGRES_USER\""'
-     sudo cat "$D/$f" | docker exec -i "$(task $db)" sh -c 'psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" "$POSTGRES_DB"'
+     # Set db name and file: firefly/firefly.sql, twenty/crm.sql, n8n/n8n.sql, miniflux/miniflux.sql, langfuse/langfuse.sql
+     db=twenty; f=crm.sql
+     docker exec "$(task infra_postgres)" sh -c "psql -U postgres -d postgres -c 'DROP DATABASE \"$db\" WITH (FORCE)' -c 'CREATE DATABASE \"$db\" OWNER \"$db\"'"
+     sudo cat "$D/$f" | docker exec -i "$(task infra_postgres)" sh -c "psql -v ON_ERROR_STOP=1 -U postgres \"$db\""
      ```
    - greenhouse (SQLite, app stopped):
      ```bash
@@ -50,27 +47,20 @@ The app's UI shows the expected data, and its service is healthy: `docker servic
 **Restore test** (no impact on live data; run after any change to the dump setup). Loads the latest dumps into throwaway containers; non-zero counts mean they restore cleanly.
 ```bash
 D=/var/lib/docker/volumes/infra_backrest_dumps/_data
-# Postgres: crm (owner twenty), n8n (owner n8n), miniflux (owner miniflux)
+# Postgres: crm (owner twenty), n8n (owner n8n), miniflux (owner miniflux), firefly (owner firefly)
 docker run -d --name restore-test -e POSTGRES_PASSWORD=test postgres:16-alpine
 until docker exec restore-test pg_isready -qU postgres; do sleep 1; done; sleep 2
-for db in crm:twenty n8n:n8n miniflux:miniflux; do
-  f=${db%%:*}; role=${db##*:}
-  docker exec restore-test psql -qU postgres -c "create role $role" -c "create database $f owner $role"
-  sudo cat "$D/$f.sql" | docker exec -i restore-test psql -q -v ON_ERROR_STOP=1 -U postgres -d "$f" >/dev/null
-  docker exec restore-test psql -U postgres -d "$f" -tAc "select count(*) from information_schema.tables where table_schema not in ('pg_catalog','information_schema')"
+for item in crm:twenty:twenty n8n:n8n:n8n miniflux:miniflux:miniflux firefly:firefly:firefly; do
+  f=${item%%:*}; rest=${item#*:}; db=${rest%%:*}; role=${rest#*:}
+  docker exec restore-test psql -qU postgres -c "create role $role" -c "create database $db owner $role"
+  sudo cat "$D/$f.sql" | docker exec -i restore-test psql -q -v ON_ERROR_STOP=1 -U postgres -d "$db" >/dev/null
+  docker exec restore-test psql -U postgres -d "$db" -tAc "select count(*) from information_schema.tables where table_schema not in ('pg_catalog','information_schema')"
 done
 docker rm -f restore-test
-# MariaDB: firefly. Wait for "init process done": the first ping answers the temporary init server.
-docker run -d --name restore-test-mariadb -e MARIADB_ROOT_PASSWORD=test -e MARIADB_DATABASE=firefly mariadb:12.3
-until docker logs restore-test-mariadb 2>&1 | grep -q "init process done"; do sleep 2; done
-until docker exec restore-test-mariadb mariadb-admin -uroot -ptest ping >/dev/null 2>&1; do sleep 2; done
-sudo cat "$D/firefly.sql" | docker exec -i restore-test-mariadb mariadb -uroot -ptest firefly
-docker exec restore-test-mariadb mariadb -uroot -ptest -N firefly -e "select count(*) from transactions"
-docker rm -f restore-test-mariadb
 # SQLite: greenhouse
 sudo python3 -c "import sqlite3; print(sqlite3.connect('file:$D/greenhouse.db?mode=ro', uri=True).execute('pragma integrity_check').fetchone())"
 ```
-Expected: three table counts and a transaction count above 0, and `('ok',)`.
+Expected: four table counts above 0, and `('ok',)`.
 
 ## Rollback
 Load the dump taken in the preconditions with the same steps.
