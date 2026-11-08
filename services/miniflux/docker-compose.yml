@@ -31,10 +31,10 @@ x-security-base: &security-base
 # Networks
 # =============================================================================
 networks:
-  # Private network for miniflux stack
-  miniflux_network:
-    driver: overlay
-    name: rp5_miniflux
+  # Database internal network - shared postgres in infra
+  db_network:
+    external: true
+    name: rp5_db
 
   # External network to connect to nginx proxy
   public_network:
@@ -45,42 +45,6 @@ networks:
 # Services
 # =============================================================================
 services:
-  db:
-    image: postgres:16-alpine
-    hostname: miniflux-db
-    environment:
-      - POSTGRES_DB=miniflux
-      - POSTGRES_USER=miniflux
-      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
-    secrets:
-      - postgres_password
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - miniflux_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U miniflux -d miniflux"]
-      interval: 30s
-      timeout: 15s
-      retries: 5
-      start_period: 60s
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "db"
-      com.giocaizzi.component: "data"
-      com.giocaizzi.tier: "extra"
-      com.giocaizzi.technology: "postgres"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      labels:
-        com.giocaizzi.tier: "extra"
-      resources:
-        limits:
-          memory: 256M
-    logging:
-      <<: *logging-base
-
   app:
     image: miniflux/miniflux:2.3.3
     hostname: miniflux-app
@@ -92,7 +56,7 @@ services:
       - /bin/sh
       - -c
       - |
-        export DATABASE_URL="postgres://miniflux:$$(cat /run/secrets/postgres_password)@miniflux-db/miniflux?sslmode=disable"
+        export DATABASE_URL="postgres://miniflux:$$(cat /run/secrets/postgres_password)@postgres:5432/miniflux?sslmode=disable"
         exec /usr/bin/miniflux
     environment:
       - BASE_URL=https://miniflux.${DOMAIN:?set DOMAIN in the stack env}
@@ -104,7 +68,7 @@ services:
       - postgres_password
       - admin_password
     networks:
-      - miniflux_network
+      - db_network
       - public_network
     healthcheck:
       test: ["CMD", "/usr/bin/miniflux", "-healthcheck", "auto"]
@@ -128,13 +92,6 @@ services:
           memory: 128M
     logging:
       <<: *logging-base
-
-# =============================================================================
-# Volumes
-# =============================================================================
-volumes:
-  postgres_data:
-    driver: local
 
 secrets:
   postgres_password:
