@@ -157,7 +157,6 @@ Service exporters use Docker discovery via `exporter_targets` module:
 | Technology | Port | Normalized To |
 |------------|------|---------------|
 | postgres-exporter | 9187 | `postgres` |
-| mysqld-exporter | 9104 | `mariadb` |
 | redis-exporter | 9121 | `redis` |
 | clickhouse | 9363 | `clickhouse` |
 

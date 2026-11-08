@@ -6,7 +6,6 @@
 //
 // Supported Exporters:
 //   - postgres-exporter → port 9187 → technology: postgres
-//   - mysqld-exporter   → port 9104 → technology: mariadb
 //   - redis-exporter    → port 9121 → technology: redis
 //   - nginx-exporter    → port 9113 → technology: nginx
 //   - clickhouse        → port 9363 → technology: clickhouse
@@ -32,7 +31,7 @@ declare "exporter_targets" {
     // -------------------------------------------------------------------------
     rule {
       source_labels = ["technology"]
-      regex         = "(postgres-exporter|mysqld-exporter|redis-exporter|nginx-exporter|clickhouse)"
+      regex         = "(postgres-exporter|redis-exporter|nginx-exporter|clickhouse)"
       action        = "keep"
     }
 
@@ -55,12 +54,6 @@ declare "exporter_targets" {
       regex         = "postgres-exporter"
       target_label  = "__tmp_port"
       replacement   = "9187"
-    }
-    rule {
-      source_labels = ["technology"]
-      regex         = "mysqld-exporter"
-      target_label  = "__tmp_port"
-      replacement   = "9104"
     }
     rule {
       source_labels = ["technology"]
@@ -98,12 +91,6 @@ declare "exporter_targets" {
       regex         = "postgres-exporter"
       target_label  = "technology"
       replacement   = "postgres"
-    }
-    rule {
-      source_labels = ["technology"]
-      regex         = "mysqld-exporter"
-      target_label  = "technology"
-      replacement   = "mariadb"
     }
     rule {
       source_labels = ["technology"]
