@@ -44,6 +44,11 @@ networks:
   observability_network:
     driver: overlay
     name: rp5_observability
+
+  # Shared database network - for exporters to scrape postgres and redis
+  db_network:
+    external: true
+    name: rp5_db
     
 
 # =============================================================================
@@ -80,6 +85,9 @@ secrets:
   grafana_mcp_server_token:
     external: true
     name: observability_grafana_mcp_server_token
+  postgres_password:
+    external: true
+    name: infra_postgres_password
 
 # =============================================================================
 # Services
@@ -373,5 +381,78 @@ services:
       resources:
         limits:
           memory: 128M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # Shared PostgreSQL Exporter - Metrics for Prometheus/Alloy
+  # ========================================
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    hostname: observability-postgres-exporter
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres@postgres:5432/postgres?sslmode=disable
+      - DATA_SOURCE_PASSWORD_FILE=/run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    networks:
+      - db_network
+      - observability_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9187/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.namespace: "infra"
+      com.giocaizzi.service: "postgres-exporter"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "postgres-exporter"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 64M
+    logging:
+      <<: *logging-base
+
+  # ========================================
+  # Shared Redis Exporter - Metrics for Prometheus/Alloy
+  # ========================================
+  redis-exporter:
+    image: oliver006/redis_exporter:alpine
+    hostname: observability-redis-exporter
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+    networks:
+      - db_network
+      - observability_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9121/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      <<: *labels-base
+      com.giocaizzi.namespace: "infra"
+      com.giocaizzi.service: "redis-exporter"
+      com.giocaizzi.component: "worker"
+      com.giocaizzi.tier: "extra"
+      com.giocaizzi.technology: "redis-exporter"
+    <<: *security-base
+    deploy:
+      <<: *deploy-base
+      labels:
+        com.giocaizzi.tier: "extra"
+      resources:
+        limits:
+          memory: 64M
     logging:
       <<: *logging-base
