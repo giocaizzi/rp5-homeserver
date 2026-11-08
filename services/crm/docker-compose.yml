@@ -31,7 +31,7 @@ x-security-base: &security-base
 # wrapper below builds PG_DATABASE_URL / ENCRYPTION_KEY from Swarm secrets.
 x-twenty-env: &twenty-env
   SERVER_URL: "https://crm.${DOMAIN:?set DOMAIN in the stack env}"
-  REDIS_URL: "redis://crm-redis:6379"
+  REDIS_URL: "redis://redis:6379"
   STORAGE_TYPE: "local"
   PG_POOL_MAX_CONNECTIONS: "5"
   TELEMETRY_ENABLED: "false"
@@ -53,15 +53,10 @@ x-twenty-entrypoint: &twenty-entrypoint
 # Networks
 # =============================================================================
 networks:
-  # Database internal network - shared postgres in infra
+  # Database internal network - shared postgres and redis in infra
   db_network:
     external: true
     name: rp5_db
-
-  # Private network for crm stack (redis)
-  crm_network:
-    driver: overlay
-    name: rp5_crm
 
   # External network for observability (Alloy scraping)
   observability_network:
@@ -77,73 +72,6 @@ networks:
 # Services
 # =============================================================================
 services:
-  # BullMQ queue + cache. noeviction is required (evicted keys = lost jobs);
-  # no persistence — the queue is transient.
-  redis:
-    image: redis:7-alpine
-    hostname: crm-redis
-    command: ["redis-server", "--maxmemory", "48mb", "--maxmemory-policy", "noeviction", "--save", "", "--appendonly", "no"]
-    expose:
-      - "6379"
-    networks:
-      - crm_network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "redis"
-      com.giocaizzi.component: "data"
-      com.giocaizzi.tier: "extra"
-      com.giocaizzi.technology: "redis"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      labels:
-        com.giocaizzi.tier: "extra"
-      resources:
-        limits:
-          memory: 64M
-    logging:
-      <<: *logging-base
-
-  # Redis metrics for Alloy (scraped via the observability network).
-  redis-exporter:
-    image: oliver006/redis_exporter:alpine
-    hostname: crm-redis-exporter
-    environment:
-      - REDIS_ADDR=redis://crm-redis:6379
-    expose:
-      - "9121"
-    networks:
-      - crm_network
-      - observability_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9121/metrics"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "redis-exporter"
-      com.giocaizzi.component: "worker"
-      com.giocaizzi.tier: "extra"
-      com.giocaizzi.technology: "redis-exporter"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      labels:
-        com.giocaizzi.tier: "extra"
-      resources:
-        limits:
-          memory: 64M
-    logging:
-      <<: *logging-base
-
   server:
     image: twentycrm/twenty:v2.51.0
     hostname: crm-server
@@ -161,7 +89,6 @@ services:
       - storage_data:/app/packages/twenty-server/.local-storage
     networks:
       - db_network
-      - crm_network
       - public_network
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:3000/healthz"]
@@ -202,7 +129,6 @@ services:
       - storage_data:/app/packages/twenty-server/.local-storage
     networks:
       - db_network
-      - crm_network
     labels:
       <<: *labels-base
       com.giocaizzi.service: "worker"
