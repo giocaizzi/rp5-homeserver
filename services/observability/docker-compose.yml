@@ -390,13 +390,11 @@ services:
   postgres-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter:latest
     hostname: observability-postgres-exporter
-    environment:
-      - DATA_SOURCE_NAME=postgresql://postgres@postgres:5432/postgres?sslmode=disable
     entrypoint:
       - /bin/sh
       - -c
       - |
-        export DATA_SOURCE_PASS=$$(cat /run/secrets/postgres_password)
+        export DATA_SOURCE_NAME="postgresql://postgres:$$(cat /run/secrets/postgres_password)@postgres:5432/postgres?sslmode=disable"
         exec /bin/postgres_exporter
     secrets:
       - postgres_password
