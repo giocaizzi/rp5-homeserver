@@ -40,7 +40,7 @@ dump_pg() {
   local db="$1" file="$2" dedicated_svc="$3" pg_user="${4:-postgres}"
   local pg_name
   pg_name=$(docker ps --format '{{.Names}}' --filter "label=com.docker.swarm.service.name=infra_postgres" | head -n1)
-  if [ -n "$pg_name" ] && docker exec "$pg_name" psql -U postgres -lqt | cut -d \| -f 1 | grep -qw "$db"; then
+  if [ -n "$pg_name" ] && [ "$(docker exec "$pg_name" psql -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='$db'")" = "1" ]; then
     if docker exec "$pg_name" pg_dump -U "$pg_user" "$db" > "$OUT/$file.tmp" && [ -s "$OUT/$file.tmp" ]; then
       mv "$OUT/$file.tmp" "$OUT/$file"
       echo "ok $file (shared postgres) $(stat -c %s "$OUT/$file") bytes"
@@ -57,7 +57,7 @@ dump_pg() {
 dump_firefly() {
   local pg_name
   pg_name=$(docker ps --format '{{.Names}}' --filter "label=com.docker.swarm.service.name=infra_postgres" | head -n1)
-  if [ -n "$pg_name" ] && docker exec "$pg_name" psql -U postgres -lqt | cut -d \| -f 1 | grep -qw "firefly"; then
+  if [ -n "$pg_name" ] && [ "$(docker exec "$pg_name" psql -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='firefly'")" = "1" ]; then
     if docker exec "$pg_name" pg_dump -U postgres firefly > "$OUT/firefly.sql.tmp" && [ -s "$OUT/firefly.sql.tmp" ]; then
       mv "$OUT/firefly.sql.tmp" "$OUT/firefly.sql"
       echo "ok firefly.sql (shared postgres) $(stat -c %s "$OUT/firefly.sql") bytes"
