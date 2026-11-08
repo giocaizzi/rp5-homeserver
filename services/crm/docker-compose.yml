@@ -44,7 +44,7 @@ x-twenty-entrypoint: &twenty-entrypoint
   - /bin/sh
   - -c
   - |
-    export PG_DATABASE_URL="postgres://twenty:$$(cat /run/secrets/postgres_password)@crm-db:5432/twenty"
+    export PG_DATABASE_URL="postgres://twenty:$$(cat /run/secrets/postgres_password)@postgres:5432/twenty"
     export ENCRYPTION_KEY="$$(cat /run/secrets/encryption_key)"
     exec /app/entrypoint.sh "$$@"
   - --
@@ -53,7 +53,12 @@ x-twenty-entrypoint: &twenty-entrypoint
 # Networks
 # =============================================================================
 networks:
-  # Private network for crm stack
+  # Database internal network - shared postgres in infra
+  db_network:
+    external: true
+    name: rp5_db
+
+  # Private network for crm stack (redis)
   crm_network:
     driver: overlay
     name: rp5_crm
@@ -72,44 +77,6 @@ networks:
 # Services
 # =============================================================================
 services:
-  db:
-    image: postgres:16-alpine
-    hostname: crm-db
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf
-    environment:
-      - POSTGRES_DB=twenty
-      - POSTGRES_USER=twenty
-      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
-    secrets:
-      - postgres_password
-    volumes:
-      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - crm_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U twenty -d twenty"]
-      interval: 30s
-      timeout: 15s
-      retries: 5
-      start_period: 60s
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "db"
-      com.giocaizzi.component: "data"
-      com.giocaizzi.tier: "extra"
-      com.giocaizzi.technology: "postgres"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      labels:
-        com.giocaizzi.tier: "extra"
-      resources:
-        limits:
-          memory: 256M
-    logging:
-      <<: *logging-base
-
   # BullMQ queue + cache. noeviction is required (evicted keys = lost jobs);
   # no persistence — the queue is transient.
   redis:
@@ -187,13 +154,13 @@ services:
     environment:
       <<: *twenty-env
       NODE_PORT: "3000"
-      NODE_OPTIONS: "--max-old-space-size=768"
     secrets:
       - postgres_password
       - encryption_key
     volumes:
       - storage_data:/app/packages/twenty-server/.local-storage
     networks:
+      - db_network
       - crm_network
       - public_network
     healthcheck:
@@ -226,7 +193,6 @@ services:
     command: ["node", "dist/queue-worker/queue-worker"]   # = yarn worker:prod, minus yarn
     environment:
       <<: *twenty-env
-      NODE_OPTIONS: "--max-old-space-size=768"   # 384 OOMs during boot (~370M heap)
       DISABLE_DB_MIGRATIONS: "true"               # server runs migrations
       DISABLE_CRON_JOBS_REGISTRATION: "true"      # server registers crons
     secrets:
@@ -235,6 +201,7 @@ services:
     volumes:
       - storage_data:/app/packages/twenty-server/.local-storage
     networks:
+      - db_network
       - crm_network
     labels:
       <<: *labels-base
@@ -254,8 +221,6 @@ services:
       <<: *logging-base
 
 volumes:
-  postgres_data:
-    driver: local
   storage_data:
     driver: local
 
