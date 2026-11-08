@@ -22,15 +22,12 @@
 |-----------|-------|---------|
 | crm-server | `twentycrm/twenty:v2.51.0` | UI + REST/GraphQL/MCP API, runs DB migrations and registers cron jobs on start |
 | crm-worker | `twentycrm/twenty:v2.51.0` | BullMQ background jobs (webhooks, workflows, imports, timeline) |
-| crm-db | `postgres:16-alpine` | Primary data store |
-| crm-redis | `redis:7-alpine` | Queue + cache (`noeviction`, no persistence) |
-| crm-redis-exporter | `oliver006/redis_exporter:alpine` | Redis metrics, scraped by Alloy |
 
-Worker and Redis are mandatory: the queue driver is hardcoded to BullMQ upstream.
+Database and queue connect to shared infrastructure (`infra_postgres` and `infra_redis` on `rp5_db`).
 
 ```
-Cloudflare Access ─► nginx ─► crm-server ─┬─► crm-db
-                                          └─► crm-redis ◄─ crm-worker
+Cloudflare Access ─► nginx ─► crm-server ─┬─► shared postgres (rp5_db)
+                                          └─► shared redis (rp5_db) ◄─ crm-worker
 ```
 
 **Public endpoints** (all behind Cloudflare Access):
@@ -41,7 +38,7 @@ Cloudflare Access ─► nginx ─► crm-server ─┬─► crm-db
 | `/rest` | CF Access service token `external-crm-api` + Twenty API key (Bearer) |
 | `/mcp`, `/oauth/*`, `/.well-known/oauth-*` | CF Access bypass for Anthropic egress IPs only (`160.79.104.0/21`); Twenty's built-in OAuth 2.1 (per-user token). `/authorize` stays behind the email allowlist |
 
-**Pi tuning:** memory limits server 1G / worker 1G / db 256M / redis 64M (~2.3G cap; Node heaps 768M each), Node heaps capped via `NODE_OPTIONS`, `PG_POOL_MAX_CONNECTIONS=5`, telemetry off. First boot (DB init + upgrade) is the memory peak — if `crm_server` is OOM-killed there, temporarily raise its limit.
+**Pi tuning:** memory limits server 1.5G / worker 1.5G (Node heap capped at 512M via `NODE_OPTIONS`), `PG_POOL_MAX_CONNECTIONS=5`, telemetry off. Database and Redis are offloaded to shared infrastructure.
 
 ---
 
