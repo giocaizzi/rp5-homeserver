@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.28.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.27.1...v1.28.0) (2026-11-08)
+
+
+### Features
+
+* **infra:** add shared postgresql service and exporter ([#576](https://github.com/giocaizzi/rp5-homeserver/issues/576)) ([1417fd0](https://github.com/giocaizzi/rp5-homeserver/commit/1417fd0390a30cea077d6e28a817403f4b753823))
+* **infra:** add shared redis service and remove postgres exporter ([#584](https://github.com/giocaizzi/rp5-homeserver/issues/584)) ([d85a635](https://github.com/giocaizzi/rp5-homeserver/commit/d85a635bcdba3e86265bbe351dfd25244c3dbc72))
+* **infra:** provision langfuse role and database in postgres init script ([#590](https://github.com/giocaizzi/rp5-homeserver/issues/590)) ([a43b094](https://github.com/giocaizzi/rp5-homeserver/commit/a43b094a8ab8dcf1e29737bdad72dc45597cf43a))
+
+
+### Bug Fixes
+
+* **infra:** allow infra_postgres in socket-proxy for db dumps ([#580](https://github.com/giocaizzi/rp5-homeserver/issues/580)) ([823a8ac](https://github.com/giocaizzi/rp5-homeserver/commit/823a8ac48eb9fc79eae16b30016b609375304ae9))
+* **infra:** prevent sigpipe in dump-dbs check with psql query ([#582](https://github.com/giocaizzi/rp5-homeserver/issues/582)) ([7fc5251](https://github.com/giocaizzi/rp5-homeserver/commit/7fc52513f212965812c18c65c29d80a622483834))
+
 ## [1.27.1](https://github.com/giocaizzi/rp5-homeserver/compare/v1.27.0...v1.27.1) (2026-11-06)
 
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/giocaizzi/rp5-homeserver/compare/miniflux-v1.0.1...miniflux-v1.1.0) (2026-11-08)
+
+
+### Features
+
+* **miniflux:** switch to shared postgresql database ([#577](https://github.com/giocaizzi/rp5-homeserver/issues/577)) ([5b7e82c](https://github.com/giocaizzi/rp5-homeserver/commit/5b7e82c6e83d3c6a47681f8ac5d903a062ead893))
+
 ## [1.0.1](https://github.com/giocaizzi/rp5-homeserver/compare/miniflux-v1.0.0...miniflux-v1.0.1) (2026-10-20)
 
 

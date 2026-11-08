@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.3.3...firefly-v0.4.0) (2026-11-08)
+
+
+### Features
+
+* **firefly:** switch to shared postgresql database ([#581](https://github.com/giocaizzi/rp5-homeserver/issues/581)) ([92e961e](https://github.com/giocaizzi/rp5-homeserver/commit/92e961e9da856c55e2beaf9476cea4936d8b32b7))
+
 ## [0.3.3](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.3.2...firefly-v0.3.3) (2026-11-04)
 
 

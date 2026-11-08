@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.3.1...crm-v0.4.0) (2026-11-08)
+
+
+### Features
+
+* **crm:** switch to shared postgresql database ([#579](https://github.com/giocaizzi/rp5-homeserver/issues/579)) ([64a468f](https://github.com/giocaizzi/rp5-homeserver/commit/64a468f47b1332036769b147e2f579ade520ba9f))
+* **crm:** switch to shared redis and remove dedicated containers ([#587](https://github.com/giocaizzi/rp5-homeserver/issues/587)) ([99242b1](https://github.com/giocaizzi/rp5-homeserver/commit/99242b15a15161453b2a03d3fa7d138dcabf7622))
+
+
+### Performance Improvements
+
+* **crm:** clamp node heap size to 512mb ([#573](https://github.com/giocaizzi/rp5-homeserver/issues/573)) ([982e3a6](https://github.com/giocaizzi/rp5-homeserver/commit/982e3a6105d901c7e9b761768efbdf5de3d6b7f5))
+
 ## [0.3.1](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.3.0...crm-v0.3.1) (2026-10-23)
 
 
