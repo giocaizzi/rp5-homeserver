@@ -31,10 +31,10 @@ x-security-base: &security-base
 # Networks
 # =============================================================================
 networks:
-  # Private network for n8n stack
-  n8n_network:
-    driver: overlay
-    name: rp5_n8n
+  # Database internal network - shared postgres in infra
+  db_network:
+    external: true
+    name: rp5_db
   
   # External network to connect to nginx proxy
   public_network:
@@ -50,87 +50,6 @@ networks:
 # Services
 # =============================================================================
 services:
-  db:
-    image: postgres:16-alpine
-    hostname: n8n-db
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf
-    environment:
-      - POSTGRES_DB=n8n
-      - POSTGRES_USER=n8n
-      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
-    secrets:
-      - postgres_password
-    volumes:
-      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - n8n_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U n8n -d n8n"]
-      interval: 30s
-      timeout: 15s
-      retries: 5
-      start_period: 60s
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "db"
-      com.giocaizzi.component: "data"
-      com.giocaizzi.tier: "core"
-      com.giocaizzi.technology: "postgres"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      labels:
-        com.giocaizzi.tier: "core"
-      resources:
-        limits:
-          memory: 256M
-    logging:
-      <<: *logging-base
-
-  # PostgreSQL Exporter - Metrics for Prometheus/Alloy
-  db-exporter:
-    image: quay.io/prometheuscommunity/postgres-exporter:latest
-    hostname: n8n-db-exporter
-    expose:
-      - "9187"
-    environment:
-      - DATA_SOURCE_URI=n8n-db:5432/n8n?sslmode=disable
-      - DATA_SOURCE_USER=n8n
-    secrets:
-      - postgres_password
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        export DATA_SOURCE_PASS=$$(cat /run/secrets/postgres_password)
-        exec /bin/postgres_exporter
-    networks:
-      - n8n_network
-      - observability_network
-    healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9187/metrics"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "db-exporter"
-      com.giocaizzi.component: "worker"
-      com.giocaizzi.tier: "extra"
-      com.giocaizzi.technology: "postgres-exporter"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      labels:
-        com.giocaizzi.tier: "extra"
-      resources:
-        limits:
-          memory: 64M
-    logging:
-      <<: *logging-base
-
   app:
     image: n8nio/n8n:latest
     hostname: n8n-app
@@ -149,7 +68,7 @@ services:
       
       # Database configuration
       - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=n8n-db
+      - DB_POSTGRESDB_HOST=postgres
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=n8n
       - DB_POSTGRESDB_USER=n8n
@@ -206,7 +125,7 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
     networks:
-      - n8n_network
+      - db_network
       - public_network
       - observability_network
     healthcheck:
@@ -236,8 +155,6 @@ services:
       <<: *logging-base
 
 volumes:
-  postgres_data:
-    driver: local
   n8n_data:
     driver: local
 
