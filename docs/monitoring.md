@@ -131,8 +131,7 @@ Prometheus scrapes metrics from internal services via Alloy.
 
 | Target | Stack | Endpoint | Metrics |
 |--------|-------|----------|---------||
-| n8n-db-exporter | n8n | `:9187/metrics` | PostgreSQL stats |
-| firefly-db-exporter | firefly | `:9104/metrics` | MariaDB stats |
+| postgres-exporter | infra | `:9187/metrics` | Shared PostgreSQL stats |
 | langfuse-db-exporter | langfuse | `:9187/metrics` | Langfuse PostgreSQL |
 | langfuse-cache-exporter | langfuse | `:9121/metrics` | Redis stats |
 | langfuse-analytics | langfuse | `:9363/metrics` | ClickHouse stats |
@@ -159,7 +158,7 @@ Horizontally-scalable log aggregation with label-based indexing.
 {service_namespace="firefly"}
 
 # Database logs across all stacks
-{technology=~"postgres|mariadb"}
+{technology="postgres"}
 
 # Error logs from app components
 {component="app", level="error"}
@@ -209,7 +208,7 @@ Dashboards are organized in folders by purpose:
 | `infra` | docker-overview | Docker Swarm container resources |
 | `observability` | health | Loki/Tempo/Prometheus/Alloy health |
 | `Website` | app, ai | Website application (pick namespace/service in the dashboard variables) |
-| `shared` | postgresql, mariadb, redis, nginx | Technology-specific dashboards (multi-instance) |
+| `shared` | postgresql, redis, nginx | Technology-specific dashboards (multi-instance) |
 | `Agents` | overview, ops, detail | Every agent harness: cost, tokens, requests and run modes (Agents Overview); guard decisions, skills, tool failures and subagent operations (Agents Ops); filterable session, model, tool, subagent, error and trace drill-down across harnesses, with clearly titled Claude-only context panels where no common signal exists (Agents Detail) |
 
 ### Dashboard Variables
@@ -326,7 +325,7 @@ Grafana's contact point and root policy are provisioned in `grafana/provisioning
 
 | Group | Alerts |
 |-------|--------|
-| Database Alerts | PostgreSQL Down, PostgreSQL Low Cache Hit, MariaDB Down |
+| Database Alerts | PostgreSQL Down, PostgreSQL Low Cache Hit |
 | Redis Alerts | Redis Down |
 | Observability Stack | Loki Down, Tempo Down, Alloy Down |
 | Agent Ops (Loki) | Agent Telemetry Silent (no `claude-code` events for 36h), Guard Deny Spike (>10 denies per guard rule in 1h), Agent Daily Cost (>$750 list price across harnesses in 24h), Agent Rate Limit Burst (>5 Claude Code 429s in 1h) |

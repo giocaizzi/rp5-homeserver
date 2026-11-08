@@ -141,46 +141,6 @@ groups:
         labels:
           severity: warning
 
-      - uid: mariadb-down
-        title: MariaDB Down
-        condition: C
-        data:
-          - refId: A
-            relativeTimeRange:
-              from: 300
-              to: 0
-            datasourceUid: prometheus
-            model:
-              expr: mysql_up
-              instant: true
-              refId: A
-          - refId: B
-            datasourceUid: __expr__
-            model:
-              expression: A
-              reducer: last
-              refId: B
-              type: reduce
-          - refId: C
-            datasourceUid: __expr__
-            model:
-              conditions:
-                - evaluator:
-                    params:
-                      - 1
-                    type: lt
-              expression: B
-              refId: C
-              type: threshold
-        noDataState: NoData
-        execErrState: Error
-        for: 2m
-        annotations:
-          summary: MariaDB instance {{ $labels.service_namespace }}/{{ $labels.service_name }} is down
-          description: The MySQL exporter is unable to connect to the database.
-        labels:
-          severity: critical
-
   # ===========================================
   # Redis Alerts
   # ===========================================

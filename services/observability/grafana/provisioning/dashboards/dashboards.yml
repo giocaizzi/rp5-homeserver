@@ -23,7 +23,7 @@ providers:
     options:
       path: /etc/grafana/provisioning/dashboards/website
 
-  # Shared technology dashboards (PostgreSQL, MariaDB, Redis, Nginx)
+  # Shared technology dashboards (PostgreSQL, Redis, Nginx)
   - name: 'shared'
     orgId: 1
     folder: 'shared'
