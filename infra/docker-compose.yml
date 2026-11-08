@@ -178,32 +178,36 @@ services:
     logging:
       <<: *logging-base
 
-  # PostgreSQL Exporter - Metrics for Prometheus/Alloy
-  postgres-exporter:
-    image: quay.io/prometheuscommunity/postgres-exporter:latest
-    hostname: infra-postgres-exporter
-    environment:
-      - DATA_SOURCE_NAME=postgresql://postgres@postgres:5432/postgres?sslmode=disable
-      - DATA_SOURCE_PASSWORD_FILE=/run/secrets/postgres_password
-    secrets:
-      - postgres_password
+  # Redis - Shared in-memory cache and queue for stateful services (Twenty CRM, Langfuse)
+  redis:
+    image: redis:7-alpine
+    hostname: infra-redis
+    command: ["redis-server", "--maxmemory", "96mb", "--maxmemory-policy", "noeviction", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
     networks:
       - db_network
-      - observability_network
+      - infra_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     labels:
       <<: *labels-base
-      com.giocaizzi.service: "postgres-exporter"
-      com.giocaizzi.component: "worker"
-      com.giocaizzi.tier: "extra"
-      com.giocaizzi.technology: "postgres-exporter"
+      com.giocaizzi.service: "redis"
+      com.giocaizzi.component: "data"
+      com.giocaizzi.tier: "core"
+      com.giocaizzi.technology: "redis"
     <<: *security-base
     deploy:
       <<: *deploy-base
       labels:
-        com.giocaizzi.tier: "extra"
+        com.giocaizzi.tier: "core"
       resources:
         limits:
-          memory: 64M
+          memory: 128M
     logging:
       <<: *logging-base
 
@@ -711,6 +715,8 @@ volumes:
       device: tmpfs
       o: "size=1k,uid=65534,gid=123,mode=0770"
   postgres_data:
+    driver: local
+  redis_data:
     driver: local
 
 secrets:

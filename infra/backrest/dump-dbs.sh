@@ -54,25 +54,7 @@ dump_pg() {
   dump "$dedicated_svc" "$file" 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"'
 }
 
-dump_firefly() {
-  local pg_name
-  pg_name=$(docker ps --format '{{.Names}}' --filter "label=com.docker.swarm.service.name=infra_postgres" | head -n1)
-  if [ -n "$pg_name" ] && [ "$(docker exec "$pg_name" psql -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='firefly'")" = "1" ]; then
-    if docker exec "$pg_name" pg_dump -U postgres firefly > "$OUT/firefly.sql.tmp" && [ -s "$OUT/firefly.sql.tmp" ]; then
-      mv "$OUT/firefly.sql.tmp" "$OUT/firefly.sql"
-      echo "ok firefly.sql (shared postgres) $(stat -c %s "$OUT/firefly.sql") bytes"
-      return 0
-    else
-      rm -f "$OUT/firefly.sql.tmp"
-      echo "ERROR: dump of firefly from infra_postgres failed" >&2
-      return 1
-    fi
-  fi
-  dump firefly_db firefly.sql \
-    'MYSQL_PWD="$(cat /run/secrets/db_password)" mariadb-dump -uroot --single-transaction --routines --triggers "$MYSQL_DATABASE"'
-}
-
-dump_firefly || fail=1
+dump_pg firefly firefly.sql firefly_db || fail=1
 dump_pg twenty crm.sql crm_db || fail=1
 dump_pg n8n n8n.sql n8n_db || fail=1
 dump_pg miniflux miniflux.sql miniflux_db || fail=1
