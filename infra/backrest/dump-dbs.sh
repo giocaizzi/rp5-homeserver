@@ -35,11 +35,47 @@ dump() {
   fi
 }
 
-dump firefly_db firefly.sql \
-  'MYSQL_PWD="$(cat /run/secrets/db_password)" mariadb-dump -uroot --single-transaction --routines --triggers "$MYSQL_DATABASE"' || fail=1
-dump crm_db crm.sql 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' || fail=1
-dump n8n_db n8n.sql 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' || fail=1
-dump miniflux_db miniflux.sql 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"' || fail=1
+# Dump from shared postgres if the DB exists, otherwise fallback to dedicated stack DB
+dump_pg() {
+  local db="$1" file="$2" dedicated_svc="$3" pg_user="${4:-postgres}"
+  local pg_name
+  pg_name=$(docker ps --format '{{.Names}}' --filter "label=com.docker.swarm.service.name=infra_postgres" | head -n1)
+  if [ -n "$pg_name" ] && docker exec "$pg_name" psql -U postgres -lqt | cut -d \| -f 1 | grep -qw "$db"; then
+    if docker exec "$pg_name" pg_dump -U "$pg_user" "$db" > "$OUT/$file.tmp" && [ -s "$OUT/$file.tmp" ]; then
+      mv "$OUT/$file.tmp" "$OUT/$file"
+      echo "ok $file (shared postgres) $(stat -c %s "$OUT/$file") bytes"
+      return 0
+    else
+      rm -f "$OUT/$file.tmp"
+      echo "ERROR: dump of $db from infra_postgres failed" >&2
+      return 1
+    fi
+  fi
+  dump "$dedicated_svc" "$file" 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB"'
+}
+
+dump_firefly() {
+  local pg_name
+  pg_name=$(docker ps --format '{{.Names}}' --filter "label=com.docker.swarm.service.name=infra_postgres" | head -n1)
+  if [ -n "$pg_name" ] && docker exec "$pg_name" psql -U postgres -lqt | cut -d \| -f 1 | grep -qw "firefly"; then
+    if docker exec "$pg_name" pg_dump -U postgres firefly > "$OUT/firefly.sql.tmp" && [ -s "$OUT/firefly.sql.tmp" ]; then
+      mv "$OUT/firefly.sql.tmp" "$OUT/firefly.sql"
+      echo "ok firefly.sql (shared postgres) $(stat -c %s "$OUT/firefly.sql") bytes"
+      return 0
+    else
+      rm -f "$OUT/firefly.sql.tmp"
+      echo "ERROR: dump of firefly from infra_postgres failed" >&2
+      return 1
+    fi
+  fi
+  dump firefly_db firefly.sql \
+    'MYSQL_PWD="$(cat /run/secrets/db_password)" mariadb-dump -uroot --single-transaction --routines --triggers "$MYSQL_DATABASE"'
+}
+
+dump_firefly || fail=1
+dump_pg twenty crm.sql crm_db || fail=1
+dump_pg n8n n8n.sql n8n_db || fail=1
+dump_pg miniflux miniflux.sql miniflux_db || fail=1
 # SQLite online backup into memory, streamed out (no temp file in the container)
 dump greenhouse_app greenhouse.db \
   "python3 -c 'import sqlite3, sys; s = sqlite3.connect(\"/app/data/irrigation.db\"); d = sqlite3.connect(\":memory:\"); s.backup(d); sys.stdout.buffer.write(d.serialize())'" || fail=1
