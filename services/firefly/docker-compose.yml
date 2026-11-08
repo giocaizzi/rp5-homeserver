@@ -32,6 +32,11 @@ x-security-base: &security-base
 # Networks
 # =============================================================================
 networks:
+  # Database internal network - shared postgres in infra
+  db_network:
+    external: true
+    name: rp5_db
+
   # Private network for firefly stack
   firefly_network:
     driver: overlay
@@ -73,9 +78,9 @@ services:
       - TZ=Europe/Rome
       
       # Database configuration
-      - DB_CONNECTION=mysql
-      - DB_HOST=firefly-db
-      - DB_PORT=3306
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
       - DB_DATABASE=firefly
       - DB_USERNAME=firefly
       - DB_PASSWORD_FILE=/run/secrets/db_password
@@ -123,6 +128,7 @@ services:
       # survive even if firefly_storage is ever rebuilt.
       - firefly_upload:/var/www/html/storage/upload
     networks:
+      - db_network
       - firefly_network
       - public_network
     healthcheck:
@@ -145,88 +151,6 @@ services:
       resources:
         limits:
           memory: 768M
-    logging:
-      <<: *logging-base
-
-  db:
-    image: mariadb:12.3   # series-pinned: :lts jumps across major series (see #185)
-    hostname: firefly-db
-    environment:
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
-      - MYSQL_DATABASE=firefly
-      - MYSQL_USER=firefly
-      - MYSQL_PASSWORD_FILE=/run/secrets/db_password
-      - MARIADB_AUTO_UPGRADE=1
-      - MARIADB_DISABLE_UPGRADE_BACKUP=1
-    secrets:
-      - db_password
-    volumes:
-      - ./mariadb/mariadb.cnf:/etc/mysql/conf.d/custom.cnf:ro
-      - firefly_db:/var/lib/mysql
-    networks:
-      - firefly_network
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      interval: 20s
-      timeout: 10s
-      retries: 6
-      start_period: 90s
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "db"
-      com.giocaizzi.component: "data"
-      com.giocaizzi.tier: "core"
-      com.giocaizzi.technology: "mariadb"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      labels:
-        com.giocaizzi.tier: "core"
-      resources:
-        limits:
-          memory: 384M
-    logging:
-      <<: *logging-base
-
-  # MySQL/MariaDB Exporter - Metrics for Prometheus/Alloy
-  db-exporter:
-    image: prom/mysqld-exporter:latest
-    hostname: firefly-db-exporter
-    init: true # Go binary as PID 1 can't die from SIGTERM and exits 2 (#316)
-    expose:
-      - "9104"
-    secrets:
-      - db_password
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        export MYSQLD_EXPORTER_PASSWORD=$$(cat /run/secrets/db_password)
-        exec /bin/mysqld_exporter \
-          --mysqld.address=firefly-db:3306 \
-          --mysqld.username=firefly \
-          --no-collect.slave_status \
-          --no-collect.info_schema.innodb_cmp \
-          --no-collect.info_schema.innodb_cmpmem
-    networks:
-      - firefly_network
-      - observability_network
-    # No healthcheck - scratch image has no shell/utilities
-    # Prometheus scrape failures serve as health indicator
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "db-exporter"
-      com.giocaizzi.component: "worker"
-      com.giocaizzi.tier: "extra"
-      com.giocaizzi.technology: "mysqld-exporter"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      labels:
-        com.giocaizzi.tier: "extra"
-      resources:
-        limits:
-          memory: 64M
     logging:
       <<: *logging-base
 
@@ -380,8 +304,6 @@ volumes:
   firefly_storage:
     driver: local
   firefly_upload:
-    driver: local
-  firefly_db:
     driver: local
 
 configs:
