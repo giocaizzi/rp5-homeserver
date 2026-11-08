@@ -130,10 +130,9 @@ Prometheus scrapes metrics from internal services via Alloy.
 **Database Exporters:**
 
 | Target | Stack | Endpoint | Metrics |
-|--------|-------|----------|---------||
-| postgres-exporter | infra | `:9187/metrics` | Shared PostgreSQL stats |
-| langfuse-db-exporter | langfuse | `:9187/metrics` | Langfuse PostgreSQL |
-| langfuse-cache-exporter | langfuse | `:9121/metrics` | Redis stats |
+|--------|-------|----------|---------|
+| postgres-exporter | observability | `:9187/metrics` | Shared PostgreSQL stats (infra) |
+| redis-exporter | observability | `:9121/metrics` | Shared Redis stats (infra) |
 | langfuse-analytics | langfuse | `:9363/metrics` | ClickHouse stats |
 
 Exporters use entrypoint scripts to inject credentials from Docker Swarm secrets.

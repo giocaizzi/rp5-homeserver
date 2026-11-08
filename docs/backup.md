@@ -26,10 +26,10 @@ Copying a running database's files does not give a consistent copy, so the raw `
 
 | File | Source | Tool |
 |------|--------|------|
-| `firefly.sql` | `firefly_db` (MariaDB) | `mariadb-dump --single-transaction` |
-| `crm.sql` | `crm_db` (Postgres) | `pg_dump` |
-| `n8n.sql` | `n8n_db` (Postgres) | `pg_dump` |
-| `miniflux.sql` | `miniflux_db` (Postgres) | `pg_dump` |
+| `firefly.sql` | `infra_postgres` (PostgreSQL) | `pg_dump` |
+| `crm.sql` | `infra_postgres` (PostgreSQL) | `pg_dump` |
+| `n8n.sql` | `infra_postgres` (PostgreSQL) | `pg_dump` |
+| `miniflux.sql` | `infra_postgres` (PostgreSQL) | `pg_dump` |
 | `greenhouse.db` | `greenhouse_app` (SQLite) | Python `sqlite3` online backup |
 | `pocket-id.zip` | `pocket-id_app` (SQLite) | `/app/pocket-id export --path -` (database and uploads) |
 

@@ -108,7 +108,7 @@ All containers must include these labels for identification and observability.
 
 #### `technology`
 
-Use the tool/image name: `postgres`, `redis`, `nginx`, `grafana`, `prometheus`, `loki`, `tempo`, `alloy`, `minio`, `clickhouse`, `mariadb`, `n8n`, `ntfy`, `adguard`, `cloudflared`, `netdata`, `backrest`, `portainer`, `homepage`, `ollama`, `langfuse`, `firefly`, `postgres-exporter`, `redis-exporter`, `mysqld-exporter`
+Use the tool/image name: `postgres`, `redis`, `nginx`, `grafana`, `prometheus`, `loki`, `tempo`, `alloy`, `minio`, `clickhouse`, `n8n`, `ntfy`, `adguard`, `cloudflared`, `netdata`, `backrest`, `portainer`, `homepage`, `ollama`, `langfuse`, `firefly`, `postgres-exporter`, `redis-exporter`
 
 ---
 
