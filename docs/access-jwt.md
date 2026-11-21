@@ -62,7 +62,7 @@ Docker secrets are immutable: when an `aud` changes (an app recreated) or a host
 
 ## Service Auth paths (log -> enforce)
 
-The 13 path-scoped service-token apps (`$cf_access_app`) start in `log` in `$cf_access_app_mode`. Roll them out in this order:
+The 13 path-scoped service-token apps (`$cf_access_app`) started in `log` in `$cf_access_app_mode` and are now `enforce`. The rollout order was:
 
 1. Create the BWS secret `infra_cf_access_v3` with the jq under [One-time setup](#one-time-setup), from the `cloud/` Terraform state after the Service Auth change is applied (the path apps' `aud` tags must exist).
 2. Add the new `aud` tags to `LEAK_PATTERNS` (repo and Dependabot).
