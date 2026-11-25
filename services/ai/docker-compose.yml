@@ -100,7 +100,7 @@ services:
       <<: *logging-base
 
   chat:
-    image: ghcr.io/open-webui/open-webui:v0.8.5
+    image: ghcr.io/open-webui/open-webui:v0.13.5
     hostname: ai-chat
     expose:
       - "8080"
