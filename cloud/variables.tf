@@ -81,13 +81,6 @@ variable "greenhouse_users" {
   sensitive   = true
 }
 
-variable "code_users" {
-  description = "List of email addresses allowed to access the Code dev environment (CloudCLI). Shell-equivalent access — keep this list minimal."
-  type        = list(string)
-  default     = []
-  sensitive   = true
-}
-
 variable "crm_users" {
   description = "List of email addresses allowed to access the Twenty CRM UI (owner + sales staff)"
   type        = list(string)
