@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.4.0...firefly-v0.5.0) (2026-11-25)
+
+
+### Features
+
+* **infra:** replace shepherd with pinned images, dependabot auto-merge and drop code stack ([#603](https://github.com/giocaizzi/rp5-homeserver/issues/603)) ([df3b419](https://github.com/giocaizzi/rp5-homeserver/commit/df3b41981d11d14e382f171dc9ba1e468c245328))
+
 ## [0.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/firefly-v0.3.3...firefly-v0.4.0) (2026-11-08)
 
 
