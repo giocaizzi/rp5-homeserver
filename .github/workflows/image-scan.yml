@@ -58,6 +58,7 @@ jobs:
       security-events: write
     strategy:
       fail-fast: false
+      max-parallel: 8 # leave runners free for the required checks
       matrix:
         image: ${{ fromJSON(needs.images.outputs.images) }}
     name: scan ${{ matrix.image }}
@@ -75,6 +76,7 @@ jobs:
         with:
           image-ref: ${{ matrix.image }}
           format: sarif
+          limit-severities-for-sarif: true # SARIF ignores `severity` otherwise
           output: trivy.sarif
           severity: HIGH,CRITICAL
           ignore-unfixed: true
