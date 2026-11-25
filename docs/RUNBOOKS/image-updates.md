@@ -18,7 +18,7 @@
 5. Merge the Release PR (`chore(repo): release main`) to deploy. The stack restarts once per released bump.
 6. Verify: `ssh pi.local 'docker stack services <stack>'` shows the services at desired replicas and the new image tag.
 
-Stopped stacks (`langfuse`, `code`) still get bump PRs and releases, and the release still POSTs their Portainer webhook: the webhook redeploys the stack, so it comes up on the new tag. Stop it again afterwards if it should stay down.
+Stopped stacks (`langfuse`, `code`) still get bump PRs and releases, and the release still POSTs their Portainer webhook. After the deploy, check `docker stack ls` on the Pi and stop the stack again if it came up and should stay down.
 
 ## Bump an image by hand
 1. Edit the tag in the stack's `docker-compose.yml` (exact version, never `latest` or a bare major/minor).
@@ -53,5 +53,6 @@ Pinning changes every service's image string, so each stack restarts once when i
 
 ## Exceptions
 - `ghcr.io/giocaizzi/rp5-code:latest` (`services/code`): stays on `latest` until the image publishes version tags.
-- `rp5-mcp-stdio` is date-tagged and built by hand ([mcp-stdio.md](../mcp-stdio.md)); Dependabot does not bump it.
+- `rp5-mcp-stdio` is date-tagged and built by hand ([mcp-stdio.md](../mcp-stdio.md)); Dependabot proposes a bump only after a newer tag is pushed.
+- `portainer/portainer-mcp` must stay on the same minor as `portainer/portainer-ee` (see [infra/README.md](../../infra/README.md)): if a Dependabot PR bumps only one of them across a minor, bump the other in the same PR.
 - ClickHouse stays on the 25.8 LTS line: bump within it, move to the next LTS deliberately.
