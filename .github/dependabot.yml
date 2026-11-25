@@ -185,6 +185,10 @@ updates:
       firefly:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+    ignore:
+      # stay on the python 3.13 line: a minor can change behaviour, bump it by hand
+      - dependency-name: python
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
 
   - package-ecosystem: docker-compose
     directory: /services/greenhouse

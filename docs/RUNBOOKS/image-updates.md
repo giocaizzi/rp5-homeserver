@@ -5,7 +5,7 @@
 
 ## How image updates work
 - Every `image:` in `infra/docker-compose.yml` and `services/*/docker-compose.yml` is pinned to an **exact version tag**. No auto-pull: nothing changes on the Pi until a release deploys.
-- `.github/dependabot.yml` has one `docker-compose` entry per stack directory (`/infra` and `/services/<stack>`), weekly on Monday. Minor and patch bumps arrive as **one grouped PR per stack**, titled `fix(<stack>): bump the <stack> group ...`; majors arrive as individual PRs. ClickHouse is held on the 25.8 LTS line via `ignore`.
+- `.github/dependabot.yml` has one `docker-compose` entry per stack directory (`/infra` and `/services/<stack>`), weekly on Monday. Minor and patch bumps arrive as **one grouped PR per stack**, titled `fix(<stack>): bump the <stack> group ...`; majors arrive as individual PRs. ClickHouse (25.8 LTS) and Python (3.13) are held on their lines via `ignore`.
 - The `fix` type cuts a **patch release** of that component ([releases](../releases.md#commit-contract--bump)). Merging the bump PR stages it; merging the release-please Release PR cuts `<stack>-vX.Y.Z` (infra: `vX.Y.Z`) and fires `deploy-services.yml` (Portainer webhook) or `deploy-infra.yml` (`sync_infra.sh --local`), unchanged.
 - Dependabot **security updates do not support `docker-compose`**: only the weekly version updates run. Watch the advisory [Image scan](#vulnerability-scan) for CVEs in between.
 - `com.giocaizzi.tier` labels stay (Alloy and Grafana read them) but no longer schedule updates.
@@ -63,3 +63,4 @@ The Cloudflare DNS record, tunnel ingress and Access app for the host are destro
 - `rp5-mcp-stdio` is date-tagged and built by hand ([mcp-stdio.md](../mcp-stdio.md)); Dependabot proposes a bump only after a newer tag is pushed.
 - `portainer/portainer-mcp` must stay on the same minor as `portainer/portainer-ee` (see [infra/README.md](../../infra/README.md)): Dependabot groups both in one `portainer` PR, never auto-merged; bump both to the same minor.
 - ClickHouse stays on the 25.8 LTS line: bump within it, move to the next LTS deliberately.
+- Python (firefly jobs image) stays on its 3.13 minor line via `ignore`: Dependabot proposes patch bumps only; bump the minor by hand ([above](#bump-an-image-by-hand)).
