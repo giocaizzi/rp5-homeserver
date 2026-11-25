@@ -20,7 +20,7 @@ Status: not deployed (no Swarm or Portainer stack on the Pi). Deploy on demand: 
 
 | Container | Image | Purpose |
 |-----------|-------|---------|
-| llm | `ollama/ollama:latest` | LLM inference server |
+| llm | `ollama/ollama` | LLM inference server |
 | chat | `ghcr.io/open-webui/open-webui:v0.8.5` | Web chat interface for Ollama |
 
 ---

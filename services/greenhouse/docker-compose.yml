@@ -82,7 +82,7 @@ secrets:
 # =============================================================================
 services:
   app:
-    image: ghcr.io/giocaizzi/greenhouse:latest
+    image: ghcr.io/giocaizzi/greenhouse:7.0.0
     hostname: greenhouse-app
     expose:
       - "8000"

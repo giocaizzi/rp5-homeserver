@@ -46,7 +46,7 @@ networks:
 # =============================================================================
 services:
   llm:
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.40.18
     hostname: ai-llm
     expose:
       - "11434"

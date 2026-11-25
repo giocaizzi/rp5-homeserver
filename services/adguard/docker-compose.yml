@@ -49,7 +49,7 @@ networks:
 # =============================================================================
 services:
   dns:
-    image: adguard/adguardhome:latest
+    image: adguard/adguardhome:v1.0.0
     hostname: adguard-dns
     ports:
       # mode: host bypasses the ingress mesh so AdGuard sees real client IPs
