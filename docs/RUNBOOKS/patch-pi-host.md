@@ -1,6 +1,6 @@
 # Patch the Pi host
 
-**When:** a Debian security advisory or a kernel/Docker CVE is announced, or for the monthly check. Containers are patched separately (Shepherd for `:latest`/floating tags, a rebuild for the Firefly fork).
+**When:** a Debian security advisory or a kernel/Docker CVE is announced, or for the monthly check. Containers are patched separately (Dependabot image bumps, see [image-updates](./image-updates.md); a rebuild for the Firefly fork).
 **Preconditions:** SSH to the Pi (`ssh pi.local`), sudo.
 
 ## What is automatic

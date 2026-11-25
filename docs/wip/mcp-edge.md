@@ -78,7 +78,7 @@ revisit mcphub only if friends need their own credentials on a shared server.
 | 7 | `otel.<domain>` outside `/v1/` reached Alloy without Access (verified: 401 from Alloy) | Low | #389, #391 |
 | 8 | Path variants vs path-scoped Access apps | Low | Not vulnerable: `//mcp`, `/%6Dcp`, `/MCP`, `/x/../mcp` all stopped by Access |
 | 9 | Stale grafana nginx comment | Low | #389 |
-| 10 | Token-holding sidecar on `:latest` with Shepherd auto-pull | Low | #390 (grafana); portainer-mcp is already pinned |
+| 10 | Token-holding sidecar on `:latest` with Shepherd auto-pull | Low | #390 (grafana); portainer-mcp is already pinned. Now every image is pinned to an exact tag and bumped by Dependabot PR (no auto-pull) |
 | 11 | One global allowlist and Google client for all connectors | Low | Allowlist: per-connector groups (#395); Google client: Phase 4 |
 
 ## Phases
