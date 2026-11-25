@@ -1,5 +1,5 @@
 # Alert (ntfy) when a Swarm service runs fewer replicas than desired for >=10 min,
-# e.g. a Shepherd update that crash-loops the new image (#185, #211).
+# e.g. an image bump that crash-loops the new image (#185, #211).
 #
 # Why a workflow: no existing metric source (Netdata, Alloy/Prometheus) exposes
 # Swarm desired-vs-running replicas, so the check reads `docker service ls`
