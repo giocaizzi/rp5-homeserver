@@ -37,7 +37,7 @@ Manifest mode: [`release-please-config.json`](../release-please-config.json) + [
 | `mcp-connector` | `workers/mcp-connector` | `node` | `mcp-connector-vX.Y.Z` | `package.json` |
 | `<service>` | `services/<service>` | `simple` | `<service>-vX.Y.Z` | manifest-only |
 
-Services covered: `adguard`, `ai`, `calibre`, `code`, `crm`, `firefly`, `greenhouse`, `langfuse`, `mcp-stdio`, `miniflux`, `n8n`, `ntfy`, `observability`, `pocket-id`. Stacks with repo bind mounts (`firefly`, `langfuse`, `observability`) also list `docker-compose.yml` under `extra-files`, so release-please bumps their `com.giocaizzi.config-rev` label and every release rolls the tasks.
+Services covered: `adguard`, `ai`, `calibre`, `crm`, `firefly`, `greenhouse`, `langfuse`, `mcp-stdio`, `miniflux`, `n8n`, `ntfy`, `observability`, `pocket-id`. Stacks with repo bind mounts (`firefly`, `langfuse`, `observability`) also list `docker-compose.yml` under `extra-files`, so release-please bumps their `com.giocaizzi.config-rev` label and every release rolls the tasks.
 
 Cross-cutting changes (CI, root docs, `scripts/`) use the `repo` scope, touch no component path, and cut **no** release.
 
@@ -65,6 +65,8 @@ The runtime stacks deploy **when their release is published**, not on merge to `
 - **Graduate deliberately:** add a `Release-As: 1.0.0` footer to a commit scoped to that component's path. There is no automatic `1.0.0`.
 
 > release-please is **SemVer-only** — CalVer/date-based versions aren't supported. The `0.x` namespacing above is the chosen way to avoid confusion with upstream versions.
+
+Dependabot `docker-compose` PRs are titled `fix(<stack>)` / `fix(infra)`, so each image bump cuts a patch release of that component and deploys through the release gate. Procedure: [image updates runbook](./RUNBOOKS/image-updates.md).
 
 ### `infra/VERSION` is release-managed
 

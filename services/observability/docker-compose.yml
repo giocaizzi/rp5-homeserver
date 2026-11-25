@@ -342,7 +342,7 @@ services:
   # Worker gate it, and callers must send Authorization: Bearer <server token>). Viewer-role
   # service account.
   mcp:
-    image: grafana/mcp-grafana:2.0.2   # pinned: holds the Grafana SA token; no floating major tag, bump by hand
+    image: grafana/mcp-grafana:2.0.2   # holds the Grafana SA token; bumps by Dependabot PR
     hostname: observability-mcp
     environment:
       - GRAFANA_URL=http://observability-dashboard:3000
@@ -388,7 +388,7 @@ services:
   # Shared PostgreSQL Exporter - Metrics for Prometheus/Alloy
   # ========================================
   postgres-exporter:
-    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.21.1
     hostname: observability-postgres-exporter
     entrypoint:
       - /bin/sh
@@ -429,7 +429,7 @@ services:
   # Shared Redis Exporter - Metrics for Prometheus/Alloy
   # ========================================
   redis-exporter:
-    image: oliver006/redis_exporter:alpine
+    image: oliver006/redis_exporter:v1.98.0-alpine
     hostname: observability-redis-exporter
     environment:
       - REDIS_ADDR=redis://redis:6379

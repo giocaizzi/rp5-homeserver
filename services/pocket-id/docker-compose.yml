@@ -41,10 +41,9 @@ networks:
 # =============================================================================
 services:
   app:
-    # Floating minor tag on purpose: Shepherd re-pulls the digest, so patch
-    # releases arrive automatically. Alpine variant, not distroless: Backrest's
-    # dump runs `docker exec ... sh -c`.
-    image: ghcr.io/pocket-id/pocket-id:v2.19
+    # Exact version, bumped by Dependabot PRs. Alpine variant, not distroless:
+    # Backrest's dump runs `docker exec ... sh -c`.
+    image: ghcr.io/pocket-id/pocket-id:v2.19.3
     hostname: pocket-id-app
     expose:
       - "1411"

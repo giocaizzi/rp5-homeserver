@@ -22,8 +22,8 @@
 | Container | Image | Purpose |
 |-----------|-------|---------|
 | `postgres` (infra) | `postgres:16-alpine` | Shared PostgreSQL database |
-| firefly-app | `fireflyiii/core:latest` | Finance app |
-| firefly-importer | `fireflyiii/data-importer:version-2` | Bank imports |
+| firefly-app | `fireflyiii/core` | Finance app |
+| firefly-importer | `fireflyiii/data-importer` | Bank imports |
 | firefly-cron | `alpine` | Scheduled jobs |
 
 ---

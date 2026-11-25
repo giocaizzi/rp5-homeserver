@@ -186,7 +186,7 @@ services:
   # ClickHouse - OLAP database
   # ========================================
   analytics:
-    image: clickhouse/clickhouse-server:25.8  # LTS line
+    image: clickhouse/clickhouse-server:25.8.33.6  # 25.8 LTS line; Dependabot ignores minor/major
     hostname: langfuse-analytics
     user: "101:101"
     environment:
@@ -239,7 +239,7 @@ services:
   # Langfuse Worker - Async event processing
   # ========================================
   worker:
-    image: langfuse/langfuse-worker:3
+    image: langfuse/langfuse-worker:3.227.1
     hostname: langfuse-worker
     environment:
       <<: *langfuse-env
@@ -294,7 +294,7 @@ services:
   # Langfuse Web - Main application
   # ========================================
   app:
-    image: langfuse/langfuse:3
+    image: langfuse/langfuse:3.227.1
     hostname: langfuse-app
     environment:
       <<: *langfuse-env

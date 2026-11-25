@@ -3,6 +3,12 @@
 #   - github-actions    — action @vX refs in .github/workflows/*
 #   - terraform         — provider + module versions in cloud/
 #   - npm               — workers/mcp-connector (Cloudflare Worker)
+#   - docker-compose    — exact image tags in infra/ and services/<stack>/ (one
+#                         entry per stack, so each PR maps to one release-please
+#                         component)
+#
+# docker-compose gets version updates only: Dependabot security updates do not
+# support docker-compose.
 #
 # Groups: one PR per ecosystem for all version updates (each ecosystem maps to
 # one release-please component), plus one for npm security fixes. Security PRs
@@ -60,3 +66,223 @@ updates:
       npm-security:
         applies-to: security-updates
         patterns: ["*"]
+
+  # docker-compose: `fix(<stack>)` cuts a patch release of that component, so
+  # merging the bump stages a deploy via the Release PR. Majors are left out of
+  # the group and arrive as individual PRs for manual review.
+  - package-ecosystem: docker-compose
+    directory: /infra
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(infra)"
+    labels:
+      - dependencies
+    groups:
+      portainer:
+        # portainer-mcp must stay on the portainer-ee minor: one PR, manual merge
+        patterns: ["portainer/*"]
+      infra:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/adguard
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(adguard)"
+    labels:
+      - dependencies
+    groups:
+      adguard:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/ai
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(ai)"
+    labels:
+      - dependencies
+    groups:
+      ai:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/calibre
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(calibre)"
+    labels:
+      - dependencies
+    groups:
+      calibre:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/crm
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(crm)"
+    labels:
+      - dependencies
+    groups:
+      crm:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/firefly
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(firefly)"
+    labels:
+      - dependencies
+    groups:
+      firefly:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/greenhouse
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(greenhouse)"
+    labels:
+      - dependencies
+    groups:
+      greenhouse:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/langfuse
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(langfuse)"
+    labels:
+      - dependencies
+    groups:
+      langfuse:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # stay on the 25.8 LTS line
+      - dependency-name: clickhouse/clickhouse-server
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/mcp-stdio
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(mcp-stdio)"
+    labels:
+      - dependencies
+    groups:
+      mcp-stdio:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/miniflux
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(miniflux)"
+    labels:
+      - dependencies
+    groups:
+      miniflux:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/n8n
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(n8n)"
+    labels:
+      - dependencies
+    groups:
+      n8n:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/ntfy
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(ntfy)"
+    labels:
+      - dependencies
+    groups:
+      ntfy:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/observability
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(observability)"
+    labels:
+      - dependencies
+    groups:
+      observability:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: docker-compose
+    directory: /services/pocket-id
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(pocket-id)"
+    labels:
+      - dependencies
+    groups:
+      pocket-id:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]

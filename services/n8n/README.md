@@ -19,7 +19,7 @@
 | Container | Image | Purpose |
 |-----------|-------|---------|
 | n8n-db | `postgres:16-alpine` | Database (Pi-optimized) |
-| n8n-app | `n8nio/n8n:latest` | Workflow engine + web UI |
+| n8n-app | `n8nio/n8n` | Workflow engine + web UI |
 
 ---
 

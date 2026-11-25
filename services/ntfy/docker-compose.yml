@@ -48,7 +48,7 @@ networks:
 services:
 
   app:
-    image: binwiederhier/ntfy:v2   # major-pinned (see #185)
+    image: binwiederhier/ntfy:v2.38.2
     hostname: ntfy-app
     command: serve
     expose:

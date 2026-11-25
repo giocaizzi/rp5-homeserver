@@ -57,7 +57,7 @@ networks:
 # =============================================================================
 services:
   app:
-    image: ghcr.io/giocaizzi/firefly-iii:mcp
+    image: ghcr.io/giocaizzi/firefly-iii:6.7.9-mcp
     hostname: firefly-app
     stop_grace_period: 30s # default 10s SIGKILLs (exit 137) in-flight requests on update (#316)
     # Image STOPSIGNAL is SIGQUIT, a no-op for s6-svscan (PID 1) -> always SIGKILLed (137).
@@ -155,7 +155,7 @@ services:
       <<: *logging-base
 
   importer:
-    image: fireflyiii/data-importer:version-2   # major-pinned (see #185)
+    image: fireflyiii/data-importer:version-2.3.5
     hostname: firefly-importer
     stop_grace_period: 30s # default 10s SIGKILLs (exit 137) in-flight imports on update (#316)
     stop_signal: SIGTERM # image SIGQUIT is ignored by s6-svscan; see app (#316)
@@ -237,7 +237,7 @@ services:
       <<: *logging-base
 
   scheduler:
-    image: python:3.13-alpine
+    image: python:3.13.18-alpine
     hostname: firefly-scheduler
     init: true # crond as PID 1 ignores SIGTERM -> SIGKILL (137) on stop (#316)
     environment:

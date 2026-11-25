@@ -48,7 +48,7 @@ networks:
 services:
 
   app:
-    image: crocodilestick/calibre-web-automated:latest
+    image: crocodilestick/calibre-web-automated:v4.0.8
     hostname: calibre-app
     expose:
       - "8083"

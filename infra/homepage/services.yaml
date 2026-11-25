@@ -98,12 +98,6 @@
             icon: sh-open-webui
             ping: http://ai_chat:8080
 
-      - Code:
-            href: https://code.{{HOMEPAGE_VAR_DOMAIN}}
-            description: Remote Claude Code dev environment
-            icon: mdi-robot-happy-#a855f7
-            ping: http://code_app:3001
-
 - Finance:
       - Firefly III:
             href: https://firefly.{{HOMEPAGE_FILE_DOMAIN}}

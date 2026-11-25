@@ -15,6 +15,8 @@ Component → workflow mapping, Portainer Remote Stack mounts, infra versioning 
 
 > Portainer services use local mount cloning the repo at `/mnt`.
 
+**Image tags:** every `image:` is an exact version tag, bumped by Dependabot PRs and shipped by the release; nothing auto-pulls. See the [image updates runbook](./RUNBOOKS/image-updates.md).
+
 > **No symlinks in the repo.** Portainer's git unpacker rejects any tracked symlink (`exit 255: repository contains a symlink, which is not allowed for security reasons`), blocking every Remote Stack deploy. Never `git add` a symlink.
 
 | Mount Type | `infra/` | `services/` |

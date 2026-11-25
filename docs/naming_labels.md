@@ -102,9 +102,9 @@ All containers must include these labels for identification and observability.
 
 | Value | Description |
 |-------|-------------|
-| `critical` | Infrastructure services (always-on, checked every 24h by Shepherd) |
-| `core` | Essential application services (checked every 48h by Shepherd) |
-| `extra` | Optional, supporting services - exporters, workers, agents (checked every 72h by Shepherd) |
+| `critical` | Infrastructure services (always-on; an outage takes the host or other stacks down) |
+| `core` | Essential application services (an outage loses a user-facing feature) |
+| `extra` | Optional, supporting services - exporters, workers, agents (an outage is tolerable) |
 
 #### `technology`
 
@@ -121,7 +121,7 @@ x-labels-base: &labels-base
 
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:16.16-alpine
     hostname: mystack-db           # <stack>-<service>
     labels:
       <<: *labels-base
@@ -131,7 +131,7 @@ services:
       com.giocaizzi.technology: "postgres"
 
   app:
-    image: myapp:latest
+    image: myapp:1.2.3
     hostname: mystack-app
     labels:
       <<: *labels-base
@@ -141,7 +141,7 @@ services:
       com.giocaizzi.technology: "myapp"
 
   db-exporter:
-    image: quay.io/prometheuscommunity/postgres-exporter:latest
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.21.1
     hostname: mystack-db-exporter
     labels:
       <<: *labels-base

@@ -21,7 +21,7 @@ Upstream: [giocaizzi/greenhouse](https://github.com/giocaizzi/greenhouse)
 
 | Container | Image | Purpose |
 |-----------|-------|---------|
-| greenhouse-app | `ghcr.io/giocaizzi/greenhouse:latest` | FastAPI (API + HTMX UI), APScheduler jobs, SQLite archive |
+| greenhouse-app | `ghcr.io/giocaizzi/greenhouse` | FastAPI (API + HTMX UI), APScheduler jobs, SQLite archive |
 
 Single-container stack. SQLite is the permanent record; Tuya Cloud is the
 live source for sensor reads; actuation goes over the Tuya **local protocol
@@ -169,7 +169,7 @@ docker exec -it $(docker ps -qf name=greenhouse_app) \
 Docker still needs network egress to `ghcr.io`. The first release tag is
 `1.0.0` (also published as `latest`).
 
-**Pin to a version.** Override `image:` in the compose file to
-`ghcr.io/giocaizzi/greenhouse:1.0.0` for reproducible deploys. The image
+**Pinned version.** The compose file pins `image:` to an exact version,
+bumped by Dependabot PRs (see [image updates](../../docs/RUNBOOKS/image-updates.md)). The image
 ships with cosign-signed SLSA provenance + SBOM (verify via
 `cosign verify --certificate-identity-regexp ...` per upstream CD docs).
