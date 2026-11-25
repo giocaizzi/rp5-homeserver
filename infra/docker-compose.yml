@@ -139,7 +139,7 @@ services:
 
   # PostgreSQL - Shared database for stateful services (n8n, miniflux, crm, firefly)
   postgres:
-    image: postgres:16.16-alpine
+    image: postgres:18.7-alpine
     hostname: infra-postgres
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     environment:
