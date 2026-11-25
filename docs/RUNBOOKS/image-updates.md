@@ -14,11 +14,11 @@
 1. Read the upstream release notes of every bumped image (linked in the PR body). Look for breaking changes, migrations and config renames.
 2. Wait for the required checks `check`, `Validate PR title` and `Leak check`. Read the advisory `Image scan` result for the changed images (see [Vulnerability scan](#vulnerability-scan)); it does not block.
 3. Majors: never merge blind. Follow the upstream upgrade guide, take a backup first if the image owns data (Backrest, plan `docker-volumes`), and adjust the compose file in the same PR if needed.
-4. Merge it by hand once checks pass (squash). Auto-merge for patch/minor is planned.
-5. Merge the Release PR (`chore(repo): release main`) to deploy. The stack restarts once per released bump.
+4. Minor and patch PRs (every ecosystem) auto-merge (squash) once checks pass: `dependabot-auto-merge.yml` arms it, nothing to do. Majors and the `portainer` PR (both Portainer images) are never armed: merge them by hand (squash). If a PR sits BEHIND `main` after another merge, comment `@dependabot rebase` on it (auto-merge stays armed). The Release PR updates on the push, or for auto-merged PRs (no push workflow fires) at the latest at the daily release-please run.
+5. Merge the Release PR (`chore(repo): release main`) to deploy; auto-merge never deploys. The stack restarts once per released bump.
 6. Verify: `ssh pi.local 'docker stack services <stack>'` shows the services at desired replicas and the new image tag.
 
-Stopped stacks (`langfuse`, `code`) still get bump PRs and releases, and the release still POSTs their Portainer webhook. After the deploy, check `docker stack ls` on the Pi and stop the stack again if it came up and should stay down.
+Stopped stacks (`langfuse`) still get bump PRs and releases, and the release still POSTs their Portainer webhook. After the deploy, check `docker stack ls` on the Pi and stop the stack again if it came up and should stay down.
 
 ## Bump an image by hand
 1. Edit the tag in the stack's `docker-compose.yml` (exact version, never `latest` or a bare major/minor).
@@ -51,8 +51,15 @@ Shepherd (`infra_shepherd-critical`, `infra_shepherd-core`, `infra_shepherd-extr
 
 Pinning changes every service's image string, so each stack restarts once when its release deploys.
 
+## Retire the code stack (one-time)
+The `code` stack is removed from the repo. Nothing of it exists in Swarm on the Pi (checked read-only: no stack, secrets, volumes or networks). Remaining manual steps:
+1. Delete the `code` stack in Portainer if it is still listed there.
+2. Delete the GitHub secrets: `gh secret delete WEBHOOK_ID_CODE -e pi-services`, then `gh secret delete CODE_USERS -e cloud-plan` and `gh secret delete CODE_USERS -e cloud-production`.
+3. Leave the stale `services/code` line in `.release-please-manifest.json`: it is never hand-edited, and release-please ignores it once the package is out of the config.
+
+The Cloudflare DNS record, tunnel ingress and Access app for the host are destroyed by `apply-cloud.yml` when this change merges.
+
 ## Exceptions
-- `ghcr.io/giocaizzi/rp5-code:latest` (`services/code`): stays on `latest` until the image publishes version tags.
 - `rp5-mcp-stdio` is date-tagged and built by hand ([mcp-stdio.md](../mcp-stdio.md)); Dependabot proposes a bump only after a newer tag is pushed.
-- `portainer/portainer-mcp` must stay on the same minor as `portainer/portainer-ee` (see [infra/README.md](../../infra/README.md)): if a Dependabot PR bumps only one of them across a minor, bump the other in the same PR.
+- `portainer/portainer-mcp` must stay on the same minor as `portainer/portainer-ee` (see [infra/README.md](../../infra/README.md)): Dependabot groups both in one `portainer` PR, never auto-merged; bump both to the same minor.
 - ClickHouse stays on the 25.8 LTS line: bump within it, move to the next LTS deliberately.

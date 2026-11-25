@@ -81,6 +81,9 @@ updates:
     labels:
       - dependencies
     groups:
+      portainer:
+        # portainer-mcp must stay on the portainer-ee minor: one PR, manual merge
+        patterns: ["portainer/*"]
       infra:
         patterns: ["*"]
         update-types: ["minor", "patch"]
@@ -127,21 +130,6 @@ updates:
       - dependencies
     groups:
       calibre:
-        patterns: ["*"]
-        update-types: ["minor", "patch"]
-
-  - package-ecosystem: docker-compose
-    directory: /services/code
-    schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "fix(code)"
-    labels:
-      - dependencies
-    groups:
-      code:
         patterns: ["*"]
         update-types: ["minor", "patch"]
 
