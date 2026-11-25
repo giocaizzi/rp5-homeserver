@@ -98,7 +98,7 @@ services:
   # Prometheus - Metrics Storage
   # ========================================
   metrics-store:
-    image: prom/prometheus:v3.5.3
+    image: prom/prometheus:v3.16.0
     hostname: observability-metrics-store
     expose:
       - "9090"
@@ -144,7 +144,7 @@ services:
   # Loki - Log Aggregation
   # ========================================
   log-store:
-    image: grafana/loki:3.7.8
+    image: grafana/loki:3.7.10
     hostname: observability-log-store
     expose:
       - "3100"
@@ -221,7 +221,7 @@ services:
   # Grafana Alloy - OpenTelemetry Collector
   # ========================================
   collector:
-    image: grafana/alloy:v1.15.1
+    image: grafana/alloy:v1.22.0
     hostname: observability-collector
     expose:
       - "12345" # Alloy metrics
@@ -268,7 +268,7 @@ services:
   # Grafana - Dashboards and Visualization
   # ========================================
   dashboard:
-    image: grafana/grafana:13.2.4
+    image: grafana/grafana:13.3.1
     hostname: observability-dashboard
     expose:
       - "3000"
@@ -342,7 +342,7 @@ services:
   # Worker gate it, and callers must send Authorization: Bearer <server token>). Viewer-role
   # service account.
   mcp:
-    image: grafana/mcp-grafana:2.0.2   # holds the Grafana SA token; bumps by Dependabot PR
+    image: grafana/mcp-grafana:2.3.0   # holds the Grafana SA token; bumps by Dependabot PR
     hostname: observability-mcp
     environment:
       - GRAFANA_URL=http://observability-dashboard:3000
