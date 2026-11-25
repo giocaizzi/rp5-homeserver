@@ -73,7 +73,7 @@ networks:
 # =============================================================================
 services:
   server:
-    image: twentycrm/twenty:v2.51.0
+    image: twentycrm/twenty:v2.61.0
     hostname: crm-server
     expose:
       - "3000"
@@ -114,7 +114,7 @@ services:
       <<: *logging-base
 
   worker:
-    image: twentycrm/twenty:v2.51.0
+    image: twentycrm/twenty:v2.61.0
     hostname: crm-worker
     entrypoint: *twenty-entrypoint
     command: ["node", "dist/queue-worker/queue-worker"]   # = yarn worker:prod, minus yarn
