@@ -180,7 +180,7 @@ services:
 
   # Redis - Shared in-memory cache and queue for stateful services (Twenty CRM, Langfuse)
   redis:
-    image: redis:7.4.12-alpine
+    image: redis:8.0.0-alpine
     hostname: infra-redis
     command: ["redis-server", "--maxmemory", "96mb", "--maxmemory-policy", "noeviction", "--appendonly", "yes"]
     volumes:
