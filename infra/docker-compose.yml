@@ -57,7 +57,7 @@ networks:
 services:
   # Nginx Reverse Proxy
   proxy:
-    image: nginx:1-alpine   # major-pinned (see #185)
+    image: nginx:1.31.10-alpine
     hostname: infra-proxy
     # Image STOPSIGNAL SIGQUIT = graceful shutdown, which waits on long-lived
     # MCP/SSE connections; bounded by worker_shutdown_timeout 20s in nginx.conf.
@@ -107,7 +107,7 @@ services:
 
   # Nginx Prometheus Exporter
   proxy-exporter:
-    image: nginx/nginx-prometheus-exporter:1.5.3   # patch-pinned: upstream :1 tag is stale (see #185)
+    image: nginx/nginx-prometheus-exporter:1.5.3
     hostname: infra-proxy-exporter
     command:
       - --nginx.scrape-uri=http://infra-proxy:80/stub_status
@@ -139,7 +139,7 @@ services:
 
   # PostgreSQL - Shared database for stateful services (n8n, miniflux, crm, firefly)
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16.16-alpine
     hostname: infra-postgres
     command: postgres -c config_file=/etc/postgresql/postgresql.conf
     environment:
@@ -180,7 +180,7 @@ services:
 
   # Redis - Shared in-memory cache and queue for stateful services (Twenty CRM, Langfuse)
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.12-alpine
     hostname: infra-redis
     command: ["redis-server", "--maxmemory", "96mb", "--maxmemory-policy", "noeviction", "--appendonly", "yes"]
     volumes:
@@ -213,7 +213,7 @@ services:
 
   # Portainer - Docker management UI (Business Edition)
   management:
-    image: portainer/portainer-ee:latest
+    image: portainer/portainer-ee:2.45.4
     hostname: infra-management
     expose:
       - "9000"
@@ -244,11 +244,11 @@ services:
 
   # Portainer MCP - HTTP MCP server for Portainer (full access, via mcp-connector Worker)
   # Unsupported upstream project (see portainer/portainer-mcp README); the image minor
-  # must track the Portainer minor (portainer-ee:latest, currently 2.45.x).
+  # must track the Portainer minor (portainer-ee 2.45.x).
   # Gate token (Authorization) + caller's Portainer key (X-Portainer-API-Key) are both
   # injected by the Worker; nothing Portainer-side is stored here.
   management-mcp:
-    image: portainer/portainer-mcp:2.45
+    image: portainer/portainer-mcp:2.45.3
     hostname: infra-management-mcp
     environment:
       - PORTAINER_URL=http://infra-management:9000
@@ -289,7 +289,7 @@ services:
 
   # Cloudflare Tunnel
   tunnel:
-    image: cloudflare/cloudflared:latest
+    image: cloudflare/cloudflared:2026.11.2
     hostname: infra-tunnel
     command: tunnel --no-autoupdate run
     stop_grace_period: 45s # cloudflared drains connections for its default 30s --grace-period; Swarm's 10s default SIGKILLed it (exit 137, #316)
@@ -324,7 +324,7 @@ services:
 
   # Netdata - Real-time performance monitoring
   monitoring:
-    image: netdata/netdata:v2   # major-pinned stable; :latest is nightly (see #185)
+    image: netdata/netdata:v2.13.0   # exact tag; :latest is nightly
     hostname: infra-monitoring
     stop_grace_period: 60s # netdata saves its DB on exit; default 10s SIGKILLed it (exit 137) on updates (#373)
     # pid: host  # UNSUPPORTED in Swarm - would be needed for per-container cgroups
@@ -379,7 +379,7 @@ services:
 
   # Backrest - Restic backup with Web UI
   backup:
-    image: garethgeorge/backrest:v1   # major-pinned (see #185)
+    image: garethgeorge/backrest:v1.14.1
     hostname: infra-backup
     expose:
       - "9898"  # Web UI
@@ -438,7 +438,7 @@ services:
   # and the janitor (prune only). Serves a unix socket in a shared volume, so no
   # network is involved.
   docker-proxy:
-    image: wollomatic/socket-proxy:1   # major-pinned (see #185)
+    image: wollomatic/socket-proxy:1.14.0
     hostname: infra-docker-proxy
     user: "65534:123"  # nobody:docker (host docker group gid)
     read_only: true
@@ -472,11 +472,11 @@ services:
     logging:
       <<: *logging-base
 
-  # Janitor - daily prune of stopped containers and unused images (CI/Shepherd
+  # Janitor - daily prune of stopped containers and unused images (CI and image-bump
   # redeploys leave ~1 GiB/day of old images otherwise). Volumes are never pruned;
   # nothing builds on the Pi, so there is no build cache. See docs/monitoring.md#disk-hygiene.
   janitor:
-    image: docker:29-cli   # major-pinned (see #185)
+    image: docker:29.10.0-cli
     hostname: infra-janitor
     init: true  # sleep as PID 1 ignores SIGTERM -> SIGKILL on stop (#316)
     environment:
@@ -512,7 +512,7 @@ services:
 
   # Homepage - Modern application dashboard
   dashboard:
-    image: ghcr.io/gethomepage/homepage:v2   # major-pinned: Shepherd tracks v2.x only (see #185)
+    image: ghcr.io/gethomepage/homepage:v2.8.0
     hostname: infra-dashboard
     expose:
       - "3000"
@@ -574,121 +574,6 @@ services:
       retries: 3
       start_period: 10s
 
-  # Shepherd - Auto-update Swarm services (tiered strategy)
-  # Critical tier: infra services, checked every 24h
-  shepherd-critical:
-    image: containrrr/shepherd:latest
-    hostname: infra-shepherd-critical
-    init: true  # shepherd's bash loop is PID 1 and ignores SIGTERM while sleeping -> SIGKILL (137) on stop (#316)
-    entrypoint:
-      - /bin/bash
-      - -c
-      - IFS=, read -r _ _ REGISTRY_USER REGISTRY_PASSWORD < /run/secrets/shepherd_registries; export REGISTRY_USER REGISTRY_PASSWORD; exec /usr/local/bin/shepherd
-    secrets:
-      - shepherd_registries
-    environment:
-      - SLEEP_TIME=24h
-      - FILTER_SERVICES=label=com.giocaizzi.tier=critical
-      - IGNORELIST_SERVICES=infra_shepherd-critical,infra_shepherd-core,infra_shepherd-extra
-      - ROLLBACK_ON_FAILURE=true
-      - TZ=Europe/Rome
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - infra_network
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "shepherd-critical"
-      com.giocaizzi.component: "worker"
-      com.giocaizzi.tier: "critical"
-      com.giocaizzi.technology: "shepherd"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      labels:
-        com.giocaizzi.tier: "critical"
-      resources:
-        limits:
-          memory: 64M
-    logging:
-      <<: *logging-base
-
-  # Core tier: main application services, checked every 48h
-  shepherd-core:
-    image: containrrr/shepherd:latest
-    hostname: infra-shepherd-core
-    init: true
-    entrypoint:
-      - /bin/bash
-      - -c
-      - IFS=, read -r _ _ REGISTRY_USER REGISTRY_PASSWORD < /run/secrets/shepherd_registries; export REGISTRY_USER REGISTRY_PASSWORD; exec /usr/local/bin/shepherd
-    secrets:
-      - shepherd_registries
-    environment:
-      - SLEEP_TIME=48h
-      - FILTER_SERVICES=label=com.giocaizzi.tier=core
-      - IGNORELIST_SERVICES=infra_shepherd-critical,infra_shepherd-core,infra_shepherd-extra
-      - ROLLBACK_ON_FAILURE=true
-      - TZ=Europe/Rome
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - infra_network
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "shepherd-core"
-      com.giocaizzi.component: "worker"
-      com.giocaizzi.tier: "critical"
-      com.giocaizzi.technology: "shepherd"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      labels:
-        com.giocaizzi.tier: "critical"
-      resources:
-        limits:
-          memory: 64M
-    logging:
-      <<: *logging-base
-
-  # Extra tier: exporters/workers, checked every 72h
-  shepherd-extra:
-    image: containrrr/shepherd:latest
-    hostname: infra-shepherd-extra
-    init: true
-    entrypoint:
-      - /bin/bash
-      - -c
-      - IFS=, read -r _ _ REGISTRY_USER REGISTRY_PASSWORD < /run/secrets/shepherd_registries; export REGISTRY_USER REGISTRY_PASSWORD; exec /usr/local/bin/shepherd
-    secrets:
-      - shepherd_registries
-    environment:
-      - SLEEP_TIME=72h
-      - FILTER_SERVICES=label=com.giocaizzi.tier=extra
-      - IGNORELIST_SERVICES=infra_shepherd-critical,infra_shepherd-core,infra_shepherd-extra
-      - ROLLBACK_ON_FAILURE=true
-      - TZ=Europe/Rome
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - infra_network
-    labels:
-      <<: *labels-base
-      com.giocaizzi.service: "shepherd-extra"
-      com.giocaizzi.component: "worker"
-      com.giocaizzi.tier: "critical"
-      com.giocaizzi.technology: "shepherd"
-    <<: *security-base
-    deploy:
-      <<: *deploy-base
-      labels:
-        com.giocaizzi.tier: "critical"
-      resources:
-        limits:
-          memory: 64M
-    logging:
-      <<: *logging-base
-
 volumes:
   nginx_cache:
     driver: local
@@ -748,5 +633,3 @@ secrets:
     file: ./secrets/ntfy_token.txt
   portainer_mcp_auth_token:
     file: ./secrets/portainer_mcp_auth_token.txt
-  shepherd_registries:
-    file: ./secrets/shepherd_registries.txt

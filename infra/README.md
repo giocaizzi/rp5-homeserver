@@ -20,16 +20,17 @@ BWS_ACCESS_TOKEN=<token> PI_SSH_USER=<user> DOMAIN=<domain> ./scripts/sync_infra
 
 | Container | Image | Purpose |
 |-----------|-------|---------|
-| nginx | `nginx:1-alpine` | Reverse proxy, SSL termination |
-| portainer | `portainer/portainer-ee:latest` | Docker management UI |
-| management-mcp | `portainer/portainer-mcp:2.45` | Portainer MCP (full access) for the [mcp-connector](../workers/mcp-connector/README.md) |
-| cloudflared | `cloudflare/cloudflared:latest` | Secure tunnel (no port forwarding) |
-| netdata | `netdata/netdata:v2` | Real-time system monitoring |
-| backrest | `garethgeorge/backrest:v1` | Restic backup web UI; dumps the databases before each snapshot |
-| docker-proxy | `wollomatic/socket-proxy:1` | Filtered Docker socket: exec into the DB tasks (Backrest) and prune (janitor) only |
-| janitor | `docker:29-cli` | Daily prune of stopped containers and unused images ([disk hygiene](../docs/monitoring.md#disk-hygiene)) |
-| homepage | `ghcr.io/gethomepage/homepage:v2` | Service dashboard |
-| shepherd | `containrrr/shepherd:latest` | Auto-update Swarm services every 24h |
+| nginx | `nginx` | Reverse proxy, SSL termination |
+| portainer | `portainer/portainer-ee` | Docker management UI |
+| management-mcp | `portainer/portainer-mcp` | Portainer MCP (full access) for the [mcp-connector](../workers/mcp-connector/README.md) |
+| cloudflared | `cloudflare/cloudflared` | Secure tunnel (no port forwarding) |
+| netdata | `netdata/netdata` | Real-time system monitoring |
+| backrest | `garethgeorge/backrest` | Restic backup web UI; dumps the databases before each snapshot |
+| docker-proxy | `wollomatic/socket-proxy` | Filtered Docker socket: exec into the DB tasks (Backrest) and prune (janitor) only |
+| janitor | `docker` | Daily prune of stopped containers and unused images ([disk hygiene](../docs/monitoring.md#disk-hygiene)) |
+| homepage | `ghcr.io/gethomepage/homepage` | Service dashboard |
+
+Exact versions are pinned in `docker-compose.yml` and bumped by Dependabot PRs; see [docs/RUNBOOKS/image-updates.md](../docs/RUNBOOKS/image-updates.md).
 
 ---
 
@@ -64,7 +65,6 @@ File-based secrets in `./secrets/` on the Pi (gitignored). Source of truth: Secr
 | `portainer_mcp_auth_token` | `portainer_mcp_auth_token.txt` | Portainer MCP gate token (`openssl rand -hex 32`; key `infra_portainer_mcp_auth_token`) |
 | `domain` | `domain.txt` | Production domain |
 | `ntfy_token` | `ntfy_token.txt` | Netdata → ntfy publisher token |
-| `shepherd_registries` | `shepherd_registries.txt` | Docker Hub login for Shepherd, one line `<id>,docker.io,<user>,<read-only access token>` (key `infra_shepherd_registries`) |
 
 ```bash
 # Generate a random password straight into Secrets Manager, then run sync_infra.sh
@@ -122,25 +122,6 @@ See [docs/backup.md](../docs/backup.md) for setup.
 ### Homepage
 
 Service dashboard at `https://homepage.home`. Config files in `./homepage/`.
-
-### Shepherd
-
-Automatically checks and updates Swarm services with tiered strategy to stay within Docker Hub unauthenticated rate limits (100 pulls/6h).
-
-**Three-tier system:**
-
-| Tier | Services | Check Interval | Pull Volume |
-|------|----------|----------------|-------------|
-| **Critical** | Infra (proxy, tunnel, portainer, netdata, backrest, homepage) | 24h | ~8 pulls/day |
-| **Core** | Main apps (observability, ntfy, adguard, firefly, n8n) | 48h | ~12 pulls/2 days |
-| **Extra** | Exporters, workers, optional services | 72h | ~6 pulls/3 days |
-
-**Total:** ~26 pulls spread over 24h window = **well within 100 pulls/6h limit**.
-
-- Uses Docker socket (read-only) to run `docker service update`.
-- Runs on manager node only.
-- Auto-ignores all shepherd instances.
-- Logs in to Docker Hub with the `shepherd_registries` secret (the entrypoint splits it into `REGISTRY_USER` / `REGISTRY_PASSWORD`); the tiered intervals keep pulls low on top of that.
 
 ---
 
