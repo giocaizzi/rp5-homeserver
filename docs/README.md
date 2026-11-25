@@ -92,7 +92,6 @@ flowchart TB
 | Ntfy | `https://ntfy.home` | services/ntfy |
 | Grafana | `https://grafana.home` | services/observability |
 | Greenhouse | `http://greenhouse.home` | services/greenhouse |
-| Code | `https://code.<domain>` | services/code |
 | CRM | `https://crm.<domain>` | services/crm |
 | Calibre | `https://calibre.<domain>` | services/calibre |
 | Miniflux | `https://miniflux.<domain>` | services/miniflux |

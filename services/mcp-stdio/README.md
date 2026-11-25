@@ -20,8 +20,7 @@ login after the first deploy: [Garmin](../../docs/mcp-stdio.md#garmin).
 
 ## 🚀 Quick Start
 
-**1. Build & push the image** (Swarm ignores `build:`, so the image is prebuilt, as for
-`code`). Use a new date tag on every rebuild and set it in
+**1. Build & push the image** (Swarm ignores `build:`, so the image is prebuilt). Use a new date tag on every rebuild and set it in
 `docker-compose.yml`:
 
 pysurfline and pylamma are private, so their wheels are built locally from a pinned commit
