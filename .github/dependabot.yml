@@ -2,7 +2,8 @@
 # Ecosystems active in this repo:
 #   - github-actions    — action @vX refs in .github/workflows/*
 #   - terraform         — provider + module versions in cloud/
-#   - npm               — workers/mcp-connector (Cloudflare Worker)
+#   - npm               — workers/mcp-connector (Cloudflare Worker) and
+#                         services/mcp-stdio/gateway
 #   - docker-compose    — exact image tags in infra/ and services/<stack>/ (one
 #                         entry per stack, so each PR maps to one release-please
 #                         component)
@@ -49,6 +50,10 @@ updates:
       terraform:
         patterns: ["*"]
 
+  # npm: every package.json directory, one grouped minor/patch PR each. `fix(<component>)`
+  # cuts a patch release of the component these dependencies ship in (the Worker
+  # deploys on the `mcp-connector` release, the gateway on the `mcp-stdio` one).
+  # Majors are left out of the group and arrive as individual PRs.
   - package-ecosystem: npm
     directory: /workers/mcp-connector
     schedule:
@@ -56,13 +61,31 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     commit-message:
-      prefix: "chore(deps)"
+      prefix: "fix(mcp-connector)"
     labels:
       - dependencies
-      - npm
     groups:
-      npm:
+      mcp-connector:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+      npm-security:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /services/mcp-stdio/gateway
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "fix(mcp-stdio)"
+    labels:
+      - dependencies
+    groups:
+      mcp-stdio:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
       npm-security:
         applies-to: security-updates
         patterns: ["*"]
