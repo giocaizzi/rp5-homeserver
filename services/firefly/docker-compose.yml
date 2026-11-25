@@ -237,7 +237,7 @@ services:
       <<: *logging-base
 
   scheduler:
-    image: python:3.13.18-alpine
+    image: python:3.15.2-alpine
     hostname: firefly-scheduler
     init: true # crond as PID 1 ignores SIGTERM -> SIGKILL (137) on stop (#316)
     environment:
