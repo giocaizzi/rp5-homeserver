@@ -43,7 +43,7 @@ Infrastructure and services for a single-node home server: reverse proxy, monito
 - **Netdata** — System monitoring (`https://netdata.home`)
 - **Backrest** — Backup UI (`https://backrest.home`)
 - **Homepage** — Dashboard (`https://homepage.home`)
-- **Shepherd** — Auto-updates Swarm services every 24h
+- **Pinned images** — exact tags, bumped by weekly Dependabot PRs and checked by an advisory Trivy scan ([runbook](docs/RUNBOOKS/image-updates.md))
 
 ## Documentation
 

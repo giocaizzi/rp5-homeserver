@@ -6,14 +6,14 @@ Runbook for Pocket ID, the passkey-only OIDC provider used as a Cloudflare Acces
 
 | Piece | Where |
 |-------|-------|
-| Stack `pocket-id`, service `pocket-id_app` (v2.19, port 1411) | `services/pocket-id/` |
+| Stack `pocket-id`, service `pocket-id_app` (v2.19.3, port 1411) | `services/pocket-id/` |
 | Data | volume `app_data` at `/app/data` |
 | Encryption key | Swarm secret named by `secrets.encryption_key.name` in the compose file (`pocket-id_encryption_key`, `pocket-id_encryption_key_v<N>` after a [rotation](#encryption-key-rotation)) -> `ENCRYPTION_KEY_FILE`; Secrets Manager key of the same name |
 | Public URL | `https://id.<domain>` through the tunnel |
 | nginx route | `infra/nginx/conf.d/services/pocket-id.conf`, no Access JWT check |
 | Access login method | `cloudflare_zero_trust_access_identity_provider.pocket_id` (generic OIDC, PKCE) in `cloud/` |
 | Break-glass | dashboard-managed **One-time PIN** login method, stays enabled |
-| Updates | Shepherd, tier core, floating `v2.19` tag (patch releases) |
+| Updates | Exact tag, Dependabot PRs ([runbook](./RUNBOOKS/image-updates.md)) |
 
 Behavior:
 
@@ -86,7 +86,7 @@ Restore from backup: [RUNBOOKS/restore-database.md](./RUNBOOKS/restore-database.
 
 ## Encryption key rotation
 
-The rotation re-encrypts the database; the app must then start only with the new key. Rotate with the service scaled to 0, so no restart (Shepherd update, crash) can start it with the old key on the re-encrypted data. Key names are versioned: the current one is in `secrets.encryption_key.name` in `services/pocket-id/docker-compose.yml`; the new one is the next `pocket-id_encryption_key_v<N>`.
+The rotation re-encrypts the database; the app must then start only with the new key. Rotate with the service scaled to 0, so no restart (image bump, crash) can start it with the old key on the re-encrypted data. Key names are versioned: the current one is in `secrets.encryption_key.name` in `services/pocket-id/docker-compose.yml`; the new one is the next `pocket-id_encryption_key_v<N>`.
 
 1. Add Secrets Manager key `pocket-id_encryption_key_v<N>` (`openssl rand -base64 32`, no trailing newline).
 2. On a branch, point `secrets.encryption_key.name` at the new name, and run `PI_SSH_USER=pi ./scripts/create_secrets.sh pocket-id` from it: this creates the new Swarm secret; the running service keeps the old one. Open the PR, do not merge yet.
@@ -118,4 +118,4 @@ The rotation re-encrypts the database; the app must then start only with the new
 
 ## Upgrades and security
 
-Follow the pocket-id GitHub security advisories. Patch releases arrive through Shepherd on the `v2.19` tag; minor bumps by PR on the tag.
+Follow the pocket-id GitHub security advisories. Patch and minor releases arrive as Dependabot PRs on the exact tag ([runbook](./RUNBOOKS/image-updates.md)).

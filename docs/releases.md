@@ -66,6 +66,8 @@ The runtime stacks deploy **when their release is published**, not on merge to `
 
 > release-please is **SemVer-only** — CalVer/date-based versions aren't supported. The `0.x` namespacing above is the chosen way to avoid confusion with upstream versions.
 
+Dependabot `docker-compose` PRs are titled `fix(<stack>)` / `fix(infra)`, so each image bump cuts a patch release of that component and deploys through the release gate. Procedure: [image updates runbook](./RUNBOOKS/image-updates.md).
+
 ### `infra/VERSION` is release-managed
 
 `infra/VERSION` is the `infra` component's `version-file`: release-please rewrites it in place (kept as a bare `X.Y.Z` string, so `homepage` and `sync_infra.sh` read it unchanged). Because the `infra` release fires `deploy-infra.yml`, **cutting an `infra` release implies an in-place infra deploy via [`sync_infra.sh`](../scripts/sync_infra.sh).** To change `infra/**` *without* a deploy, use a non-releasing type (`chore(infra):` / `docs(infra):`).
