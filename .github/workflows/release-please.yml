@@ -11,6 +11,10 @@ name: release-please
 # tags it publishes: the `infra` release (v*) fires deploy-infra.yml and a service
 # release (<stack>-v*) fires deploy-services.yml (both trigger on the `release`
 # event). cloud/ Terraform stays apply-on-merge (apply-cloud.yml).
+#
+# It also runs daily: Dependabot PRs auto-merged by dependabot-auto-merge.yml are
+# merged with GITHUB_TOKEN, which fires no push workflow, so the daily run picks
+# those commits up and the Release PR lags at most a day.
 
 on:
   # DELIBERATELY NOT path-filtered. release-please must observe EVERY commit on
@@ -18,6 +22,8 @@ on:
   # `paths:` filter would drop commits and corrupt versioning.
   push:
     branches: ["main"]
+  schedule:
+    - cron: "0 5 * * *"
 
 permissions:
   contents: write

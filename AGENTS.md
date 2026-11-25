@@ -51,8 +51,8 @@ Raspberry Pi 5 (8GB) home server on ARM64 Debian/Raspberry Pi OS.
 
 | Path | Purpose |
 |------|---------|
-| `infra/` | Always-on infra stack (nginx, portainer, cloudflared, netdata, backrest, homepage, shepherd). Single `docker-compose.yml` + `VERSION`; file-based `secrets/` live only on the Pi, written from Secrets Manager by `sync_infra.sh`. |
-| `services/<stack>/` | One folder per service stack (n8n, firefly, adguard, ai, langfuse, ntfy, observability, greenhouse, code, crm, calibre, miniflux, pocket-id, mcp-stdio). Each ships a `docker-compose.yml` and a README; secrets come from Secrets Manager (project `rp5-homeserver`), never from files in the stack folder. |
+| `infra/` | Always-on infra stack (nginx, portainer, cloudflared, netdata, backrest, homepage). Single `docker-compose.yml` + `VERSION`; file-based `secrets/` live only on the Pi, written from Secrets Manager by `sync_infra.sh`. |
+| `services/<stack>/` | One folder per service stack (n8n, firefly, adguard, ai, langfuse, ntfy, observability, greenhouse, crm, calibre, miniflux, pocket-id, mcp-stdio). Each ships a `docker-compose.yml` and a README; secrets come from Secrets Manager (project `rp5-homeserver`), never from files in the stack folder. |
 | `scripts/` | Operational scripts — see Common Commands. |
 | `cloud/` | Terraform for Cloudflare Tunnel + GCS backup bucket. |
 | `docs/` | Documentation (source of truth): see "Where to find what". |
@@ -155,6 +155,7 @@ This repo is **public**, and so are its PRs, issues, comments, releases and Acti
 | Documentation and README conventions, file management | [docs/README.md](docs/README.md#documentation-conventions) |
 | Pocket ID (Access passkey login, bootstrap, recovery) | [docs/pocket-id.md](docs/pocket-id.md) |
 | Stdio MCP servers (add one, Garmin notes) | [docs/mcp-stdio.md](docs/mcp-stdio.md) |
+| Image updates, rollback, vulnerability scan | [docs/RUNBOOKS/image-updates.md](docs/RUNBOOKS/image-updates.md) |
 | Firefly runbook | `.claude/skills/firefly/SKILL.md` (not present in this checkout; referenced as before) |
 
-Key gotchas (details in docs/deployment.md): no tracked symlinks in the repo (Portainer rejects them); Tier label must be set in both `labels:` and `deploy.labels:` or Shepherd silently skips the service; Portainer redeploy re-clones the repo, so use `docker service update --force <stack>_<svc>` for out-of-band redeploys; a new `infra/` secret file needs a non-local `sync_infra.sh` run before the infra release.
+Key gotchas (details in docs/deployment.md): no tracked symlinks in the repo (Portainer rejects them); pin every `image:` to an exact version tag (Dependabot bumps it; see docs/RUNBOOKS/image-updates.md); Portainer redeploy re-clones the repo, so use `docker service update --force <stack>_<svc>` for out-of-band redeploys; a new `infra/` secret file needs a non-local `sync_infra.sh` run before the infra release.

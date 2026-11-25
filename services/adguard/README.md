@@ -19,7 +19,7 @@
 
 | Container | Image | Purpose |
 |-----------|-------|---------|
-| adguard | `adguard/adguardhome:latest` | DNS server + web UI |
+| adguard | `adguard/adguardhome` | DNS server + web UI |
 
 **Exposed Ports** (Swarm `mode: host`, bypassing the ingress mesh so AdGuard sees real client IPs for per-client stats and `ratelimit`):
 - `53/tcp`, `53/udp` — Plain DNS

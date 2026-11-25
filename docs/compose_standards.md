@@ -83,7 +83,7 @@ service-name:
   deploy:
     <<: *deploy-base
     labels:
-      com.giocaizzi.tier: "<tier>"        # service-level — required for Shepherd filter
+      com.giocaizzi.tier: "<tier>"        # service-level (Swarm service label)
     resources:
       limits:
         memory: <limit>M                # required for ARM64
@@ -93,7 +93,9 @@ service-name:
     <<: *logging-base
 ```
 
-> **Tier label must appear in both blocks.** `labels:` (top-level) sets container labels; Shepherd filters on **service** labels via `docker service ls --filter` and needs `deploy.labels.com.giocaizzi.tier`. Omitting the deploy-level tier silently disables Shepherd auto-updates for that service.
+> **Set the tier label in both blocks.** `labels:` (top-level) sets container labels, which feed Alloy/Loki; `deploy.labels` sets the Swarm service label.
+
+> **`image:` must be an exact version tag** (no `latest`, no bare major or minor tag). Dependabot bumps it by PR: see [image updates](./RUNBOOKS/image-updates.md).
 
 **Component values:** `app`, `data`, `worker`, `gateway`.
 

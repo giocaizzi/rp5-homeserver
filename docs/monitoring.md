@@ -53,7 +53,7 @@ Lightweight real-time monitoring running as a Docker container in the infra stac
 
 ### Disk Hygiene
 
-`/` (NVMe) holds `/var/lib/docker`. Without cleanup it grew ~1 GiB/day from old images left by CI and Shepherd redeploys (231 → 295 GiB, Aug–Oct 2026; manual cleanup on 15–16 Oct 2026 freed ~255 GiB, #454). Two pieces keep it flat:
+`/` (NVMe) holds `/var/lib/docker`. Without cleanup it grew ~1 GiB/day from old images left by CI and image-bump redeploys (231 → 295 GiB, Aug–Oct 2026; manual cleanup on 15–16 Oct 2026 freed ~255 GiB, #454). Two pieces keep it flat:
 
 | Piece | What it does |
 |-------|--------------|

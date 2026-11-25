@@ -1,0 +1,9 @@
+# Trivy ignore list for .github/workflows/image-scan.yml.
+#
+# Format: one CVE ID per line (e.g. CVE-2026-12345). Trivy also accepts an
+# expiry suffix: `CVE-2026-12345 exp:2027-01-31`.
+#
+# Rule: every entry needs a comment line directly above it with the image, the
+# reason, and a review/expiry date. See docs/RUNBOOKS/image-updates.md.
+#
+# No entries.

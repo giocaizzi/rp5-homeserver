@@ -30,7 +30,6 @@ Infrastructure and services for a single-node home server: reverse proxy, monito
 | **[Ntfy](./services/ntfy/README.md)** | `https://ntfy.home` | Push notifications |
 | **[Observability](./services/observability/README.md)** | `https://grafana.home` | Grafana, Loki, Tempo, Prometheus |
 | **[Greenhouse](./services/greenhouse/README.md)** | `http://greenhouse.home` | Smart plant irrigation |
-| **[Code](./services/code/README.md)** (not deployed) | `https://code.<domain>` | Remote Claude Code dev environment (CloudCLI) |
 | **[CRM](./services/crm/README.md)** | `https://crm.<domain>` | Twenty CRM (sales pipeline, API + MCP for an external backend and Claude) |
 | **[Calibre](./services/calibre/README.md)** | `https://calibre.<domain>` | Ebook library (Send-to-Kindle, OPDS, reader sync) |
 | **[Miniflux](./services/miniflux/README.md)** | `https://miniflux.<domain>` | Feed reader (follow sites, ntfy on new articles) |
@@ -43,7 +42,7 @@ Infrastructure and services for a single-node home server: reverse proxy, monito
 - **Netdata** — System monitoring (`https://netdata.home`)
 - **Backrest** — Backup UI (`https://backrest.home`)
 - **Homepage** — Dashboard (`https://homepage.home`)
-- **Shepherd** — Auto-updates Swarm services every 24h
+- **Pinned images** — exact tags, bumped by weekly Dependabot PRs and checked by an advisory Trivy scan ([runbook](docs/RUNBOOKS/image-updates.md))
 
 ## Documentation
 

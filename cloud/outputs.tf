@@ -56,12 +56,6 @@ output "greenhouse_url" {
   sensitive   = true
 }
 
-output "code_url" {
-  description = "The public URL for the Code dev environment (CloudCLI)"
-  value       = "https://code.${var.zone_name}"
-  sensitive   = true
-}
-
 output "crm_url" {
   description = "The public URL for Twenty CRM (SERVER_URL)"
   value       = "https://crm.${var.zone_name}"

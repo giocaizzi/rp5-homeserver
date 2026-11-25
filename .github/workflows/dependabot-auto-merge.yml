@@ -1,0 +1,45 @@
+name: Dependabot auto-merge
+
+# Arms squash auto-merge on Dependabot PRs whose update type is minor or patch;
+# GitHub then merges once the required checks pass. Applies to every ecosystem
+# (github-actions, terraform, npm, docker-compose): minor/patch only, by intent.
+#
+# Stay manual:
+#   - majors;
+#   - portainer-ee / portainer-mcp (must stay on the same minor; one `portainer` PR);
+#   - any PR whose update-type fetch-metadata cannot compute.
+# For a grouped PR fetch-metadata reports the HIGHEST update type of the group, so
+# a group containing a major is never armed.
+#
+# Merges done with GITHUB_TOKEN fire no push workflow, so release-please also runs
+# on a daily schedule to pick these commits up.
+#
+# No secrets and no App key: the default token is enough to arm auto-merge.
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  auto-merge:
+    if: github.actor == 'dependabot[bot]' && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@v3
+
+      - name: Arm auto-merge (minor/patch, not portainer)
+        if: >-
+          (steps.meta.outputs.update-type == 'version-update:semver-patch' ||
+           steps.meta.outputs.update-type == 'version-update:semver-minor') &&
+          !contains(steps.meta.outputs.dependency-names, 'portainer/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"

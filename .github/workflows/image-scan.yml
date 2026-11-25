@@ -1,0 +1,128 @@
+# Advisory Trivy scan of every image referenced by infra/ and services/*.
+#
+# Resolves the image list from the compose files, then scans each image for
+# HIGH/CRITICAL vulnerabilities that have a fix. ADVISORY: the run never fails
+# on findings and is NOT in the `main` ruleset's required checks.
+#
+# Results: Security > Code scanning (SARIF, one category per image) and the
+# step summary of each `scan <image>` job.
+# Ignore a finding: add its CVE ID to .trivyignore (rules in that file).
+#
+# Promote to a gate later: set `exit-code: "1"` on the scan steps, add an
+# aggregate job that needs `scan`, and add its name to the `main` ruleset's
+# required checks.
+name: Image scan
+
+on:
+  pull_request:
+    paths:
+      - infra/docker-compose.yml
+      - services/*/docker-compose.yml
+      - .trivyignore
+      - .github/workflows/image-scan.yml
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      images: ${{ steps.list.outputs.images }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: list
+        name: List unique images
+        run: |
+          images=$(
+            for f in infra/docker-compose.yml services/*/docker-compose.yml; do
+              DOMAIN=example.com PI_SSH_USER=pi CC_ACCOUNT_ID=0 CC_SETTLEMENT_SOURCE_ID=0 CC_RESIDUAL_ACCOUNT_ID=0 docker compose -f "$f" config --images
+            done | sort -u | jq -R . | jq -sc .
+          )
+          echo "images=$images" >> "$GITHUB_OUTPUT"
+
+  scan:
+    needs: images
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      max-parallel: 8 # leave runners free for the required checks
+      matrix:
+        image: ${{ fromJSON(needs.images.outputs.images) }}
+    name: scan ${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@v7 # for .trivyignore
+
+      # Pinned by full SHA on purpose: the action's tags were hijacked in
+      # March 2026 (CVE-2026-33634).
+      - name: Trivy (SARIF)
+        continue-on-error: true # registry rate limits must not red the run
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_PLATFORM: linux/arm64
+          TRIVY_IMAGE_SRC: remote
+        with:
+          image-ref: ${{ matrix.image }}
+          format: sarif
+          limit-severities-for-sarif: true # SARIF ignores `severity` otherwise
+          output: trivy.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: "0"
+
+      # Same pin as above (CVE-2026-33634).
+      - name: Trivy (table)
+        continue-on-error: true
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        env:
+          TRIVY_PLATFORM: linux/arm64
+          TRIVY_IMAGE_SRC: remote
+        with:
+          skip-setup-trivy: true
+          image-ref: ${{ matrix.image }}
+          format: table
+          output: trivy.txt
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivyignores: .trivyignore
+          exit-code: "0"
+
+      - name: Job summary
+        env:
+          IMAGE: ${{ matrix.image }}
+        run: |
+          if [ -f trivy.txt ]; then
+            {
+              echo "## $IMAGE"
+              echo '```text'
+              cat trivy.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - id: category
+        name: SARIF category
+        env:
+          IMAGE: ${{ matrix.image }}
+        run: echo "name=trivy-$(echo "$IMAGE" | tr '/:@' '---')" >> "$GITHUB_OUTPUT"
+
+      - name: Upload SARIF
+        if: always() && hashFiles('trivy.sarif') != ''
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy.sarif
+          category: ${{ steps.category.outputs.name }}

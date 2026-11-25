@@ -171,7 +171,6 @@ GitHub Actions ENVIRONMENT SECRETS on cloud-plan AND cloud-production
   HOMEPAGE_USERS            <JSON array string>
   GRAFANA_USERS             <JSON array string>
   GREENHOUSE_USERS          <JSON array string>
-  CODE_USERS                <JSON array string>
   CRM_USERS                 <JSON array string>
   CALIBRE_USERS             <JSON array string>
   MINIFLUX_USERS            <JSON array string>
