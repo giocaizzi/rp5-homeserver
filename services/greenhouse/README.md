@@ -99,12 +99,12 @@ Tunables in `docker-compose.yml` `environment:`:
 |----------|---------|---------|
 | `TUYA_REGION` | `eu` | Tuya Cloud region (`eu` / `us` / `cn` / `in`) |
 | `TZ` | `Europe/Rome` | Container timezone |
-| `IRRIGATION_DB_URL` | `sqlite:////app/data/irrigation.db` | DB path inside the volume |
-| `IRRIGATION_SYNC_INTERVAL_MINUTES` | `30` | Sensor sync cadence |
-| `IRRIGATION_CHECK_CRON_HOURS` | `*/6` | Cron hour spec for `check_all` (replaces deprecated `IRRIGATION_CHECK_INTERVAL_HOURS`; engine cooldown still gates actuation) |
-| `IRRIGATION_WEATHER_LAT` / `_LON` | `45.464` / `9.189` | Open-Meteo coordinates for the precipitation-skip rule |
-| `IRRIGATION_ENABLE_SCHEDULER` | `true` | Disable to freeze the system without stopping the stack |
-| `IRRIGATION_AUTH_ENABLED` | `true` | Session auth gate (v3.0.0+). `false` opts out — dev/migration only |
+| `GREENHOUSE_DB_URL` | `sqlite:////app/data/irrigation.db` | DB path inside the volume |
+| `GREENHOUSE_SYNC_INTERVAL_MINUTES` | `30` | Sensor sync cadence |
+| `GREENHOUSE_CHECK_CRON_HOURS` | `*/6` | Cron hour spec for `check_all` (engine cooldown still gates actuation) |
+| `GREENHOUSE_WEATHER_LAT` / `_LON` | `45.464` / `9.189` | Open-Meteo coordinates for the precipitation-skip rule |
+| `GREENHOUSE_ENABLE_SCHEDULER` | `true` | Disable to freeze the system without stopping the stack |
+| `GREENHOUSE_AUTH_ENABLED` | `true` | Session auth gate (v3.0.0+). `false` opts out — dev/migration only |
 | `GREENHOUSE_AUTH_ADMIN_USERNAME` | `admin` | Bootstrap admin username (password is a secret) |
 
 The local key for each irrigator is fetched from the Tuya Cloud API at

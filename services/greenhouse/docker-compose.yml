@@ -90,18 +90,17 @@ services:
       - TZ=Europe/Rome
       # Tuya Cloud
       - TUYA_REGION=eu
-      # Server settings (prefixed IRRIGATION_ per Pydantic BaseSettings)
-      - IRRIGATION_DB_URL=sqlite:////app/data/irrigation.db
-      - IRRIGATION_HOST=0.0.0.0
-      - IRRIGATION_PORT=8000
-      - IRRIGATION_SYNC_INTERVAL_MINUTES=30
-      # Cron hour spec for the check_all job (every 6h at :00). Replaces the
-      # deprecated IRRIGATION_CHECK_INTERVAL_HOURS shim (removed in next major).
-      - IRRIGATION_CHECK_CRON_HOURS=*/6
-      - IRRIGATION_ENABLE_SCHEDULER=true
+      # Server settings (prefixed GREENHOUSE_ per Pydantic BaseSettings)
+      - GREENHOUSE_DB_URL=sqlite:////app/data/irrigation.db
+      - GREENHOUSE_HOST=0.0.0.0
+      - GREENHOUSE_PORT=8000
+      - GREENHOUSE_SYNC_INTERVAL_MINUTES=30
+      # Cron hour spec for the check_all job (every 6h at :00).
+      - GREENHOUSE_CHECK_CRON_HOURS=*/6
+      - GREENHOUSE_ENABLE_SCHEDULER=true
       # Weather (Milan defaults — override per location)
-      - IRRIGATION_WEATHER_LAT=45.464
-      - IRRIGATION_WEATHER_LON=9.189
+      - GREENHOUSE_WEATHER_LAT=45.464
+      - GREENHOUSE_WEATHER_LON=9.189
       # Session auth (v3.0.0+). Every /api/v1 route (except /auth/login and
       # /.well-known/*) and every web page requires a login. MCP is unaffected
       # — it keeps its own GREENHOUSE_MCP_TOKEN bearer (require_user also
@@ -110,7 +109,7 @@ services:
       # would break LAN login. Public access (greenhouse.<domain>) is HTTPS
       # via the Cloudflare tunnel + CF Access; the non-secure cookie still rides
       # that encrypted path fine.
-      - IRRIGATION_AUTH_ENABLED=true
+      - GREENHOUSE_AUTH_ENABLED=true
       - GREENHOUSE_AUTH_ADMIN_USERNAME=admin
       # Push irrigation runs and new warning/critical alerts to the self-hosted
       # ntfy over the shared rp5_public network (token exported below).
