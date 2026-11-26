@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.29.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.28.0...v1.29.0) (2026-11-25)
+
+
+### Features
+
+* **infra:** replace shepherd with pinned images, dependabot auto-merge and drop code stack ([#603](https://github.com/giocaizzi/rp5-homeserver/issues/603)) ([df3b419](https://github.com/giocaizzi/rp5-homeserver/commit/df3b41981d11d14e382f171dc9ba1e468c245328))
+
 ## [1.28.0](https://github.com/giocaizzi/rp5-homeserver/compare/v1.27.1...v1.28.0) (2026-11-08)
 
 

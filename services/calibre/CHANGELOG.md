@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/giocaizzi/rp5-homeserver/compare/calibre-v0.2.0...calibre-v0.3.0) (2026-11-25)
+
+
+### Features
+
+* **infra:** replace shepherd with pinned images, dependabot auto-merge and drop code stack ([#603](https://github.com/giocaizzi/rp5-homeserver/issues/603)) ([df3b419](https://github.com/giocaizzi/rp5-homeserver/commit/df3b41981d11d14e382f171dc9ba1e468c245328))
+
 ## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/calibre-v0.1.0...calibre-v0.2.0) (2026-10-11)
 
 

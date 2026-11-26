@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.13.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.12.0...observability-v0.13.0) (2026-11-25)
+
+
+### Features
+
+* **infra:** replace shepherd with pinned images, dependabot auto-merge and drop code stack ([#603](https://github.com/giocaizzi/rp5-homeserver/issues/603)) ([df3b419](https://github.com/giocaizzi/rp5-homeserver/commit/df3b41981d11d14e382f171dc9ba1e468c245328))
+
+
+### Bug Fixes
+
+* **observability:** bump the observability group in /services/observability with 5 updates ([#612](https://github.com/giocaizzi/rp5-homeserver/issues/612)) ([41edff3](https://github.com/giocaizzi/rp5-homeserver/commit/41edff363607d6982a595af5b09be1dcab8baee6))
+
 ## [0.12.0](https://github.com/giocaizzi/rp5-homeserver/compare/observability-v0.11.0...observability-v0.12.0) (2026-11-08)
 
 
