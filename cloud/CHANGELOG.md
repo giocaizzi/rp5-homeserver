@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.1](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.17.0...cloud-v0.17.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* **cloud:** bump terraform providers (cloudflare 5.29.0, google 8.12.0) ([#622](https://github.com/giocaizzi/rp5-homeserver/issues/622)) ([78c301f](https://github.com/giocaizzi/rp5-homeserver/commit/78c301f85efcb23a98d8d41836934179bdd5f42e))
+
 ## [0.17.0](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.16.0...cloud-v0.17.0) (2026-11-25)
 
 
