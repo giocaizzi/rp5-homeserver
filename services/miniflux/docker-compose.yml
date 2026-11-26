@@ -46,7 +46,7 @@ networks:
 # =============================================================================
 services:
   app:
-    image: miniflux/miniflux:2.3.3
+    image: miniflux/miniflux:2.3.5
     hostname: miniflux-app
     expose:
       - "8080"

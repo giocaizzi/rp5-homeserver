@@ -142,7 +142,7 @@ services:
   # ========================================
   # AWS_* env = admin identity; the `langfuse` bucket is auto-created on first upload.
   storage:
-    image: chrislusf/seaweedfs:4.48
+    image: chrislusf/seaweedfs:4.54
     hostname: langfuse-storage
     entrypoint:
       - /bin/sh
