@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/giocaizzi/rp5-homeserver/compare/ai-v0.2.0...ai-v0.2.1) (2026-11-26)
+
+
+### Documentation
+
+* **ai:** ai is deployed, langfuse is the only on-demand stack ([#620](https://github.com/giocaizzi/rp5-homeserver/issues/620)) ([cecdae9](https://github.com/giocaizzi/rp5-homeserver/commit/cecdae9865f756bff5c02db139c0816021f498ad))
+
 ## [0.2.0](https://github.com/giocaizzi/rp5-homeserver/compare/ai-v0.1.1...ai-v0.2.0) (2026-11-25)
 
 
