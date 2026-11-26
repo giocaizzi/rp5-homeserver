@@ -294,7 +294,7 @@ services:
   # Langfuse Web - Main application
   # ========================================
   app:
-    image: langfuse/langfuse:3.227.1
+    image: langfuse/langfuse:4.83.0
     hostname: langfuse-app
     environment:
       <<: *langfuse-env
