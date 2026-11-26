@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.4.0...crm-v0.4.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* **crm:** bump twentycrm/twenty from v2.51.0 to v2.61.0 in /services/crm in the crm group across 1 directory ([#604](https://github.com/giocaizzi/rp5-homeserver/issues/604)) ([f0828b3](https://github.com/giocaizzi/rp5-homeserver/commit/f0828b3cbeb785c16823d338850cfa5997451cd8))
+
 ## [0.4.0](https://github.com/giocaizzi/rp5-homeserver/compare/crm-v0.3.1...crm-v0.4.0) (2026-11-08)
 
 
