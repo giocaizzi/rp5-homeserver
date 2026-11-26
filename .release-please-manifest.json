@@ -3,7 +3,7 @@
   "cloud": "0.17.0",
   "workers/mcp-connector": "0.8.1",
   "services/adguard": "0.3.0",
-  "services/ai": "0.2.0",
+  "services/ai": "0.2.1",
   "services/firefly": "0.5.0",
   "services/greenhouse": "0.4.0",
   "services/langfuse": "0.4.0",
