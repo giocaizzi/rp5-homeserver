@@ -239,7 +239,7 @@ services:
   # Langfuse Worker - Async event processing
   # ========================================
   worker:
-    image: langfuse/langfuse-worker:3.227.1
+    image: langfuse/langfuse-worker:4.83.0
     hostname: langfuse-worker
     environment:
       <<: *langfuse-env
