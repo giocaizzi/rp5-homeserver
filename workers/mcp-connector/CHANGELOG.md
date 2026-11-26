@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.1](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.8.0...mcp-connector-v0.8.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* **mcp-connector:** bump the mcp-connector group in /workers/mcp-connector with 2 updates ([#618](https://github.com/giocaizzi/rp5-homeserver/issues/618)) ([b3ed554](https://github.com/giocaizzi/rp5-homeserver/commit/b3ed554b611d919ee636ddb27164cc7157fc1e4a))
+
 ## [0.8.0](https://github.com/giocaizzi/rp5-homeserver/compare/mcp-connector-v0.7.0...mcp-connector-v0.8.0) (2026-11-04)
 
 

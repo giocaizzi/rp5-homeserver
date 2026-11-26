@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/giocaizzi/rp5-homeserver/compare/miniflux-v1.1.0...miniflux-v1.1.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* **miniflux:** bump miniflux/miniflux from 2.3.3 to 2.3.5 in /services/miniflux in the miniflux group across 1 directory ([#606](https://github.com/giocaizzi/rp5-homeserver/issues/606)) ([91f3a9d](https://github.com/giocaizzi/rp5-homeserver/commit/91f3a9d49c122775dc9bd35851b0fa9d5d8c0311))
+
 ## [1.1.0](https://github.com/giocaizzi/rp5-homeserver/compare/miniflux-v1.0.1...miniflux-v1.1.0) (2026-11-08)
 
 
