@@ -183,7 +183,7 @@ services:
   # Receives traces ONLY from Alloy via OTLP gRPC.
   # All external trace ingestion goes through Alloy for processing.
   trace-store:
-    image: grafana/tempo:2.10.5
+    image: grafana/tempo:3.1.1
     hostname: observability-trace-store
     expose:
       - "3200"  # Tempo HTTP (queries)
