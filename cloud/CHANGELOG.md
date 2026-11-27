@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.17.2](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.17.1...cloud-v0.17.2) (2026-11-27)
+
+
+### Bug Fixes
+
+* **cloud:** disable Cloudflare incident notification policy ([#624](https://github.com/giocaizzi/rp5-homeserver/issues/624)) ([2e9b6b9](https://github.com/giocaizzi/rp5-homeserver/commit/2e9b6b93b3ed601bd95949db854b1106d0bef4b5))
+
 ## [0.17.1](https://github.com/giocaizzi/rp5-homeserver/compare/cloud-v0.17.0...cloud-v0.17.1) (2026-11-26)
 
 
