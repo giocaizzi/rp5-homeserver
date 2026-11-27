@@ -1,6 +1,6 @@
 {
   "infra": "1.29.0",
-  "cloud": "0.17.1",
+  "cloud": "0.17.2",
   "workers/mcp-connector": "0.8.1",
   "services/adguard": "0.3.0",
   "services/ai": "0.2.1",
