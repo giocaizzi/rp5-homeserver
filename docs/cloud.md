@@ -115,7 +115,7 @@ Set per app: 8 h for `portainer`, `backrest`; 24 h for every other app. Service-
 
 ### Cloudflare notifications
 
-Terraform manages the email policies for tunnel health (this tunnel), Universal SSL and Cloudflare incidents. The destination is the `alert_email` input (secret `ALERT_EMAIL` on `cloud-plan` and `cloud-production`). Dashboard-managed, not in Terraform (do not recreate them): DDoS Protection, Expiring Service Token Alert, Leaked Service Token Alert. A webhook to ntfy is deliberately not used: it would be dead exactly when the tunnel is down.
+Terraform manages the email policies for tunnel health (this tunnel), Universal SSL and Cloudflare incidents (kept in code but `enabled = false`). The destination is the `alert_email` input (secret `ALERT_EMAIL` on `cloud-plan` and `cloud-production`). Dashboard-managed, not in Terraform (do not recreate them): DDoS Protection, Expiring Service Token Alert, Leaked Service Token Alert. A webhook to ntfy is deliberately not used: it would be dead exactly when the tunnel is down.
 
 ### WAF custom rules
 
