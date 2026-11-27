@@ -39,7 +39,7 @@ resource "cloudflare_notification_policy" "incident" {
   name        = "Cloudflare incidents"
   description = "Cloudflare status incidents"
   alert_type  = "incident_alert"
-  enabled     = true
+  enabled     = false # disabled: unfiltered status incidents are too noisy
 
   mechanisms = {
     email = [{ id = var.alert_email }]
